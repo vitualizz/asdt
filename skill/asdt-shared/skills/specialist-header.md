@@ -26,6 +26,14 @@ If either condition is not met, output this exact message and STOP:
 > - If PRESENT: parse the `steps:` list. Execute ONLY those steps in the order specified.
 > - Steps NOT in the tailored list → skip entirely (log annotation that the step was skipped by workflow tailoring).
 > - The tailored list overrides the default ordering.
+> - The block MAY carry a `depth: quick|standard|deep` field controlling per-step OUTPUT VERBOSITY
+>   (orthogonal to WHICH steps run — it never adds or removes steps):
+>   - `depth` omitted ⇒ treat as `standard` (no behavior change).
+>   - `quick` ⇒ minimum viable output: collapse enumerations to the most important item(s), skip
+>     OPTIONAL fields, keep rationale terse. NEVER omit hard schema-required fields.
+>   - `standard` ⇒ the current default output volume.
+>   - `deep` ⇒ exhaustive: maximize alternatives, edge-cases, and rationale within the existing
+>     per-step context budget.
 
 <!-- co-location note: The specialist-specific complexity/tier paragraph and the Artifact Persistence block remain inline in each specialist SKILL.md. Do NOT move them here. The closing Tailored Workflow sentence also stays per-specialist. -->
 

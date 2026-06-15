@@ -96,16 +96,19 @@ Recommended specialists:
     ## Tailored Workflow
     steps: [{comma-separated step list}]
     complexity: {trivial | simple | moderate | complex}
+    depth: standard
 
   {specialist name} — {one-line rationale}
     ## Tailored Workflow
     steps: [{comma-separated step list}]
     complexity: {trivial | simple | moderate | complex}
+    depth: standard
 
   Security — {one-line rationale}
     ## Tailored Workflow
     steps: [{comma-separated step list}]
     risk_surface: {none | moderate | high}
+    depth: standard
 
 {If risk_surface == none: Security — risk_surface: none; not auto-invoked (available on demand via /asdt-security)}
 
@@ -157,24 +160,28 @@ Run each specialist in order:
 ## Tailored Workflow
 steps: [feature-brief, information-architecture, user-flows, component-mapping, ux-handoff]
 complexity: moderate
+depth: standard
 
 2. /asdt-architect "{change name or description}"
 
 ## Tailored Workflow
 steps: [knowledge-recall, load-constraints, evaluate-approaches, decision-record]
 complexity: moderate
+depth: standard
 
 3. /asdt-developer "{change name or description}"
 
 ## Tailored Workflow
 steps: [explore, spec, design, implement]
 complexity: moderate
+depth: standard
 
 4. /asdt-developer "change the variable name"
 
 ## Tailored Workflow
 steps: [explore]
 complexity: trivial
+depth: standard
 
 Each specialist will automatically load artifacts produced by previous specialists.
 ```
@@ -334,3 +341,5 @@ risk_surface: {none | moderate | high}
 ```
 
 The `steps` list overrides the specialist's default step order. Steps NOT in the list are skipped entirely. The specialist scans their prompt for `## Tailored Workflow` header — if absent, they run their full default workflow.
+
+The block MAY also carry an OPTIONAL `depth: {quick | standard | deep}` field (default `standard` when omitted). `depth` is a verbosity dial that controls per-step OUTPUT volume only — it is orthogonal to `complexity` and `risk_surface` (which gate WHICH steps run) and to the `steps` list itself. `quick` collapses enumerations and skips optional fields; `standard` is the current default; `deep` maximizes alternatives, edge-cases, and rationale within each step's existing context budget. `depth` NEVER overrides hard schema-required fields — those are always emitted regardless of depth.
