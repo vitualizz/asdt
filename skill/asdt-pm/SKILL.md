@@ -8,6 +8,12 @@ shared-skills:
   - knowledge-recall
   - report
   - decision-preservation
+trigger_phrases:
+  - formalize requirements
+  - write user stories
+  - define scope
+  - create backlog entry
+  - new feature request
 metadata:
   author: "Lee Palacios (vitualizz)"
   version: "1.0"
