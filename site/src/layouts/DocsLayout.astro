@@ -44,13 +44,18 @@ const slugToLabel: Record<string, string> = {
   skills: t.docs.skillsIndex,
   commands: t.docs.commands,
   'user-flows': t.docs.userFlows,
+  troubleshooting: t.docs.troubleshooting,
+  recipes: t.docs.recipes,
+  tutorial: t.docs.tutorial,
+  'specialist-comparison': t.docs.specialistComparison,
+  changelog: t.docs.changelog,
 }
 
 const navGroups = [
-  { label: isEs ? 'Empezar' : 'Getting Started', slugs: ['getting-started', 'configuration'] },
+  { label: isEs ? 'Empezar' : 'Getting Started', slugs: ['getting-started', 'tutorial', 'configuration'] },
   { label: isEs ? 'Conceptos' : 'Concepts', slugs: ['how-it-works', 'specialist-model', 'memory-and-engram'] },
-  { label: isEs ? 'Especialistas' : 'Specialists', slugs: ['skills', 'specialists/pm', 'specialists/architect', 'specialists/developer', 'specialists/qa', 'specialists/security', 'specialists/ux-ui', 'specialists/researcher'] },
-  { label: isEs ? 'Referencia' : 'Reference', slugs: ['commands', 'user-flows'] },
+  { label: isEs ? 'Especialistas' : 'Specialists', slugs: ['skills', 'specialists/pm', 'specialists/architect', 'specialists/developer', 'specialists/qa', 'specialists/security', 'specialists/ux-ui', 'specialists/researcher', 'specialist-comparison'] },
+  { label: isEs ? 'Referencia' : 'Reference', slugs: ['commands', 'user-flows', 'troubleshooting', 'recipes', 'changelog'] },
   { label: isEs ? 'Contribuir' : 'Contributing', slugs: ['contributing', 'development'] },
 ]
 
