@@ -46,3 +46,40 @@ func TestEmbeddedSkillTree(t *testing.T) {
 		}
 	}
 }
+
+// TestRoutedSpecialistInvariants asserts that every routed specialist's
+// embedded SKILL.md body carries the two load-bearing header invariants:
+// the SOLE orchestrator gate and the FIRST ACTION self-load instruction.
+// These phrases drive orchestration behavior, so dropping them silently
+// would break the launch contract — this guards against that.
+func TestRoutedSpecialistInvariants(t *testing.T) {
+	routed := []string{
+		"asdt-pm",
+		"asdt-ux-ui",
+		"asdt-architect",
+		"asdt-developer",
+		"asdt-qa",
+		"asdt-security",
+		"asdt-researcher",
+	}
+
+	const (
+		soleOrchestrator = "SOLE orchestrator"
+		firstAction      = "FIRST ACTION — self-load the header"
+	)
+
+	for _, dir := range routed {
+		data, err := fs.ReadFile(FS(), dir+"/SKILL.md")
+		if err != nil {
+			t.Errorf("%s/SKILL.md missing from embedded FS: %v", dir, err)
+			continue
+		}
+		body := string(data)
+		if !strings.Contains(body, soleOrchestrator) {
+			t.Errorf("%s/SKILL.md missing required phrase %q", dir, soleOrchestrator)
+		}
+		if !strings.Contains(body, firstAction) {
+			t.Errorf("%s/SKILL.md missing required phrase %q", dir, firstAction)
+		}
+	}
+}
