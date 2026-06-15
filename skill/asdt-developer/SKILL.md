@@ -9,6 +9,12 @@ shared-skills:
   - artifact-envelope
   - scope-definition
   - artifact-loading
+trigger_phrases:
+  - implement this
+  - write the code
+  - change the code
+  - build the feature
+  - generate tests
 metadata:
   author: "Lee Palacios (vitualizz)"
   version: "1.0"

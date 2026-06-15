@@ -9,6 +9,12 @@ shared-skills:
   - artifact-envelope
   - scope-definition
   - report
+trigger_phrases:
+  - architecture decision
+  - system design
+  - api design
+  - service boundaries
+  - is this scalable
 metadata:
   author: "Lee Palacios (vitualizz)"
   version: "1.0"

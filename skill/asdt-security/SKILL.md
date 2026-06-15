@@ -9,6 +9,12 @@ shared-skills:
   - artifact-envelope
   - artifact-loading
   - report
+trigger_phrases:
+  - threat model
+  - vulnerability analysis
+  - owasp review
+  - harden auth
+  - review for security
 metadata:
   author: "Lee Palacios (vitualizz)"
   version: "1.0"

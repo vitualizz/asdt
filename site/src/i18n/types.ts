@@ -114,5 +114,10 @@ export interface UIStrings {
     flowOf: string
     flowTitle: string
     skillsIndex: string
+    troubleshooting: string
+    recipes: string
+    tutorial: string
+    specialistComparison: string
+    changelog: string
   }
 }

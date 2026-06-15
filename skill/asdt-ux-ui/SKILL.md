@@ -8,6 +8,12 @@ shared-skills:
   - platform-context
   - artifact-envelope
   - report
+trigger_phrases:
+  - design the interface
+  - user flow
+  - new screen
+  - component spec
+  - redesign the ui
 metadata:
   author: "Lee Palacios (vitualizz)"
   version: "1.0"

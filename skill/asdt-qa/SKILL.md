@@ -9,6 +9,12 @@ shared-skills:
   - artifact-envelope
   - artifact-loading
   - report
+trigger_phrases:
+  - test plan
+  - acceptance criteria
+  - edge cases
+  - quality sign-off
+  - test coverage
 metadata:
   author: "Lee Palacios (vitualizz)"
   version: "1.0"

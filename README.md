@@ -20,6 +20,8 @@ flowchart TD
 
 Each specialist orchestrates its own isolated steps. Steps that produce artifacts run as separate sub-agents so they don't pollute each other's context. Artifacts are saved to [Engram](https://github.com/Gentleman-Programming/engram) — not to files on disk — so specialists can run minutes or days apart and still pick up where the last one left off.
 
+The same skill tree installs natively into either host — see [Agent portability](docs/agent-portability.md) for how one embedded source renders to both Claude Code and OpenCode.
+
 ## Requirements
 
 - Claude Code (`claude`) or OpenCode (`opencode`) installed

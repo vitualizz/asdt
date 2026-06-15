@@ -136,5 +136,10 @@ export const en: UIStrings = {
     flowOf: 'of',
     flowTitle: 'How it runs',
     skillsIndex: 'Skills Index',
+    troubleshooting: 'Troubleshooting',
+    recipes: 'Recipes',
+    tutorial: 'Tutorial',
+    specialistComparison: 'Specialist Comparison',
+    changelog: 'Changelog',
   },
 }

@@ -8,6 +8,12 @@ shared-skills:
   - knowledge-recall
   - report
   - decision-preservation
+trigger_phrases:
+  - explore the problem
+  - feasibility check
+  - discovery brief
+  - ideate options
+  - fuzzy problem
 metadata:
   author: "Lee Palacios (vitualizz)"
   version: "1.0"

@@ -135,6 +135,26 @@ embedded FS contains.
 
 ---
 
+## Marking deliberate ceilings (`asdt:ceiling`)
+
+When you ship a DELIBERATE simplification — a known ceiling you chose on purpose, not an oversight — mark it so it stays auditable instead of becoming silent debt. The marker token is fixed: `asdt:ceiling`. After it, write a freeform reason and an upgrade path, separated by a U+2014 em-dash (`—`).
+
+In Go, use a line comment:
+
+```go
+// asdt:ceiling — <reason> — upgrade path: <how to lift it later>
+```
+
+In Markdown, use an HTML comment:
+
+```markdown
+<!-- asdt:ceiling — <reason> — upgrade path: <how to lift it later> -->
+```
+
+Run `make debt-scan` to list every current ceiling across the repo. The two examples above will self-match in the scan — that is expected, and it demonstrates the scan picking up both the Go and Markdown forms.
+
+---
+
 ## PR process
 
 - One logical change per PR.
