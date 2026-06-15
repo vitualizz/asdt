@@ -74,6 +74,7 @@ func extractFrontmatterBlock(skillMD string) (block string, ok bool) {
 func scanFrontmatterFields(block string) map[string]string {
 	fields := make(map[string]string)
 
+	// asdt:ceiling — only top-level scalar frontmatter keys are parsed; indented lines are skipped so nested/mapping YAML is invisible — upgrade path: replace this hand-rolled scanner with a real YAML decoder (gopkg.in/yaml.v3) if a specialist ever needs nested frontmatter.
 	for _, line := range strings.Split(block, "\n") {
 		if line == "" || line[0] == ' ' || line[0] == '\t' || line[0] == '#' {
 			continue

@@ -32,6 +32,7 @@ const AIProviderAnthropic = "anthropic"
 
 // AIProviders lists all known AI providers with their cataloged models.
 // The catalog ships compiled into the binary and is updated with releases.
+// asdt:ceiling — provider/model catalog is a static compiled-in slice refreshed only on release; no live provider API fetch — upgrade path: add an optional online catalog refresh (per-provider models endpoint) behind a flag, falling back to this slice when offline or unauthenticated.
 var AIProviders = []AIProvider{
 	{
 		ID:     AIProviderAnthropic,
