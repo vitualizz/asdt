@@ -1,0 +1,19 @@
+schema_version: "1"
+agent: architect
+change_id: grader-impl
+payload:
+  title: "Adopt dispatch-map grader"
+  status: accepted
+  context: "Specialist outputs were unverifiable; gates needed machine-checkable probes."
+  decision: "Implement a pure dispatch-map probe grader in internal/grader."
+  alternatives_considered:
+    - name: "JSON Schema validation only"
+      why_rejected: "Cannot express negative-consequence or FK-integrity semantic gates."
+  consequences:
+    positive:
+      - "Deterministic, panic-free grading."
+      - "Probe sets are declarative YAML, editable without code changes."
+    negative:
+      - "Each new probe type needs a new evaluator + dispatch entry."
+    technical_debt:
+      - "Scalar enum comparison uses fmt.Sprint coercion; revisit for typed equality."

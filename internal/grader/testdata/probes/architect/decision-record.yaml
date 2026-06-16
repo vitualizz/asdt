@@ -1,0 +1,14 @@
+schema_version: "1"
+specialist_id: architect
+step_id: decision-record
+mvp_gate: "must"
+probes:
+  - name: decision-present
+    type: field-present
+    target: payload.decision
+  - name: context-present
+    type: field-present
+    target: payload.context
+  - name: negative-consequences-present
+    type: negative-present
+    target: payload.consequences.negative
