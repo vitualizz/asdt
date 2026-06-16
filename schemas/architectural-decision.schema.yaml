@@ -42,10 +42,27 @@ properties:
           type: string
 
   consequences:
-    type: array
-    description: Expected outcomes — both positive and negative — of this decision.
-    items:
-      type: string
+    type: object
+    description: >
+      Expected outcomes of this decision, separated by sign. The negative
+      array MUST be non-empty — every architectural decision has tradeoffs.
+    required:
+      - positive
+      - negative
+    properties:
+      positive:
+        type: array
+        items:
+          type: string
+      negative:
+        type: array
+        minItems: 1
+        items:
+          type: string
+      technical_debt:
+        type: array
+        items:
+          type: string
 
   summary:
     type: string
