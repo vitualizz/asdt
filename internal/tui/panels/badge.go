@@ -3,9 +3,9 @@ package panels
 import "github.com/charmbracelet/lipgloss"
 
 // Badge is a small value type rendering a bracketed, tinted label —
-// mirrors the StatusIndicator precedent (constructor + Render() string,
-// not a tea.Model). The caller supplies tone so Badge stays a pure
-// rendering primitive with no hardcoded semantic-state mapping.
+// a pure rendering primitive (constructor + Render() string, not a
+// tea.Model). The caller supplies tone so Badge stays free of any
+// hardcoded semantic-state mapping.
 type Badge struct {
 	label string
 	tone  lipgloss.AdaptiveColor

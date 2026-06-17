@@ -17,18 +17,13 @@ type InstallResult struct {
 	Err             error
 }
 
-// Install copies skill files from skillsFS into each assistant's SkillsDir,
-// applies provider.CustomizeSkill to each file's content, and returns one
-// result per assistant. A failure for one assistant does not abort the others.
-// lang is the language code chosen in the TUI; it is recorded in each
-// assistant's install metadata (an empty lang preserves the existing value).
-func Install(assistants []AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string) []InstallResult {
-	return InstallWithModels(assistants, provider, skillsFS, lang, nil)
-}
-
-// InstallWithModels is Install with per-step model selections from the TUI.
-// models maps "{specialist}/{step}" to the model value injected into that
-// step's `model:` field as each workflow.yaml is written. A nil/empty map
+// InstallWithModels copies skill files from skillsFS into each assistant's
+// SkillsDir, applies provider.CustomizeSkill to each file's content, and
+// returns one result per assistant. A failure for one assistant does not abort
+// the others. lang is the language code chosen in the TUI; it is recorded in
+// each assistant's install metadata (an empty lang preserves the existing
+// value). models maps "{specialist}/{step}" to the model value injected into
+// that step's `model:` field as each workflow.yaml is written; a nil/empty map
 // installs files unmodified.
 func InstallWithModels(assistants []AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string, models map[string]string) []InstallResult {
 	results := make([]InstallResult, len(assistants))

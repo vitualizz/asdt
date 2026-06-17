@@ -41,7 +41,7 @@ func TestInstallOne_SiblingLayout(t *testing.T) {
 	}
 	provider := installer.Providers[0]
 
-	results := installer.Install(assistants, provider, siblingFS, "")
+	results := installer.InstallWithModels(assistants, provider, siblingFS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("install failed: %v", results[0].Err)
 	}
@@ -91,7 +91,7 @@ func TestInstallOne_ProductionShapedSiblingLayout(t *testing.T) {
 	}
 	provider := installer.Providers[0]
 
-	results := installer.Install(assistants, provider, productionShapedFS, "")
+	results := installer.InstallWithModels(assistants, provider, productionShapedFS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("install failed: %v", results[0].Err)
 	}
@@ -148,7 +148,7 @@ func TestInstall_SuccessForTwoAssistants(t *testing.T) {
 	}
 	provider := installer.Providers[0] // engram
 
-	results := installer.Install(assistants, provider, testFS, "")
+	results := installer.InstallWithModels(assistants, provider, testFS, "", nil)
 
 	if len(results) != 2 {
 		t.Fatalf("expected 2 results, got %d", len(results))
@@ -181,7 +181,7 @@ func TestInstall_PartialFailure(t *testing.T) {
 	}
 	provider := installer.Providers[0]
 
-	results := installer.Install(assistants, provider, testFS, "")
+	results := installer.InstallWithModels(assistants, provider, testFS, "", nil)
 
 	if len(results) != 2 {
 		t.Fatalf("expected 2 results, got %d", len(results))
@@ -201,12 +201,12 @@ func TestInstall_Idempotent(t *testing.T) {
 	}
 	provider := installer.Providers[0]
 
-	results1 := installer.Install(assistants, provider, testFS, "")
+	results1 := installer.InstallWithModels(assistants, provider, testFS, "", nil)
 	if results1[0].Err != nil {
 		t.Fatalf("first install failed: %v", results1[0].Err)
 	}
 
-	results2 := installer.Install(assistants, provider, testFS, "")
+	results2 := installer.InstallWithModels(assistants, provider, testFS, "", nil)
 	if results2[0].Err != nil {
 		t.Errorf("second install (idempotent) failed: %v", results2[0].Err)
 	}
@@ -254,7 +254,7 @@ func TestInstall_AgentGenFailureIsolation(t *testing.T) {
 	}
 	provider := installer.Providers[0]
 
-	results := installer.Install(assistants, provider, agentEnabledFS, "")
+	results := installer.InstallWithModels(assistants, provider, agentEnabledFS, "", nil)
 
 	if results[0].Err == nil {
 		t.Error("results[0].Err should be non-nil when the agent root is unwritable")
@@ -288,7 +288,7 @@ func TestInstall_ReinstallPreservesPersonaAndSetsAgentTypes(t *testing.T) {
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: filepath.Join(dir, "skills")}
 	provider := installer.Providers[0]
 
-	results := installer.Install([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "")
+	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("first install failed: %v", results[0].Err)
 	}
@@ -308,7 +308,7 @@ func TestInstall_ReinstallPreservesPersonaAndSetsAgentTypes(t *testing.T) {
 		t.Fatalf("write meta: %v", err)
 	}
 
-	results = installer.Install([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "")
+	results = installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("reinstall failed: %v", results[0].Err)
 	}
@@ -340,7 +340,7 @@ func TestInstall_WritesLanguageToAllAssistantsMeta(t *testing.T) {
 	}
 	provider := installer.Providers[0]
 
-	results := installer.Install(assistants, provider, agentEnabledFS, "es")
+	results := installer.InstallWithModels(assistants, provider, agentEnabledFS, "es", nil)
 	for i, r := range results {
 		if r.Err != nil {
 			t.Fatalf("install failed for assistant %d: %v", i, r.Err)
@@ -365,12 +365,12 @@ func TestInstall_ReinstallWithEmptyLangPreservesLanguage(t *testing.T) {
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: filepath.Join(t.TempDir(), "skills")}
 	provider := installer.Providers[0]
 
-	results := installer.Install([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "es")
+	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "es", nil)
 	if results[0].Err != nil {
 		t.Fatalf("first install failed: %v", results[0].Err)
 	}
 
-	results = installer.Install([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "")
+	results = installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("reinstall failed: %v", results[0].Err)
 	}
@@ -426,13 +426,13 @@ func TestInstall_PrunesStaleFilesOnUpgrade(t *testing.T) {
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: root}
 	provider := installer.Providers[0]
 
-	results := installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV1FS, "")
+	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV1FS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("v1 install failed: %v", results[0].Err)
 	}
 	checkFile(t, filepath.Join(root, "sample", "old", "extra.md"))
 
-	results = installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "")
+	results = installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("v2 install failed: %v", results[0].Err)
 	}
@@ -472,7 +472,7 @@ func TestInstall_LegacyMetaFallbackPrune(t *testing.T) {
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: root}
 	provider := installer.Providers[0]
 
-	results := installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "")
+	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("install failed: %v", results[0].Err)
 	}
@@ -492,7 +492,7 @@ func TestInstall_LegacyMetaFallbackPrune(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	results = installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "")
+	results = installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("reinstall failed: %v", results[0].Err)
 	}
@@ -519,11 +519,11 @@ func TestInstall_SecondIdenticalInstallRemovesNothing(t *testing.T) {
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: root}
 	provider := installer.Providers[0]
 
-	results := installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "")
+	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("first install failed: %v", results[0].Err)
 	}
-	results = installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "")
+	results = installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("second install failed: %v", results[0].Err)
 	}
@@ -548,7 +548,7 @@ func TestInstall_PruneLeavesNonManagedSiblingsAlone(t *testing.T) {
 	}
 
 	for range 2 { // first install + reinstall, both must leave it alone
-		results := installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "")
+		results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "", nil)
 		if results[0].Err != nil {
 			t.Fatalf("install failed: %v", results[0].Err)
 		}
@@ -566,7 +566,7 @@ func TestInstall_MetaPreservedFieldsSurvivePruneManifest(t *testing.T) {
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: root}
 	provider := installer.Providers[0]
 
-	results := installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "es")
+	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "es", nil)
 	if results[0].Err != nil {
 		t.Fatalf("first install failed: %v", results[0].Err)
 	}
@@ -581,7 +581,7 @@ func TestInstall_MetaPreservedFieldsSurvivePruneManifest(t *testing.T) {
 		t.Fatalf("write meta: %v", err)
 	}
 
-	results = installer.Install([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "")
+	results = installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, pruneV2FS, "", nil)
 	if results[0].Err != nil {
 		t.Fatalf("reinstall failed: %v", results[0].Err)
 	}

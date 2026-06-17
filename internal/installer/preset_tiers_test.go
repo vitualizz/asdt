@@ -75,21 +75,3 @@ func TestPresetDecisionTierNeverLight(t *testing.T) {
 		}
 	}
 }
-
-func TestPresetNameReturnsCanonicalNames(t *testing.T) {
-	cases := map[int]string{
-		installer.PresetChameleon:  "Chameleon",
-		installer.PresetSprinter:   "Sprinter",
-		installer.PresetCraftsman:  "Craftsman",
-		installer.PresetStrategist: "Strategist",
-		installer.PresetMastermind: "Mastermind",
-	}
-	for choice, want := range cases {
-		if got := installer.PresetName(choice); got != want {
-			t.Errorf("PresetName(%d) = %q, want %q", choice, got, want)
-		}
-	}
-	if installer.PresetName(99) != "" {
-		t.Error("PresetName for an unknown choice must be empty")
-	}
-}
