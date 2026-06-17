@@ -84,19 +84,3 @@ var presetModels = map[int]map[StepTier]string{
 func PresetModels(choice int) map[StepTier]string {
 	return presetModels[choice]
 }
-
-// presetNames holds the canonical English preset names, used for tests and
-// logging. User-facing labels come from the i18n catalog instead.
-var presetNames = map[int]string{
-	PresetChameleon:  "Chameleon",
-	PresetSprinter:   "Sprinter",
-	PresetCraftsman:  "Craftsman",
-	PresetStrategist: "Strategist",
-	PresetMastermind: "Mastermind",
-}
-
-// PresetName returns the canonical English name for a preset choice, or "" for
-// an unknown choice.
-func PresetName(choice int) string {
-	return presetNames[choice]
-}

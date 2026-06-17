@@ -7,7 +7,7 @@ import (
 
 // NewSpinner constructs an indeterminate spinner.Model using the Dot frame
 // set, tinted with ColorSecondary — the cyan/sky pastel reserved for
-// in-progress/running indicators (mirrors StatusColor's StatusRunning case).
+// in-progress/running indicators.
 //
 // Exported (not package-private newSpinner) because internal/setup also needs
 // an indeterminate spinner for StateInstalling and must not duplicate the

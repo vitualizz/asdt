@@ -93,8 +93,8 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 		}
 	}
 
-	if analystCount != 31 {
-		t.Errorf("analyst subagent steps = %d, want 31", analystCount)
+	if analystCount != 32 {
+		t.Errorf("analyst subagent steps = %d, want 32", analystCount)
 	}
 	if builderCount != 2 {
 		t.Errorf("builder subagent steps = %d, want 2 (got %v)", builderCount, builderSteps)

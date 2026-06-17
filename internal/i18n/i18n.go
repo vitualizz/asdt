@@ -51,10 +51,6 @@ func ForCode(code string) Catalog {
 	return English
 }
 
-// For returns the Catalog for the given language tag, falling back to English.
-// Useful in tests and CLI flag handling to bypass env-var detection.
-func For(tag language.Tag) Catalog { return catalogFor(tag) }
-
 func catalogFor(tag language.Tag) Catalog {
 	base, _ := tag.Base()
 	if c, ok := catalogs[base.String()]; ok {

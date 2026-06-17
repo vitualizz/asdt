@@ -17,12 +17,3 @@ var skillFS embed.FS
 func FS() fs.FS {
 	return skillFS
 }
-
-// PromptSubFS returns an fs.FS backed by the full skill FS.
-// Kept for backward compatibility — callers that used the old prompts/ subtree
-// should migrate to the specialist skill layout.
-//
-// Deprecated: use FS() directly.
-func PromptSubFS() fs.FS {
-	return skillFS
-}
