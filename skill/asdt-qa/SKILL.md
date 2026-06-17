@@ -17,7 +17,7 @@ trigger_phrases:
   - test coverage
 metadata:
   author: "Lee Palacios (vitualizz)"
-  version: "1.0"
+  version: "1.1"
 ---
 
 > **FIRST ACTION — self-load the header**: Read `../asdt-shared/skills/specialist-header.md`
@@ -44,8 +44,8 @@ or UX specs.
 | Level | Steps |
 |-------|-------|
 | **trivial** | Not eligible — falls back to `simple`; no dependency-complete step set exists below `simple` |
-| **simple** | `load-requirements → ac-validation → test-case-generation → quality-report` |
-| **moderate** | `load-requirements → ac-validation → edge-case-analysis → test-strategy → test-case-generation → quality-report` |
+| **simple** | `load-requirements → ac-validation → test-case-generation → quality-report → review` |
+| **moderate** | `load-requirements → ac-validation → edge-case-analysis → test-strategy → test-case-generation → quality-report → review` |
 | **complex** | Full workflow (same steps as moderate) |
 
 **Trivial eligible**: No — falls back to `simple`.
@@ -62,11 +62,12 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | edge-case-analysis | steps/edge-case-analysis.md | subagent | `qa/ac-list` | `qa/edge-cases` |
 | test-strategy | steps/test-strategy.md | subagent | `qa/edge-cases` | `qa/test-strategy` |
 | test-case-generation | steps/test-case-generation.md | subagent | `qa/test-strategy`, `qa/edge-cases` | `qa/test-cases` |
-| quality-report | steps/quality-report.md | subagent | `qa/test-cases`, `qa/ac-gaps` | `test-plan` |
+| quality-report | steps/quality-report.md | subagent | `qa/test-cases`, `qa/ac-gaps` | `qa/test-plan` |
+| review | steps/review.md | subagent | `qa/test-plan`, `qa/ac-gaps` | `qa/qa-review` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 
 ## Final Output
-`test-plan` — consumed by Developer specialist and used as QA sign-off artifact.
+`qa/qa-review` — the go/no-go shipping verdict. When `review` runs, its `summary` feeds `decision-preservation`. The intermediate `qa/test-plan` (from `quality-report`) remains available as the full test plan artifact.
 
 ## Artifact Persistence
 
@@ -86,7 +87,7 @@ For each artifact, call `mem_save` with:
 > the full rationale; artifacts saved under the old coarse key remain retrievable only
 > via title-based search.
 
-The `quality-report` step (final step) MUST include a `summary` field in its output payload (≤ 150 tokens). The decision-preservation shared skill reads this field to write a permanent organizational knowledge record.
+The `review` step (final generative step) MUST include a `summary` field in its output payload (≤ 150 tokens). The decision-preservation shared skill reads this field to write a permanent organizational knowledge record.
 
 ## Invariants
 - Every acceptance criterion MUST have at least one test case

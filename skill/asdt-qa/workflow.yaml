@@ -77,6 +77,19 @@ steps:
     reference_skills:
       - ../asdt-shared/skills/report.md
 
+  # ADR-018 Q1/A2: go/no-go shipping verdict before knowledge is preserved
+  - name: review
+    skill: steps/review.md
+    description: Evaluate the test-plan holistically and produce a final go/no-go shipping verdict
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs:
+      - "{project}/{change}/qa/test-plan"
+      - "{project}/{change}/qa/ac-gaps"
+    output_topic_key: "{project}/{change}/qa/qa-review"
+    reference_skills: []
+
   - name: decision-preservation
     skill: ../asdt-shared/skills/decision-preservation.md
     description: Save a permanent organizational knowledge record of QA decisions made during this run
