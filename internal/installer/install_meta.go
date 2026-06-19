@@ -15,7 +15,7 @@ type InstallMeta struct {
 	InstalledAt time.Time `json:"installed_at,omitempty"`
 	Persona     string    `json:"persona,omitempty"`     // PersonaPreset.Name; empty when skipped
 	Emojis      string    `json:"emojis,omitempty"`      // "yes"/"no" emoji preference; empty when never chosen
-	Language    string    `json:"language,omitempty"`    // base language code ("en"/"es"); empty when never chosen
+	Language    string    `json:"language,omitempty"`    // full BCP-47 locale (en/es-419/es-ES); base derived for i18n; empty when never chosen
 	AgentTypes  []string  `json:"agent_types,omitempty"` // installed executor agent type IDs (AgentTypeNames)
 	Files       []string  `json:"files,omitempty"`       // SkillsDir-relative paths written by the last install; nil on legacy meta
 }

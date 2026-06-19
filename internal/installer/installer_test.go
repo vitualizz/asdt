@@ -340,7 +340,7 @@ func TestInstall_WritesLanguageToAllAssistantsMeta(t *testing.T) {
 	}
 	provider := installer.Providers[0]
 
-	results := installer.InstallWithModels(assistants, provider, agentEnabledFS, "es", nil)
+	results := installer.InstallWithModels(assistants, provider, agentEnabledFS, "es-ES", nil)
 	for i, r := range results {
 		if r.Err != nil {
 			t.Fatalf("install failed for assistant %d: %v", i, r.Err)
@@ -352,20 +352,20 @@ func TestInstall_WritesLanguageToAllAssistantsMeta(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read meta for %s: %v", a.ID, err)
 		}
-		if meta.Language != "es" {
-			t.Errorf("meta.Language for %s = %q, want %q", a.ID, meta.Language, "es")
+		if meta.Language != "es-ES" {
+			t.Errorf("meta.Language for %s = %q, want %q", a.ID, meta.Language, "es-ES")
 		}
 	}
 }
 
-// TestInstall_ReinstallWithEmptyLangPreservesLanguage verifies the
-// wipe-prevention guard: a reinstall that passes lang="" must keep the
-// previously recorded language (mirroring the Persona handling).
-func TestInstall_ReinstallWithEmptyLangPreservesLanguage(t *testing.T) {
+// TestInstall_ReinstallPreservesLocale verifies the wipe-prevention guard
+// preserves the FULL BCP-47 locale: a reinstall that passes lang="" must keep
+// the previously recorded full code (es-ES), not a truncated base.
+func TestInstall_ReinstallPreservesLocale(t *testing.T) {
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: filepath.Join(t.TempDir(), "skills")}
 	provider := installer.Providers[0]
 
-	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "es", nil)
+	results := installer.InstallWithModels([]installer.AssistantDescriptor{assistant}, provider, agentEnabledFS, "es-ES", nil)
 	if results[0].Err != nil {
 		t.Fatalf("first install failed: %v", results[0].Err)
 	}
@@ -379,8 +379,8 @@ func TestInstall_ReinstallWithEmptyLangPreservesLanguage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read meta after reinstall: %v", err)
 	}
-	if meta.Language != "es" {
-		t.Errorf("meta.Language = %q after reinstall with lang=\"\", want %q (must be preserved)", meta.Language, "es")
+	if meta.Language != "es-ES" {
+		t.Errorf("meta.Language = %q after reinstall with lang=\"\", want %q (full locale must be preserved)", meta.Language, "es-ES")
 	}
 }
 

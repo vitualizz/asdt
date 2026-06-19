@@ -243,6 +243,18 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 		}
 	}
 
+	// The root SKILL.md (and only the root — per-specialist asdt-*/SKILL.md
+	// carry no markers) has its §9.2 inline-steps region regenerated from the
+	// specialist workflow.yaml files. Fail loud if the markers are missing: the
+	// root file MUST carry them, so an absent-marker error is a real defect.
+	if srcPath == "SKILL.md" {
+		generated, genErr := GenerateInlineSteps(skillsFS, data)
+		if genErr != nil {
+			return fmt.Errorf("generate inline steps in %s: %w", srcPath, genErr)
+		}
+		data = generated
+	}
+
 	content := provider.CustomizeSkill(string(data))
 
 	if mkErr := os.MkdirAll(filepath.Dir(target), 0o755); mkErr != nil {

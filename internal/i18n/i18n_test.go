@@ -25,18 +25,18 @@ func TestActive_SpanishFromLANG(t *testing.T) {
 	t.Setenv("ASDT_LANG", "")
 
 	got := i18n.Active()
-	if got.Installer.BtnContinue != i18n.Spanish.Installer.BtnContinue {
-		t.Errorf("LANG=es_AR.UTF-8: expected Spanish, got BtnContinue=%q", got.Installer.BtnContinue)
+	if got.Installer.BodyEmojiPrefSubtitle != i18n.SpanishNeutral.Installer.BodyEmojiPrefSubtitle {
+		t.Errorf("LANG=es_AR.UTF-8: expected SpanishNeutral (es-419), got BodyEmojiPrefSubtitle=%q", got.Installer.BodyEmojiPrefSubtitle)
 	}
 }
 
-func TestActive_SpanishFromLCAll(t *testing.T) {
+func TestActive_SpanishSpainFromLCAll(t *testing.T) {
 	t.Setenv("LC_ALL", "es_ES.UTF-8")
 	t.Setenv("ASDT_LANG", "")
 
 	got := i18n.Active()
-	if got.Installer.BtnContinue != i18n.Spanish.Installer.BtnContinue {
-		t.Errorf("LC_ALL=es_ES: expected Spanish, got BtnContinue=%q", got.Installer.BtnContinue)
+	if got.Installer.TitlePreflightCheck != i18n.SpanishSpain.Installer.TitlePreflightCheck {
+		t.Errorf("LC_ALL=es_ES: expected SpanishSpain (es-ES), got TitlePreflightCheck=%q", got.Installer.TitlePreflightCheck)
 	}
 }
 
@@ -46,8 +46,8 @@ func TestActive_ASDTLANGOverridesSystem(t *testing.T) {
 	t.Setenv("ASDT_LANG", "es")
 
 	got := i18n.Active()
-	if got.Installer.BtnContinue != i18n.Spanish.Installer.BtnContinue {
-		t.Errorf("ASDT_LANG=es: expected Spanish, got BtnContinue=%q", got.Installer.BtnContinue)
+	if got.Installer.BodyEmojiPrefSubtitle != i18n.SpanishNeutral.Installer.BodyEmojiPrefSubtitle {
+		t.Errorf("ASDT_LANG=es: expected SpanishNeutral (es-419), got BodyEmojiPrefSubtitle=%q", got.Installer.BodyEmojiPrefSubtitle)
 	}
 }
 
@@ -62,13 +62,18 @@ func TestActive_FallsBackToEnglishOnUnknownLocale(t *testing.T) {
 	}
 }
 
-func TestActiveCode_ResolvesBaseCode(t *testing.T) {
+func TestActiveCode_ResolvesFullCode(t *testing.T) {
 	t.Setenv("LC_ALL", "")
 	t.Setenv("LANG", "es_AR.UTF-8")
 	t.Setenv("LANGUAGE", "")
 	t.Setenv("ASDT_LANG", "")
-	if got := i18n.ActiveCode(); got != "es" {
-		t.Errorf("ActiveCode() with LANG=es_AR = %q, want %q", got, "es")
+	if got := i18n.ActiveCode(); got != "es-419" {
+		t.Errorf("ActiveCode() with LANG=es_AR = %q, want %q", got, "es-419")
+	}
+
+	t.Setenv("LANG", "es_ES.UTF-8")
+	if got := i18n.ActiveCode(); got != "es-ES" {
+		t.Errorf("ActiveCode() with LANG=es_ES = %q, want %q", got, "es-ES")
 	}
 
 	t.Setenv("LANG", "")
@@ -78,8 +83,18 @@ func TestActiveCode_ResolvesBaseCode(t *testing.T) {
 }
 
 func TestForCode_KnownAndUnknown(t *testing.T) {
-	if got := i18n.ForCode("es"); got.Installer.BtnContinue != i18n.Spanish.Installer.BtnContinue {
-		t.Errorf("ForCode(\"es\"): expected Spanish, got BtnContinue=%q", got.Installer.BtnContinue)
+	// Legacy bare "es" and generic Spanish funnel to es-419 (SpanishNeutral).
+	if got := i18n.ForCode("es"); got.Installer.BodyEmojiPrefSubtitle != i18n.SpanishNeutral.Installer.BodyEmojiPrefSubtitle {
+		t.Errorf("ForCode(\"es\"): expected SpanishNeutral (es-419), got BodyEmojiPrefSubtitle=%q", got.Installer.BodyEmojiPrefSubtitle)
+	}
+	if got := i18n.ForCode("es-419"); got.Installer.BodyEmojiPrefSubtitle != i18n.SpanishNeutral.Installer.BodyEmojiPrefSubtitle {
+		t.Errorf("ForCode(\"es-419\"): expected SpanishNeutral, got BodyEmojiPrefSubtitle=%q", got.Installer.BodyEmojiPrefSubtitle)
+	}
+	if got := i18n.ForCode("es-ES"); got.Installer.TitlePreflightCheck != i18n.SpanishSpain.Installer.TitlePreflightCheck {
+		t.Errorf("ForCode(\"es-ES\"): expected SpanishSpain, got TitlePreflightCheck=%q", got.Installer.TitlePreflightCheck)
+	}
+	if got := i18n.ForCode("es-MX"); got.Installer.BodyEmojiPrefSubtitle != i18n.SpanishNeutral.Installer.BodyEmojiPrefSubtitle {
+		t.Errorf("ForCode(\"es-MX\"): expected SpanishNeutral (es-419), got BodyEmojiPrefSubtitle=%q", got.Installer.BodyEmojiPrefSubtitle)
 	}
 	if got := i18n.ForCode("xx"); got.Installer.BtnContinue != i18n.English.Installer.BtnContinue {
 		t.Errorf("ForCode(\"xx\"): expected English fallback, got BtnContinue=%q", got.Installer.BtnContinue)
@@ -90,8 +105,12 @@ func TestEnglishCatalogComplete(t *testing.T) {
 	walkCatalog(t, "English", i18n.English)
 }
 
-func TestSpanishCatalogComplete(t *testing.T) {
-	walkCatalog(t, "Spanish", i18n.Spanish)
+func TestES419CatalogComplete(t *testing.T) {
+	walkCatalog(t, "SpanishNeutral", i18n.SpanishNeutral)
+}
+
+func TestESESCatalogComplete(t *testing.T) {
+	walkCatalog(t, "SpanishSpain", i18n.SpanishSpain)
 }
 
 // walkCatalog walks every top-level struct field of Catalog (Installer,
@@ -123,17 +142,17 @@ func TestPersonaDescription_KnownIDs(t *testing.T) {
 		if got := i18n.English.PersonaDescription(id); got == "" {
 			t.Errorf("English.PersonaDescription(%q) = \"\", want non-empty", id)
 		}
-		if got := i18n.Spanish.PersonaDescription(id); got == "" {
-			t.Errorf("Spanish.PersonaDescription(%q) = \"\", want non-empty", id)
+		if got := i18n.SpanishNeutral.PersonaDescription(id); got == "" {
+			t.Errorf("SpanishNeutral.PersonaDescription(%q) = \"\", want non-empty", id)
 		}
 	}
-	if en, es := i18n.English.PersonaDescription("sky"), i18n.Spanish.PersonaDescription("sky"); en == es {
+	if en, es := i18n.English.PersonaDescription("sky"), i18n.SpanishNeutral.PersonaDescription("sky"); en == es {
 		t.Errorf("Spanish persona description for sky should differ from English, both = %q", en)
 	}
 }
 
 func TestPersonaDescription_EmptyFieldFallsBackToEnglish(t *testing.T) {
-	incomplete := i18n.Spanish
+	incomplete := i18n.SpanishNeutral
 	incomplete.Personas.Sky = "" // simulate a catalog missing one persona description
 	got := incomplete.PersonaDescription("sky")
 	want := i18n.English.Personas.Sky

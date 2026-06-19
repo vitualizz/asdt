@@ -1,0 +1,146 @@
+---
+// Inline SVG: 7 plain-language ASDT terminology cells (deck slide 03).
+// No props, no JS. Every term + definition is a real <text> node for
+// screen-reader + search indexing. Accent groups: output family (teal),
+// role/structure family (blue), human-signal (yellow).
+const cells = [
+  {
+    icon: '▣',
+    term: 'Artifact',
+    accent: '#7AA89F',
+    lines: ['A written output', 'a step leaves behind —', 'the thing that survives.'],
+  },
+  {
+    icon: '✦',
+    term: 'Brief',
+    accent: '#7AA89F',
+    lines: ['A short, structured', 'document handed', 'from one step to the next.'],
+  },
+  {
+    icon: '→',
+    term: 'Step',
+    accent: '#7AA89F',
+    lines: ['One unit of work.', 'Reads one artifact,', 'produces one artifact.'],
+  },
+  {
+    icon: '◎',
+    term: 'Specialist',
+    accent: '#7FB4CA',
+    lines: ['One role, one lens —', 'Researcher, Architect,', 'Developer, and more.'],
+  },
+  {
+    icon: '⟳',
+    term: 'Orchestrator',
+    accent: '#7FB4CA',
+    lines: ['Runs a specialist’s', 'steps in order.', 'Coordinates, never codes.'],
+  },
+  {
+    icon: '⌥',
+    term: 'Router',
+    accent: '#7FB4CA',
+    lines: ['Reads your request', 'and recommends', 'which specialist fits.'],
+  },
+  {
+    icon: '⊘',
+    term: 'Gate',
+    accent: '#E0C15A',
+    lines: ['A pause for a human', 'to review and approve', 'before work continues.'],
+  },
+]
+
+const W = 200
+const H = 100
+// Row 1: 4 cells. Row 2: 3 cells, centered.
+const positions = [
+  { x: 10, y: 20 },
+  { x: 230, y: 20 },
+  { x: 450, y: 20 },
+  { x: 670, y: 20 },
+  { x: 170, y: 140 },
+  { x: 390, y: 140 },
+  { x: 610, y: 140 },
+]
+---
+<svg
+  class="term-diagram"
+  viewBox="0 0 980 280"
+  role="img"
+  aria-labelledby="term-title term-desc"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="term-title">Key ASDT terminology: seven concepts defined</title>
+  <desc id="term-desc"
+    >Icon grid with plain-language definitions for Artifact, Brief, Step,
+    Specialist, Orchestrator, Router, and Gate.</desc
+  >
+  <defs>
+    <filter id="term-card-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+  {
+    cells.map((cell, i) => {
+      const p = positions[i]
+      const cx = p.x + W / 2
+      return (
+        <>
+          <rect
+            x={p.x}
+            y={p.y}
+            width={W}
+            height={H}
+            rx="10"
+            fill="#232A36"
+            stroke="#313342"
+            stroke-width="1"
+            filter="url(#term-card-shadow)"
+          />
+          <text
+            x={cx}
+            y={p.y + 28}
+            text-anchor="middle"
+            fill={cell.accent}
+            font-size="18"
+          >
+            {cell.icon}
+          </text>
+          <text
+            x={cx}
+            y={p.y + 52}
+            text-anchor="middle"
+            fill={cell.accent}
+            font-family="var(--dk-font-display, sans-serif)"
+            font-size="14"
+            font-weight="600"
+          >
+            {cell.term}
+          </text>
+          <text
+            x={cx}
+            y={p.y + 68}
+            text-anchor="middle"
+            fill="#A1AABB"
+            font-family="var(--dk-font-body, serif)"
+            font-size="10"
+          >
+            {cell.lines.map((line, li) => (
+              <tspan x={cx} dy={li === 0 ? 0 : 13}>
+                {line}
+              </tspan>
+            ))}
+          </text>
+        </>
+      )
+    })
+  }
+</svg>
+
+<style>
+  .term-diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 980px;
+    margin: 0.5rem auto;
+  }
+</style>

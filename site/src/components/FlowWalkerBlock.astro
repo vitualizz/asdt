@@ -17,20 +17,55 @@ const t = useTranslations(lang)
     client:visible
     flow={flow}
     lang={lang}
-    labelNext={t.docs.flowNext}
-    labelPrev={t.docs.flowPrev}
     labelStep={t.docs.flowStep}
     labelOf={t.docs.flowOf}
   />
+
+  <noscript>
+    <ol class="fwb-static">
+      {flow.steps.map((s) => (
+        <li class="fwb-static-step">
+          <code class="fwb-static-cmd">{s.command}</code>
+          <p>{lang === 'es' ? s.descriptionEs : s.descriptionEn}</p>
+        </li>
+      ))}
+    </ol>
+  </noscript>
+
+  <div class="fwb-print-all" aria-hidden="true">
+    <ol class="fwb-static">
+      {flow.steps.map((s) => (
+        <li class="fwb-static-step">
+          <code class="fwb-static-cmd">{s.command}</code>
+          <p>{lang === 'es' ? s.descriptionEs : s.descriptionEn}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
 </div>
 
 <style>
+.fwb-wrap {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* alias site-level tokens (used by .fw rules) into the deck-scoped --dk-* set */
+  --border-soft: var(--dk-divider);
+  --font-mono: var(--dk-font-mono);
+  --color-text: var(--dk-text);
+  --sc: var(--tone);
+  --faint: var(--dk-muted-alt);
+}
+
 .fwb-wrap :global(.fw) {
-  margin: 32px 0;
-  border: 1px solid var(--border-soft);
-  border-radius: 12px;
+  margin: 0;
+  border: none;
+  border-radius: 8px;
   overflow: hidden;
   background: oklch(from var(--sc) l c h / 0.04);
+  flex: 1;
+  min-height: 0;
 }
 
 .fwb-wrap :global(.fw-header) {
@@ -48,33 +83,6 @@ const t = useTranslations(lang)
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
-}
-
-.fwb-wrap :global(.fw-nav) {
-  display: flex;
-  gap: 6px;
-}
-
-.fwb-wrap :global(.fw-btn) {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  border: 1px solid var(--border-soft);
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.fwb-wrap :global(.fw-btn:hover:not(:disabled)) {
-  background: oklch(from var(--sc) l c h / 0.10);
-  border-color: oklch(from var(--sc) l c h / 0.40);
-}
-
-.fwb-wrap :global(.fw-btn:disabled) {
-  opacity: 0.30;
-  cursor: default;
 }
 
 .fwb-wrap :global(.fw-command) {
@@ -109,7 +117,6 @@ const t = useTranslations(lang)
   border-radius: 50%;
   border: none;
   background: oklch(from var(--sc) l c h / 0.20);
-  cursor: pointer;
   padding: 0;
   transition: background 0.15s, transform 0.15s;
 }
@@ -128,9 +135,41 @@ html[data-theme='light'] .fwb-wrap :global(.fw-command) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fwb-wrap :global(.fw-btn),
   .fwb-wrap :global(.fw-dot) {
     transition: none;
+  }
+}
+
+.fwb-print-all {
+  display: none;
+}
+
+.fwb-static {
+  list-style: decimal;
+  padding-left: 1.4rem;
+  margin: 0;
+}
+
+.fwb-static-step {
+  margin-bottom: 0.75rem;
+  font-family: var(--dk-font-body, serif);
+  color: var(--dk-text, #F3F6F9);
+}
+
+.fwb-static-cmd {
+  display: block;
+  font-family: var(--dk-font-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--sc, var(--dk-teal, #7AA89F));
+  margin-bottom: 0.25rem;
+}
+
+@media print {
+  .fwb-wrap :global(.fw) {
+    display: none !important;
+  }
+  .fwb-print-all {
+    display: block !important;
   }
 }
 </style>

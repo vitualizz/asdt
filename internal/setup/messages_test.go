@@ -31,8 +31,7 @@ func TestInstallCmd_ReturnsNonNilCmd(t *testing.T) {
 }
 
 func TestAgentInstallCmd_ReturnsNonNilCmd(t *testing.T) {
-	var skillsFS fs.FS = fstest.MapFS{}
-	cmd := setup.AgentInstallCmd(installer.Descriptors, installer.PersonaPresets[0], true, map[string]installer.AgentWriteMode{}, skillsFS)
+	cmd := setup.AgentInstallCmd(installer.Descriptors, installer.PersonaPresets[0], true, "en", map[string]installer.AgentWriteMode{})
 	if cmd == nil {
 		t.Error("AgentInstallCmd returned nil tea.Cmd")
 	}

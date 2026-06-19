@@ -8,7 +8,8 @@ import (
 const agentConfigPlaceholder = "detected at project init"
 
 // emojiPrefYes / emojiPrefNo are the rendered {{emoji_preference}} bullets.
-// AGENTS.md output is always English regardless of the TUI locale.
+// The template prose is always English; the injected {{language_directive}}
+// sets the spoken-language variant for the assistant's replies.
 const (
 	emojiPrefYes = "- **Emojis**: Use emojis naturally to add warmth and expressiveness — they are part of this persona's voice."
 	emojiPrefNo  = "- **Emojis**: Never use emojis — keep all output plain text."
@@ -25,17 +26,18 @@ func AgentConfigAdapterFor(id AssistantID) (AgentConfigAdapterDescriptor, bool) 
 }
 
 // renderAgentConfig reads the AGENTS.md template and persona file from the
-// embedded skillsFS and substitutes all placeholders with the preset values.
-// Only {{agent_name}}, {{agent_description}}, {{persona_block}}, and
-// {{emoji_preference}} receive real values; {{stack}} and
-// {{architectural_style}} receive the sentinel string.
-func renderAgentConfig(skillsFS fs.FS, preset PersonaPreset, useEmojis bool) (string, error) {
-	tmpl, err := fs.ReadFile(skillsFS, "asdt-init/agents-template.md")
+// package-private assetsFS (internal/installer/assets/) and substitutes all
+// placeholders with the preset values. Only {{agent_name}},
+// {{agent_description}}, {{persona_block}}, and {{emoji_preference}} receive
+// real values; {{stack}} and {{architectural_style}} receive the sentinel
+// string.
+func renderAgentConfig(preset PersonaPreset, useEmojis bool, localeCode string) (string, error) {
+	tmpl, err := fs.ReadFile(assetsFS, "assets/agents-template.md")
 	if err != nil {
 		return "", err
 	}
 
-	persona, err := fs.ReadFile(skillsFS, preset.File)
+	persona, err := fs.ReadFile(assetsFS, preset.File)
 	if err != nil {
 		return "", err
 	}
@@ -49,10 +51,22 @@ func renderAgentConfig(skillsFS fs.FS, preset PersonaPreset, useEmojis bool) (st
 		emojiPref = emojiPrefYes
 	}
 	out = strings.ReplaceAll(out, "{{emoji_preference}}", emojiPref)
+	out = strings.ReplaceAll(out, "{{language_directive}}", LocaleByCode(localeCode).Directive)
 	out = strings.ReplaceAll(out, "{{stack}}", agentConfigPlaceholder)
 	out = strings.ReplaceAll(out, "{{architectural_style}}", agentConfigPlaceholder)
 
 	return out, nil
+}
+
+// allAssistantsError builds one AgentConfigResult per assistant, each carrying
+// the same render error. Used when renderAgentConfig fails before any write so
+// the failure is reported uniformly across all selected assistants.
+func allAssistantsError(assistants []AssistantDescriptor, err error) []AgentConfigResult {
+	results := make([]AgentConfigResult, len(assistants))
+	for i, a := range assistants {
+		results[i] = AgentConfigResult{AssistantID: a.ID, Err: err}
+	}
+	return results
 }
 
 // InstallAgentConfig renders the AGENTS.md template for the given preset and
@@ -60,14 +74,10 @@ func renderAgentConfig(skillsFS fs.FS, preset PersonaPreset, useEmojis bool) (st
 // modes maps each AssistantID to its AgentWriteMode; assistants absent from
 // the map default to AgentModeOverwrite (clean write, no prior conflict).
 // One result per assistant; per-assistant failure does not abort the others.
-func InstallAgentConfig(assistants []AssistantDescriptor, preset PersonaPreset, useEmojis bool, modes map[string]AgentWriteMode, skillsFS fs.FS) []AgentConfigResult {
-	rendered, err := renderAgentConfig(skillsFS, preset, useEmojis)
+func InstallAgentConfig(assistants []AssistantDescriptor, preset PersonaPreset, useEmojis bool, localeCode string, modes map[string]AgentWriteMode) []AgentConfigResult {
+	rendered, err := renderAgentConfig(preset, useEmojis, localeCode)
 	if err != nil {
-		results := make([]AgentConfigResult, len(assistants))
-		for i, a := range assistants {
-			results[i] = AgentConfigResult{AssistantID: a.ID, Err: err}
-		}
-		return results
+		return allAssistantsError(assistants, err)
 	}
 
 	results := make([]AgentConfigResult, len(assistants))

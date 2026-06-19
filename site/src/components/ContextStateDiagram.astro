@@ -1,0 +1,59 @@
+---
+// Inline SVG: empty context after a reset vs. durable artifacts that survive (deck slide 06).
+// Mirrors LayerModelDiagram.astro grammar. No JS. Bilingual via lang prop. The bottom
+// node carries a cat easter-egg <title> tooltip.
+interface Props {
+  lang: 'en' | 'es'
+}
+const { lang } = Astro.props
+const isEs = lang === 'es'
+---
+<svg
+  class="context-state-diagram"
+  viewBox="0 0 520 340"
+  role="img"
+  aria-labelledby="cs-title cs-desc"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="cs-title"
+    >{isEs ? 'Contexto vacío versus artefacto duradero' : 'Empty context versus durable artifact'}</title
+  >
+  <desc id="cs-desc"
+    >{isEs
+      ? 'Un contexto vacío tras un reset fluye, a través de un artefacto escrito, hacia documentos duraderos que sobreviven a cada reset.'
+      : 'An empty context after a reset flows, through a written artifact, into durable artifacts that survive every reset.'}</desc
+  >
+
+  <!-- top node: empty context -->
+  <rect x="110" y="40" width="300" height="80" rx="10" fill="#232A36" stroke="#A1AABB" stroke-width="1.5" />
+  <text x="260" y="75" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">{isEs ? '💨 contexto vacío tras un reset' : '💨 empty context after a reset'}</text>
+
+  <!-- connector -->
+  <line x1="260" y1="120" x2="260" y2="220" stroke="#313342" stroke-width="1.5" />
+  <text x="260" y="178" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-mono, monospace)" font-size="11">{isEs ? 'artefacto escrito' : 'written artifact'}</text>
+
+  <!-- bottom node: durable artifacts (cat easter egg in <title>) -->
+  <g>
+    <title>{isEs
+      ? 'los gatos siempre caen de pie — los artefactos siempre sobreviven el reset'
+      : 'cats always land on their feet — artifacts always survive the reset'}</title>
+    <rect x="110" y="220" width="300" height="80" rx="10" fill="#232A36" stroke="#7FB4CA" stroke-width="1.5" />
+    <text x="260" y="255" text-anchor="middle" fill="#7FB4CA" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">{isEs ? '🗂 documentos duraderos que sobreviven' : '🗂 durable artifacts that survive'}</text>
+  </g>
+
+  <!-- anchor phrase -->
+  <text x="260" y="320" text-anchor="middle" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">
+    <tspan fill="#7FB4CA">{isEs ? 'Los artefactos sobreviven.' : 'Artifacts survive.'}</tspan>
+    <tspan fill="#A1AABB">{isEs ? ' Las conversaciones no.' : " Conversations don't."}</tspan>
+  </text>
+</svg>
+
+<style>
+  .context-state-diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 520px;
+    margin: 0.5rem auto;
+  }
+</style>

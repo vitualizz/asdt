@@ -1,0 +1,65 @@
+---
+// Inline SVG: the human gate between PM and Architect (deck slide 10).
+// Mirrors LayerModelDiagram.astro grammar. No JS. Bilingual via lang prop. The gate
+// bar is a narrow vertical rect with a butter-yellow glow.
+interface Props {
+  lang: 'en' | 'es'
+}
+const { lang } = Astro.props
+const isEs = lang === 'es'
+---
+<svg
+  class="gate-diagram-svg"
+  viewBox="0 0 520 380"
+  role="img"
+  aria-labelledby="gd-title gd-desc"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="gd-title"
+    >{isEs ? 'Gate humano entre PM y Architect' : 'Human gate between PM and Architect'}</title
+  >
+  <desc id="gd-desc"
+    >{isEs
+      ? 'El PM entrega opciones; un gate humano se interpone antes de que el Architect avance.'
+      : 'The PM delivers options; a human gate stands between the PM and the Architect before work continues.'}</desc
+  >
+  <defs>
+    <filter id="gate-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#E0C15A" flood-opacity="0.20" />
+    </filter>
+  </defs>
+
+  <!-- PM node -->
+  <rect x="160" y="30" width="200" height="60" rx="10" fill="#232A36" stroke="#7FB4CA" stroke-width="1.5" />
+  <text x="260" y="67" text-anchor="middle" fill="#7FB4CA" font-family="var(--dk-font-display, sans-serif)" font-size="18" font-weight="700">PM</text>
+
+  <!-- connector 1 -->
+  <line x1="260" y1="90" x2="260" y2="160" stroke="#313342" stroke-width="1.5" />
+
+  <!-- gate bar -->
+  <rect x="252" y="160" width="16" height="60" rx="4" fill="#232A36" stroke="#E0C15A" stroke-width="1.5" filter="url(#gate-glow)" />
+  <text x="282" y="196" text-anchor="start" fill="#E0C15A" font-family="var(--dk-font-mono, monospace)" font-size="12">{isEs ? '🔑 gate humano' : '🔑 human gate'}</text>
+
+  <!-- connector 2 -->
+  <line x1="260" y1="220" x2="260" y2="290" stroke="#313342" stroke-width="1.5" />
+
+  <!-- Architect node -->
+  <rect x="160" y="290" width="200" height="60" rx="10" fill="#232A36" stroke="#DEBA87" stroke-width="1.5" />
+  <text x="260" y="327" text-anchor="middle" fill="#DEBA87" font-family="var(--dk-font-display, sans-serif)" font-size="16" font-weight="700">Architect</text>
+
+  <!-- anchor phrase -->
+  <text x="260" y="368" text-anchor="middle" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">
+    <tspan fill="#A1AABB">{isEs ? 'La máquina presenta opciones.' : 'The machine delivers options.'}</tspan>
+    <tspan fill="#E0C15A">{isEs ? ' El humano abre el gate.' : ' The human opens the gate.'}</tspan>
+  </text>
+</svg>
+
+<style>
+  .gate-diagram-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 520px;
+    margin: 0.5rem auto;
+  }
+</style>

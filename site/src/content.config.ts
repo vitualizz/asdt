@@ -11,4 +11,14 @@ const docs = defineCollection({
   }),
 })
 
-export const collections = { docs }
+const talks = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/talks' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    order: z.number(),
+    locale: z.enum(['en', 'es']),
+  }),
+})
+
+export const collections = { docs, talks }

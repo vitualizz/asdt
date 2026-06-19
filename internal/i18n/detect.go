@@ -8,10 +8,13 @@ import (
 )
 
 // supported lists the locales the application ships catalogs for.
-// English must be first — language.NewMatcher uses position 0 as the fallback.
+// English must be first — language.NewMatcher uses position 0 as the fallback
+// (NFR-i18n-constraint). x/text has no es-419 constant, so the regional Spanish
+// tags are built with MustParse.
 var supported = language.NewMatcher([]language.Tag{
 	language.English,
-	language.Spanish,
+	language.MustParse("es-419"),
+	language.MustParse("es-ES"),
 })
 
 // detect returns the best-matching supported language tag from the system
@@ -36,6 +39,18 @@ func detect() language.Tag {
 		tag, err := language.Parse(val)
 		if err != nil {
 			continue
+		}
+		// Deterministic region pre-switch: route Spanish locales by region
+		// regardless of the matcher's region-distance heuristic. An explicit
+		// "ES" region resolves to peninsular es-ES; every other Spanish region
+		// (419/AR/MX/CO/…) and bare "es" resolves to neutral es-419. Non-Spanish
+		// bases fall through to Match, keeping English (index 0) as the fallback.
+		base, _ := tag.Base()
+		if base.String() == "es" {
+			if region, conf := tag.Region(); region.String() == "ES" && conf != language.Low {
+				return language.MustParse("es-ES")
+			}
+			return language.MustParse("es-419")
 		}
 		matched, _, _ := supported.Match(tag)
 		return matched

@@ -156,11 +156,13 @@ func InstallCmd(assistants []installer.AssistantDescriptor, provider installer.P
 
 // AgentInstallCmd runs installer.InstallAgentConfig in a goroutine and sends
 // AgentInstallDoneMsg when it completes. useEmojis selects the rendered
-// {{emoji_preference}} bullet. modes maps each AssistantID to its write mode;
-// a nil or empty map defaults all assistants to AgentModeOverwrite.
-func AgentInstallCmd(assistants []installer.AssistantDescriptor, preset installer.PersonaPreset, useEmojis bool, modes map[string]installer.AgentWriteMode, skillsFS fs.FS) tea.Cmd {
+// {{emoji_preference}} bullet. localeCode is the full BCP-47 locale whose
+// Directive is injected as {{language_directive}}. modes maps each AssistantID
+// to its write mode; a nil or empty map defaults all assistants to
+// AgentModeOverwrite.
+func AgentInstallCmd(assistants []installer.AssistantDescriptor, preset installer.PersonaPreset, useEmojis bool, localeCode string, modes map[string]installer.AgentWriteMode) tea.Cmd {
 	return func() tea.Msg {
-		results := installer.InstallAgentConfig(assistants, preset, useEmojis, modes, skillsFS)
+		results := installer.InstallAgentConfig(assistants, preset, useEmojis, localeCode, modes)
 		return AgentInstallDoneMsg{Results: results}
 	}
 }

@@ -1,4 +1,5 @@
 specialist: security
+routable: true
 steps:
   - name: knowledge-recall
     skill: ../asdt-shared/skills/knowledge-recall.md

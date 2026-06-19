@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks'
+import { useState, useEffect, useRef } from 'preact/hooks'
 import { SPECIALIST_COLOR } from '@data/artifact-graph'
 import type { PipelineFlow } from '@data/pipeline-flow-steps'
 
@@ -12,13 +12,11 @@ const ID_TO_COLOR: Record<string, string> = {
 interface Props {
   flow: PipelineFlow
   lang: 'en' | 'es'
-  labelNext: string
-  labelPrev: string
   labelStep: string
   labelOf: string
 }
 
-export function FlowWalker({ flow, lang, labelNext, labelPrev, labelStep, labelOf }: Props) {
+export function FlowWalker({ flow, lang, labelStep, labelOf }: Props) {
   const [step, setStep] = useState(0)
   const current = flow.steps[step]
   const total = flow.steps.length
@@ -26,29 +24,41 @@ export function FlowWalker({ flow, lang, labelNext, labelPrev, labelStep, labelO
 
   const colorVar = ID_TO_COLOR[current.specialistId] ?? 'var(--color-accent)'
 
-  function handleNext() { if (step < total - 1) setStep(step + 1) }
-  function handlePrev() { if (step > 0) setStep(step - 1) }
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // Expose the fragment API on the DOM node so the DeckController can drive
+  // step-stepping via global next/prev. Re-assigned on each state change so the
+  // closures stay fresh (deps include step, total).
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    ;(el as any).fragmentAdvance = () => {
+      if (step >= total - 1) return false
+      setStep((s) => s + 1)
+      return step + 1 < total - 1
+    }
+    ;(el as any).fragmentBack = () => {
+      if (step <= 0) return false
+      setStep((s) => s - 1)
+      return step - 1 > 0
+    }
+    ;(el as any).fragmentReset = () => setStep(0)
+    ;(el as any).fragmentShowAll = () => setStep(total - 1)
+  }, [step, total])
 
   return (
-    <div class="fw" style={{ '--sc': colorVar } as Record<string, string>}>
+    <div class="fw" data-fragment-island ref={rootRef} style={{ '--sc': colorVar } as Record<string, string>}>
       <div class="fw-header">
         <span class="fw-counter">{labelStep} {step + 1} {labelOf} {total}</span>
-        <div class="fw-nav">
-          <button class="fw-btn" onClick={handlePrev} disabled={step === 0} aria-label={labelPrev}>←</button>
-          <button class="fw-btn" onClick={handleNext} disabled={step === total - 1} aria-label={labelNext}>→</button>
-        </div>
       </div>
       <code class="fw-command">{current.command}</code>
       <p class="fw-desc">{isEs ? current.descriptionEs : current.descriptionEn}</p>
-      <div class="fw-dots" role="tablist">
+      <div class="fw-dots" role="presentation">
         {flow.steps.map((_, i) => (
-          <button
+          <span
             key={i}
             class={`fw-dot${i === step ? ' fw-dot--active' : ''}`}
-            role="tab"
-            aria-selected={i === step}
-            aria-label={`${labelStep} ${i + 1}`}
-            onClick={() => setStep(i)}
+            aria-hidden="true"
           />
         ))}
       </div>

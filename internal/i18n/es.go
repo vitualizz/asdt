@@ -1,7 +1,8 @@
 package i18n
 
-// Spanish is the Rioplatense Spanish catalog (voseo for action descriptions).
-var Spanish = Catalog{
+// SpanishNeutral is the es-419 neutral Latin American Spanish catalog
+// (tuteo, region-neutral register — no voseo).
+var SpanishNeutral = Catalog{
 	Installer: InstallerStrings{
 		TitleMainMenu:         "asdt-tui",
 		TitlePreflightCheck:   "Verificación Previa",
@@ -50,35 +51,35 @@ var Spanish = Catalog{
 		BtnSkip:     "[ Omitir → ]",
 		BtnInstall:  "[ Instalar → ]",
 
-		BodyAgentSetupSubtitle: "Configurá cómo se comportan tus asistentes de IA en todas las herramientas",
-		BodyEmojiPrefSubtitle:  "¿Querés que tus asistentes usen emojis en sus respuestas?",
+		BodyAgentSetupSubtitle: "Configura cómo se comportan tus asistentes de IA en todas las herramientas",
+		BodyEmojiPrefSubtitle:  "¿Quieres que tus asistentes usen emojis en sus respuestas?",
 		BodyModelSetupSubtitle: "Cada paso de especialista corre en su propio modelo. Proveedores detectados: %s",
 
-		OptionModelsPreset0:        "Camaleón — mantené el modelo que tu asistente ya tiene definido",
+		OptionModelsPreset0:        "Camaleón — mantén el modelo que tu asistente ya tiene definido",
 		OptionModelsPreset1:        "Velocista — lo más rápido y económico en todo",
 		OptionModelsPreset2:        "Artesano — el equilibrio recomendado entre velocidad y capacidad",
 		OptionModelsPreset3:        "Estratega — más capacidad para el análisis y las decisiones",
 		OptionModelsPreset4:        "Mente Maestra — máxima capacidad donde más importa",
-		OptionModelsPreset5:        "Personalizar por paso — elegí el modelo de cada paso de especialista",
+		OptionModelsPreset5:        "Personalizar por paso — elige el modelo de cada paso de especialista",
 		HintPresetAssignment0:      "cada paso hereda el modelo propio de tu asistente",
 		HintPresetAssignment1:      "decisiones → equilibrado · análisis → rápido · tareas livianas → rápido",
 		HintPresetAssignment2:      "decisiones → máximo · análisis → equilibrado · tareas livianas → rápido",
 		HintPresetAssignment3:      "decisiones → máximo · análisis → equilibrado · tareas livianas → equilibrado",
 		HintPresetAssignment4:      "decisiones → nivel tope · análisis → máximo · tareas livianas → equilibrado",
-		HintPresetAssignment5:      "elegí a mano un modelo para cada paso de especialista",
+		HintPresetAssignment5:      "elige a mano un modelo para cada paso de especialista",
 		HintRunsAs:                 "→ corre como %s en Claude Code",
 		LabelModels:                "Modelos:",
 		ValueModelsPreset:          "preset %s",
 		ValueModelsCustomized:      "%d personalizados",
-		BodyAgentWriteMode:         "Elegí cómo manejar cada config existente:",
+		BodyAgentWriteMode:         "Elige cómo manejar cada config existente:",
 		BodyInstalling:             "Instalando asistentes y skills...",
-		BodyLanguageSelectSubtitle: "¿En qué idioma querés usar el instalador?",
+		BodyLanguageSelectSubtitle: "¿En qué idioma quieres usar el instalador?",
 
 		OptionEmojiYes: "Sí — usar emojis",
 		OptionEmojiNo:  "No — solo texto plano",
 
 		WarnExistingConfig:     "⚠  Se detectó una config global de agente existente — será sobreescrita.",
-		WarnExistingConfigNote: "   Continuá bajo tu responsabilidad.",
+		WarnExistingConfigNote: "   Continúa bajo tu responsabilidad.",
 		InfoWriteGlobal:        "Esto va a escribir en tu config global de asistentes de IA.",
 
 		LabelAssistants: "Asistentes:",
@@ -96,7 +97,7 @@ var Spanish = Catalog{
 		MsgAgentConfigWritten: "config de %s escrita",
 		MsgAgentConfigSkipped: "– %s: omitido (se mantuvo la config existente)",
 		MsgOpenCodeNote:       "Nota: OpenCode usa esto como override global para todos los proyectos.",
-		MsgGetStarted:         "Abrí un proyecto y ejecutá /asdt para arrancar.",
+		MsgGetStarted:         "Abre un proyecto y ejecuta /asdt para arrancar.",
 		MsgStaleRemoved:       "se limpiaron %d archivo(s) obsoleto(s)",
 
 		SectionYourEnvironment: "Tu Entorno",
@@ -104,8 +105,8 @@ var Spanish = Catalog{
 		SectionAIEnhancements:  "Mejoras de IA",
 
 		PrefEngramRequired: "⚠  Engram es requerido para la persistencia de memoria entre sesiones de IA.",
-		PrefEngramInstall:  "Instalá: https://github.com/Gentleman-Programming/engram",
-		PrefEngramRestart:  "Después de instalarlo, reiniciá asdt-tui.",
+		PrefEngramInstall:  "Instala: https://github.com/Gentleman-Programming/engram",
+		PrefEngramRestart:  "Después de instalarlo, reinicia asdt-tui.",
 	},
 	Dashboard: DashboardStrings{
 		LabelInstalled: "Instalado",
@@ -114,8 +115,8 @@ var Spanish = Catalog{
 	Personas: PersonaStrings{
 		Sky:         "Aguda y minuciosa. Destroza las malas prácticas con ingenio, y después te explica todo.",
 		Toffy:       "Cálida y entusiasta. Respuestas simples, sarcasmo accidental.",
-		Atreus:      "Audaz y temerario. Shipea primero la solución poco convencional — y funciona.",
-		Babi:        "Tu fan número uno. Cálida, rápida, y celebra todo a los gritos.",
+		Atreus:      "Audaz y temerario. Lanza primero la solución poco convencional — y funciona.",
+		Babi:        "Tu fan número uno. Cálida, rápida, y celebra todo en voz alta.",
 		LeePalacios: "Amante de los gatos, coder, otaku. Tu compañero de pair programming para todo el viaje.",
 	},
 }
