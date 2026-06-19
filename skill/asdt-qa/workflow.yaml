@@ -78,6 +78,19 @@ steps:
     reference_skills:
       - ../asdt-shared/skills/report.md
 
+  - name: performance-validation
+    skill: steps/performance-validation.md
+    description: Gate — validate planned/measured performance against the PM NFR targets and produce a go/no-go verdict
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs:
+      - "{project}/{change}/qa/test-plan"
+      - "{project}/{change}/pm/nfr-targets"
+    output_topic_key: "{project}/{change}/qa/perf-validation"
+    reference_skills:
+      - ../asdt-shared/skills/nfr-budget.md
+
   # ADR-018 Q1/A2: go/no-go shipping verdict before knowledge is preserved
   - name: review
     skill: steps/review.md

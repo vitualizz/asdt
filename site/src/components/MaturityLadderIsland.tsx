@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks'
 
 const RW = 180
-const RH = 80
+const RH = 68
 
 interface Props {
   lang: 'en' | 'es'
@@ -19,8 +19,8 @@ const DEFINITIONS = [
     es: 'Desarrollo guiado por especificación. Primero el spec, luego el código. Disciplinado, pero sigue siendo una sola perspectiva.',
   },
   {
-    en: 'SDD on steroids. Seven specialists, each a fresh context, with a human gate between every handoff. Artifacts survive every reset.',
-    es: 'SDD con esteroides. Siete especialistas, cada uno con contexto fresco, con una compuerta humana entre cada entrega. Los artefactos sobreviven cada reset.',
+    en: 'SDD on steroids. Seven specialists, each a fresh context, with a human checkpoint between every handoff. Artifacts survive every reset.',
+    es: 'SDD con esteroides. Siete especialistas, cada uno con contexto fresco, con un punto de control humano entre cada entrega. Los artefactos sobreviven cada reset.',
   },
 ]
 
@@ -48,14 +48,14 @@ export function MaturityLadderIsland({ lang }: Props) {
     const el = rootRef.current
     if (!el) return
     ;(el as any).fragmentAdvance = () => {
-      if (revealedStep >= 2) return false
+      if (revealedStep >= 2) return false // already at last; navigate
       setRevealedStep((s) => s + 1)
-      return revealedStep + 1 < 2
+      return true // consumed a step; stay
     }
     ;(el as any).fragmentBack = () => {
-      if (revealedStep <= 0) return false
+      if (revealedStep <= 0) return false // already at first; navigate
       setRevealedStep((s) => s - 1)
-      return revealedStep - 1 > 0
+      return true // consumed a step; stay
     }
     ;(el as any).fragmentReset = () => setRevealedStep(0)
     ;(el as any).fragmentShowAll = () => setRevealedStep(2)
@@ -65,7 +65,7 @@ export function MaturityLadderIsland({ lang }: Props) {
     <div class="ml-island" data-fragment-island ref={rootRef}>
       <svg
         class="ml-diagram"
-        viewBox="0 0 520 340"
+        viewBox="0 0 540 300"
         role="img"
         aria-labelledby="ml-title ml-desc"
         xmlns="http://www.w3.org/2000/svg"
@@ -84,37 +84,37 @@ export function MaturityLadderIsland({ lang }: Props) {
 
         {/* connectors */}
         <line
-          x1={30 + RW} y1="260" x2="170" y2={160 + RH}
+          x1={30 + RW} y1="212" x2="250" y2={122 + RH}
           stroke="#313342" stroke-width="2" stroke-dasharray="4 3"
           style={{ opacity: connectorOpacity, transition: motion.current ? 'opacity 300ms ease' : 'none' }}
         />
         <line
-          x1={170 + RW} y1="160" x2="310" y2={60 + RH}
+          x1={160 + RW} y1="122" x2="380" y2={32 + RH}
           stroke="#313342" stroke-width="2" stroke-dasharray="4 3"
           style={{ opacity: revealedStep >= 2 ? 1 : 0.1, transition: motion.current ? 'opacity 300ms ease' : 'none' }}
         />
 
         {/* Rung 1: Vibe Coding */}
         <g class="rung" style={{ opacity: opacityFor(0), transition: motion.current ? 'opacity 300ms ease' : 'none' }}>
-          <rect x="30" y="260" width={RW} height={RH} rx="10" fill="#232A36" stroke="#313342" stroke-width="1" />
-          <text x={30 + RW / 2} y="296" text-anchor="middle" fill="#F3F6F9" font-family="var(--dk-font-display, sans-serif)" font-size="16" font-weight="700">Vibe Coding</text>
-          <text x={30 + RW / 2} y="316" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="11">prompt, paste, pray</text>
+          <rect x="30" y="212" width={RW} height={RH} rx="10" fill="#232A36" stroke="#313342" stroke-width="1" />
+          <text x={30 + RW / 2} y="246" text-anchor="middle" fill="#F3F6F9" font-family="var(--dk-font-display, sans-serif)" font-size="14" font-weight="700">Vibe Coding</text>
+          <text x={30 + RW / 2} y="266" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="11">{isEs ? 'escribe, pega, reza' : 'prompt, paste, pray'}</text>
         </g>
 
         {/* Rung 2: SDD */}
         <g class="rung" style={{ opacity: opacityFor(1), transition: motion.current ? 'opacity 300ms ease' : 'none' }}>
-          <rect x="170" y="160" width={RW} height={RH} rx="10" fill="#232A36" stroke="#7FB4CA" stroke-width="1.5" />
-          <text x={170 + RW / 2} y="196" text-anchor="middle" fill="#7FB4CA" font-family="var(--dk-font-display, sans-serif)" font-size="16" font-weight="700">SDD</text>
-          <text x={170 + RW / 2} y="216" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="11">spec-driven, disciplined</text>
+          <rect x="160" y="122" width={RW} height={RH} rx="10" fill="#232A36" stroke="#7FB4CA" stroke-width="1.5" />
+          <text x={160 + RW / 2} y="156" text-anchor="middle" fill="#7FB4CA" font-family="var(--dk-font-display, sans-serif)" font-size="14" font-weight="700">SDD</text>
+          <text x={160 + RW / 2} y="176" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="11">{isEs ? 'guiado por especificación' : 'spec-driven, disciplined'}</text>
         </g>
 
         {/* Rung 3: ASDT (glowing) */}
         <g class="rung" style={{ opacity: opacityFor(2), transition: motion.current ? 'opacity 300ms ease' : 'none' }}>
-          <rect x="310" y="60" width={RW} height={RH} rx="10" fill="#232A36" stroke="#B7CC85" stroke-width="2" filter="url(#ml-glow)" />
-          <rect x={310 + RW / 2 - 55} y="34" width="110" height="20" rx="4" fill="#B7CC85" />
-          <text x={310 + RW / 2} y="48" text-anchor="middle" fill="#1c212c" font-family="var(--dk-font-mono, monospace)" font-size="10" font-weight="700">YOU ARE HERE</text>
-          <text x={310 + RW / 2} y="98" text-anchor="middle" fill="#B7CC85" font-family="var(--dk-font-display, sans-serif)" font-size="18" font-weight="700">ASDT</text>
-          <text x={310 + RW / 2} y="118" text-anchor="middle" fill="#B7CC85" opacity="0.85" font-family="var(--dk-font-body, serif)" font-size="11">SDD on steroids</text>
+          <rect x="290" y="32" width={RW} height={RH} rx="10" fill="#232A36" stroke="#B7CC85" stroke-width="2" filter="url(#ml-glow)" />
+          <rect x={290 + RW / 2 - 55} y="6" width="110" height="20" rx="4" fill="#B7CC85" />
+          <text x={290 + RW / 2} y="20" text-anchor="middle" fill="#1c212c" font-family="var(--dk-font-mono, monospace)" font-size="10" font-weight="700">{isEs ? 'ESTÁS AQUÍ' : 'YOU ARE HERE'}</text>
+          <text x={290 + RW / 2} y="62" text-anchor="middle" fill="#B7CC85" font-family="var(--dk-font-display, sans-serif)" font-size="16" font-weight="700">ASDT</text>
+          <text x={290 + RW / 2} y="82" text-anchor="middle" fill="#B7CC85" opacity="0.85" font-family="var(--dk-font-body, serif)" font-size="11">{isEs ? 'SDD con esteroides' : 'SDD on steroids'}</text>
         </g>
       </svg>
 

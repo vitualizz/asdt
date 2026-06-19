@@ -118,6 +118,13 @@ const producesLabel = isEs ? 'Produce:' : 'Produces:'
     flex-direction: column;
   }
 
+  .seb-wrap :global(.se) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
   .seb-wrap :global(.se-nodes) {
     display: flex;
     align-items: center;
@@ -129,7 +136,7 @@ const producesLabel = isEs ? 'Produce:' : 'Produces:'
   .seb-wrap :global(.se-node) {
     flex: 1 1 0;
     min-width: 80px;
-    padding: 0.55rem 0.4rem;
+    padding: 0.4rem 0.35rem;
     border-radius: var(--dk-radius-sm, 8px);
     border: 1.5px solid color-mix(in srgb, var(--sc) 50%, transparent);
     background: color-mix(in srgb, var(--sc) 15%, var(--dk-bg-alt));
@@ -192,14 +199,30 @@ const producesLabel = isEs ? 'Produce:' : 'Produces:'
   }
 
   .seb-wrap :global(.se-panel--open) {
-    max-height: 900px;
+    flex: 1;
+    min-height: 0;
+    max-height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
     opacity: 1;
     padding: var(--dk-space-md, 1.25rem) var(--dk-space-lg, 2rem);
   }
 
+  /* thin, deck-scoped webkit scrollbar for the open panel (no chunky OS default) */
+  .seb-wrap :global(.se-panel)::-webkit-scrollbar {
+    width: 4px;
+  }
+  .seb-wrap :global(.se-panel)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .seb-wrap :global(.se-panel)::-webkit-scrollbar-thumb {
+    background: var(--dk-divider);
+    border-radius: 4px;
+  }
+
   .seb-wrap :global(.se-panel-name) {
     font-family: var(--dk-font-display);
-    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
     font-weight: 700;
     margin: 0;
   }
@@ -208,7 +231,7 @@ const producesLabel = isEs ? 'Produce:' : 'Produces:'
     font-family: var(--dk-font-body);
     font-style: italic;
     color: var(--dk-muted);
-    margin: 0.35rem 0 var(--dk-space-md, 1.25rem);
+    margin: 0.35rem 0 var(--dk-space-sm, 0.75rem);
   }
 
   .seb-wrap :global(.se-steps-table) {
@@ -225,7 +248,7 @@ const producesLabel = isEs ? 'Produce:' : 'Produces:'
     grid-template-columns: minmax(120px, 160px) 1fr auto;
     gap: 8px 12px;
     align-items: start;
-    padding: 10px 14px;
+    padding: 7px 12px;
     border-bottom: 1px solid color-mix(in srgb, var(--dk-divider) 60%, transparent);
     transition: background 0.12s;
   }

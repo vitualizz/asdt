@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks'
+import { useState, useEffect, useRef } from 'preact/hooks'
 
 interface PipelineStep {
   slug: string
@@ -321,13 +321,41 @@ interface Props {
 }
 
 export function SpecialistExplorer({ lang }: Props) {
-  const [activeSpecialist, setActiveSpecialist] = useState<string>('researcher')
+  // fragIdx is the single source of truth: the DeckController steps it via the
+  // fragment API, and clicking a chip jumps it. activeSpecialist derives from it
+  // so global-next and click never disagree.
+  const [fragIdx, setFragIdx] = useState(0)
   const isEs = lang === 'es'
+  const last = PIPELINE_SPECIALISTS.length - 1
 
-  const active = PIPELINE_SPECIALISTS.find((s) => s.id === activeSpecialist)!
+  const activeSpecialist = PIPELINE_SPECIALISTS[fragIdx].id
+  const active = PIPELINE_SPECIALISTS[fragIdx]
+
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // Expose the fragment API so the DeckController can step through specialists
+  // via global next/prev. Re-assigned on each fragIdx change so closures stay
+  // fresh. Contract: true = consumed a step (stay); false = navigate away.
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    ;(el as any).fragmentAdvance = () => {
+      if (fragIdx >= last) return false // already at last; navigate
+      setFragIdx((i) => i + 1)
+      return true // consumed a step; stay
+    }
+    ;(el as any).fragmentBack = () => {
+      if (fragIdx <= 0) return false // already at first; navigate
+      setFragIdx((i) => i - 1)
+      return true // consumed a step; stay
+    }
+    ;(el as any).fragmentReset = () => setFragIdx(0)
+    ;(el as any).fragmentShowAll = () => setFragIdx(last)
+  }, [fragIdx, last])
 
   function handleNodeClick(id: string) {
-    if (id !== activeSpecialist) setActiveSpecialist(id)
+    const idx = PIPELINE_SPECIALISTS.findIndex((s) => s.id === id)
+    if (idx >= 0 && idx !== fragIdx) setFragIdx(idx)
     // clicking the active node is a no-op — prevents re-creating blank panel
   }
 
@@ -339,41 +367,34 @@ export function SpecialistExplorer({ lang }: Props) {
       // LOAD-BEARING: stop the browser default (exit fullscreen) firing.
       e.stopPropagation()
       e.preventDefault()
-      setActiveSpecialist('researcher')
+      setFragIdx(0)
     }
   }
 
   const framing = isEs
-    ? 'Selecciona un especialista para explorar'
-    : 'Select a specialist to explore'
-  const groupLabel = isEs ? 'Pipeline de especialistas' : 'Specialist pipeline'
+    ? 'No es una línea de montaje — cada especialista es una mirada, y todas dependen entre sí.'
+    : 'Not an assembly line — each specialist is a lens, and they all depend on each other.'
+  const groupLabel = isEs ? 'Equipo de especialistas' : 'Specialist team'
   const producesLabel = isEs ? 'Produce:' : 'Produces:'
 
   return (
-    <div class="se" data-island>
+    <div class="se" data-fragment-island ref={rootRef}>
       <div class="se-nodes" role="group" aria-label={groupLabel}>
-        {PIPELINE_SPECIALISTS.map((s, i) => {
+        {PIPELINE_SPECIALISTS.map((s) => {
           const isActive = s.id === activeSpecialist
           return (
-            <>
-              {i > 0 && (
-                <span aria-hidden="true" class="se-gate">
-                  gate
-                </span>
-              )}
-              <button
-                key={s.id}
-                type="button"
-                class={`se-node${isActive ? ' se-node--active' : ''}`}
-                data-specialist={s.id}
-                aria-expanded={isActive}
-                style={{ '--sc': s.colorVar } as Record<string, string>}
-                onClick={() => handleNodeClick(s.id)}
-                onKeyDown={(e) => handleKeyDown(e as unknown as KeyboardEvent, s.id)}
-              >
-                {isEs ? s.nameEs : s.nameEn}
-              </button>
-            </>
+            <button
+              key={s.id}
+              type="button"
+              class={`se-node${isActive ? ' se-node--active' : ''}`}
+              data-specialist={s.id}
+              aria-expanded={isActive}
+              style={{ '--sc': s.colorVar } as Record<string, string>}
+              onClick={() => handleNodeClick(s.id)}
+              onKeyDown={(e) => handleKeyDown(e as unknown as KeyboardEvent, s.id)}
+            >
+              {isEs ? s.nameEs : s.nameEn}
+            </button>
           )
         })}
       </div>

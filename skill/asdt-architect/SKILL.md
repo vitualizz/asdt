@@ -61,6 +61,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | evaluate-approaches | steps/evaluate-approaches.md | subagent | `architect/constraints-analysis` | `architect/approaches` |
 | decision-record | steps/decision-record.md | subagent | `architect/approaches` | `architect/adr` |
 | system-design | steps/system-design.md | subagent | `architect/adr` | `architect/system-design` |
+| cost-estimation | steps/cost-estimation.md | subagent | `architect/system-design`, `pm/nfr-targets` | `architect/cost-estimate` |
 | risk-analysis | steps/risk-analysis.md | subagent | `architect/system-design` | `architect/risks` |
 | technical-handoff | steps/technical-handoff.md | subagent | `architect/adr`, `architect/system-design`, `architect/risks` | `architectural-decision` + `system-design` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |

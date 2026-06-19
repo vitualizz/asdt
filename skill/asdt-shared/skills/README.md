@@ -35,6 +35,7 @@ These are **reference text injected into the active context**, not independently
 | `decision-preservation.md` | Saves a permanent organizational knowledge record after a significant decision is produced. Used as the final inline step in most specialists. |
 | `scope-definition.md` | Guidelines for defining explicit, unambiguous project scope. Used by Architect and Developer. |
 | `report.md` | Generates a structured handoff document from multiple intermediate artifacts; includes the extraction rules (200-token budget per artifact). Used as the consolidation step in UX/UI, Architect, QA, Security, and PM. |
+| `nfr-budget.md` | Shared NFR-target value-object shape + the measure-against-budget protocol; reference-only, produces no artifact. Referenced by PM `success-metrics`, Architect `cost-estimation`, QA `performance-validation`. |
 
 ## How to Reference
 

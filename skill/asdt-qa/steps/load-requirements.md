@@ -17,6 +17,11 @@ no prior `subagent`-produced QA artifact to retrieve; it is QA's first generativ
 step and reads directly from upstream specialists' artifacts (or the raw request
 as fallback).
 
+Note: PM also produces `pm/nfr-targets` (from its `success-metrics` step) — a new
+upstream `pm/*` artifact the QA chain consumes DOWNSTREAM in `performance-validation`
+(the gate), NOT here. `load-requirements` does not gain it as an InputRef; its
+`inputs:` stays empty.
+
 ## Context budget
 Extract only: user_stories/acceptance_criteria/scope from each artifact.
 Max 200 tokens per artifact. Max 1,500 tokens total.

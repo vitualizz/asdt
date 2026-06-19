@@ -16,12 +16,12 @@ const isEs = lang === 'es'
   xmlns="http://www.w3.org/2000/svg"
 >
   <title id="gd-title"
-    >{isEs ? 'Gate humano entre PM y Architect' : 'Human gate between PM and Architect'}</title
+    >{isEs ? 'Punto de control humano entre PM y Architect' : 'Human checkpoint between PM and Architect'}</title
   >
   <desc id="gd-desc"
     >{isEs
-      ? 'El PM entrega opciones; un gate humano se interpone antes de que el Architect avance.'
-      : 'The PM delivers options; a human gate stands between the PM and the Architect before work continues.'}</desc
+      ? 'El PM entrega opciones; un punto de control humano se interpone antes de que el Architect avance.'
+      : 'The PM delivers options; a human checkpoint stands between the PM and the Architect before work continues.'}</desc
   >
   <defs>
     <filter id="gate-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -31,26 +31,26 @@ const isEs = lang === 'es'
 
   <!-- PM node -->
   <rect x="160" y="30" width="200" height="60" rx="10" fill="#232A36" stroke="#7FB4CA" stroke-width="1.5" />
-  <text x="260" y="67" text-anchor="middle" fill="#7FB4CA" font-family="var(--dk-font-display, sans-serif)" font-size="18" font-weight="700">PM</text>
+  <text x="260" y="67" text-anchor="middle" fill="#7FB4CA" font-family="var(--dk-font-display, sans-serif)" font-size="17" font-weight="700">PM</text>
 
   <!-- connector 1 -->
-  <line x1="260" y1="90" x2="260" y2="160" stroke="#313342" stroke-width="1.5" />
+  <line x1="260" y1="90" x2="260" y2="154" stroke="#313342" stroke-width="2" />
 
   <!-- gate bar -->
-  <rect x="252" y="160" width="16" height="60" rx="4" fill="#232A36" stroke="#E0C15A" stroke-width="1.5" filter="url(#gate-glow)" />
-  <text x="282" y="196" text-anchor="start" fill="#E0C15A" font-family="var(--dk-font-mono, monospace)" font-size="12">{isEs ? '🔑 gate humano' : '🔑 human gate'}</text>
+  <rect x="250" y="154" width="20" height="72" rx="4" fill="#232A36" stroke="#E0C15A" stroke-width="2" filter="url(#gate-glow)" />
+  <text x="282" y="196" text-anchor="start" fill="#F3F0C0" font-family="var(--dk-font-mono, monospace)" font-size="17">{isEs ? '🔑 punto de control' : '🔑 human checkpoint'}</text>
 
   <!-- connector 2 -->
-  <line x1="260" y1="220" x2="260" y2="290" stroke="#313342" stroke-width="1.5" />
+  <line x1="260" y1="226" x2="260" y2="290" stroke="#313342" stroke-width="2" />
 
   <!-- Architect node -->
   <rect x="160" y="290" width="200" height="60" rx="10" fill="#232A36" stroke="#DEBA87" stroke-width="1.5" />
-  <text x="260" y="327" text-anchor="middle" fill="#DEBA87" font-family="var(--dk-font-display, sans-serif)" font-size="16" font-weight="700">Architect</text>
+  <text x="260" y="327" text-anchor="middle" fill="#DEBA87" font-family="var(--dk-font-display, sans-serif)" font-size="17" font-weight="700">Architect</text>
 
   <!-- anchor phrase -->
   <text x="260" y="368" text-anchor="middle" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">
     <tspan fill="#A1AABB">{isEs ? 'La máquina presenta opciones.' : 'The machine delivers options.'}</tspan>
-    <tspan fill="#E0C15A">{isEs ? ' El humano abre el gate.' : ' The human opens the gate.'}</tspan>
+    <tspan fill="#E0C15A">{isEs ? ' El humano activa el punto de control.' : ' The human opens the checkpoint.'}</tspan>
   </text>
 </svg>
 

@@ -66,6 +66,8 @@ const t = useTranslations(lang)
   background: oklch(from var(--sc) l c h / 0.04);
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .fwb-wrap :global(.fw-header) {
@@ -95,19 +97,31 @@ const t = useTranslations(lang)
   border-bottom: 1px solid oklch(from var(--border-soft) l c h / 0.5);
 }
 
+.fwb-wrap :global(.fw-produces) {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: oklch(from var(--sc) l c h / 0.85);
+  background: oklch(from var(--sc) l c h / 0.05);
+  padding: 9px 18px;
+  border-bottom: 1px solid oklch(from var(--border-soft) l c h / 0.5);
+}
+
 .fwb-wrap :global(.fw-desc) {
-  font-size: 13.5px;
-  color: oklch(0.86 0.008 285);
+  font-size: 14.5px;
+  color: oklch(0.92 0.008 285);
   line-height: 1.6;
   padding: 16px 18px;
   margin: 0;
+  flex: 1;
   border-bottom: 1px solid oklch(from var(--border-soft) l c h / 0.5);
 }
 
 .fwb-wrap :global(.fw-dots) {
   display: flex;
   gap: 6px;
-  padding: 12px 18px;
+  padding: 8px 18px;
   align-items: center;
 }
 

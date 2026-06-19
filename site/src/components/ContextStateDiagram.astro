@@ -10,7 +10,7 @@ const isEs = lang === 'es'
 ---
 <svg
   class="context-state-diagram"
-  viewBox="0 0 520 340"
+  viewBox="0 0 520 360"
   role="img"
   aria-labelledby="cs-title cs-desc"
   xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +29,7 @@ const isEs = lang === 'es'
   <text x="260" y="75" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">{isEs ? '💨 contexto vacío tras un reset' : '💨 empty context after a reset'}</text>
 
   <!-- connector -->
-  <line x1="260" y1="120" x2="260" y2="220" stroke="#313342" stroke-width="1.5" />
+  <line x1="260" y1="120" x2="260" y2="220" stroke="#4a5068" stroke-width="2.5" />
   <text x="260" y="178" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-mono, monospace)" font-size="11">{isEs ? 'artefacto escrito' : 'written artifact'}</text>
 
   <!-- bottom node: durable artifacts (cat easter egg in <title>) -->
@@ -42,7 +42,7 @@ const isEs = lang === 'es'
   </g>
 
   <!-- anchor phrase -->
-  <text x="260" y="320" text-anchor="middle" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">
+  <text x="260" y="345" text-anchor="middle" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">
     <tspan fill="#7FB4CA">{isEs ? 'Los artefactos sobreviven.' : 'Artifacts survive.'}</tspan>
     <tspan fill="#A1AABB">{isEs ? ' Las conversaciones no.' : " Conversations don't."}</tspan>
   </text>

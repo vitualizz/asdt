@@ -17,10 +17,12 @@ import { dogfoodFlow } from '@data/dogfood-flow-steps'
 import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
 
 <section class="slide slide--wide" data-title="La tesis" data-tone="blue" data-module="1">
-  <div class="slide-content">
+  <div class="slide-content" style="display:flex; flex-direction:column; justify-content:center;">
     <p class="slide-kicker">01 / 12 · por qué esta charla</p>
     <h2>No necesitas una IA más grande.</h2>
     <p>Necesitas un mejor proceso. <strong>Siete perspectivas. Un humano en el proceso.</strong> Eso es ASDT.</p>
+    <p class="slide-sub-hero"><strong>El modelo no es el cuello de botella — lo es el proceso a su alrededor.</strong></p>
+    <p>Esta charla es una sola idea, repetida: una IA sola es una sola opinión. Un equipo de perspectivas, con un humano decidiendo, es un proceso en el que puedes confiar.</p>
   </div>
 </section>
 
@@ -41,6 +43,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">03 / 12 · conceptos clave</p>
     <h2>Conceptos clave</h2>
     <p>Siete palabras que vas a escuchar todo el día. Aquí están en lenguaje simple.</p>
+    <p>Estas siete palabras aparecen en todo el deck.</p>
+    <p>Toca cualquier tarjeta para ver su definición y un ejemplo real.</p>
   </div>
   <figure class="slide-figure">
     <div class="slide-figure-inner">
@@ -60,10 +64,12 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
       <div class="panel">
         <h3>Sin spec a la que volver</h3>
         <p>Salió porque compiló — no porque alguien decidió que debía.</p>
+        <p class="panel-example"><strong>Ejemplo:</strong> el modelo construyó todo un flujo de recuperación de contraseña cuando solo pediste un enlace de "olvidé mi contraseña" — con seguridad, y mal.</p>
       </div>
       <div class="panel">
         <h3>Una mirada, un sesgo</h3>
         <p>No puede atrapar sus propios errores. No es un fallo del modelo. Es un hueco en el proceso.</p>
+        <p class="panel-example"><strong>Ejemplo:</strong> el mismo modelo que escribió el código de autenticación también lo revisó — y no vio el token que dejó registrado en texto plano.</p>
       </div>
     </div>
   </figure>
@@ -73,7 +79,7 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
   <div class="slide-content">
     <p class="slide-kicker">05 / 12 · la escalera de madurez</p>
     <h2>La escalera de madurez</h2>
-    <p>SDD con esteroides — un equipo de especialistas, ruteo y gates humanos por encima.</p>
+    <p>SDD con esteroides — un equipo de especialistas, ruteo y puntos de control humanos por encima.</p>
   </div>
   <figure class="slide-figure">
     <div class="slide-figure-inner">
@@ -87,18 +93,21 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">06 / 12 · el problema de la memoria</p>
     <h2>La IA se olvida. Las sesiones largas no solo pierden datos — pierden criterio.</h2>
     <p><strong>La Ley 1 en la práctica:</strong> cada step arranca con un contexto limpio y acotado, y entrega a través de un artefacto escrito. El trabajo vive en documentos — no en una conversación que quizás mañana ya no exista.</p>
+    <p><strong>Pérdida concreta:</strong> pídele a un chat largo que "use el patrón de autenticación que acordamos" y para el mensaje 200 ya olvidó en silencio cuál era — e inventa uno nuevo. Un documento escrito nunca olvida.</p>
     <p>¿Este deck? El ejemplo vivo. Cada especialista leyó un artefacto, escribió un artefacto, volvió. Sin deriva. Sin un chat interminable. Solo documentos que sobreviven. 🐈</p>
   </div>
   <figure class="slide-figure">
-    <ContextStateDiagram lang="es" />
+    <div class="fig-center">
+      <ContextStateDiagram lang="es" />
+    </div>
   </figure>
 </section>
 
-<section class="slide" data-title="Explorador del pipeline" data-tone="purple" data-module="3">
+<section class="slide" data-title="Explorador del pipeline" data-tone="purple" data-module="3" data-fragments="7">
   <div class="slide-content">
     <p class="slide-kicker">07 / 12 · ley 3 · perspectivas antes del código</p>
     <h2>Una funcionalidad, siete especialistas</h2>
-    <p>Cada especialista aporta una lente acotada y fresca. Entre cada especialista hay una puerta.</p>
+    <p>Cada uno aporta una mirada acotada y fresca. No es una línea de montaje fija — el orden se adapta, y cada especialista depende de los demás.</p>
   </div>
   <figure class="slide-figure">
     <div class="slide-figure-inner">
@@ -124,8 +133,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">09 / 12 · esta charla fue construida con asdt</p>
     <h2>Esta charla fue construida con ASDT</h2>
     <p>Acabas de ver el pipeline. Ahora aquí está, corriendo sobre este mismo deck.</p>
-    <p>Un <strong>brief</strong> es simplemente un documento corto y estructurado que un step le entrega al siguiente. Este deck pasó por seis de ellos: el Researcher escribió un discovery brief, el PM lo convirtió en requisitos, el Architect tomó una decisión de formato, el Developer construyó la implementación, QA escribió la revisión, y UX/UI produjo el design brief.</p>
-    <p>Seis especialistas, un gate humano entre cada uno, cada handoff un artefacto escrito. El deck es su propia prueba.</p>
+    <p>Un <strong>resumen (brief)</strong> es simplemente un documento corto y estructurado que un paso le entrega al siguiente. Este deck pasó por seis de ellos: el Researcher escribió un resumen de descubrimiento, el PM lo convirtió en requisitos, el Architect tomó una decisión de formato, el Developer construyó la implementación, QA escribió la revisión, y UX/UI produjo el resumen de diseño.</p>
+    <p>Seis especialistas, un punto de control humano entre cada uno, cada handoff un documento escrito. El deck es su propia prueba.</p>
   </div>
   <figure class="slide-figure">
     <FlowWalkerBlock flow={dogfoodFlow} lang="es" />
@@ -137,8 +146,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">10 / 12 · los humanos deciden, la ia ejecuta</p>
     <h2>Los humanos deciden, la IA ejecuta</h2>
     <p>La máquina nunca decide. Entrega opciones y espera.</p>
-    <p>Ejemplo concreto de este deck: en el gate <strong>PM → Architect</strong>, la decisión de formato estaba abierta — ¿slides como Markdown, como framework, como HTML crudo? La IA puso las ventajas y desventajas sobre la mesa. No eligió.</p>
-    <p>Un humano abrió el gate, eligió el formato, y recién ahí el Architect avanzó. Un gate. Una decisión. En manos del humano.</p>
+    <p>Ejemplo concreto de este deck: en el punto de control <strong>PM → Architect</strong>, la decisión de formato estaba abierta — ¿slides como Markdown, como framework, como HTML crudo? La IA puso las ventajas y desventajas sobre la mesa. No eligió.</p>
+    <p>Un humano activó el punto de control, eligió el formato, y recién ahí el Architect avanzó. Un punto de control. Una decisión. En manos del humano.</p>
   </div>
   <figure class="slide-figure">
     <GateDiagram lang="es" />
@@ -170,8 +179,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
           </div>
           <h3 class="law-title">Los humanos deciden, la IA ejecuta</h3>
           <p class="law-summary">La máquina nunca decide; entrega opciones y espera.</p>
-          <p class="law-body">Entre especialistas hay un gate. La IA pone sobre la mesa las ventajas y desventajas y se detiene. Un humano revisa, elige una dirección, y recién entonces el siguiente especialista avanza. El criterio sigue en manos humanas.</p>
-          <blockquote class="law-example"><span class="law-ex-label">En este deck</span> Al construir este deck: en el gate PM → Architect la IA ofreció Markdown, un framework de slides o HTML crudo. Lee eligió el formato — la IA no.</blockquote>
+          <p class="law-body">Entre especialistas hay un punto de control. La IA pone sobre la mesa las ventajas y desventajas y se detiene. Un humano revisa, elige una dirección, y recién entonces el siguiente especialista avanza. El criterio sigue en manos humanas.</p>
+          <blockquote class="law-example"><span class="law-ex-label">En este deck</span> Al construir este deck: en el punto de control PM → Architect la IA ofreció Markdown, un framework de slides o HTML crudo. Lee eligió el formato — la IA no.</blockquote>
         </div>
         <div class="law-card law-card--l3">
           <div class="law-card-head">
@@ -192,9 +201,10 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
   <div class="slide-content">
     <p class="slide-kicker">12 / 12 · tu turno</p>
     <h2>Tu equipo está a un install de distancia.</h2>
-    <p>Siete especialistas. Gates humanos. Artefactos escritos. Todo esto, en tu terminal, hoy.</p>
+    <p>Siete especialistas. Puntos de control humanos. Documentos escritos. Todo esto, en tu terminal, hoy.</p>
+    <div class="cta-divider" role="presentation"></div>
     <div class="install-block">curl -fsSL {ASDT_INSTALL} | sh<br />asdt-tui</div>
-    <p><a href={ASDT_REPO} target="_blank" rel="noopener noreferrer">github.com/vitualizz/asdt</a></p>
-    <p><strong>No necesitas una IA más grande. Necesitas un mejor proceso.</strong></p>
+    <p><a class="cta-link" href={ASDT_REPO} target="_blank" rel="noopener noreferrer">github.com/vitualizz/asdt</a></p>
+    <p class="cta-thesis"><strong>No necesitas una IA más grande. Necesitas un mejor proceso.</strong></p>
   </div>
 </section>

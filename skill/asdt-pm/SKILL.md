@@ -44,8 +44,8 @@ architecture decisions, implementation code, UX specs, or test plans.
 |-------|-------|
 | **trivial** | `feature-intake` |
 | **simple** | `feature-intake → user-stories → backlog-entry` |
-| **moderate** | `feature-intake → user-stories → scope-analysis → backlog-entry` |
-| **complex** | `feature-intake → user-stories → scope-analysis → prioritization → backlog-entry` |
+| **moderate** | `feature-intake → user-stories → success-metrics → scope-analysis → backlog-entry` |
+| **complex** | `feature-intake → user-stories → success-metrics → scope-analysis → prioritization → backlog-entry` |
 
 **Trivial eligible**: Yes — `feature-intake` has `inputs: []`; inline prelude `knowledge-recall` always runs.
 **Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `decision-preservation`
@@ -57,6 +57,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | knowledge-recall | ../asdt-shared/skills/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
 | feature-intake | steps/feature-intake.md | subagent | raw request | `pm/feature-intake` |
 | user-stories | steps/user-stories.md | subagent | `pm/feature-intake` | `pm/user-stories` |
+| success-metrics | steps/success-metrics.md | subagent | `pm/user-stories` | `pm/nfr-targets` |
 | scope-analysis | steps/scope-analysis.md | subagent | `pm/user-stories` | `pm/scope-analysis` |
 | prioritization | steps/prioritization.md | subagent | `pm/user-stories`, `pm/scope-analysis` | `pm/prioritization` |
 | backlog-entry | steps/backlog-entry.md | subagent | `pm/user-stories`, `pm/scope-analysis`, `pm/prioritization` | `pm/backlog-entry` |

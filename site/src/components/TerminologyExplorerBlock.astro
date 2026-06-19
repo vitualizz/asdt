@@ -106,8 +106,8 @@ const terms = [
   }
 
   .teb-wrap :global(.te) {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: var(--dk-space-sm, 0.75rem);
   }
 
@@ -115,7 +115,7 @@ const terms = [
     border: 1px solid var(--dk-divider);
     border-radius: var(--dk-radius-md, 12px);
     background: var(--dk-bg-alt);
-    padding: var(--dk-space-sm, 0.75rem) var(--dk-space-md, 1.25rem);
+    padding: 0.5rem 0.9rem;
     transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
   }
 
@@ -140,7 +140,6 @@ const terms = [
   .teb-wrap :global(.te-card--open) {
     border-color: var(--card-accent);
     box-shadow: 0 0 12px color-mix(in srgb, var(--card-accent) 20%, transparent);
-    grid-column: 1 / -1;
   }
 
   .teb-wrap :global(.te-card-trigger:focus-visible) {
@@ -156,7 +155,7 @@ const terms = [
   }
 
   .teb-wrap :global(.te-icon) {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     line-height: 1;
     color: var(--card-accent);
   }

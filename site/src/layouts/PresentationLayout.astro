@@ -102,7 +102,7 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
     --dk-bg-alt: #232a36;
     --dk-gray0: #191e28;
     --dk-text: #f3f6f9;
-    --dk-muted: #a1aabb;
+    --dk-muted: #b0baca;
     --dk-muted-alt: #8394a3;
     --dk-divider: #313342;
     --dk-blue: #7fb4ca;
@@ -322,7 +322,7 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
 
   /* ----- Progress bar (pill) ----- */
   .progress-track {
-    height: 8px;
+    height: 10px;
     border-radius: var(--dk-radius-pill);
     background: var(--dk-bg-alt);
     border: 1px solid var(--dk-muted-alt);
@@ -394,6 +394,7 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
   .rail :global(.rail-module.is-active-module > .rail-title) {
     color: var(--dk-text);
     border-color: var(--mode-bg);
+    border-left: 3px solid var(--mode-bg);
     background: var(--dk-selection);
   }
   .rail :global(.rail-dots) {
@@ -479,18 +480,18 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
 
   /* Transitions: 28px fade */
   .deck-app :global(section.slide.is-entering.from-next) {
-    animation: slide-enter-from-right 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    animation: slide-enter-from-right 250ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   }
   .deck-app :global(section.slide.is-entering.from-prev) {
-    animation: slide-enter-from-left 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    animation: slide-enter-from-left 250ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   }
   .deck-app :global(section.slide.is-leaving.to-next) {
     z-index: 2;
-    animation: slide-leave-to-left 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: slide-leave-to-left 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
   }
   .deck-app :global(section.slide.is-leaving.to-prev) {
     z-index: 2;
-    animation: slide-leave-to-right 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: slide-leave-to-right 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
   @keyframes slide-enter-from-right {
@@ -519,7 +520,7 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
   @media (prefers-reduced-motion: no-preference) {
     .deck-app :global(section.slide.is-active .slide-content),
     .deck-app :global(section.slide.is-active .slide-figure) {
-      animation: card-settle 280ms ease-out both;
+      animation: card-settle 250ms ease-out both;
     }
   }
 
@@ -542,7 +543,7 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
   .deck-app :global(.slide-content) {
     border: 1px solid var(--dk-divider);
     border-radius: 16px;
-    padding: clamp(16px, 2vw, 24px);
+    padding: clamp(12px, 1.5vw, 18px);
     background: var(--dk-bg);
     min-height: 0;
     overflow-y: auto;
@@ -560,7 +561,7 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
     font-family: var(--dk-font-display);
   }
   .deck-app :global(.slide-content h2) {
-    margin: 0 0 12px;
+    margin: 0 0 8px;
     font-family: var(--dk-font-body);
     font-size: clamp(1.3rem, 1.8vw, 1.85rem);
     line-height: 1.2;
@@ -584,6 +585,18 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
   .deck-app :global(.slide-content strong) {
     color: var(--dk-text);
   }
+  /* S01 sub-hero: a tone-accented lead line that lifts off the body copy */
+  .deck-app :global(.slide-sub-hero) {
+    margin: 0.4rem 0 0.9rem;
+    padding-left: 0.85rem;
+    border-left: 3px solid var(--tone);
+    font-size: clamp(1.02rem, 1.25vw, 1.2rem);
+    line-height: 1.45;
+    color: var(--dk-text);
+  }
+  .deck-app :global(.slide-sub-hero strong) {
+    font-weight: 600;
+  }
   .deck-app :global(.slide-content a) {
     color: var(--color-accent);
   }
@@ -606,6 +619,13 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
     min-height: 0;
     overflow-y: auto;
     scrollbar-width: thin;
+  }
+  /* S06: vertically center a static figure (e.g. ContextStateDiagram) in its card */
+  .deck-app :global(.fig-center) {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .deck-app :global(.slide-figure svg),
   .deck-app :global(.slide-figure .layer-diagram) {
@@ -710,6 +730,18 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
     font-size: 0.9rem;
     color: var(--dk-muted);
     line-height: 1.5;
+  }
+  /* S04 worked example: separated from the lead line, dimmer, tone-tinted label */
+  .deck-app :global(.panel-example) {
+    margin-top: 0.7rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--dk-divider);
+    font-size: 0.84rem;
+    color: var(--dk-muted-alt);
+  }
+  .deck-app :global(.panel-example strong) {
+    color: var(--tone);
+    font-weight: 600;
   }
 
   .deck-app :global(.law-cards) {
@@ -821,11 +853,40 @@ const eyebrow = isEs ? 'ASDT · presentación' : 'ASDT · presentation'
     border: 1px solid var(--dk-divider);
     border-radius: var(--dk-radius-md);
     padding: 1.25rem;
-    margin: 0.75rem 0;
+    margin: 1.5rem 0;
     font-family: var(--dk-font-mono);
     color: var(--dk-green);
-    font-size: clamp(0.85rem, 1.5vw, 1.1rem);
+    font-size: clamp(1rem, 1.8vw, 1.3rem);
     box-shadow: var(--dk-shadow-md);
+  }
+
+  /* S12 CTA helpers — stronger closing composition */
+  .deck-app :global(.cta-divider) {
+    height: 1px;
+    border: none;
+    margin: 1.5rem 0 0;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--mode-bg) 50%,
+      transparent
+    );
+    opacity: 0.6;
+  }
+  .deck-app :global(.cta-thesis) {
+    color: var(--dk-text);
+    font-weight: 700;
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+  }
+  .deck-app :global(.cta-thesis strong) {
+    color: var(--mode-bg);
+  }
+  .deck-app :global(.cta-link) {
+    display: inline-block;
+    font-family: var(--dk-font-mono);
+    font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+    color: var(--mode-bg);
+    font-weight: 600;
   }
 
   /* Nav / footer hide while deck is active (normal browser view) */

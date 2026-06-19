@@ -27,6 +27,18 @@ steps:
     output_topic_key: "{project}/{change}/pm/user-stories"
     reference_skills: []
 
+  - name: success-metrics
+    skill: steps/success-metrics.md
+    description: Derive measurable NFR targets (budget + target + measurement method) from the user stories
+    execution: subagent
+    model: haiku
+    agent: analyst
+    inputs:
+      - "{project}/{change}/pm/user-stories"
+    output_topic_key: "{project}/{change}/pm/nfr-targets"
+    reference_skills:
+      - ../asdt-shared/skills/nfr-budget.md
+
   - name: scope-analysis
     skill: steps/scope-analysis.md
     description: Define explicit in-scope and out-of-scope boundaries, integration points, and risk flags

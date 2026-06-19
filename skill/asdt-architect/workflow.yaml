@@ -60,6 +60,19 @@ steps:
       - skills/api-design.md
       - skills/scalability-analysis.md
 
+  - name: cost-estimation
+    skill: steps/cost-estimation.md
+    description: Estimate the cost profile of the system design per NFR dimension and judge each against the PM budget
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs:
+      - "{project}/{change}/architect/system-design"
+      - "{project}/{change}/pm/nfr-targets"
+    output_topic_key: "{project}/{change}/architect/cost-estimate"
+    reference_skills:
+      - ../asdt-shared/skills/nfr-budget.md
+
   - name: risk-analysis
     skill: steps/risk-analysis.md
     description: Identify risks introduced by the system design and rate them by severity

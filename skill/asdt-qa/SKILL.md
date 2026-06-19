@@ -44,8 +44,8 @@ or UX specs.
 | Level | Steps |
 |-------|-------|
 | **trivial** | Not eligible — falls back to `simple`; no dependency-complete step set exists below `simple` |
-| **simple** | `load-requirements → ac-validation → test-case-generation → quality-report → review` |
-| **moderate** | `load-requirements → ac-validation → edge-case-analysis → test-strategy → test-case-generation → quality-report → review` |
+| **simple** | `load-requirements → ac-validation → test-case-generation → quality-report → performance-validation → review` |
+| **moderate** | `load-requirements → ac-validation → edge-case-analysis → test-strategy → test-case-generation → quality-report → performance-validation → review` |
 | **complex** | Full workflow (same steps as moderate) |
 
 **Trivial eligible**: No — falls back to `simple`.
@@ -63,6 +63,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | test-strategy | steps/test-strategy.md | subagent | `qa/edge-cases` | `qa/test-strategy` |
 | test-case-generation | steps/test-case-generation.md | subagent | `qa/test-strategy`, `qa/edge-cases` | `qa/test-cases` |
 | quality-report | steps/quality-report.md | subagent | `qa/test-cases`, `qa/ac-gaps` | `qa/test-plan` |
+| performance-validation | steps/performance-validation.md | subagent | `qa/test-plan`, `pm/nfr-targets` | `qa/perf-validation` |
 | review | steps/review.md | subagent | `qa/test-plan`, `qa/ac-gaps` | `qa/qa-review` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 

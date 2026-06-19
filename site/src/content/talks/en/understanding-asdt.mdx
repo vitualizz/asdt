@@ -17,10 +17,12 @@ import { dogfoodFlow } from '@data/dogfood-flow-steps'
 import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
 
 <section class="slide slide--wide" data-title="The thesis" data-tone="blue" data-module="1">
-  <div class="slide-content">
+  <div class="slide-content" style="display:flex; flex-direction:column; justify-content:center;">
     <p class="slide-kicker">01 / 12 · why this talk</p>
     <h2>You don't need a bigger AI.</h2>
     <p>You need a better process. <strong>Seven perspectives. One human in the loop.</strong> That's ASDT.</p>
+    <p class="slide-sub-hero"><strong>The model isn't the bottleneck — the process around it is.</strong></p>
+    <p>This talk is one idea, repeated: a single AI is one opinion. A team of perspectives, with a human deciding, is a process you can trust.</p>
   </div>
 </section>
 
@@ -41,6 +43,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">03 / 12 · key terminology</p>
     <h2>Key Terminology</h2>
     <p>Seven words you'll hear all day. Here they are in plain language.</p>
+    <p>These seven words appear throughout the deck.</p>
+    <p>Tap any card to expand its definition and a real example.</p>
   </div>
   <figure class="slide-figure">
     <div class="slide-figure-inner">
@@ -60,10 +64,12 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
       <div class="panel">
         <h3>No spec to trace back to</h3>
         <p>It shipped because it compiled — not because anyone decided it should.</p>
+        <p class="panel-example"><strong>Example:</strong> the model built a full password-reset flow when all you asked for was a "forgot password" link — confidently, and wrong.</p>
       </div>
       <div class="panel">
         <h3>One lens, one bias</h3>
         <p>It can't catch its own mistakes. That's not a bug in the model. That's a gap in the process.</p>
+        <p class="panel-example"><strong>Example:</strong> the same model that wrote the auth code also reviewed it — and missed the token it logged in plaintext.</p>
       </div>
     </div>
   </figure>
@@ -73,7 +79,7 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
   <div class="slide-content">
     <p class="slide-kicker">05 / 12 · the maturity ladder</p>
     <h2>The maturity ladder</h2>
-    <p>SDD on steroids — a specialist team, routing, and human gates on top.</p>
+    <p>SDD on steroids — a specialist team, routing, and human checkpoints on top.</p>
   </div>
   <figure class="slide-figure">
     <div class="slide-figure-inner">
@@ -87,18 +93,21 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">06 / 12 · the memory problem</p>
     <h2>AI forgets. Long sessions don't just lose facts — they lose judgment.</h2>
     <p><strong>Law 1 in practice:</strong> every step starts with a clean, scoped context and hands off through a written artifact. The work lives in documents — not in a conversation that might not exist tomorrow.</p>
+    <p><strong>Concrete loss:</strong> ask one long chat to "use the auth pattern we agreed on" and by message 200 it has quietly forgotten which pattern that was — and invents a new one. A written artifact never forgets.</p>
     <p>This deck? Worked example. Every specialist read one artifact, wrote one artifact, returned. No drift. No giant chat. Just documents that survive. 🐈</p>
   </div>
   <figure class="slide-figure">
-    <ContextStateDiagram lang="en" />
+    <div class="fig-center">
+      <ContextStateDiagram lang="en" />
+    </div>
   </figure>
 </section>
 
-<section class="slide" data-title="Pipeline explorer" data-tone="purple" data-module="3">
+<section class="slide" data-title="Pipeline explorer" data-tone="purple" data-module="3" data-fragments="7">
   <div class="slide-content">
     <p class="slide-kicker">07 / 12 · law 3 · perspectives before code</p>
     <h2>One feature, seven specialists</h2>
-    <p>Each a fresh scoped lens. Between every specialist sits a gate.</p>
+    <p>Each one a fresh, scoped lens. Not a fixed assembly line — the order flexes, and every specialist depends on the others.</p>
   </div>
   <figure class="slide-figure">
     <div class="slide-figure-inner">
@@ -124,8 +133,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">09 / 12 · this talk was built with asdt</p>
     <h2>This talk was built with ASDT</h2>
     <p>You just saw the pipeline. Now here it is, running on this very deck.</p>
-    <p>A <strong>brief</strong> is just a short, structured document one step hands to the next. This deck flowed through six of them: the Researcher wrote a discovery brief, the PM turned it into requirements, the Architect made a format decision, the Developer built the implementation, QA wrote the review, and UX/UI produced the design brief.</p>
-    <p>Six specialists, one human gate between each, every handoff a written artifact. The deck is its own proof.</p>
+    <p>A <strong>summary (brief)</strong> is just a short, structured document one step hands to the next. This deck flowed through six of them: the Researcher wrote a discovery summary, the PM turned it into requirements, the Architect made a format decision, the Developer built the implementation, QA wrote the review, and UX/UI produced the design summary.</p>
+    <p>Six specialists, one human checkpoint between each, every handoff a written document. The deck is its own proof.</p>
   </div>
   <figure class="slide-figure">
     <FlowWalkerBlock flow={dogfoodFlow} lang="en" />
@@ -137,8 +146,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
     <p class="slide-kicker">10 / 12 · humans gate, ai executes</p>
     <h2>Humans gate, AI executes</h2>
     <p>The machine never decides. It delivers options and waits.</p>
-    <p>Concrete example from this deck: at the <strong>PM → Architect</strong> gate, the format decision was open — slides as Markdown, as a framework, as raw HTML? The AI laid out the trade-offs. It did not choose.</p>
-    <p>A human opened the gate, picked the format, and only then did the Architect proceed. One gate. One decision. Human-owned.</p>
+    <p>Concrete example from this deck: at the <strong>PM → Architect</strong> checkpoint, the format decision was open — slides as Markdown, as a framework, as raw HTML? The AI laid out the trade-offs. It did not choose.</p>
+    <p>A human opened the checkpoint, picked the format, and only then did the Architect proceed. One checkpoint. One decision. Human-owned.</p>
   </div>
   <figure class="slide-figure">
     <GateDiagram lang="en" />
@@ -170,8 +179,8 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
           </div>
           <h3 class="law-title">Humans gate, AI executes</h3>
           <p class="law-summary">The machine never decides; it delivers options and waits.</p>
-          <p class="law-body">Between specialists sits a gate. The AI lays out trade-offs and stops. A human reviews, picks a direction, and only then does the next specialist proceed. Judgment stays human-owned.</p>
-          <blockquote class="law-example"><span class="law-ex-label">In this deck</span> Building this deck: at the PM → Architect gate the AI offered Markdown, a slide framework, or raw HTML. Lee chose the format — the AI did not.</blockquote>
+          <p class="law-body">Between specialists sits a checkpoint. The AI lays out trade-offs and stops. A human reviews, picks a direction, and only then does the next specialist proceed. Judgment stays human-owned.</p>
+          <blockquote class="law-example"><span class="law-ex-label">In this deck</span> Building this deck: at the PM → Architect checkpoint the AI offered Markdown, a slide framework, or raw HTML. Lee chose the format — the AI did not.</blockquote>
         </div>
         <div class="law-card law-card--l3">
           <div class="law-card-head">
@@ -192,9 +201,10 @@ import { ASDT_REPO, ASDT_INSTALL } from '@data/urls'
   <div class="slide-content">
     <p class="slide-kicker">12 / 12 · your move</p>
     <h2>Your team is one install away.</h2>
-    <p>Seven specialists. Human gates. Written artifacts. All of it, in your terminal, today.</p>
+    <p>Seven specialists. Human checkpoints. Written documents. All of it, in your terminal, today.</p>
+    <div class="cta-divider" role="presentation"></div>
     <div class="install-block">curl -fsSL {ASDT_INSTALL} | sh<br />asdt-tui</div>
-    <p><a href={ASDT_REPO} target="_blank" rel="noopener noreferrer">github.com/vitualizz/asdt</a></p>
-    <p><strong>You don't need a bigger AI. You need a better process.</strong></p>
+    <p><a class="cta-link" href={ASDT_REPO} target="_blank" rel="noopener noreferrer">github.com/vitualizz/asdt</a></p>
+    <p class="cta-thesis"><strong>You don't need a bigger AI. You need a better process.</strong></p>
   </div>
 </section>
