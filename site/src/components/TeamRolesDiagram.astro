@@ -1,0 +1,72 @@
+---
+// Inline SVG: the seven ASDT specialists, each a single perspective (deck slide 02).
+// Mirrors LayerModelDiagram.astro grammar. No JS. All labels are real <text> nodes
+// for a11y + search. Bilingual via lang prop (role labels, sub-label, anchor phrase).
+interface Props {
+  lang: 'en' | 'es'
+}
+const { lang } = Astro.props
+const isEs = lang === 'es'
+
+const roles = [
+  { en: 'Researcher', es: 'Investigador', stroke: '#7AA89F' },
+  { en: 'Product', es: 'Producto', stroke: '#7FB4CA' },
+  { en: 'Architect', es: 'Arquitecto', stroke: '#DEBA87' },
+  { en: 'Developer', es: 'Desarrollador', stroke: '#B7CC85' },
+  { en: 'QA', es: 'QA', stroke: '#E0C15A' },
+  { en: 'Security', es: 'Seguridad', stroke: '#CB7C94' },
+  { en: 'Design', es: 'Diseño', stroke: '#A1AABB' },
+]
+
+const Y0 = 20
+const STEP = 48
+const NODE_W = 300
+const NODE_H = 52
+const X0 = (980 - NODE_W) / 2
+const subLabel = isEs ? 'una perspectiva' : 'one lens'
+---
+<svg
+  class="team-roles-diagram"
+  viewBox="0 0 980 380"
+  role="img"
+  aria-labelledby="tr-title tr-desc"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="tr-title"
+    >{isEs
+      ? 'Siete especialistas ASDT, cada uno con una perspectiva'
+      : 'Seven ASDT specialists, each with one perspective'}</title
+  >
+  <desc id="tr-desc"
+    >{isEs
+      ? 'Siete nodos en columna vertical — Investigador, Producto, Arquitecto, Desarrollador, QA, Seguridad y Diseño — cada uno una sola perspectiva, con un humano en el proceso.'
+      : 'Seven nodes in a vertical column — Researcher, Product, Architect, Developer, QA, Security and Design — each one lens, with one human in the loop.'}</desc
+  >
+
+  {roles.map((role, i) => {
+    const y = Y0 + i * STEP
+    return (
+      <>
+        <rect x={X0} y={y} width={NODE_W} height={NODE_H} rx="10" fill="#232A36" stroke={role.stroke} stroke-width="1.5" />
+        <text x="490" y={y + 22} text-anchor="middle" fill={role.stroke} font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">{isEs ? role.es : role.en}</text>
+        <text x="490" y={y + 38} text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="10">{subLabel}</text>
+      </>
+    )
+  })}
+
+  <!-- anchor phrase -->
+  <text x="490" y="360" text-anchor="middle" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">
+    <tspan fill="#7FB4CA">{isEs ? 'Siete perspectivas.' : 'Seven perspectives.'}</tspan>
+    <tspan fill="#B7CC85">{isEs ? ' Un humano en el proceso.' : ' One human in the loop.'}</tspan>
+  </text>
+</svg>
+
+<style>
+  .team-roles-diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 980px;
+    margin: 0.5rem auto;
+  }
+</style>

@@ -130,8 +130,6 @@ export const en: UIStrings = {
     pipelinePosition: 'Pipeline position',
     artifactReads: 'Reads from knowledge base',
     artifactWrites: 'Writes to knowledge base',
-    flowNext: 'Next step',
-    flowPrev: 'Previous step',
     flowStep: 'Step',
     flowOf: 'of',
     flowTitle: 'How it runs',

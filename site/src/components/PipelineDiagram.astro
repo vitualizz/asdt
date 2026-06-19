@@ -1,240 +1,147 @@
 ---
-import type { UIStrings } from '@i18n/types'
+// Inline SVG of the ASDT 7-specialist pipeline for the conference deck (slide 7).
+// No props, no JS. All specialist names + keywords are real <text> nodes so they
+// are screen-reader- and search-indexable. Node fills use specialist tokens.
+const nodes = [
+  { name: 'Researcher', token: 'var(--c-res)' },
+  { name: 'PM', token: 'var(--c-pm)' },
+  { name: 'Architect', token: 'var(--c-arch)' },
+  { name: 'Developer', token: 'var(--c-dev)' },
+  { name: 'QA', token: 'var(--c-qa)' },
+  { name: 'Security', token: 'var(--c-sec)' },
+  { name: 'UX/UI', token: 'var(--c-ux)' },
+]
 
-interface Props { t: UIStrings }
-const { t } = Astro.props
-const nodes = t.pipeline.nodes
+interface Props {
+  lang?: 'en' | 'es'
+}
+const { lang = 'en' } = Astro.props
 
-function nc(id: string): string {
-  return id === 'ux-ui' ? 'var(--c-ux)' : `var(--c-${id})`
-}
-
-const ABBR: Record<string, string> = {
-  pm: 'PM',
-  architect: 'ARC',
-  developer: 'DEV',
-  qa: 'QA',
-  security: 'SEC',
-  'ux-ui': 'UX',
-}
-function abbr(id: string): string {
-  return ABBR[id] ?? id.toUpperCase().slice(0, 3)
-}
+const NODE_W = 124
+const NODE_H = 64
+const GAP = 16
+const X0 = 10
+const NODE_Y = 150
+const step = NODE_W + GAP
 ---
-<section class="px-6 py-24 border-t border-(--color-border)">
-  <div class="mx-auto max-w-7xl space-y-12">
-    <div class="text-center space-y-4">
-      <h2 class="text-3xl font-bold tracking-tight text-(--color-text)">{t.pipeline.title}</h2>
-      <p class="mx-auto max-w-2xl text-(--color-text-muted)">{t.pipeline.sub}</p>
-    </div>
+<svg
+  class="pipeline-diagram"
+  viewBox="0 0 980 320"
+  role="img"
+  aria-labelledby="pipeline-title pipeline-desc"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="pipeline-title"
+    >ASDT pipeline: Researcher to PM to Architect to Developer to QA to Security
+    to UX/UI</title
+  >
+  <desc id="pipeline-desc"
+    >Seven specialists in sequence with a human gate between each handoff
+    artifact.</desc
+  >
 
-    <div class="pipe-wrap" role="img" aria-labelledby="pipe-a11y-title pipe-a11y-desc">
-      <span id="pipe-a11y-title" class="pipe-sr">{t.pipeline.a11yTitle}</span>
-      <span id="pipe-a11y-desc" class="pipe-sr">{t.pipeline.a11yDesc}</span>
+  <!-- Orchestrator annotation (top) -->
+  <text
+    x="490"
+    y="44"
+    text-anchor="middle"
+    fill="var(--dk-muted, #A1AABB)"
+    font-family="var(--dk-font-body, serif)"
+    font-size="20">Seven specialists — one perspective each</text
+  >
 
-      <div class="pipe-row" aria-hidden="true">
-        {nodes.map((node, i) => (
-          <>
-            {i > 0 && <div class={`pipe-conn pipe-conn-${i}`}></div>}
-            <div class={`pipe-node pipe-node-${i}`} style={`--nc:${nc(node.id)}`}>
-              <div class="node-ring">
-                <span class="node-abbr">{abbr(node.id)}</span>
-              </div>
-              <span class="node-label">{node.label}</span>
-            </div>
-          </>
-        ))}
-      </div>
+  {
+    nodes.map((node, i) => {
+      const x = X0 + i * step
+      const cx = x + NODE_W / 2
+      return (
+        <>
+          {/* handoff connector + gate marker before each node after the first */}
+          {i > 0 && (
+            <>
+              <line
+                x1={x - GAP - 1}
+                y1={NODE_Y + NODE_H / 2}
+                x2={x}
+                y2={NODE_Y + NODE_H / 2}
+                stroke="var(--dk-divider, #313342)"
+                stroke-width="2"
+              />
+              <rect
+                x={x - GAP / 2 - 4}
+                y={NODE_Y + NODE_H / 2 - 16}
+                width="8"
+                height="32"
+                rx="2"
+                fill="var(--dk-muted, #A1AABB)"
+              />
+              <text
+                x={x - GAP / 2}
+                y={NODE_Y - 10}
+                text-anchor="middle"
+                fill="var(--dk-muted, #A1AABB)"
+                font-family="var(--dk-font-mono, monospace)"
+                font-size="11">
+                gate
+              </text>
+            </>
+          )}
+          <rect
+            x={x}
+            y={NODE_Y}
+            width={NODE_W}
+            height={NODE_H}
+            rx="10"
+            fill={node.token}
+            stroke="var(--dk-divider, #313342)"
+            stroke-width="1"
+          />
+          <text
+            x={cx}
+            y={NODE_Y + NODE_H / 2 + 5}
+            text-anchor="middle"
+            fill="var(--dk-bg, #1c212c)"
+            font-family="var(--dk-font-mono, monospace)"
+            font-size="16"
+            font-weight="600">
+            {node.name}
+          </text>
+        </>
+      )
+    })
+  }
 
-      <div class="pipe-kb" aria-hidden="true">
-        <span class="kb-label">knowledge base</span>
-      </div>
-    </div>
-  </div>
-</section>
+  <!-- handoff / artifact keyword label (lang-aware) -->
+  <text
+    x="490"
+    y="270"
+    text-anchor="middle"
+    fill="var(--dk-muted, #A1AABB)"
+    font-family="var(--dk-font-mono, monospace)"
+    font-size="13">{lang === 'es'
+      ? 'Cada entrega es un artefacto escrito. Cada gate es del humano.'
+      : 'Each handoff is a written artifact. Each gate is human-owned.'}</text
+  >
+
+  <!-- anchor phrase / subtitle -->
+  <text
+    x="490"
+    y="300"
+    text-anchor="middle"
+    font-family="var(--dk-font-display, sans-serif)"
+    font-size="22"
+    font-weight="600">
+    <tspan fill="var(--dk-text, #F3F6F9)">{lang === 'es' ? 'Mismo modelo,' : 'Same model,'}</tspan>
+    <tspan fill="var(--dk-muted, #A1AABB)">{lang === 'es' ? ' otra mirada' : ' different lens'}</tspan>
+  </text>
+</svg>
 
 <style>
-  .pipe-sr {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .pipe-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 900px;
-    margin: 0 auto;
-    overflow-x: auto;
-    padding: 0 8px;
-  }
-
-  .pipe-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    min-width: fit-content;
-    padding: 4px 0 0;
-  }
-
-  .pipe-node {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .node-ring {
-    width: 68px;
-    height: 68px;
-    border-radius: 50%;
-    border: 1.5px solid var(--nc, var(--color-accent));
-    background: oklch(from var(--nc) l c h / 0.08);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .node-abbr {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--nc, var(--color-accent));
-  }
-
-  .node-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--faint);
-    white-space: nowrap;
-    text-align: center;
-  }
-
-  .pipe-conn {
-    width: 44px;
-    height: 1.5px;
-    background: var(--border-soft);
-    flex-shrink: 0;
-    margin-top: 33px;
-    position: relative;
-    opacity: 1;
-  }
-
-  .pipe-conn::after {
-    content: '';
-    position: absolute;
-    right: -3px;
-    top: -3px;
-    width: 7px;
-    height: 7px;
-    border-top: 1.5px solid var(--faint);
-    border-right: 1.5px solid var(--faint);
-    transform: rotate(45deg);
-    border-radius: 1px;
-  }
-
-  /* Knowledge base strip */
-  .pipe-kb {
-    position: relative;
-    margin-top: 20px;
+  .pipeline-diagram {
+    display: block;
     width: 100%;
-    max-width: 820px;
-    height: 40px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-soft);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-
-  .pipe-kb::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--spectrum);
-    border-radius: 10px 10px 0 0;
-  }
-
-  .kb-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--faint);
-  }
-
-  /* Animations */
-  @media (prefers-reduced-motion: no-preference) {
-    .node-ring {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    .node-label { opacity: 0; }
-    .pipe-conn { opacity: 0; }
-    .pipe-conn::after { opacity: 0; }
-    .pipe-kb { opacity: 0; transform: translateY(10px); }
-
-    .pipe-node-0 .node-ring { animation: node-in 0.4s cubic-bezier(0.2,0.9,0.3,1.2) 0.10s forwards, node-pulse 2.8s ease-in-out 0.50s infinite; }
-    .pipe-node-1 .node-ring { animation: node-in 0.4s cubic-bezier(0.2,0.9,0.3,1.2) 0.60s forwards, node-pulse 2.8s ease-in-out 1.00s infinite; }
-    .pipe-node-2 .node-ring { animation: node-in 0.4s cubic-bezier(0.2,0.9,0.3,1.2) 1.10s forwards, node-pulse 2.8s ease-in-out 1.50s infinite; }
-    .pipe-node-3 .node-ring { animation: node-in 0.4s cubic-bezier(0.2,0.9,0.3,1.2) 1.60s forwards, node-pulse 2.8s ease-in-out 2.00s infinite; }
-    .pipe-node-4 .node-ring { animation: node-in 0.4s cubic-bezier(0.2,0.9,0.3,1.2) 2.10s forwards, node-pulse 2.8s ease-in-out 2.50s infinite; }
-    .pipe-node-5 .node-ring { animation: node-in 0.4s cubic-bezier(0.2,0.9,0.3,1.2) 2.60s forwards, node-pulse 2.8s ease-in-out 3.00s infinite; }
-
-    .pipe-node-0 .node-label { animation: fade-in 0.3s ease 0.40s forwards; }
-    .pipe-node-1 .node-label { animation: fade-in 0.3s ease 0.90s forwards; }
-    .pipe-node-2 .node-label { animation: fade-in 0.3s ease 1.40s forwards; }
-    .pipe-node-3 .node-label { animation: fade-in 0.3s ease 1.90s forwards; }
-    .pipe-node-4 .node-label { animation: fade-in 0.3s ease 2.40s forwards; }
-    .pipe-node-5 .node-label { animation: fade-in 0.3s ease 2.90s forwards; }
-
-    .pipe-conn-1 { animation: fade-in 0.25s ease 0.50s forwards; }
-    .pipe-conn-2 { animation: fade-in 0.25s ease 1.00s forwards; }
-    .pipe-conn-3 { animation: fade-in 0.25s ease 1.50s forwards; }
-    .pipe-conn-4 { animation: fade-in 0.25s ease 2.00s forwards; }
-    .pipe-conn-5 { animation: fade-in 0.25s ease 2.50s forwards; }
-
-    .pipe-conn-1::after { animation: fade-in 0.15s ease 0.72s forwards; }
-    .pipe-conn-2::after { animation: fade-in 0.15s ease 1.22s forwards; }
-    .pipe-conn-3::after { animation: fade-in 0.15s ease 1.72s forwards; }
-    .pipe-conn-4::after { animation: fade-in 0.15s ease 2.22s forwards; }
-    .pipe-conn-5::after { animation: fade-in 0.15s ease 2.72s forwards; }
-
-    .pipe-kb { animation: kb-in 0.5s ease 2.9s forwards; }
-  }
-
-  @keyframes node-in {
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes node-pulse {
-    0%, 100% {
-      border-color: oklch(from var(--nc) l c h / 0.55);
-      box-shadow: none;
-    }
-    50% {
-      border-color: var(--nc);
-      box-shadow: 0 0 18px 0 oklch(from var(--nc) l c h / 0.28);
-    }
-  }
-
-  @keyframes fade-in {
-    to { opacity: 1; }
-  }
-
-  @keyframes kb-in {
-    to { opacity: 1; transform: translateY(0); }
+    height: auto;
+    max-width: 980px;
+    margin: 0.5rem auto;
   }
 </style>

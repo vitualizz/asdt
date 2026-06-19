@@ -3,7 +3,8 @@ import { getCollection } from 'astro:content'
 
 export const GET: APIRoute = async () => {
   const docs = await getCollection('docs')
-  const index = docs.map((entry) => ({
+  const talks = await getCollection('talks')
+  const index = [...docs, ...talks].map((entry) => ({
     id: entry.id,
     slug: entry.id.replace(/^(en|es)\//, ''),
     locale: entry.data.locale,

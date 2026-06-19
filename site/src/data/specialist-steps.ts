@@ -183,8 +183,8 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tiers: {
       trivial:  [],
       simple:   ['load-requirements', 'ac-validation', 'test-case-generation', 'quality-report'],
-      moderate: ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report'],
-      complex:  ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report'],
+      moderate: ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'review'],
+      complex:  ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'review'],
     },
     special: {
       trivial: 'not-eligible',
@@ -219,6 +219,11 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
         id: 'quality-report',
         purpose: 'Verify AC coverage, compute percentage, render READY / READY WITH CAVEATS / BLOCKED verdict',
         produces: 'test-plan',
+      },
+      'review': {
+        id: 'review',
+        purpose: 'Go/no-go shipping verdict — holistic release-readiness decision integrating all QA findings before knowledge preservation',
+        produces: 'qa/qa-review',
       },
     },
   },

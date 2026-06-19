@@ -1,0 +1,121 @@
+---
+import { MaturityLadderIsland } from './MaturityLadderIsland'
+import MaturityLadderDiagram from './MaturityLadderDiagram.astro'
+import type { Locale } from '@i18n/utils'
+
+interface Props {
+  lang: Locale
+}
+const { lang } = Astro.props
+const isEs = lang === 'es'
+
+// Mirror of MaturityLadderIsland DEFINITIONS — used for the print/no-JS fallback.
+const printRungs = [
+  {
+    label: 'Vibe Coding',
+    text: isEs
+      ? 'Escribe, pega, reza. Sin spec, sin trazabilidad, sin segunda opinión. Parece rápido hasta que algo falla.'
+      : 'Prompt, paste, pray. No spec, no trace, no second opinion. Feels fast until something breaks.',
+  },
+  {
+    label: 'SDD',
+    text: isEs
+      ? 'Desarrollo guiado por especificación. Primero el spec, luego el código. Disciplinado, pero sigue siendo una sola perspectiva.'
+      : 'Spec-driven development. Write the spec first; let the code follow the document. Disciplined but still a single lens.',
+  },
+  {
+    label: 'ASDT',
+    text: isEs
+      ? 'SDD con esteroides. Siete especialistas, cada uno con contexto fresco, con una compuerta humana entre cada entrega. Los artefactos sobreviven cada reset.'
+      : 'SDD on steroids. Seven specialists, each a fresh context, with a human gate between every handoff. Artifacts survive every reset.',
+  },
+]
+---
+
+<div class="mlb-wrap">
+  <MaturityLadderIsland client:visible lang={lang} />
+
+  <noscript>
+    <MaturityLadderDiagram />
+    <p class="mlb-ns-label">Vibe Coding → SDD → ASDT</p>
+  </noscript>
+
+  <div class="mlb-ns-print" aria-hidden="true">
+    <MaturityLadderDiagram />
+    {
+      printRungs.map((rung) => (
+        <p class="mlb-print-def">
+          <strong>{rung.label}</strong> — {rung.text}
+        </p>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .mlb-wrap {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .mlb-wrap :global(.ml-island) {
+    max-width: 100%;
+  }
+
+  .mlb-wrap :global(.ml-diagram) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: none;
+    margin: 0.5rem auto;
+  }
+
+  .mlb-ns-label {
+    text-align: center;
+    font-family: var(--dk-font-mono);
+    color: var(--dk-muted);
+    font-size: 0.85rem;
+  }
+
+  .mlb-wrap :global(.ml-definition) {
+    margin-top: var(--dk-space-md, 1.25rem);
+    padding: var(--dk-space-sm, 0.75rem) 0;
+    border-top: 1px solid var(--dk-divider);
+  }
+
+  .mlb-wrap :global(.ml-def-text) {
+    font-family: var(--dk-font-body);
+    font-size: clamp(1rem, 1.8vw, 1.25rem);
+    color: var(--dk-text);
+    line-height: 1.6;
+    margin: 0;
+    transition: opacity 150ms ease;
+  }
+
+  .mlb-ns-print {
+    display: none;
+  }
+
+  .mlb-print-def {
+    font-family: var(--dk-font-body);
+    color: var(--dk-text);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0.4rem 0;
+  }
+
+  @media print {
+    .mlb-wrap :global(.ml-island) {
+      display: none !important;
+    }
+    .mlb-ns-print {
+      display: block !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mlb-wrap :global(.ml-def-text) {
+      transition: none !important;
+    }
+  }
+</style>

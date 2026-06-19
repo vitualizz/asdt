@@ -1,0 +1,103 @@
+---
+// Inline SVG: the ASDT three-layer model (deck slide 09).
+// Layer 1 Router → Layer 2 Specialist orchestrators → Layer 3 Steps/Artifacts.
+// No JS. Bilingual via lang prop. All labels are real <text> nodes for a11y + search.
+interface Props {
+  lang?: 'en' | 'es'
+}
+const { lang = 'en' } = Astro.props
+const isEs = lang === 'es'
+
+const routerSub = isEs ? 'ROUTER — recomienda, nunca ejecuta' : 'ROUTER — recommends, never executes'
+const stepSub = isEs ? '1 step → 1 artefacto' : '1 step → 1 artifact'
+
+const titleText = isEs
+  ? 'Modelo de tres capas de ASDT: Router, orquestadores especialistas, steps y artefactos'
+  : 'ASDT three-layer model: Router, Specialist Orchestrators, Steps and Artifacts'
+const descText = isEs
+  ? 'Tres niveles descendentes. Capa 1: el Router /asdt analiza y recomienda. Capa 2: cada especialista orquesta su propia secuencia de steps. Capa 3: cada step produce un artefacto.'
+  : 'Three descending tiers. Layer 1: the /asdt Router analyzes and recommends. Layer 2: each specialist orchestrates its own step sequence. Layer 3: each step produces one artifact.'
+
+const anchorRouter = isEs ? 'El router recomienda.' : 'Router recommends.'
+const anchorSpecialist = isEs ? ' El especialista orquesta.' : ' Specialist orchestrates.'
+const anchorStep = isEs ? ' El step produce.' : ' Step produces.'
+
+const l2 = [
+  { x: 60, label: 'Architect', stroke: '#DEBA87', sw: 1 },
+  { x: 400, label: 'Developer', stroke: '#B7CC85', sw: 2 },
+  { x: 740, label: 'QA', stroke: '#7AA89F', sw: 1 },
+]
+const l3 = [
+  { x: 260, label: 'feature-brief' },
+  { x: 420, label: 'implementation' },
+  { x: 580, label: 'test-suite' },
+]
+---
+<svg
+  class="layer-diagram"
+  viewBox="0 0 980 360"
+  role="img"
+  aria-labelledby="layer-title layer-desc"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="layer-title">{titleText}</title>
+  <desc id="layer-desc">{descText}</desc>
+  <defs>
+    <filter id="layer-glow-blue" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#7FB4CA" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- fan lines L1 -> L2 -->
+  {l2.map((b) => (
+    <line x1="490" y1="80" x2={b.x + 90} y2="130" stroke="#313342" stroke-width="1.5" />
+  ))}
+
+  <!-- Layer 1: Router -->
+  <rect x="340" y="20" width="300" height="60" rx="12" fill="#232A36" stroke="#7FB4CA" stroke-width="2" filter="url(#layer-glow-blue)" />
+  <text x="490" y="46" text-anchor="middle" fill="#7FB4CA" font-family="var(--dk-font-mono, monospace)" font-size="20" font-weight="700">/asdt</text>
+  <text x="490" y="64" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="11">{routerSub}</text>
+
+  <!-- ellipses between L2 boxes -->
+  <text x="320" y="170" text-anchor="middle" fill="#A1AABB" font-size="24">···</text>
+  <text x="660" y="170" text-anchor="middle" fill="#A1AABB" font-size="24">···</text>
+
+  <!-- Layer 2: specialists -->
+  {l2.map((b) => (
+    <>
+      <rect x={b.x} y="130" width="180" height="56" rx="10" fill="#232A36" stroke={b.stroke} stroke-width={b.sw} />
+      <text x={b.x + 90} y="164" text-anchor="middle" fill={b.stroke} font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">{b.label}</text>
+    </>
+  ))}
+
+  <!-- lines Developer -> L3 -->
+  {l3.map((b) => (
+    <line x1="490" y1="186" x2={b.x + 70} y2="250" stroke="#313342" stroke-width="1.5" stroke-dasharray="3 2" />
+  ))}
+
+  <!-- Layer 3: steps -->
+  {l3.map((b) => (
+    <>
+      <rect x={b.x} y="250" width="140" height="50" rx="8" fill="#1c212c" stroke="#313342" stroke-width="1" />
+      <text x={b.x + 70} y="276" text-anchor="middle" fill="#F3F6F9" font-family="var(--dk-font-mono, monospace)" font-size="13">{b.label}</text>
+      <text x={b.x + 70} y="291" text-anchor="middle" fill="#8394A3" font-family="var(--dk-font-body, serif)" font-size="9">{stepSub}</text>
+    </>
+  ))}
+
+  <!-- anchor phrase -->
+  <text x="490" y="335" text-anchor="middle" font-family="var(--dk-font-display, sans-serif)" font-size="15" font-weight="600">
+    <tspan fill="#7FB4CA">{anchorRouter}</tspan>
+    <tspan fill="#B7CC85">{anchorSpecialist}</tspan>
+    <tspan fill="#DEBA87">{anchorStep}</tspan>
+  </text>
+</svg>
+
+<style>
+  .layer-diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 980px;
+    margin: 0.5rem auto;
+  }
+</style>

@@ -108,8 +108,6 @@ export interface UIStrings {
     pipelinePosition: string
     artifactReads: string
     artifactWrites: string
-    flowNext: string
-    flowPrev: string
     flowStep: string
     flowOf: string
     flowTitle: string

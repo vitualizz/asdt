@@ -1,0 +1,120 @@
+---
+// Inline SVG: how this talk was built with ASDT (deck slide 10).
+// Six specialist nodes in sequence, each producing one artifact, with a
+// human gate marker in every handoff gap. No props, no JS. All labels are
+// real <text> nodes for a11y + search. Artifact labels per orchestrator spec.
+const nodes = [
+  { name: 'Researcher', fill: '#7AA89F', text: '#1c212c', artifact: 'discovery brief' },
+  { name: 'PM', fill: '#7FB4CA', text: '#1c212c', artifact: 'requirements/backlog' },
+  { name: 'Architect', fill: '#DEBA87', text: '#1c212c', artifact: 'decision (format)' },
+  { name: 'Developer', fill: '#B7CC85', text: '#1c212c', artifact: 'implementation' },
+  { name: 'QA', fill: '#E0C15A', text: '#1c212c', artifact: 'review' },
+  { name: 'UX/UI', fill: '#CB7C94', text: '#F3F6F9', artifact: 'design brief' },
+]
+
+const NODE_W = 120
+const NODE_H = 56
+const GAP = 12
+const X0 = 20
+const NODE_Y = 100
+const step = NODE_W + GAP
+---
+<svg
+  class="dogfood-diagram"
+  viewBox="0 0 980 300"
+  role="img"
+  aria-labelledby="dogfood-title dogfood-desc"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="dogfood-title"
+    >How this talk was built with ASDT: six specialists in sequence</title
+  >
+  <desc id="dogfood-desc"
+    >Timeline of six specialist nodes: Researcher, PM, Architect, Developer, QA,
+    and UX/UI. Each specialist produced one artifact; a human gate sits between
+    each handoff.</desc
+  >
+
+  <!-- top annotation -->
+  <text x="490" y="44" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="16">Each specialist read one artifact, produced one artifact, then returned.</text>
+
+  {
+    nodes.map((node, i) => {
+      const x = X0 + i * step
+      const cx = x + NODE_W / 2
+      return (
+        <>
+          {/* connector + gate marker before each node after the first */}
+          {i > 0 && (
+            <>
+              <line
+                x1={x - GAP - 1}
+                y1={NODE_Y + NODE_H / 2}
+                x2={x}
+                y2={NODE_Y + NODE_H / 2}
+                stroke="#313342"
+                stroke-width="2"
+              />
+              <rect
+                x={x - GAP / 2 - 2.5}
+                y={NODE_Y + NODE_H / 2 - 11}
+                width="5"
+                height="22"
+                rx="2"
+                fill="#A1AABB"
+              />
+              <text
+                x={x - GAP / 2}
+                y={NODE_Y - 8}
+                text-anchor="middle"
+                fill="#8394A3"
+                font-family="var(--dk-font-mono, monospace)"
+                font-size="9"
+              >
+                gate
+              </text>
+            </>
+          )}
+          <rect x={x} y={NODE_Y} width={NODE_W} height={NODE_H} rx="10" fill={node.fill} />
+          <text
+            x={cx}
+            y={NODE_Y + NODE_H / 2 + 5}
+            text-anchor="middle"
+            fill={node.text}
+            font-family="var(--dk-font-display, sans-serif)"
+            font-size="14"
+            font-weight="600"
+          >
+            {node.name}
+          </text>
+          {/* artifact connector tick */}
+          <line x1={cx} y1={NODE_Y + NODE_H} x2={cx} y2={NODE_Y + NODE_H + 10} stroke="#313342" stroke-width="1" />
+          {/* artifact label */}
+          <text
+            x={cx}
+            y={NODE_Y + NODE_H + 14}
+            text-anchor="middle"
+            fill="#A1AABB"
+            font-family="var(--dk-font-mono, monospace)"
+            font-size="10"
+          >
+            {node.artifact}
+          </text>
+        </>
+      )
+    })
+  }
+
+  <!-- bottom note -->
+  <text x="490" y="278" text-anchor="middle" fill="#8394A3" font-family="var(--dk-font-body, serif)" font-size="12">No information was lost between steps. Each artifact persisted and was available to the next specialist.</text>
+</svg>
+
+<style>
+  .dogfood-diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 980px;
+    margin: 0.5rem auto;
+  }
+</style>
