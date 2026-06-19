@@ -11,6 +11,7 @@
 {{persona_block}}
 
 {{emoji_preference}}
+{{language_directive}}
 
 ## Session Protocol
 
@@ -89,7 +90,7 @@ This project uses the ASDT specialist model. For complex, multi-step work, invok
 
 For full-pipeline orchestration: `/asdt <feature description>`
 
-> **Name-invoked skills**: `/asdt-init` (project setup) and `/asdt-researcher` (pre-PM discovery) are invoked directly by name — they are deliberately outside `/asdt` routing by design (ADR-016), not missing from it.
+> **Routing note**: `/asdt-init` (project setup) is invoked directly by name and is deliberately outside `/asdt` routing by design (ADR-016 §4: "init is a setup-class command, NOT routable") — not missing from it. `/asdt-researcher` (pre-PM discovery) IS routable by `/asdt` (it appears in the §5 Specialist Registry and §9.2 routing table) and can also be invoked directly when you want discovery before requirements.
 
 ### When NOT to use /asdt
 
