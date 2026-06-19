@@ -13,7 +13,7 @@ import (
 // and Spanish strings must both be reachable from the language screen.
 const (
 	languageSubtitleEN = "Which language should the installer use?"
-	languageSubtitleES = "¿En qué idioma querés usar el instalador?"
+	languageSubtitleES = "¿En qué idioma quieres usar el instalador?"
 )
 
 // toLanguageSelect drives the model from MainMenu into StateLanguageSelect
@@ -29,10 +29,12 @@ func toLanguageSelect(t *testing.T, m setup.Model) setup.Model {
 
 func TestNew_LanguageDefaultsFromActiveCode(t *testing.T) {
 	// TestMain pins ASDT_LANG=en for the binary; override per-case.
+	// ASDT_LANG=es is a BASE code; New() maps it to the default full Spanish
+	// locale (es-419), the first SupportedLocales row whose base is "es".
 	t.Setenv("ASDT_LANG", "es")
 	m := setup.New(fstest.MapFS{}, "dev")
-	if got := m.LanguageCode(); got != "es" {
-		t.Errorf("New() with ASDT_LANG=es: LanguageCode() = %q, want %q", got, "es")
+	if got := m.LanguageCode(); got != "es-419" {
+		t.Errorf("New() with ASDT_LANG=es: LanguageCode() = %q, want %q", got, "es-419")
 	}
 
 	t.Setenv("ASDT_LANG", "en")
@@ -60,8 +62,9 @@ func TestUpdate_LanguagePrefMsg_PreselectsPersistedLanguage(t *testing.T) {
 
 	next, _ := m.Update(setup.LanguagePrefMsg{Code: "es"})
 	m2 := next.(setup.Model)
-	if got := m2.LanguageCode(); got != "es" {
-		t.Errorf("after LanguagePrefMsg{es}: LanguageCode() = %q, want %q", got, "es")
+	// Legacy bare "es" maps to es-419; the catalog still resolves to base es.
+	if got := m2.LanguageCode(); got != "es-419" {
+		t.Errorf("after LanguagePrefMsg{es}: LanguageCode() = %q, want %q", got, "es-419")
 	}
 	if view := m2.View(); !strings.Contains(view, languageSubtitleES) {
 		t.Errorf("after LanguagePrefMsg{es}: view should use the Spanish catalog, got:\n%s", view)
@@ -72,15 +75,15 @@ func TestUpdate_LanguagePrefMsg_IgnoredAfterUserTouched(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = toLanguageSelect(t, m)
 
-	m = updateKey(t, m, tea.KeyDown) // user explicitly selects Español → touched
-	if got := m.LanguageCode(); got != "es" {
-		t.Fatalf("after Down: LanguageCode() = %q, want %q", got, "es")
+	m = updateKey(t, m, tea.KeyDown) // user explicitly selects Español (Latinoamérica) → touched
+	if got := m.LanguageCode(); got != "es-419" {
+		t.Fatalf("after Down: LanguageCode() = %q, want %q", got, "es-419")
 	}
 
 	next, _ := m.Update(setup.LanguagePrefMsg{Code: "en"})
 	m2 := next.(setup.Model)
-	if got := m2.LanguageCode(); got != "es" {
-		t.Errorf("late LanguagePrefMsg must be ignored after touch: LanguageCode() = %q, want %q", got, "es")
+	if got := m2.LanguageCode(); got != "es-419" {
+		t.Errorf("late LanguagePrefMsg must be ignored after touch: LanguageCode() = %q, want %q", got, "es-419")
 	}
 }
 
@@ -135,7 +138,7 @@ func TestView_LanguageSelectHasNoStepIndicator(t *testing.T) {
 	if strings.Contains(view, "step") {
 		t.Errorf("language screen must not show a step indicator (unnumbered, like MainMenu), got:\n%s", view)
 	}
-	for _, label := range []string{"English", "Español"} {
+	for _, label := range []string{"English", "Español (Latinoamérica)", "Español (España)"} {
 		if !strings.Contains(view, label) {
 			t.Errorf("language screen missing native option label %q, got:\n%s", label, view)
 		}

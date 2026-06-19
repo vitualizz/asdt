@@ -1,4 +1,5 @@
 specialist: researcher
+routable: true
 steps:
   - name: context-recall
     skill: ../asdt-shared/skills/knowledge-recall.md

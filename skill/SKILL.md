@@ -278,6 +278,8 @@ Once complexity is determined, generate a `## Tailored Workflow` block for each 
 **Collapse fallback**: After Pass 2, compare the resulting validated list against each specialist's presets in ascending order (trivial → simple → moderate → complex). If the validated list equals or is a superset of a preset, relabel `complexity:` to the smallest preset whose step set is a superset of the validated list — never emit a grown list with a `complexity:` value lower than the work it actually represents (e.g., never label a list that grew to match `simple` as `complexity: trivial`).
 
 **Inline steps** (outputs injected into context — NEVER required as explicit list producers):
+<!-- GENERATED REGION — do not hand-edit; regenerated at install time from each specialist's workflow.yaml by registry_gen.go. Edits here are overwritten. -->
+<!-- ASDT:GENERATED:9.2-inline-steps -->
 - PM: `knowledge-recall`, `decision-preservation`
 - Architect: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - QA: `knowledge-recall`, `decision-preservation`
@@ -285,6 +287,7 @@ Once complexity is determined, generate a `## Tailored Workflow` block for each 
 - UX/UI: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - Developer: `knowledge-recall`, `decision-preservation`
 - Researcher: `context-recall`, `decision-preservation`
+<!-- /ASDT:GENERATED:9.2-inline-steps -->
 
 **Trivial eligibility**: The `trivial` tier applies ONLY when the orchestrator independently classifies complexity as `trivial` (§9.1). It is not user-selectable. A `trivial` list is exactly the specialist's single `inputs: []` subagent step — by construction it always passes Pass 2 (no declared inputs to satisfy). If a specialist has no useful single-step output (QA), `trivial` is not eligible for that specialist — fall back to `simple` and label the block `complexity: simple`.
 
