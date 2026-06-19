@@ -1,44 +1,22 @@
 package installer
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"testing/fstest"
 )
-
-var agentTestFS = fstest.MapFS{
-	"asdt-init/agents-template.md": &fstest.MapFile{Data: []byte(`# {{agent_name}}
-
-> {{agent_description}}
-
-## Project Context
-- **Stack**: {{stack}}
-- **Architecture**: {{architectural_style}}
-
-## Identity
-
-{{persona_block}}
-
-{{emoji_preference}}
-`)},
-	"asdt-init/personas/sky.md":          &fstest.MapFile{Data: []byte(`You are Sky. Sharp and thorough.`)},
-	"asdt-init/personas/toffy.md":        &fstest.MapFile{Data: []byte(`You are Toffy. Warm and enthusiastic.`)},
-	"asdt-init/personas/atreus.md":       &fstest.MapFile{Data: []byte(`You are Atreus. Bold and reckless.`)},
-	"asdt-init/personas/babi.md":         &fstest.MapFile{Data: []byte(`You are Babi. Your biggest fan.`)},
-	"asdt-init/personas/lee-palacios.md": &fstest.MapFile{Data: []byte(`You are Lee Palacios. Cat lover, coder, otaku.`)},
-}
 
 func TestRenderAgentConfig_SubstitutesAllPlaceholders(t *testing.T) {
 	for _, preset := range PersonaPresets {
 		t.Run(preset.ID, func(t *testing.T) {
-			out, err := renderAgentConfig(agentTestFS, preset, true)
+			out, err := renderAgentConfig(preset, true, "en")
 			if err != nil {
 				t.Fatalf("renderAgentConfig(%q): %v", preset.ID, err)
 			}
 			// No placeholders should remain.
-			for _, placeholder := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{stack}}", "{{architectural_style}}"} {
+			for _, placeholder := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{language_directive}}", "{{stack}}", "{{architectural_style}}"} {
 				if contains(out, placeholder) {
 					t.Errorf("output still contains placeholder %q", placeholder)
 				}
@@ -60,11 +38,11 @@ func TestRenderAgentConfig_SubstitutesAllPlaceholders(t *testing.T) {
 
 func TestRenderAgentConfig_PersonaBlockPresent(t *testing.T) {
 	preset := PersonaPresets[0] // Sky
-	out, err := renderAgentConfig(agentTestFS, preset, true)
+	out, err := renderAgentConfig(preset, true, "en")
 	if err != nil {
 		t.Fatalf("renderAgentConfig: %v", err)
 	}
-	if !contains(out, "You are Sky") {
+	if !contains(out, "I am Sky") {
 		t.Errorf("output missing persona block content, got:\n%s", out)
 	}
 }
@@ -83,7 +61,7 @@ func TestRenderAgentConfig_EmojiBulletVariants(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			out, err := renderAgentConfig(agentTestFS, PersonaPresets[0], c.useEmojis)
+			out, err := renderAgentConfig(PersonaPresets[0], c.useEmojis, "en")
 			if err != nil {
 				t.Fatalf("renderAgentConfig: %v", err)
 			}
@@ -122,7 +100,7 @@ func TestInstallAgentConfig_PersistsEmojiMeta(t *testing.T) {
 			}
 			a := AssistantDescriptor{ID: AssistantClaudeCode, Name: "Claude Code", SkillsDir: skillsDir}
 
-			results := InstallAgentConfig([]AssistantDescriptor{a}, PersonaPresets[0], c.useEmojis, map[string]AgentWriteMode{}, agentTestFS)
+			results := InstallAgentConfig([]AssistantDescriptor{a}, PersonaPresets[0], c.useEmojis, "en", map[string]AgentWriteMode{})
 			if len(results) != 1 {
 				t.Fatalf("expected 1 result, got %d", len(results))
 			}
@@ -147,7 +125,7 @@ func TestInstallAgentConfig_PersistsEmojiMeta(t *testing.T) {
 func TestInstallAgentConfig_NoAdapterSkipsSilently(t *testing.T) {
 	// Use an assistant ID that has no registered adapter.
 	unknownAssistant := AssistantDescriptor{ID: "unknown-ai", Name: "Unknown AI"}
-	results := InstallAgentConfig([]AssistantDescriptor{unknownAssistant}, PersonaPresets[0], true, map[string]AgentWriteMode{}, agentTestFS)
+	results := InstallAgentConfig([]AssistantDescriptor{unknownAssistant}, PersonaPresets[0], true, "en", map[string]AgentWriteMode{})
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
 	}
@@ -163,7 +141,7 @@ func TestInstallAgentConfig_PerAssistantIsolation(t *testing.T) {
 	// Two assistants: unknown (skip) + another unknown. Each should have its own result.
 	a1 := AssistantDescriptor{ID: "no-adapter-1", Name: "No Adapter 1"}
 	a2 := AssistantDescriptor{ID: "no-adapter-2", Name: "No Adapter 2"}
-	results := InstallAgentConfig([]AssistantDescriptor{a1, a2}, PersonaPresets[0], true, map[string]AgentWriteMode{}, agentTestFS)
+	results := InstallAgentConfig([]AssistantDescriptor{a1, a2}, PersonaPresets[0], true, "en", map[string]AgentWriteMode{})
 	if len(results) != 2 {
 		t.Fatalf("expected 2 results, got %d", len(results))
 	}
@@ -174,26 +152,45 @@ func TestInstallAgentConfig_PerAssistantIsolation(t *testing.T) {
 	}
 }
 
-func TestInstallAgentConfig_RenderErrorPropagatedToAllAssistants(t *testing.T) {
-	// Use an FS that is missing the template.
-	emptyFS := fstest.MapFS{}
-	a := AssistantDescriptor{ID: AssistantClaudeCode, Name: "Claude Code"}
-	results := InstallAgentConfig([]AssistantDescriptor{a}, PersonaPresets[0], true, map[string]AgentWriteMode{}, emptyFS)
-	if len(results) != 1 {
-		t.Fatalf("expected 1 result, got %d", len(results))
+// TestAllAssistantsError_PropagatesToEveryAssistant unit-tests the render-error
+// fan-out helper directly. The previous fixture-based test (a missing-template
+// emptyFS) is unreachable now that the template/persona are compile-time
+// embedded in assetsFS — a missing asset is a build failure, not a runtime
+// error. This preserves the "one render error -> every assistant carries it"
+// contract that InstallAgentConfig relies on.
+func TestAllAssistantsError_PropagatesToEveryAssistant(t *testing.T) {
+	sentinel := errors.New("render failed")
+	assistants := []AssistantDescriptor{
+		{ID: AssistantClaudeCode, Name: "Claude Code"},
+		{ID: AssistantOpenCode, Name: "OpenCode"},
+		{ID: "third-ai", Name: "Third AI"},
 	}
-	if results[0].Err == nil {
-		t.Error("expected error when template is missing, got nil")
+
+	results := allAssistantsError(assistants, sentinel)
+
+	if len(results) != len(assistants) {
+		t.Fatalf("expected %d results, got %d", len(assistants), len(results))
+	}
+	for i, r := range results {
+		if r.AssistantID != assistants[i].ID {
+			t.Errorf("results[%d].AssistantID = %q, want %q", i, r.AssistantID, assistants[i].ID)
+		}
+		if r.Err == nil {
+			t.Errorf("results[%d].Err is nil, want sentinel", i)
+		}
+		if !errors.Is(r.Err, sentinel) {
+			t.Errorf("results[%d].Err = %v, want sentinel %v", i, r.Err, sentinel)
+		}
 	}
 }
 
 func TestInstallAgentConfig_SkipMode_SkipsAllAssistants(t *testing.T) {
 	a1 := AssistantDescriptor{ID: AssistantClaudeCode, Name: "Claude Code"}
 	a2 := AssistantDescriptor{ID: AssistantOpenCode, Name: "OpenCode"}
-	results := InstallAgentConfig([]AssistantDescriptor{a1, a2}, PersonaPresets[0], true, map[string]AgentWriteMode{
+	results := InstallAgentConfig([]AssistantDescriptor{a1, a2}, PersonaPresets[0], true, "en", map[string]AgentWriteMode{
 		string(AssistantClaudeCode): AgentModeSkip,
 		string(AssistantOpenCode):   AgentModeSkip,
-	}, agentTestFS)
+	})
 	if len(results) != 2 {
 		t.Fatalf("expected 2 results, got %d", len(results))
 	}
@@ -221,6 +218,57 @@ func TestAgentConfigAdapterFor_KnownIDs(t *testing.T) {
 			_, ok := AgentConfigAdapterFor(c.id)
 			if ok != c.wantFound {
 				t.Errorf("AgentConfigAdapterFor(%q) found=%v, want %v", c.id, ok, c.wantFound)
+			}
+		})
+	}
+}
+
+// TestLocaleByCode_ResolvesAndAlwaysHasDirective verifies exact matches, the
+// legacy bare-"es" → es-419 mapping, and the default-en fallback for empty or
+// unknown codes — and that every returned Directive is non-empty.
+func TestLocaleByCode_ResolvesAndAlwaysHasDirective(t *testing.T) {
+	cases := []struct {
+		code     string
+		wantCode string
+	}{
+		{"", "en"},
+		{"en", "en"},
+		{"es", "es-419"},
+		{"es-419", "es-419"},
+		{"es-ES", "es-ES"},
+		{"xx", "en"},
+	}
+	for _, c := range cases {
+		t.Run(c.code, func(t *testing.T) {
+			got := LocaleByCode(c.code)
+			if got.Code != c.wantCode {
+				t.Errorf("LocaleByCode(%q).Code = %q, want %q", c.code, got.Code, c.wantCode)
+			}
+			if got.Directive == "" {
+				t.Errorf("LocaleByCode(%q).Directive is empty", c.code)
+			}
+		})
+	}
+}
+
+// TestRenderAgentConfig_InjectsLanguageDirective verifies the rendered AGENTS.md
+// contains the verbatim Directive for the chosen locale.
+func TestRenderAgentConfig_InjectsLanguageDirective(t *testing.T) {
+	cases := []struct {
+		code string
+		want string
+	}{
+		{"en", "Respond in English, keeping the assistant's own defined voice and style."},
+		{"es-419", "Respond in Latin American Spanish, keeping the assistant's own defined voice and style."},
+	}
+	for _, c := range cases {
+		t.Run(c.code, func(t *testing.T) {
+			out, err := renderAgentConfig(PersonaPresets[0], true, c.code)
+			if err != nil {
+				t.Fatalf("renderAgentConfig: %v", err)
+			}
+			if !strings.Contains(out, c.want) {
+				t.Errorf("output missing directive %q, got:\n%s", c.want, out)
 			}
 		})
 	}

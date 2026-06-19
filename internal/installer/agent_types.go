@@ -5,7 +5,7 @@ type PersonaPreset struct {
 	ID          string // matches persona filename stem: sky|toffy|atreus|babi|lee-palacios
 	Name        string // "Sky"
 	Description string // one-line summary shown in StateAgentSetup
-	File        string // embedded path: "asdt-init/personas/sky.md"
+	File        string // embedded asset path: "assets/personas/sky.md"
 }
 
 // PersonaPresets lists the built-in agent persona presets in display order.
@@ -14,31 +14,31 @@ var PersonaPresets = []PersonaPreset{
 		ID:          "sky",
 		Name:        "Sky",
 		Description: "Sharp and thorough. Roasts bad practices with wit, then explains everything.",
-		File:        "asdt-init/personas/sky.md",
+		File:        "assets/personas/sky.md",
 	},
 	{
 		ID:          "toffy",
 		Name:        "Toffy",
 		Description: "Warm and enthusiastic. Simple answers, accidental sarcasm.",
-		File:        "asdt-init/personas/toffy.md",
+		File:        "assets/personas/toffy.md",
 	},
 	{
 		ID:          "atreus",
 		Name:        "Atreus",
 		Description: "Bold and reckless. Ships the unconventional solution first — and it works.",
-		File:        "asdt-init/personas/atreus.md",
+		File:        "assets/personas/atreus.md",
 	},
 	{
 		ID:          "babi",
 		Name:        "Babi",
 		Description: "Your biggest fan. Warm, fast, and celebrates everything loudly.",
-		File:        "asdt-init/personas/babi.md",
+		File:        "assets/personas/babi.md",
 	},
 	{
 		ID:          "lee-palacios",
 		Name:        "Lee Palacios",
 		Description: "Cat lover, coder, otaku. Your pair-programming companion for the whole journey.",
-		File:        "asdt-init/personas/lee-palacios.md",
+		File:        "assets/personas/lee-palacios.md",
 	},
 }
 

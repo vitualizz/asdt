@@ -4,33 +4,9 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"testing/fstest"
 
 	"github.com/vitualizz/asdt/internal/installer"
 )
-
-// agentRenderFS is a minimal embedded FS for testing agent config rendering.
-var agentRenderFS = fstest.MapFS{
-	"asdt-init/agents-template.md": &fstest.MapFile{Data: []byte(`# {{agent_name}}
-
-> {{agent_description}}
-
-## Project Context
-- **Stack**: {{stack}}
-- **Architecture**: {{architectural_style}}
-
-## Identity
-
-{{persona_block}}
-
-{{emoji_preference}}
-`)},
-	"asdt-init/personas/sky.md":          &fstest.MapFile{Data: []byte(`You are Sky. Sharp and thorough.`)},
-	"asdt-init/personas/toffy.md":        &fstest.MapFile{Data: []byte(`You are Toffy. Warm and enthusiastic.`)},
-	"asdt-init/personas/atreus.md":       &fstest.MapFile{Data: []byte(`You are Atreus. Bold and reckless.`)},
-	"asdt-init/personas/babi.md":         &fstest.MapFile{Data: []byte(`You are Babi. Your biggest fan.`)},
-	"asdt-init/personas/lee-palacios.md": &fstest.MapFile{Data: []byte(`You are Lee Palacios. Cat lover, coder, otaku.`)},
-}
 
 // TestRenderAgentConfig_AllPresetsSubstituteCorrectly verifies that for each preset
 // the render step does not error (tested via InstallAgentConfig with no adapter →
@@ -42,8 +18,8 @@ func TestRenderAgentConfig_AllPresetsSubstituteCorrectly(t *testing.T) {
 				[]installer.AssistantDescriptor{{ID: "no-adapter-for-render-test"}},
 				preset,
 				true,
+				"en",
 				map[string]installer.AgentWriteMode{},
-				agentRenderFS,
 			)
 			if len(results) != 1 {
 				t.Fatalf("expected 1 result, got %d", len(results))
@@ -71,7 +47,7 @@ func TestRenderAgentConfig_NoPlaceholdersRemain(t *testing.T) {
 	assistants := []installer.AssistantDescriptor{
 		{ID: installer.AssistantClaudeCode, Name: "Claude Code"},
 	}
-	results := installer.InstallAgentConfig(assistants, preset, true, map[string]installer.AgentWriteMode{}, agentRenderFS)
+	results := installer.InstallAgentConfig(assistants, preset, true, "en", map[string]installer.AgentWriteMode{})
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
 	}
@@ -90,7 +66,7 @@ func TestRenderAgentConfig_NoPlaceholdersRemain(t *testing.T) {
 	}
 	content := string(data)
 
-	for _, ph := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{stack}}", "{{architectural_style}}"} {
+	for _, ph := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{language_directive}}", "{{stack}}", "{{architectural_style}}"} {
 		if strings.Contains(content, ph) {
 			t.Errorf("AGENTS.md still contains placeholder %q", ph)
 		}

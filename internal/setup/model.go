@@ -109,16 +109,12 @@ type languageState struct {
 	touched  bool // true once the user moved the selection; guards late LanguagePrefMsg
 }
 
-// languageOptions lists the selectable installer languages. Labels are the
-// languages' NATIVE names — deliberately not catalog strings, so each option
-// is readable regardless of the currently active language.
-var languageOptions = []struct {
-	Code  string
-	Label string
-}{
-	{Code: "en", Label: "English"},
-	{Code: "es", Label: "Español"},
-}
+// languageOptions lists the selectable installer locales, sourced from the
+// single installer.SupportedLocales registry so the TUI selector, the persisted
+// InstallMeta.Language code, and the injected {{language_directive}} all agree.
+// Labels are the locales' NATIVE names — deliberately not catalog strings, so
+// each option is readable regardless of the currently active language.
+var languageOptions = installer.SupportedLocales
 
 // languageIndex returns the languageOptions index for code, or -1 when the
 // code has no option.
@@ -172,7 +168,10 @@ type Model struct {
 // instead of each hand-rolling its own and risking drift.
 func New(skillsFS fs.FS, version string) Model {
 	str := i18n.Active()
-	selected := languageIndex(i18n.ActiveCode())
+	// ActiveCode() now returns the full canonical code (en/es-419/es-ES), which
+	// matches a SupportedLocales row directly — no base-to-full mapping needed.
+	active := i18n.ActiveCode()
+	selected := languageIndex(active)
 	if selected < 0 {
 		selected = 0
 	}
@@ -230,9 +229,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.language.touched {
 			return m, nil
 		}
-		if idx := languageIndex(msg.Code); idx >= 0 {
+		// msg.Code may be a legacy bare "es"; map it to a full locale row. The
+		// full code feeds i18n.ForCode directly — normalize() handles legacy
+		// shapes inside the i18n package.
+		loc := installer.LocaleByCode(msg.Code)
+		if idx := languageIndex(loc.Code); idx >= 0 {
 			m.language.selected = idx
-			m.catalog = i18n.ForCode(msg.Code)
+			m.catalog = i18n.ForCode(loc.Code)
 			if m.state == StateLanguageSelect {
 				m.cursor = idx
 			}
@@ -977,7 +980,7 @@ func (m Model) buildInstallCmd() tea.Cmd {
 		return installCmd
 	}
 	preset := installer.PersonaPresets[m.agentConfig.selectedPersona]
-	agentCmd := AgentInstallCmd(assistants, preset, m.agentConfig.useEmojis, m.agentConfig.writeModes, m.skillsFS)
+	agentCmd := AgentInstallCmd(assistants, preset, m.agentConfig.useEmojis, lang, m.agentConfig.writeModes)
 	return tea.Batch(installCmd, agentCmd)
 }
 
