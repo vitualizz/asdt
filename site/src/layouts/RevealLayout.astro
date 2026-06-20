@@ -1,0 +1,147 @@
+---
+type Locale = 'en' | 'es'
+interface Props {
+  title: string
+  lang: Locale
+}
+const { title, lang } = Astro.props
+---
+
+<!doctype html>
+<html lang={lang} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style is:global>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0b0c11;
+      }
+
+      .reveal,
+      .reveal-viewport {
+        background: #0b0c11 !important;
+      }
+
+      .reveal .slides > section {
+        position: absolute !important;
+        display: none !important;
+        width: 1920px;
+        height: 1080px;
+        box-sizing: border-box;
+        font-family: 'Instrument Sans', system-ui, sans-serif;
+        font-size: 16px;
+        line-height: normal;
+        text-align: left;
+        color: #dfe4ec;
+      }
+      .reveal .slides > section.present {
+        display: flex !important;
+      }
+      .reveal .slides aside.notes {
+        display: none;
+      }
+
+      summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      details[open] .chev {
+        transform: rotate(45deg);
+      }
+
+      @keyframes asdtRise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+      @keyframes asdtRight{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:none}}
+      @keyframes asdtLeft{from{opacity:0;transform:translateX(-46px)}to{opacity:1;transform:none}}
+      @keyframes asdtFade{from{opacity:0}to{opacity:1}}
+      @keyframes asdtScale{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+      @keyframes asdtGrow{from{opacity:0;transform:scaleY(.04)}to{opacity:1;transform:scaleY(1)}}
+      @keyframes asdtDrawY{from{opacity:.2;transform:scaleY(0)}to{opacity:1;transform:scaleY(1)}}
+      @keyframes asdtGlow{0%,100%{box-shadow:0 0 26px var(--g,rgba(80,200,120,.22))}50%{box-shadow:0 0 64px var(--g,rgba(80,200,120,.6))}}
+      @keyframes asdtFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+      @keyframes asdtBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
+      @keyframes asdtFlow{0%{transform:translateY(-6px);opacity:0}12%{opacity:1}88%{opacity:1}100%{transform:translateY(var(--flow,120px));opacity:0}}
+      @keyframes asdtType{from{width:0}to{width:100%}}
+
+      @media (prefers-reduced-motion: no-preference) {
+        .reveal .slides section.present .rise{animation:asdtRise .6s cubic-bezier(.2,.7,.2,1) both}
+        .reveal .slides section.present .rise2{animation:asdtRise .6s cubic-bezier(.2,.7,.2,1) .12s both}
+        .reveal .slides section.present .rise3{animation:asdtRise .6s cubic-bezier(.2,.7,.2,1) .24s both}
+        .reveal .slides section.present .rise4{animation:asdtRise .6s cubic-bezier(.2,.7,.2,1) .36s both}
+        .reveal .slides section.present .au{animation:asdtRise .64s cubic-bezier(.2,.7,.2,1) both}
+        .reveal .slides section.present .ar{animation:asdtRight .64s cubic-bezier(.2,.7,.2,1) both}
+        .reveal .slides section.present .al{animation:asdtLeft .64s cubic-bezier(.2,.7,.2,1) both}
+        .reveal .slides section.present .af{animation:asdtFade .75s ease both}
+        .reveal .slides section.present .as{animation:asdtScale .6s cubic-bezier(.2,.7,.2,1) both}
+        .reveal .slides section.present .ag{transform-origin:bottom center;animation:asdtGrow .72s cubic-bezier(.2,.7,.2,1) both}
+        .reveal .slides section.present .adraw{transform-origin:top center;animation:asdtDrawY .5s ease both}
+        .reveal .slides section.present .d1{animation-delay:.06s}
+        .reveal .slides section.present .d2{animation-delay:.14s}
+        .reveal .slides section.present .d3{animation-delay:.22s}
+        .reveal .slides section.present .d4{animation-delay:.30s}
+        .reveal .slides section.present .d5{animation-delay:.38s}
+        .reveal .slides section.present .d6{animation-delay:.46s}
+        .reveal .slides section.present .d7{animation-delay:.54s}
+        .reveal .slides section.present .d8{animation-delay:.62s}
+        .reveal .slides section.present .d9{animation-delay:.70s}
+        .reveal .slides section.present .d10{animation-delay:.78s}
+        .reveal .slides section.present .d11{animation-delay:.86s}
+        .reveal .slides section.present .d12{animation-delay:.94s}
+        .reveal .slides section.present .glow{animation:asdtGlow 2.8s ease-in-out 1s infinite}
+        .reveal .slides section.present .float{animation:asdtFloat 3.6s ease-in-out 1s infinite}
+        .reveal .slides section.present .blink{animation:asdtBlink 1.1s step-end infinite}
+        .reveal .slides section.present .flowdot{animation:asdtFlow 2.2s ease-in-out 1.1s infinite}
+        .reveal .slides section.present .typ{overflow:hidden;white-space:nowrap;animation:asdtType .9s steps(34) both}
+      }
+      .flowdot {
+        display: none;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .reveal .slides section.present .flowdot {
+          display: block;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <slot />
+      </div>
+    </div>
+
+    <script>
+      import Reveal from 'reveal.js'
+      import RevealNotes from 'reveal.js/plugin/notes'
+      import 'reveal.js/reveal.css'
+
+      const deck = new Reveal({
+        width: 1920,
+        height: 1080,
+        margin: 0,
+        minScale: 0.1,
+        maxScale: 2,
+        center: false,
+        hash: true,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        transition: 'fade',
+        plugins: [RevealNotes],
+      })
+      deck.initialize()
+    </script>
+  </body>
+</html>
