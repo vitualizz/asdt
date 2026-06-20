@@ -9,9 +9,9 @@ locale: en
 
 ## Installation issues
 
-### `command not found: asdt` after install
+### `command not found: asdt-tui` after install
 
-The install script places the binary at `~/.local/bin/asdt`. If your shell doesn't find it, your PATH doesn't include that directory.
+The install script places the binary at `~/.local/bin/asdt-tui`. If your shell doesn't find it, your PATH doesn't include that directory.
 
 **Fix:**
 
@@ -21,10 +21,10 @@ export PATH="$HOME/.local/bin:$PATH"
 
 To make this permanent, add the line above to your `~/.bashrc`, `~/.zshrc`, or `~/.profile`, then restart your terminal or run `source ~/.zshrc`.
 
-Verify the install:
+Verify the install by launching the menu:
 
 ```bash
-asdt --version
+asdt-tui
 ```
 
 ### Install script fails silently
@@ -46,7 +46,7 @@ ASDT stores specialist artifacts in Engram. If Engram isn't configured, speciali
 **Fix:**
 1. Confirm Engram is listed in your Claude Code MCP config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `~/.config/Claude/claude_desktop_config.json` on Linux).
 2. Restart Claude Code after editing the config.
-3. Run `asdt init` — it writes the memory provider setting to `.asdt/config.yaml`.
+3. Run `/asdt-init` inside your assistant — it writes the memory provider setting to `.asdt/config.yaml`.
 4. Check `.asdt/config.yaml` and confirm `memory.provider: engram` is present.
 
 ### Connection refused from Engram
@@ -90,9 +90,9 @@ See [Specialist Comparison](/asdt/docs/specialist-comparison) to choose the righ
 If typing `/asdt-pm` (or any specialist) shows no autocomplete, the skill files are not installed.
 
 **Fix:**
-1. Run `asdt init` inside your project directory.
+1. Run `asdt-tui` and (re)install the skills for your assistant.
 2. Restart Claude Code — it reloads skill definitions on startup.
-3. If the problem persists, run `asdt install` to re-install skill files.
+3. If the problem persists, run `asdt-tui` again and reinstall the skill files.
 
 ### Artifacts not loading in the next session
 

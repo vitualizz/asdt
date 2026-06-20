@@ -27,29 +27,31 @@ Run the install script:
 curl -fsSL https://raw.githubusercontent.com/vitualizz/asdt/main/install.sh | bash
 ```
 
-The binary is placed at `~/.local/bin/asdt`. If your shell doesn't find it, add this to your shell profile:
+The binary is placed at `~/.local/bin/asdt-tui`. If your shell doesn't find it, add this to your shell profile:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Verify the install:
+Then install the specialist skills into your assistant:
 
 ```bash
-asdt --version
+asdt-tui
 ```
 
-If you see `command not found`, see [Troubleshooting](/asdt/docs/troubleshooting).
+This interactive menu lets you pick your assistant(s) and copies the skill files in. Then **restart Claude Code** — it loads the skill definitions on startup.
+
+If `asdt-tui` shows `command not found`, see [Troubleshooting](/asdt/docs/troubleshooting).
 
 ## Step 2 — Initialize ASDT in your project
 
-Navigate to your project directory and run:
+Open Claude Code in your project directory and run:
 
-```bash
-asdt init
+```text
+/asdt-init
 ```
 
-This creates `.asdt/config.yaml` (memory provider settings) and installs the specialist skill files. Then **restart Claude Code** — it loads the skill definitions on startup.
+This creates `.asdt/config.yaml` (memory provider settings) and `.asdt/knowledge/platform.yaml` (detected stack), so every specialist tailors its output to your project.
 
 ## Step 3 — Ask ASDT for a pipeline recommendation
 

@@ -7,27 +7,29 @@ locale: en
 
 # Commands
 
-## CLI Commands
+## CLI
 
-### `asdt init`
+### `asdt-tui`
 
-Initialize ASDT in the current project. Creates `.asdt/config.yaml` and sets up the memory provider.
-
-```bash
-asdt init
-```
-
-### `asdt install`
-
-Install or update the ASDT specialist skills for Claude Code.
+The only CLI tool. An interactive terminal app — run it with no arguments:
 
 ```bash
-asdt install
-asdt install --all        # install all available specialists
-asdt install --force      # reinstall even if up to date
+asdt-tui
 ```
+
+It checks your setup, lets you pick which assistant(s) to target (Claude Code, OpenCode, or both), and installs or updates the ASDT specialist skills. Everything is driven by the on-screen menu — there are no subcommands or flags.
+
+> Initializing a project (writing `.asdt/config.yaml`) is **not** a CLI command — it's the `/asdt-init` slash command, run inside your assistant. See below.
 
 ## Slash Commands (Claude Code / OpenCode)
+
+### `/asdt-init`
+
+Initialize ASDT in the current project. Detects your stack and creates `.asdt/config.yaml` and `.asdt/knowledge/platform.yaml`. Run it inside your assistant, in your project folder.
+
+```
+/asdt-init
+```
 
 ### `/asdt`
 
