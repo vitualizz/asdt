@@ -5,11 +5,12 @@ Consolidate all UX work into two final artifacts: ux-brief (for Developer contex
 component-spec (for implementation). Apply the report shared skill.
 
 ## Inputs
-- `ux-ui/feature-brief`: actor, problem, success criteria
-- `ux-ui/ia`: sections, navigation
+- `ux-ui/feature-brief`: actor, problem, success criteria, design_intent, jtbd
+- `ux-ui/ia`: sections, navigation, content_intent
 - `ux-ui/flows`: interaction sequences
-- `ux-ui/components`: component inventory
-- `ux-ui/responsive`: breakpoint behavior
+- `ux-ui/components`: component inventory + absorbed responsive (`responsive`, `breakpoint_strategy`, `hidden_on_mobile`) + state_matrix
+- `ux-ui/design-tokens`: derived token set
+- `ux-ui/design-critique`: critique annotations + needs_review (complex-only → may arrive UNRESOLVED on lower tiers; handle gracefully)
 
 Apply the extraction rules in the report shared skill to each: keep only fields relevant to implementation handoff.
 
@@ -18,12 +19,17 @@ All inputs context-extracted to max 200 tokens each = max 1,000 tokens total.
 
 ## Processing
 Apply the `report` shared skill:
-1. From feature-brief: extract actor + success_criteria.
-2. From ia: extract navigation.entry_point + primary_actions.
+1. From feature-brief: extract actor + success_criteria + design_intent + jtbd.
+2. From ia: extract navigation.entry_point + primary_actions + content_intent.
 3. From flows: extract happy-path steps and decision_points (not edge cases — those go in QA).
-4. From components: full component inventory.
-5. From responsive (if resolved): extract the component_behavior table — this is authoritative for responsive specs and overrides the one-liner `responsive_behavior` fields in component-mapping output. If the responsive input is UNRESOLVED (tier did not include responsive-strategy), omit the responsive section and add `"responsive strategy deferred — tier did not include responsive-strategy"` to open_items.
-6. Consolidate open_items from ALL inputs into a deduplicated list.
+4. From components: full component inventory. Responsive specs are sourced from the components
+   artifact's absorbed `responsive` / `breakpoint_strategy` / `hidden_on_mobile` fields (plus each
+   component's `state_matrix`) — components is now authoritative for responsive.
+5. From design-tokens: carry the token set into `design_tokens_ref`.
+6. From design-critique (if resolved): carry `critique_annotations` and `needs_review`. design-critique
+   is complex-only — if it arrives UNRESOLVED (lower tier), omit `critique_annotations`/`needs_review`
+   and add `"design critique deferred — tier did not include design-critique"` to open_items.
+7. Consolidate open_items from ALL inputs into a deduplicated list.
 
 ## Output
 Produces: `ux-brief` (final) and `component-spec` (final)
@@ -43,7 +49,7 @@ artifact `component-spec` under its own distinct per-type topic_key
 `{project}/{change}/ux-ui/component-spec` (see the inline YAML comment on this
 step's `workflow.yaml` entry — no suffix needed, this name collides with neither
 the primary key nor any intermediate artifact produced earlier in this
-specialist's chain: `feature-brief`, `ia`, `flows`, `components`, `responsive`).
+specialist's chain: `feature-brief`, `design-tokens`, `ia`, `flows`, `components`, `design-critique`).
 Return an envelope covering both persisted keys.
 
 ux-brief schema:
@@ -52,6 +58,9 @@ payload:
   feature_summary: ""
   primary_actor: ""
   success_criteria: []
+  design_intent: {tone: "", principles: [], north_star: ""}
+  jtbd: []   # [{actor, motivation, outcome}]
+  content_intent: {copy_direction: "", microcopy: [], empty_state: "", error_state: ""}
   user_flows:
     - id: ""
       name: ""
@@ -75,5 +84,10 @@ payload:
       props: []
       events: []
       responsive_behavior: ""
+      design_tokens_ref: []   # token names this component consumes
+      state_matrix: {}        # carried from component-mapping (9 states)
+      responsive: {}          # carried from component-mapping (mobile/tablet/desktop/touch_target_compliant)
+  critique_annotations: []    # present only when design-critique resolved (complex tier)
+  needs_review: false         # present only when design-critique resolved (complex tier)
   open_items: []
 ```
