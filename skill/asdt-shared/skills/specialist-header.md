@@ -8,7 +8,7 @@ Before starting any step, verify:
 
 If either condition is not met, output this exact message and STOP:
 
-> Memory provider not configured. Run `asdt init` and set `memory.provider` in `.asdt/config.yaml` before running any specialist.
+> Memory provider not configured. Run `/asdt-init` and set `memory.provider` in `.asdt/config.yaml` before running any specialist.
 
 > **ORCHESTRATOR GATE**: This file is a PLAN, not an executable pipeline. The
 > calling assistant (Claude Code / OpenCode) is the SOLE orchestrator. For every

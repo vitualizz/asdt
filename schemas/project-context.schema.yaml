@@ -1,6 +1,6 @@
 # project-context.schema.yaml
 # Schema for .asdt/knowledge/project-context.yaml
-# Produced by asdt init Step 4 (Detect project context).
+# Produced by /asdt-init Step 4 (Detect project context).
 # schema_version "1" — increment when breaking changes are introduced.
 
 schema_version: "1"

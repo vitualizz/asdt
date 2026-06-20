@@ -10,7 +10,7 @@ Inject the project's detected platform knowledge into any specialist's context. 
 
 Before any analysis, check if `.asdt/knowledge/platform-summary.yaml` exists.
 
-If it does, **do not re-analyze**. Read that file and inject its contents as context, as-is. The `asdt init` command produces this file deterministically using the Go scanner; re-deriving it with the LLM wastes tokens and yields non-deterministic stack interpretations.
+If it does, **do not re-analyze**. Read that file and inject its contents as context, as-is. The `/asdt-init` command produces this file deterministically via bounded scan probes; re-deriving it with the LLM wastes tokens and yields non-deterministic stack interpretations.
 
 Only if `.asdt/knowledge/platform-summary.yaml` is **absent**, fall back to finding and reading `.asdt/knowledge/platform.yaml` (next section) and injecting the extracted fields described below.
 
@@ -79,7 +79,7 @@ Conventions: PascalCase exported types, snake_case files | internal/ for package
 Architecture: Hexagonal — ports in internal/, adapters in cmd/
 ```
 
-Partially-populated example — e.g. a `platform.yaml` straight out of `asdt init`, which only runs bounded presence checks and intentionally leaves `conventions.naming` and `design_fingerprint` for a dedicated future analysis step:
+Partially-populated example — e.g. a `platform.yaml` straight out of `/asdt-init`, which only runs bounded presence checks and intentionally leaves `conventions.naming` and `design_fingerprint` for a dedicated future analysis step:
 ```
 Stack: Go
 Conventions: cmd/ for binaries, internal/ for private packages
@@ -94,7 +94,7 @@ Conventions: cmd/ for binaries, internal/ for private packages
 > If `schema_version` != `"1"`, skip and note `project-context.yaml: schema_version mismatch, skipped` in open_items.
 
 The following fields describe the structural and stylistic context of this project,
-as detected by `asdt init`. Each field carries a `source` (detected | inferred | manual)
+as detected by `/asdt-init`. Each field carries a `source` (detected | inferred | manual)
 and a `confidence` (high | medium | low). Fields with an empty `value` are omitted.
 
 **Monorepo**: {{ is_monorepo.value }}  *({{ is_monorepo.source }}, {{ is_monorepo.confidence }})*
