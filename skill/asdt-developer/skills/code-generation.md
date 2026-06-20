@@ -2,151 +2,84 @@
 
 ## Purpose
 
-This skill provides guidelines for generating idiomatic, production-quality code. Apply these guidelines at Step 5 (Code Generation) of the Developer workflow when writing code snippets or implementation instructions.
+Guidelines for generating idiomatic, production-quality code at Step 5 (Code Generation) of the Developer workflow. The `platform-context` shared skill is the first authority on conventions; these guidelines are language-neutral defaults that apply only where platform-context is silent.
 
-Platform conventions are provided by the `platform-context` shared skill. Always check platform context before generating code — the conventions there take precedence over these defaults.
+---
+
+## Precedence
+
+When platform-context conventions or existing project conventions conflict with these defaults, the platform-context and project consistency take precedence. These guidelines apply only where no project-specific convention has been established. Platform-context injects the project's detected conventions (from `platform-summary.yaml`, or `platform.yaml` as fallback); treat its detected/high-confidence and manual fields as authoritative. Defer every language-specific idiom to it — never apply a default from this file over a convention the project has already established.
 
 ---
 
 ## Match Existing Conventions
 
-Before writing any code, review the platform context loaded at Step 2. Then:
+Read the platform context loaded at Step 2 before writing any code. Then:
 
-- **Naming**: use the casing style already dominant in the project (snake_case, camelCase, PascalCase per layer). Never introduce a new casing style without justification.
-- **File structure**: place new files in directories consistent with the existing layout. A feature in `src/features/` belongs there, not in `src/utils/`.
-- **Imports**: prefer the project's established import style. If the project uses named exports, use named exports. If it uses default exports, match that pattern.
-- **Libraries**: use libraries already in the dependency manifest (`go.mod`, `package.json`, etc.) before introducing new ones. Every new dependency is a cost.
+- Casing: use the identifier casing already dominant in the project. Never introduce a new casing style without justification.
+- File structure: place new files in directories consistent with the existing layout. A feature belongs beside its peers, not in a generic utilities folder.
+- Imports and exports: match the project's established module and export style rather than imposing your own.
+- Libraries: prefer libraries already declared in the project's dependency manifest before introducing new ones. Treat every manifest equally as the source of truth.
 
 If platform context is absent, infer conventions from the visible code and note the inference in the step's rationale.
 
 ---
 
+## Naming and Self-Documentation
+
+Make the code reveal its own intent so it needs little explanation:
+
+- Prefer intent-revealing names over comments. A reader should understand what an identifier holds or does from its name alone.
+- Comment the WHY, not the WHAT: add comments for non-obvious logic, rationale, or constraints only — do not comment what the code obviously does. Presume the team's already-agreed shared context; do not restate it.
+- Name all significant constants. Unnamed numbers and inline strings obscure intent exactly as opaque identifiers do, and make code fragile and unsearchable. Bind each meaningful literal to a named constant.
+
+---
+
 ## Prefer Composition Over Inheritance
 
-- Favour small, focused interfaces over large class hierarchies.
-- Embed/compose structs or objects instead of inheriting behaviour.
-- In Go: use struct embedding and interface satisfaction. In TypeScript: use composition functions and `interface` declarations. In Python: use protocol classes and dataclasses.
+Favour small, focused units composed together over deep inheritance hierarchies. Assemble behaviour from collaborating parts rather than extending a base type. Defer the concrete composition mechanism to the idiom your language and platform-context prescribe.
 
 ---
 
 ## Early Return / Early Exit
 
-Validate preconditions at the top of the function and return early on failure. This keeps the happy path unindented and readable.
-
-```go
-// Good
-func ProcessOrder(order Order) error {
-    if order.ID == "" {
-        return errors.New("order ID is required")
-    }
-    if order.Total < 0 {
-        return errors.New("order total cannot be negative")
-    }
-    // happy path here — not nested
-    return process(order)
-}
-
-// Avoid
-func ProcessOrder(order Order) error {
-    if order.ID != "" {
-        if order.Total >= 0 {
-            return process(order)
-        }
-    }
-    return errors.New("invalid order")
-}
-```
+Validate preconditions at the top of the function and return early on failure. Each early return handles one invalid case and exits, so the happy path stays unindented and linear. Avoid nesting the success path inside conditional branches.
 
 ---
 
 ## Explicit Interfaces
 
-Define interfaces at the point of use (the consumer), not at the point of definition (the implementor). Small, focused interfaces are easier to mock and satisfy.
-
-```go
-// Good — defined where used, minimal surface
-type OrderStore interface {
-    Save(ctx context.Context, order Order) error
-    FindByID(ctx context.Context, id string) (Order, error)
-}
-
-// Avoid — large interface defined at the implementor
-type Database interface {
-    SaveOrder(...)
-    FindOrder(...)
-    SaveUser(...)
-    FindUser(...)
-    // 20 more methods...
-}
-```
+Define each injected interface at the consumer site, not at the implementor. Keep the interface surface small — only the methods the consumer actually calls. Small, consumer-defined interfaces are easier to satisfy and to substitute. Every injected interface declared here is a testing seam consumed by the `test-generation` skill — keeping the surface minimal keeps tests focused.
 
 ---
 
-## Dependency Injection — No Global State
+## Dependencies
 
-All dependencies (database connections, HTTP clients, configuration, loggers) must be injected via constructor parameters or function arguments. Never use package-level variables for mutable state.
-
-```go
-// Good
-type OrderService struct {
-    store  OrderStore
-    mailer Mailer
-    clock  func() time.Time
-}
-
-func NewOrderService(store OrderStore, mailer Mailer) *OrderService {
-    return &OrderService{store: store, mailer: mailer, clock: time.Now}
-}
-
-// Avoid
-var globalDB *sql.DB  // injected via init() or set during startup
-```
+- Inject all dependencies — data stores, clients, configuration, clocks, loggers — through constructor parameters or function arguments. Enforce no global state: never reach for package-level or module-level mutable state, which hides coupling and defeats substitution.
+- Practise dependency minimalism. Prefer dependencies already declared in the project manifest; every new dependency is a cost in surface, maintenance, and risk. Add one only when it earns its place.
 
 ---
 
 ## Small, Focused Functions
 
-A function should do one thing. If a function has more than one level of abstraction (e.g. it validates input AND formats output AND persists to storage), split it.
+A function should do one thing at one level of abstraction. If you cannot describe what it does in a single "and"-free sentence, split it. Small functions stay testable and readable.
 
-Rule of thumb: if you can describe what the function does with a single "and"-free sentence, its scope is appropriate.
-
----
-
-## No Magic Numbers or Strings
-
-All significant constants must be named. Magic numbers and inline strings make code fragile and unsearchable.
-
-```go
-// Good
-const (
-    maxRetries     = 3
-    resetTokenTTL  = 15 * time.Minute
-    emailSubject   = "Reset your password"
-)
-
-// Avoid
-time.Sleep(900000000000)   // what is this?
-if attempts > 3 { ... }   // where does 3 come from?
-```
+Apply the rule of three to abstraction: do not extract shared behaviour on the first or second occurrence. Tolerate the duplication until the third repetition, then extract — premature abstraction couples code that only looked alike by coincidence.
 
 ---
 
 ## Error Handling
 
-- In Go: always check and wrap errors. Use `fmt.Errorf("context: %w", err)` for wrapping. Never ignore an error with `_`.
-- In TypeScript: use `Result` types or explicit `try/catch` with typed error discrimination. Never swallow errors silently.
-- In Python: use typed exceptions and do not use bare `except:` clauses.
-
-Errors must carry enough context to locate the failure without a debugger.
+Errors must carry enough context to locate the failure without a debugger. Choose the error mechanism your language idiomatically prescribes and apply it consistently. Never swallow an error silently or discard it without handling. Add locating context as an error propagates outward, and defer the concrete error type and wrapping syntax to platform-context.
 
 ---
 
 ## Code Snippet Format
 
 When producing code snippets in an `implementation-plan.yaml`:
-- Show the complete, relevant code unit (function, type, method) — not a fragment that requires the reader to guess the surrounding context.
-- Include package/module declarations when introducing a new file.
-- Add comments for non-obvious logic only. Do not comment what the code obviously does.
-- If the snippet is an excerpt from a larger file, add `// ... (existing code)` markers to show where the snippet fits.
-- Set `file` to the relative path from the project root (e.g. `internal/auth/reset.go`).
-- Set `language` to the file's language identifier (e.g. `go`, `typescript`, `python`).
+
+- Show the complete, relevant code unit (function, type, method) — not a fragment that forces the reader to guess the surrounding context.
+- Include package or module declarations when introducing a new file.
+- If the snippet is an excerpt from a larger file, add markers to show where it fits within the existing code.
+- Set `file` to the relative path from the project root.
+- Set `language` to the file's language identifier.
