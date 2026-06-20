@@ -19,6 +19,8 @@ ux-ui/feature-brief: max 1,000 tokens.
 4. DEFINE the navigation path: what is the entry point? What are the exit points?
 5. IDENTIFY data relationships: what loads together vs. on demand?
 6. APPLY progressive disclosure: what can be hidden initially to reduce cognitive load?
+7. DEFINE content/copy direction per section: the overall `copy_direction`, key `microcopy`
+   snippets, and the `empty_state` and `error_state` messaging guidance.
 
 ## Output
 Produces: `ux-ui/ia`
@@ -40,5 +42,6 @@ payload:
   data_relationships:
     - entities: []
       load_strategy: "together|lazy|on-demand"
+  content_intent: {copy_direction: "", microcopy: [], empty_state: "", error_state: ""}
   open_items: []
 ```

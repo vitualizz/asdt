@@ -47,7 +47,7 @@ func skillDir(t *testing.T) string {
 // `execution: subagent` step in every specialist workflow.yaml declares an
 // `agent:` value drawn from AgentTypeNames, and that the agent-type split is
 // exactly the contract: the developer's implement and test steps are the only
-// builder steps (2), everything else is analyst (38).
+// builder steps (2), everything else is analyst (39).
 func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 	root := skillDir(t)
 	known := make(map[string]bool, len(AgentTypeNames))
@@ -94,8 +94,8 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 		}
 	}
 
-	if analystCount != 38 {
-		t.Errorf("analyst subagent steps = %d, want 38", analystCount)
+	if analystCount != 39 {
+		t.Errorf("analyst subagent steps = %d, want 39", analystCount)
 	}
 	if builderCount != 2 {
 		t.Errorf("builder subagent steps = %d, want 2 (got %v)", builderCount, builderSteps)

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Mobile-first approach and breakpoint strategy. Applied during Step 6 of the UX/UI workflow.
+Mobile-first approach and breakpoint strategy. Applied during the component-mapping step of the UX/UI workflow (which now owns responsive behavior).
 
 ## Mobile-First Principle
 

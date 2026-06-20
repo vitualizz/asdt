@@ -21,6 +21,17 @@ steps:
     output_topic_key: "{project}/{change}/ux-ui/feature-brief"
     reference_skills: []
 
+  - name: design-tokens
+    skill: steps/design-tokens.md
+    description: Derive the design token set from the feature brief design intent and the platform design system fingerprint
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs:
+      - "{project}/{change}/ux-ui/feature-brief"
+    output_topic_key: "{project}/{change}/ux-ui/design-tokens"
+    reference_skills: []
+
   - name: information-architecture
     skill: steps/information-architecture.md
     description: Define the information architecture (navigation, hierarchy, content model) from the feature brief
@@ -55,21 +66,22 @@ steps:
     output_topic_key: "{project}/{change}/ux-ui/components"
     reference_skills: []
 
-  - name: responsive-strategy
-    skill: steps/responsive-strategy.md
-    description: Define the responsive layout strategy for the mapped components
+  - name: design-critique
+    skill: steps/design-critique.md
+    description: Single-pass annotation of the component inventory against the design tokens for consistency and accessibility; derive needs_review
     execution: subagent
     model: sonnet
     agent: analyst
     inputs:
       - "{project}/{change}/ux-ui/components"
-    output_topic_key: "{project}/{change}/ux-ui/responsive"
+      - "{project}/{change}/ux-ui/design-tokens"
+    output_topic_key: "{project}/{change}/ux-ui/design-critique"
     reference_skills:
-      - skills/responsive-design.md
+      - skills/accessibility.md
 
   - name: ux-handoff
     skill: steps/ux-handoff.md
-    description: Consolidate feature-brief, IA, flows, components, and responsive into the final ux-brief + component-spec artifacts
+    description: Consolidate feature-brief, IA, flows, components, design-tokens, and design-critique into the final ux-brief + component-spec artifacts
     execution: subagent
     model: sonnet
     agent: analyst
@@ -78,13 +90,15 @@ steps:
       - "{project}/{change}/ux-ui/ia"
       - "{project}/{change}/ux-ui/flows"
       - "{project}/{change}/ux-ui/components"
-      - "{project}/{change}/ux-ui/responsive"
+      - "{project}/{change}/ux-ui/design-tokens"
+      - "{project}/{change}/ux-ui/design-critique"
     # NOTE: this step produces TWO final artifacts (`ux-brief` + `component-spec`)
     # but `output_topic_key` is contractually a single string. output_topic_key
     # below names the PRIMARY artifact; persist the SECOND under its own distinct
     # per-type key "{project}/{change}/ux-ui/component-spec" (no suffix needed —
     # neither name collides with any intermediate artifact produced earlier in
-    # this specialist's chain: feature-brief, ia, flows, components, responsive).
+    # this specialist's chain: feature-brief, design-tokens, ia, flows, components,
+    # design-critique).
     # Mirrors architect's technical-handoff / security's hardening-checklist workaround.
     output_topic_key: "{project}/{change}/ux-ui/ux-brief"
     reference_skills:
