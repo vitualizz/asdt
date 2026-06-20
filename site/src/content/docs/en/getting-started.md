@@ -23,17 +23,29 @@ Before using ASDT, you need:
 curl -fsSL https://raw.githubusercontent.com/vitualizz/asdt/main/install.sh | bash
 ```
 
-Downloads the latest pre-built binary for your platform and installs it to `~/.local/bin/`.
+Downloads the latest pre-built binary (`asdt-tui`) for your platform and installs it to `~/.local/bin/`. No Go or compiler needed.
 
-## Initialization
+> If `~/.local/bin` is not on your `PATH`, the installer prints the exact line to add to your shell profile.
 
-Initialize ASDT in your project:
+## Install the specialists
+
+Run the interactive installer:
 
 ```bash
-asdt init
+asdt-tui
 ```
 
-Creates `.asdt/config.yaml` with sensible defaults.
+It checks your setup, lets you pick which assistant(s) to target (Claude Code, OpenCode, or both), and copies the ASDT skills in — each specialist as its own independently invocable skill.
+
+## Initialize your project
+
+Open your AI assistant in your project folder and run:
+
+```
+/asdt-init
+```
+
+It detects your stack, asks a couple of questions, and writes `.asdt/config.yaml` with sensible defaults.
 
 ## Your first pipeline
 
