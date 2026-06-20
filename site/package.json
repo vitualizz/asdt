@@ -24,19 +24,20 @@
     "@fontsource/instrument-sans": "^5.2.8",
     "astro": "^6.4.6",
     "fuse.js": "^7.4.2",
-    "preact": "^10.29.2"
+    "preact": "^10.29.2",
+    "reveal.js": "^6.0.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "latest",
-    "tailwindcss": "latest",
     "@astrojs/check": "latest",
-    "typescript": "latest",
     "@eslint/js": "latest",
-    "typescript-eslint": "latest",
-    "eslint-plugin-astro": "latest",
+    "@tailwindcss/vite": "latest",
     "eslint-config-prettier": "latest",
+    "eslint-plugin-astro": "latest",
     "prettier": "latest",
     "prettier-plugin-astro": "latest",
-    "prettier-plugin-tailwindcss": "latest"
+    "prettier-plugin-tailwindcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "latest"
   }
 }
