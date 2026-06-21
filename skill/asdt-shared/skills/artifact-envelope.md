@@ -33,7 +33,7 @@ payload:
 | `agent` | string | Yes | The specialist ID (e.g. `"developer"`, `"security"`) — must match the specialist's `specialist-id` frontmatter field |
 | `change_id` | string | Yes | The active change name (e.g. `"add-password-reset"`) |
 | `created_at` | string | Yes | ISO 8601 UTC timestamp of when the artifact was written |
-| `prompt_version` | string | Yes | Hash or version identifier of the prompt fragments active at write time (for drift detection) |
+| `prompt_version` | string | Yes | SHA-256, first 8 hex chars, of the composed-prompt manifest (per ADR-003) — used for drift detection |
 | `input_refs` | []string | Yes | List of Engram topic_keys (`{project}/{change}/{specialist}/{artifact-type}`, per ADR-011) for every artifact read as input. Filesystem knowledge files (e.g. `.asdt/knowledge/platform.yaml`) keep their relative-path form — the only non-topic-key allowance. Empty list `[]` when no inputs were read |
 | `payload` | map | Yes | Specialist-specific content. Must contain at minimum an `open_items` key |
 
@@ -72,7 +72,7 @@ Before writing any artifact, validate:
 2. `agent` must be non-empty and must match the running specialist's ID
 3. `change_id` must be non-empty
 4. `created_at` must be a valid ISO 8601 timestamp (UTC preferred)
-5. `prompt_version` must be non-empty (use a hash of the assembled prompt or a monotonic identifier)
+5. `prompt_version` must be non-empty and computed as SHA-256, first 8 hex chars, of the composed-prompt manifest (per ADR-003); a monotonic identifier is NOT a valid substitute
 6. `input_refs` must be present (empty list is valid when no inputs were read)
 7. `payload` must be present and must contain `open_items`
 

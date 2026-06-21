@@ -30,6 +30,7 @@ architect's dual-output `technical-handoff`; persist it once under this step's
 
 Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
 
+<!-- ASDT:GENERATED:schema-test-plan -->
 Schema:
 ```yaml
 payload:
@@ -43,8 +44,16 @@ payload:
     covered: 0
     coverage_percent: ""
   ac_gaps: []
-  quality_verdict: "READY|READY_WITH_CAVEATS|BLOCKED"
+  quality_verdict: "READY" # one of: READY|READY_WITH_CAVEATS|BLOCKED
   verdict_rationale: ""
-  test_cases: []     # full list from qa/test-cases
+  test_cases:
+    - id: ""
+      title: ""
+      given: ""
+      when: ""
+      then: ""
+      type: "unit" # one of: unit|integration|e2e|acceptance
+      story_id: ""
   open_items: []
 ```
+<!-- /ASDT:GENERATED:schema-test-plan -->

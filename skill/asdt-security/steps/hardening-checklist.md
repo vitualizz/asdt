@@ -37,36 +37,43 @@ on this step's workflow.yaml entry — `{project}/{change}/security/hardening-ch
 which collides with neither the primary key nor any intermediate artifact name);
 return envelope covering both persisted keys.
 
+<!-- ASDT:GENERATED:schema-security-findings -->
 security-findings schema:
 ```yaml
 payload:
   findings:
-    - id: "SF-001"
-      severity: "Critical|High|Medium|Low"
-      title: ""
-      description: ""
-      cwe: ""
-      recommendation: ""
-  overall_risk: "Critical|High|Medium|Low"
+    - id: "" # Finding identifier (e.g. F-001).
+      owasp_category: "" # OWASP Top 10 2021 category (e.g. A01:2021 - Broken Access Control).
+      title: "" # Short title naming the vulnerability.
+      description: "" # What the vulnerability is and where it manifests.
+      severity: "Low" # one of: Low|Medium|High|Critical
+      cwe: "" # Optional CWE identifier (e.g. CWE-79).
+      recommendation: "" # Concrete remediation action for the Developer specialist.
+  summary: "" # One-sentence security posture summary for the organizational knowledge record.
+  overall_risk: "Low" # Overall risk rating for this feature before hardening. | one of: Low|Medium|High|Critical
   open_items: []
 ```
+<!-- /ASDT:GENERATED:schema-security-findings -->
 
+<!-- ASDT:GENERATED:schema-hardening-checklist -->
 hardening-checklist schema:
 ```yaml
 payload:
-  quick_wins:       # < 1h effort
+  quick_wins:
     - item: ""
       priority: ""
       finding_ref: ""
-  medium_effort:    # 1h-1 day
+  medium_effort:
     - item: ""
       priority: ""
       finding_ref: ""
-  significant:      # > 1 day
+  significant:
     - item: ""
       priority: ""
       finding_ref: ""
   must_fix_before_launch: []
   can_defer: []
+  summary: ""
   open_items: []
 ```
+<!-- /ASDT:GENERATED:schema-hardening-checklist -->

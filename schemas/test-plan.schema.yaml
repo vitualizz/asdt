@@ -10,51 +10,47 @@ description: >
 type: object
 
 required:
-  - strategy
-  - coverage_targets
-  - test_cases
+  - quality_verdict
 
 properties:
-  strategy:
+  test_summary:
     type: object
-    description: Overall test strategy for this change.
-    required:
-      - unit
-      - integration
     properties:
+      total_cases:
+        type: integer
       unit:
-        type: string
-        description: Approach for unit tests.
+        type: integer
       integration:
-        type: string
-        description: Approach for integration tests.
+        type: integer
       e2e:
-        type: string
-        description: Approach for end-to-end tests (optional).
+        type: integer
 
-  coverage_targets:
+  ac_coverage:
     type: object
-    description: Minimum coverage percentages by layer.
     properties:
-      unit:
+      total_testable:
         type: integer
-        minimum: 0
-        maximum: 100
-      integration:
+      covered:
         type: integer
-        minimum: 0
-        maximum: 100
+      coverage_percent:
+        type: string
+
+  ac_gaps:
+    type: array
+    items:
+      type: string
+
+  quality_verdict:
+    type: string
+    enum: [READY, READY_WITH_CAVEATS, BLOCKED]
+
+  verdict_rationale:
+    type: string
 
   test_cases:
     type: array
-    description: Concrete test cases in Given/When/Then format.
     items:
       type: object
-      required:
-        - id
-        - given
-        - when
-        - then
       properties:
         id:
           type: string
@@ -72,12 +68,7 @@ properties:
         story_id:
           type: string
 
-  test_data_notes:
-    type: string
-    description: Notes on test data setup, fixtures, or factories needed.
-
   open_items:
     type: array
-    description: Unresolved test infrastructure or coverage gaps.
     items:
       type: string

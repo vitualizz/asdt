@@ -41,6 +41,16 @@ Any step that produces a **final decision artifact**:
    You MUST call `mem_save` yourself with this summary as the permanent record —
    there is no runner; persistence is your responsibility.
 
+## Dual mem_save semantics
+
+This `mem_save` is the SECONDARY permanent knowledge record — it uses the title pattern
+`"{specialist-role}: {change-name}"` and is NOT stored at the step's `output_topic_key`.
+The PRIMARY canonical envelope save was already performed by the calling step itself, under
+the `output_topic_key` declared in `workflow.yaml` — that is the artifact sub-agents retrieve
+via their declared `inputs:`. These two saves are DISTINCT and MUST NOT be merged: collapsing
+them would break artifact retrieval at the canonical topic_key. This applies to every specialist
+whose final step invokes this skill, not just one.
+
 ## Context Budget
 
 No added input budget — this skill operates on the artifact you already produced.

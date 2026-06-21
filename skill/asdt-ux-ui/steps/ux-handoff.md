@@ -52,15 +52,23 @@ the primary key nor any intermediate artifact produced earlier in this
 specialist's chain: `feature-brief`, `design-tokens`, `ia`, `flows`, `components`, `design-critique`).
 Return an envelope covering both persisted keys.
 
+<!-- ASDT:GENERATED:schema-ux-brief -->
 ux-brief schema:
 ```yaml
 payload:
   feature_summary: ""
   primary_actor: ""
   success_criteria: []
-  design_intent: {tone: "", principles: [], north_star: ""}
-  jtbd: []   # [{actor, motivation, outcome}]
-  content_intent: {copy_direction: "", microcopy: [], empty_state: "", error_state: ""}
+  design_intent:
+    tone: ""
+    principles: []
+    north_star: ""
+  jtbd: []
+  content_intent:
+    copy_direction: ""
+    microcopy: []
+    empty_state: ""
+    error_state: ""
   user_flows:
     - id: ""
       name: ""
@@ -71,7 +79,9 @@ payload:
     navigation_path: ""
   open_items: []
 ```
+<!-- /ASDT:GENERATED:schema-ux-brief -->
 
+<!-- ASDT:GENERATED:schema-component-spec -->
 component-spec schema:
 ```yaml
 payload:
@@ -84,10 +94,46 @@ payload:
       props: []
       events: []
       responsive_behavior: ""
-      design_tokens_ref: []   # token names this component consumes
-      state_matrix: {}        # carried from component-mapping (9 states)
-      responsive: {}          # carried from component-mapping (mobile/tablet/desktop/touch_target_compliant)
-  critique_annotations: []    # present only when design-critique resolved (complex tier)
-  needs_review: false         # present only when design-critique resolved (complex tier)
+      design_tokens_ref: []
+      state_matrix:
+        default:
+          applicable: false
+          behavior: ""
+        hover:
+          applicable: false
+          behavior: ""
+        focus:
+          applicable: false
+          behavior: ""
+        active:
+          applicable: false
+          behavior: ""
+        disabled:
+          applicable: false
+          behavior: ""
+        empty:
+          applicable: false
+          behavior: ""
+        loading:
+          applicable: false
+          behavior: ""
+        error:
+          applicable: false
+          behavior: ""
+        success:
+          applicable: false
+          behavior: ""
+      responsive:
+        mobile: ""
+        tablet: ""
+        desktop: ""
+        touch_target_compliant: false
+  critique_annotations:
+    - target: ""
+      issue: ""
+      severity: "low" # one of: low|medium|high
+      token_ref: ""
+  needs_review: false
   open_items: []
 ```
+<!-- /ASDT:GENERATED:schema-component-spec -->

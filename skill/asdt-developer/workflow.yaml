@@ -10,7 +10,7 @@ steps:
     skill: steps/explore.md
     description: Explore the request and platform context to produce a development exploration artifact
     execution: subagent
-    model: sonnet
+    model: sonnet  # exploration / enumeration: lower ambiguity, favor throughput
     agent: analyst
     inputs: []
     output_topic_key: "{project}/{change}/developer/dev-exploration"
@@ -22,10 +22,11 @@ steps:
     skill: steps/spec.md
     description: Transform the exploration into a structured development specification
     execution: subagent
-    model: sonnet
+    model: sonnet  # structured transform / analysis: lower ambiguity, favor throughput
     agent: analyst
     inputs:
       - "{project}/{change}/developer/dev-exploration"
+      - "{project}/{change}/pm/backlog-entry"  # SOFT/optional — AC authority (ADR-019); degrade gracefully if absent
     output_topic_key: "{project}/{change}/developer/dev-spec"
     reference_skills:
       - ../asdt-shared/skills/scope-definition.md
@@ -34,7 +35,7 @@ steps:
     skill: steps/design.md
     description: Produce a technical design from the spec (data model, API surface, component boundaries)
     execution: subagent
-    model: opus
+    model: opus  # deep design / synthesis: high ambiguity, strongest reasoning
     agent: analyst
     inputs:
       - "{project}/{change}/developer/dev-spec"
@@ -45,7 +46,7 @@ steps:
     skill: steps/tasks.md
     description: Break the design into an ordered task list with dependency graph
     execution: subagent
-    model: sonnet
+    model: sonnet  # task enumeration / dependency mapping: lower ambiguity, favor throughput
     agent: analyst
     inputs:
       - "{project}/{change}/developer/dev-spec"
@@ -57,7 +58,7 @@ steps:
     skill: steps/implement.md
     description: Generate the concrete implementation from the task list and design
     execution: subagent
-    model: opus
+    model: opus  # real-file writing / code generation: high ambiguity, strongest reasoning
     agent: builder
     inputs:
       - "{project}/{change}/developer/dev-tasks"
@@ -71,7 +72,7 @@ steps:
     skill: steps/test.md
     description: Write tests covering the implementation tasks and edge cases
     execution: subagent
-    model: sonnet
+    model: sonnet  # test enumeration from existing code: lower ambiguity, favor throughput
     agent: builder
     inputs:
       - "{project}/{change}/developer/dev-tasks"

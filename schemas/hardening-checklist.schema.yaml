@@ -11,39 +11,57 @@ description: >
 type: object
 
 required:
-  - actions
+  - summary
 
 properties:
-  actions:
+  quick_wins:
     type: array
-    description: Ordered hardening actions, highest priority first.
     items:
       type: object
-      required:
-        - id
-        - action
-        - priority
       properties:
-        id:
+        item:
           type: string
-          description: Action identifier (e.g. H-001).
-        action:
-          type: string
-          description: Concrete developer task (imperative sentence).
         priority:
           type: string
-          enum: [Critical, High, Medium, Low]
-        rationale:
-          type: string
-          description: Why this action is necessary (links back to a finding or threat).
         finding_ref:
           type: string
-          description: Optional reference to a security finding ID (e.g. F-001).
+
+  medium_effort:
+    type: array
+    items:
+      type: object
+      properties:
+        item:
+          type: string
+        priority:
+          type: string
+        finding_ref:
+          type: string
+
+  significant:
+    type: array
+    items:
+      type: object
+      properties:
+        item:
+          type: string
+        priority:
+          type: string
+        finding_ref:
+          type: string
+
+  must_fix_before_launch:
+    type: array
+    items:
+      type: string
+
+  can_defer:
+    type: array
+    items:
+      type: string
 
   summary:
     type: string
-    description: >
-      One-sentence hardening summary for the organizational knowledge record.
 
   open_items:
     type: array

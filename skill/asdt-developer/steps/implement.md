@@ -6,9 +6,20 @@ Generate implementation code for each task, respecting existing conventions.
 ## Inputs
 - `developer/dev-tasks`: ordered task list with files and dependencies
 - `developer/dev-design`: technical approach, key constraints
+- `developer/dev-spec` (SOFT — ADR-019 spec→code traceability): acceptance criteria for this change
 
 Extract from dev-tasks: `tasks` list.
 Extract from dev-design: `key_constraints`, `data_model` field shapes.
+Extract from dev-spec: `acceptance_criteria[]` (for the traceability_report — see Processing).
+
+**Soft input (no `dev-spec`)**: if dev-spec is ABSENT, do NOT fail — note the absence in
+`open_items`, emit an empty `traceability_report[]`, and proceed with available context.
+
+**Fallback (no `dev-tasks`)**: in simple/moderate tier the `tasks` step does not run, so
+`developer/dev-tasks` is ABSENT. Do NOT fail and do NOT STOP on the missing artifact alone —
+fall back to `developer/dev-spec` + `developer/dev-design` as primary inputs and derive the
+task list inline from those two artifacts, then proceed. The Mode resolution below (PLAN-ONLY
+vs WRITING, gated on declared edit roots) applies unchanged to the inline-derived tasks.
 
 ## Context budget
 dev-tasks + dev-design summary: max 3,000 tokens. Generate code for tasks in batches
@@ -47,6 +58,23 @@ For each task in dev-tasks:
 5. Record the written path, action (`created`|`modified`), and rationale in the `files_changed[]`
    manifest entry for that task.
 
+### Traceability (both modes — ADR-019 US-002)
+After generating code, build a top-level `traceability_report[]`:
+1. Read `dev-spec.acceptance_criteria[]`. If dev-spec was absent, emit `traceability_report: []`.
+2. For each AC, identify the task(s) / file(s) that address it. Set `coverage_status: covered`
+   and list the addressing `task_id`(s) in `addressed_by`.
+3. If no task addresses an AC, set `coverage_status: unaddressed` and add a NON-BLOCKING warning
+   to `open_items`. Unaddressed ACs are WARNINGS — do NOT halt the step.
+
+## Dual mem_save semantics
+This step persists TWICE, and the two saves are DISTINCT — never merge them:
+- **PRIMARY (canonical)**: the envelope save under the `output_topic_key` from `workflow.yaml`
+  (`developer/dev-implementation`). This is the artifact sub-agents retrieve via their declared `inputs:`.
+- **SECONDARY (knowledge record)**: the `decision-preservation` save under its own title pattern
+  (`"{specialist-role}: {change-name}"`). This is the permanent organizational memory entry.
+
+See `../asdt-shared/skills/decision-preservation.md` for the shared definition.
+
 ## Output
 Produces: `developer/dev-implementation`
 
@@ -68,6 +96,11 @@ payload:
         - file: ""
           language: ""
           content: ""
+  traceability_report:        # top-level — maps each dev-spec AC to the code addressing it
+    - ac_id: ""
+      ac_text: ""
+      addressed_by: []        # [task_id]
+      coverage_status: "covered|unaddressed"
   open_items: []
 ```
 
@@ -82,5 +115,10 @@ payload:
       task_id: "T-001"
       rationale: ""
   unsafe_skipped: []          # paths STOPPED on, with the triggering task_id
+  traceability_report:        # top-level — maps each dev-spec AC to the code addressing it
+    - ac_id: ""
+      ac_text: ""
+      addressed_by: []        # [task_id]
+      coverage_status: "covered|unaddressed"
   open_items: []
 ```

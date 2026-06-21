@@ -67,6 +67,8 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 
 ¹ Only included when `strict_tdd: true` in `.asdt/config.yaml`. Excluded when `strict_tdd` is `false` or absent.
 
+**Model assignment rationale** (see inline `#` comments per `model:` field in `workflow.yaml`): steps that enumerate, transform, or analyze with lower ambiguity run on `sonnet` for throughput (`explore`, `spec`, `tasks`, `test`); steps that synthesize a design or write real files under high ambiguity run on `opus` for its strongest reasoning (`design`, `implement`).
+
 ## Final Output
 `developer/dev-implementation` — the consolidated implementation artifact produced by the `implement` step. Consumed by QA and other specialists.
 

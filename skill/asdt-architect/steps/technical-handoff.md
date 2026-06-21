@@ -27,28 +27,49 @@ Produces: `architectural-decision` (final) and `system-design` (final)
 
 Persist `architectural-decision` via mem_save under this step's `output_topic_key` in workflow.yaml; persist the second final artifact `system-design` under its own distinct per-type topic_key (see the NOTE on this step's workflow.yaml entry — do not collide with the intermediate `architect/system-design` produced earlier by the system-design step); return envelope covering both persisted keys.
 
+<!-- ASDT:GENERATED:schema-architectural-decision -->
 architectural-decision schema:
 ```yaml
 payload:
   decision_title: ""
-  status: "accepted"
+  status: "accepted" # one of: accepted|proposed|superseded|deprecated
   context: ""
   decision: ""
-  alternatives_considered: []
+  alternatives_considered:
+    - name: ""
+      reason_rejected: ""
   consequences:
     positive: []
     negative: []
-  key_constraints_for_developer: []  # MUST respect these
+    technical_debt: []
+  key_constraints_for_developer: []
+  summary: ""
   open_items: []
 ```
+<!-- /ASDT:GENERATED:schema-architectural-decision -->
 
+<!-- ASDT:GENERATED:schema-system-design -->
 system-design schema:
 ```yaml
 payload:
-  data_model: []
-  api_surface: []
-  service_boundaries: {}
+  data_model:
+    - entity: ""
+      fields:
+        - name: ""
+          type: ""
+          constraints: ""
+      relationships: []
+  api_surface:
+    - operation: ""
+      method: "GET" # one of: GET|POST|PUT|PATCH|DELETE|SUBSCRIBE|PUBLISH
+      input: {}
+      success_response: {}
+      error_cases: []
+  service_boundaries:
+    touched_modules: []
+    new_interfaces: []
+    extended_interfaces: []
   key_sequence: []
-  top_risks: []
   open_items: []
 ```
+<!-- /ASDT:GENERATED:schema-system-design -->

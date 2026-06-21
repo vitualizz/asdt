@@ -30,19 +30,22 @@ properties:
           description: Finding identifier (e.g. F-001).
         owasp_category:
           type: string
-          description: OWASP Top 10 2021 category (e.g. A01:2021 – Broken Access Control).
+          description: OWASP Top 10 2021 category (e.g. A01:2021 - Broken Access Control).
+        title:
+          type: string
+          description: Short title naming the vulnerability.
         description:
           type: string
           description: What the vulnerability is and where it manifests.
         severity:
           type: string
           enum: [Low, Medium, High, Critical]
-        remediation:
-          type: string
-          description: Concrete remediation action for the Developer specialist.
-        cwe_id:
+        cwe:
           type: string
           description: Optional CWE identifier (e.g. CWE-79).
+        recommendation:
+          type: string
+          description: Concrete remediation action for the Developer specialist.
 
   summary:
     type: string

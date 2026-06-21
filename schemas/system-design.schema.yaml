@@ -15,69 +15,69 @@ required:
 
 properties:
   data_model:
-    type: object
-    description: Core entities and their relationships.
-    properties:
-      entities:
-        type: array
-        items:
-          type: object
-          required:
-            - name
-            - fields
-          properties:
-            name:
-              type: string
-            fields:
-              type: array
-              items:
+    type: array
+    items:
+      type: object
+      properties:
+        entity:
+          type: string
+        fields:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
                 type: string
-            relationships:
-              type: array
-              items:
+              type:
                 type: string
+              constraints:
+                type: string
+        relationships:
+          type: array
+          items:
+            type: string
 
   api_surface:
     type: array
-    description: API endpoints or service contracts this feature introduces or modifies.
     items:
       type: object
-      required:
-        - method
-        - path
       properties:
+        operation:
+          type: string
         method:
           type: string
           enum: [GET, POST, PUT, PATCH, DELETE, SUBSCRIBE, PUBLISH]
-        path:
-          type: string
-        description:
-          type: string
-        request_body:
-          type: string
-        response:
-          type: string
-        auth_required:
-          type: boolean
+        input:
+          type: object
+        success_response:
+          type: object
+        error_cases:
+          type: array
+          items:
+            type: string
 
   service_boundaries:
-    type: array
-    description: Services, modules, or packages involved and their responsibilities.
-    items:
-      type: object
-      properties:
-        name:
+    type: object
+    properties:
+      touched_modules:
+        type: array
+        items:
           type: string
-        responsibility:
+      new_interfaces:
+        type: array
+        items:
+          type: string
+      extended_interfaces:
+        type: array
+        items:
           type: string
 
-  sequence_notes:
-    type: string
-    description: >
-      Key sequence or interaction notes (informal prose or Mermaid-style description).
+  key_sequence:
+    type: array
+    items:
+      type: string
 
   open_items:
     type: array
-    description: Unresolved design decisions.
     items:
       type: string

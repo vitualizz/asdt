@@ -30,6 +30,19 @@ dev-tasks AC list + dev-implementation function signatures: max 2,500 tokens.
    determines WHERE the resulting test artifact lives (Engram snippet vs. real file), not
    whether TDD discipline applies.
 
+### strict_tdd: false behavior (test-lite floor — ADR-020, TARGET / not yet wired)
+> **Status: not active.** ADR-020 defines a test-lite floor for `strict_tdd: false`, but the
+> tier mapping in `SKILL.md` still EXCLUDES this step when `strict_tdd` is `false` or absent —
+> so the floor below is the intended TARGET behavior, pending the SKILL.md/§9.2 wiring that
+> makes the step run in that branch. It does not take effect until that wiring lands.
+
+When activated, the target is: instead of zero output, this step runs PLAN-ONLY and emits
+`test_snippets[]` covering the critical paths. Each snippet MUST carry a label
+`plan-only / not executed` (inline comment or explicit text) — they are design intent, NOT
+passing tests, so consumers (QA) treat them as such and gain no false confidence. Persist these
+snippets to Engram ONLY — never write test files to disk in this branch. Not a depth override;
+no new config key, no schema change.
+
 ## Processing
 
 ### Plan-only mode

@@ -10,60 +10,144 @@ description: >
   Persisted via mem_save to the memory provider (not written to .asdt/artifacts/).
 type: object
 
-required:
-  - components
+required: []
 
 properties:
-  components:
+  reused_components:
     type: array
-    description: All UI components involved in this feature.
-    items:
-      type: object
-      required:
-        - name
-        - status
-      properties:
-        name:
-          type: string
-          description: Component name (e.g. LoginForm, UserAvatar).
-        status:
-          type: string
-          description: Whether this component is reused, extended, or new.
-          enum:
-            - reused
-            - extended
-            - new
-        location:
-          type: string
-          description: File path or package where the component lives/will live.
-        props:
-          type: array
-          description: Key props/inputs this component accepts.
-          items:
-            type: string
-        notes:
-          type: string
-          description: Design notes, constraints, or special behavior.
-
-  design_tokens:
-    type: array
-    description: Shared design tokens (colors, spacing, typography) this feature depends on.
     items:
       type: string
 
-  responsive_breakpoints:
+  extended_components:
     type: array
-    description: Breakpoints and adaptive behavior rules.
+    items:
+      type: string
+
+  new_components:
+    type: array
     items:
       type: object
       properties:
-        breakpoint:
+        name:
           type: string
-        behavior:
+        purpose:
           type: string
+        reason_existing_insufficient:
+          type: string
+        props:
+          type: array
+          items:
+            type: string
+        events:
+          type: array
+          items:
+            type: string
+        responsive_behavior:
+          type: string
+        design_tokens_ref:
+          type: array
+          items:
+            type: string
+        state_matrix:
+          type: object
+          properties:
+            default:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            hover:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            focus:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            active:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            disabled:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            empty:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            loading:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            error:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+            success:
+              type: object
+              properties:
+                applicable:
+                  type: boolean
+                behavior:
+                  type: string
+        responsive:
+          type: object
+          properties:
+            mobile:
+              type: string
+            tablet:
+              type: string
+            desktop:
+              type: string
+            touch_target_compliant:
+              type: boolean
+
+  critique_annotations:
+    type: array
+    items:
+      type: object
+      properties:
+        target:
+          type: string
+        issue:
+          type: string
+        severity:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        token_ref:
+          type: string
+
+  needs_review:
+    type: boolean
 
   open_items:
     type: array
-    description: Unresolved component questions.
     items:
       type: string
