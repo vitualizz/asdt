@@ -13,6 +13,10 @@ type Locale struct {
 
 // SupportedLocales is the single source of truth for the installer's selectable
 // languages. The TUI selector and renderAgentConfig both consume it.
+//
+// The neutral-register rule (clear register, no strong regional dialect or slang)
+// lives in the agents-template.md framing, not here — Directives name only the
+// spoken language so the neutrality guidance stays single-sourced across locales.
 var SupportedLocales = []Locale{
 	{Code: "en", Label: "🇬🇧 English", Directive: "Respond in English, keeping the assistant's own defined voice and style."},
 	{Code: "es-419", Label: "🌎 Español (Latinoamérica)", Directive: "Respond in Latin American Spanish, keeping the assistant's own defined voice and style."},
