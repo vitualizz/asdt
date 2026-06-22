@@ -45,12 +45,12 @@ write implementation code, architecture decisions, or test plans.
 |-------|-------|
 | **trivial** | `feature-brief` |
 | **simple** | `feature-brief → design-tokens → information-architecture → user-flows → component-mapping → ux-handoff` |
-| **moderate** | `feature-brief → design-tokens → information-architecture → user-flows → component-mapping → ux-handoff` |
-| **complex** | Full workflow (`feature-brief → design-tokens → information-architecture → user-flows → component-mapping → design-critique → ux-handoff`) |
+| **moderate** | `feature-brief → design-tokens → information-architecture → user-flows → content-design → component-mapping → ux-handoff` |
+| **complex** | Full workflow (`feature-brief → design-tokens → information-architecture → user-flows → content-design → component-mapping → design-critique → ux-handoff`) |
 
 **Trivial eligible**: Yes — `feature-brief` has `inputs: []`; inline preludes `knowledge-recall`, `platform-analysis` always run.
 **Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `platform-analysis`, `decision-preservation`
-**Invariant**: `simple` and `moderate` are intentionally identical — `design-critique` is the only complexity-gated step and it gates `complex` only. Do not diverge these lists.
+**Invariant**: there are now TWO complexity-gated steps — `content-design` gates `moderate|complex` (absent on `simple`), and `design-critique` gates `complex` only. Consequently `simple` and `moderate` are NO LONGER identical: they differ by exactly `content-design`. Keep the two gates aligned with this rule when steps change.
 **Hard dependency**: `information-architecture` is a required input of `user-flows` — never omit it.
 
 When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence over the complexity-based defaults above.
@@ -63,9 +63,10 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | design-tokens | steps/design-tokens.md | subagent | `ux-ui/feature-brief` | `ux-ui/design-tokens` |
 | information-architecture | steps/information-architecture.md | subagent | `ux-ui/feature-brief` | `ux-ui/ia` |
 | user-flows | steps/user-flows.md | subagent | `ux-ui/ia` | `ux-ui/flows` |
-| component-mapping | steps/component-mapping.md | subagent | `ux-ui/flows`, `platform-summary` (injected) | `ux-ui/components` |
+| content-design | steps/content-design.md | subagent | `ux-ui/flows`, `ux-ui/ia` | `ux-ui/content-inventory` |
+| component-mapping | steps/component-mapping.md | subagent | `ux-ui/flows`, `platform-summary` (injected), `ux-ui/content-inventory` (optional) | `ux-ui/components` |
 | design-critique | steps/design-critique.md | subagent | `ux-ui/components`, `ux-ui/design-tokens` | `ux-ui/design-critique` |
-| ux-handoff | steps/ux-handoff.md | subagent | `ux-ui/feature-brief`, `ux-ui/ia`, `ux-ui/flows`, `ux-ui/components`, `ux-ui/design-tokens`, `ux-ui/design-critique` | `ux-brief` + `component-spec` |
+| ux-handoff | steps/ux-handoff.md | subagent | `ux-ui/feature-brief`, `ux-ui/ia`, `ux-ui/flows`, `ux-ui/components`, `ux-ui/design-tokens`, `ux-ui/design-critique`, `ux-ui/content-inventory` | `ux-brief` + `component-spec` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 
 ## Final Output
@@ -90,7 +91,8 @@ For each artifact, call `mem_save` with:
 > via title-based search.
 
 **Artifact types produced by this specialist**: `feature-brief`, `design-tokens`, `ia`, `flows`,
-`components`, `design-critique` (complex tier only), and the two finals `ux-brief` + `component-spec`.
+`content-inventory` (moderate|complex tier only), `components`, `design-critique` (complex tier only),
+and the two finals `ux-brief` + `component-spec`.
 The `design-tokens` and `design-critique` artifacts each persist under their own per-type topic_key
 (`{project}/{change}/ux-ui/design-tokens`, `{project}/{change}/ux-ui/design-critique`). The final
 `ux-brief` is now enriched with `design_intent`, `jtbd`, and `content_intent`; `component-spec` is

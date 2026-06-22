@@ -11,6 +11,7 @@ component-spec (for implementation). Apply the report shared skill.
 - `ux-ui/components`: component inventory + absorbed responsive (`responsive`, `breakpoint_strategy`, `hidden_on_mobile`) + state_matrix
 - `ux-ui/design-tokens`: derived token set
 - `ux-ui/design-critique`: critique annotations + needs_review (complex-only → may arrive UNRESOLVED on lower tiers; handle gracefully)
+- `ux-ui/content-inventory`: text touchpoints (TextTouchpoint list) — tier-gated (moderate|complex) → may arrive UNRESOLVED on trivial|simple; handle gracefully.
 
 Apply the extraction rules in the report shared skill to each: keep only fields relevant to implementation handoff.
 
@@ -20,7 +21,21 @@ All inputs context-extracted to max 200 tokens each = max 1,000 tokens total.
 ## Processing
 Apply the `report` shared skill:
 1. From feature-brief: extract actor + success_criteria + design_intent + jtbd.
-2. From ia: extract navigation.entry_point + primary_actions + content_intent.
+2. From ia + content-inventory: extract IA `navigation.entry_point` + `primary_actions`, then
+   ASSEMBLE `content_intent` via this SOURCE-SELECTION algorithm. The emitted `content_intent`
+   block is UNCONDITIONALLY the 4 keys `{copy_direction, microcopy, empty_state, error_state}`
+   (R-004 — feed VALUES only; never add or remove a key). `surface_type → content_intent` key map:
+   `CTA → microcopy[]`, `label → microcopy[]`, `empty_state → empty_state`, `error → error_state`;
+   `copy_direction` is always sourced from the IA thin intent.
+   - BRANCH A (content-inventory PRESENT): build `microcopy[]` from touchpoints whose `surface_type`
+     ∈ {CTA, label} (use `representative_copy`); `empty_state` from the empty_state touchpoint(s);
+     `error_state` from the error touchpoint(s); `copy_direction` from IA.
+   - BRANCH B (content-inventory UNRESOLVED/absent): degrade to the IA thin intent — `copy_direction`
+     from IA; `microcopy: []`; `empty_state`/`error_state` from the IA intent hints; APPEND open_item
+     `"content inventory deferred — tier did not include content-design"`. (Models the same graceful
+     degradation as the design-critique branch in step 6.)
+   - BOTH ABSENT (no content-inventory AND no IA content_intent): `copy_direction: ""`, empty values,
+     and APPEND the same open_item.
 3. From flows: extract happy-path steps and decision_points (not edge cases — those go in QA).
 4. From components: full component inventory. Responsive specs are sourced from the components
    artifact's absorbed `responsive` / `breakpoint_strategy` / `hidden_on_mobile` fields (plus each

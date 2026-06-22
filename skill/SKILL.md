@@ -76,6 +76,11 @@ When you receive a feature request:
 | **Security Engineer** | `/asdt-security` | Threat modeling, OWASP review, hardening, vulnerability analysis | When the request touches authentication, authorization, data handling, or external integrations — can run independently at any time |
 | **Researcher** | `/asdt-researcher` | Problem discovery, divergent ideation, feasibility scanning, discovery briefs | When a problem or opportunity is fuzzy and needs structured exploration BEFORE requirements — runs immediately before /asdt-pm, or standalone |
 
+### Routing semantics: `/asdt-init` and `/asdt-researcher`
+
+- **`/asdt-init` is NOT routable.** It is a setup-class command, invoked directly by name to scaffold a project. By design it sits outside `/asdt` routing (ADR-016 §4: "init is a setup-class command, NOT routable") — its absence from the routing table is intentional, not a gap.
+- **`/asdt-researcher` IS routable.** It appears in this Specialist Registry and in the routing table as the pre-PM discovery stage: `/asdt` can dispatch to it when a problem is still fuzzy, and it can also be invoked directly when you want discovery before requirements.
+
 ---
 
 ## 6. Output Format
