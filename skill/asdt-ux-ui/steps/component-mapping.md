@@ -7,8 +7,9 @@ Maximize reuse. Justify every new component.
 ## Inputs
 - `ux-ui/flows`: interaction sequences, state changes
 - `platform-summary`: component_library, existing patterns
+- `ux-ui/content-inventory`: text touchpoints (TextTouchpoint list) — OPTIONAL; informs content-driven component sizing.
 
-`ux-ui/flows` arrives injected per the parallel-retrieval contract — consume it directly. `platform-summary` is injected by the orchestrator's inline `platform-analysis` step. Do not fetch either yourself.
+`ux-ui/flows` arrives injected per the parallel-retrieval contract — consume it directly. `platform-summary` is injected by the orchestrator's inline `platform-analysis` step. Do not fetch either yourself. `ux-ui/content-inventory` is ALWAYS-OPTIONAL (no tier-conditional branch): if it arrives UNRESOLVED, proceed on flows alone, SKIP content-driven sizing, and NEVER error (R-006).
 
 Extract from flows: all unique UI states and interactions.
 Extract from platform-summary: component_library name and approach.

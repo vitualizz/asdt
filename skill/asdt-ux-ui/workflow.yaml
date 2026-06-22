@@ -55,6 +55,19 @@ steps:
     output_topic_key: "{project}/{change}/ux-ui/flows"
     reference_skills: []
 
+  - name: content-design
+    # RUN at moderate|complex; SKIP at trivial|simple
+    skill: steps/content-design.md
+    description: Catalog the text touchpoints surfaced by the flows, elaborating the IA content_intent into an illustrative content inventory
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs:
+      - "{project}/{change}/ux-ui/flows"
+      - "{project}/{change}/ux-ui/ia"
+    output_topic_key: "{project}/{change}/ux-ui/content-inventory"
+    reference_skills: []
+
   - name: component-mapping
     skill: steps/component-mapping.md
     description: Map user flows to design system components and identify gaps
@@ -63,6 +76,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/ux-ui/flows"
+      - "{project}/{change}/ux-ui/content-inventory"   # optional (R-006): UNRESOLVED → proceed on flows
     output_topic_key: "{project}/{change}/ux-ui/components"
     reference_skills: []
 
@@ -92,6 +106,7 @@ steps:
       - "{project}/{change}/ux-ui/components"
       - "{project}/{change}/ux-ui/design-tokens"
       - "{project}/{change}/ux-ui/design-critique"
+      - "{project}/{change}/ux-ui/content-inventory"
     # NOTE: this step produces TWO final artifacts (`ux-brief` + `component-spec`)
     # but `output_topic_key` is contractually a single string. output_topic_key
     # below names the PRIMARY artifact; persist the SECOND under its own distinct
