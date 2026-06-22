@@ -2,10 +2,22 @@ package installer
 
 import (
 	"io/fs"
+	"regexp"
 	"strings"
 )
 
 const agentConfigPlaceholder = "detected at project init"
+
+// htmlCommentRE matches a single HTML comment, non-greedy so multiple or
+// multiline comments each strip cleanly. Used by stripHTMLComments to remove
+// source-only authoring comments (e.g. the H2-ownership contract) from the
+// rendered agent config before it is wrapped for write.
+var htmlCommentRE = regexp.MustCompile(`<!--[\s\S]*?-->`)
+
+// stripHTMLComments removes every HTML comment from s. It runs inside
+// renderAgentConfig only (pre-wrap), never on the write path, so the asdt block
+// markers — themselves HTML comments injected later — stay intact.
+func stripHTMLComments(s string) string { return htmlCommentRE.ReplaceAllString(s, "") }
 
 // emojiPrefYes / emojiPrefNo are the rendered {{emoji_preference}} bullets.
 // The template prose is always English; the injected {{language_directive}}
@@ -54,6 +66,7 @@ func renderAgentConfig(preset PersonaPreset, useEmojis bool, localeCode string) 
 	out = strings.ReplaceAll(out, "{{language_directive}}", LocaleByCode(localeCode).Directive)
 	out = strings.ReplaceAll(out, "{{stack}}", agentConfigPlaceholder)
 	out = strings.ReplaceAll(out, "{{architectural_style}}", agentConfigPlaceholder)
+	out = stripHTMLComments(out)
 
 	return out, nil
 }
