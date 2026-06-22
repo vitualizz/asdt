@@ -14,23 +14,34 @@ import (
 // them to paper over an unintended rendering change.
 var updateGolden = flag.Bool("update", false, "regenerate AGENTS.md golden fixtures")
 
-// TestRenderAgentConfig_GoldenByteIdentity is the primary guard that relocating
-// the persona/template assets out of skill/ into internal/installer/assets/ did
-// not alter the rendered AGENTS.md. It renders PersonaPresets[0] (Sky) with
-// emoji on and off against the package-private assetsFS and asserts byte-for-byte
-// equality with the frozen pre-move goldens.
+// TestRenderAgentConfig_GoldenByteIdentity is the primary guard that the
+// persona/template assets render to a stable AGENTS.md. It renders every
+// PersonaPreset with emoji on and off against the package-private assetsFS and
+// asserts byte-for-byte equality with the frozen goldens. The 5-preset ×
+// {emoji_on,off} matrix byte-guards all persona demotions/dedups (US-108);
+// goldens prove byte-stability, not content correctness — a human eyeballs the
+// -update diff before the suite is trusted.
 func TestRenderAgentConfig_GoldenByteIdentity(t *testing.T) {
 	cases := []struct {
 		name      string
+		preset    PersonaPreset
 		useEmojis bool
 		golden    string
 	}{
-		{name: "emoji_on", useEmojis: true, golden: "testdata/agents_sky_emoji_on.golden"},
-		{name: "emoji_off", useEmojis: false, golden: "testdata/agents_sky_emoji_off.golden"},
+		{name: "sky_emoji_on", preset: PersonaPresets[0], useEmojis: true, golden: "testdata/agents_sky_emoji_on.golden"},
+		{name: "sky_emoji_off", preset: PersonaPresets[0], useEmojis: false, golden: "testdata/agents_sky_emoji_off.golden"},
+		{name: "toffy_emoji_on", preset: PersonaPresets[1], useEmojis: true, golden: "testdata/agents_toffy_emoji_on.golden"},
+		{name: "toffy_emoji_off", preset: PersonaPresets[1], useEmojis: false, golden: "testdata/agents_toffy_emoji_off.golden"},
+		{name: "atreus_emoji_on", preset: PersonaPresets[2], useEmojis: true, golden: "testdata/agents_atreus_emoji_on.golden"},
+		{name: "atreus_emoji_off", preset: PersonaPresets[2], useEmojis: false, golden: "testdata/agents_atreus_emoji_off.golden"},
+		{name: "babi_emoji_on", preset: PersonaPresets[3], useEmojis: true, golden: "testdata/agents_babi_emoji_on.golden"},
+		{name: "babi_emoji_off", preset: PersonaPresets[3], useEmojis: false, golden: "testdata/agents_babi_emoji_off.golden"},
+		{name: "lee_emoji_on", preset: PersonaPresets[4], useEmojis: true, golden: "testdata/agents_lee_emoji_on.golden"},
+		{name: "lee_emoji_off", preset: PersonaPresets[4], useEmojis: false, golden: "testdata/agents_lee_emoji_off.golden"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := renderAgentConfig(PersonaPresets[0], c.useEmojis, "en")
+			got, err := renderAgentConfig(c.preset, c.useEmojis, "en")
 			if err != nil {
 				t.Fatalf("renderAgentConfig: %v", err)
 			}
