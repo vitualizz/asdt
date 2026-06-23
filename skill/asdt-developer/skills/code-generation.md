@@ -30,7 +30,8 @@ If platform context is absent, infer conventions from the visible code and note 
 Make the code reveal its own intent so it needs little explanation:
 
 - Prefer intent-revealing names over comments. A reader should understand what an identifier holds or does from its name alone.
-- Comment the WHY, not the WHAT: add comments for non-obvious logic, rationale, or constraints only — do not comment what the code obviously does. Presume the team's already-agreed shared context; do not restate it.
+- Comment sparingly; default to no comment. Add one only when intent cannot be carried by names and structure — for genuinely non-obvious logic, a rationale, or a constraint. Comment the WHY, never the WHAT: do not restate what the code plainly does.
+- Write every comment for a teammate reading the repository cold, with no knowledge of how the code was produced and no ASDT installed. Never reference the authoring process or tooling-internal artifacts in code — no mention of an assistant, a turn, an ADR, a ticket number, or any internal concept the reader may not have access to. If a rationale depends on such context, restate it in plain terms a reader without that context can act on.
 - Name all significant constants. Unnamed numbers and inline strings obscure intent exactly as opaque identifiers do, and make code fragile and unsearchable. Bind each meaningful literal to a named constant.
 
 ---
