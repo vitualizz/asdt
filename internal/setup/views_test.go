@@ -207,8 +207,8 @@ func stateView(t *testing.T, target string) string {
 		return m.View()
 	}
 
-	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → Review
-	if target == "Review" {
+	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → PermissionConsent
+	if target == "PermissionConsent" {
 		return m.View()
 	}
 
@@ -239,6 +239,11 @@ func stateView(t *testing.T, target string) string {
 		m2 = updateKey(t, m2, tea.KeyEnter) // AgentSetup preset → EmojiPref
 		m2 = updateKey(t, m2, tea.KeyEnter) // EmojiPref → AgentWriteMode (conflict)
 		return m2.View()
+	}
+
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
+	if target == "Review" {
+		return m.View()
 	}
 
 	m = updateKey(t, m, tea.KeyEnter) // Review → Installing
@@ -557,7 +562,8 @@ func TestView_ReviewOmitsEmojiRowWhenSkipped(t *testing.T) {
 	for range installer.PersonaPresets {
 		m = updateKey(t, m, tea.KeyDown) // navigate to [ Skip → ]
 	}
-	m = updateKey(t, m, tea.KeyEnter) // Skip → Review
+	m = updateKey(t, m, tea.KeyEnter) // Skip → PermissionConsent
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
 	if m.State() != setup.StateReview {
 		t.Fatalf("expected StateReview, got %v", m.State())
 	}

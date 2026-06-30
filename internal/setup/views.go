@@ -56,6 +56,8 @@ func renderState(m Model) string {
 		return renderEmojiPref(m)
 	case StateAgentWriteMode:
 		return renderAgentWriteMode(m)
+	case StatePermissionConsent:
+		return renderPermissionConsent(m)
 	case StateInstalling:
 		return renderInstalling(m)
 	case StateDone:

@@ -247,7 +247,11 @@ func TestUpdate_AssistantInstallProgress_AllDone_TransitionsToDone(t *testing.T)
 	for range installer.PersonaPresets {
 		m = updateKey(t, m, tea.KeyDown)
 	}
-	m = updateKey(t, m, tea.KeyEnter) // Skip → Review
+	m = updateKey(t, m, tea.KeyEnter) // Skip → PermissionConsent
+	if m.State() != setup.StatePermissionConsent {
+		t.Fatalf("expected StatePermissionConsent, got %v", m.State())
+	}
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
 	if m.State() != setup.StateReview {
 		t.Fatalf("expected StateReview, got %v", m.State())
 	}
@@ -277,7 +281,8 @@ func TestUpdate_AssistantInstallProgress_WaitsForAgentConfig(t *testing.T) {
 	m = updateKey(t, m, tea.KeyEnter) // SelectProvider → ModelSetup
 	m = updateKey(t, m, tea.KeyEnter) // → AgentSetup (no conflicts in clean HOME)
 	m = updateKey(t, m, tea.KeyEnter) // preset 0 → EmojiPref
-	m = updateKey(t, m, tea.KeyEnter) // EmojiPref (Yes) → Review
+	m = updateKey(t, m, tea.KeyEnter) // EmojiPref (Yes) → PermissionConsent
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
 	m = updateKey(t, m, tea.KeyEnter) // Review → Installing (agentDone=false)
 	if m.State() != setup.StateInstalling {
 		t.Fatalf("expected StateInstalling, got %v", m.State())
@@ -366,7 +371,8 @@ func toInstalling(t *testing.T, m setup.Model) setup.Model {
 	m2 = updateKey(t, m2, tea.KeyEnter) // SelectProvider → ModelSetup
 	m2 = updateKey(t, m2, tea.KeyEnter) // ModelSetup → AgentSetup
 	m2 = updateKey(t, m2, tea.KeyEnter) // AgentSetup → EmojiPref
-	m2 = updateKey(t, m2, tea.KeyEnter) // EmojiPref (Yes) → Review (no conflicts)
+	m2 = updateKey(t, m2, tea.KeyEnter) // EmojiPref (Yes) → PermissionConsent (no conflicts)
+	m2 = updateKey(t, m2, tea.KeyEnter) // PermissionConsent → Review
 	m2 = updateKey(t, m2, tea.KeyEnter) // Review → Installing
 	if m2.State() != setup.StateInstalling {
 		t.Fatalf("toInstalling: state = %v, want StateInstalling", m2.State())
@@ -669,10 +675,16 @@ func TestUpdate_AgentSetup_EnterPreset_GoesToEmojiPrefThenReview(t *testing.T) {
 	if m2.State() != setup.StateEmojiPref {
 		t.Errorf("Enter on preset at AgentSetup: state = %v, want StateEmojiPref", m2.State())
 	}
-	// Enter at EmojiPref with no conflicts → StateReview.
+	// Enter at EmojiPref with no conflicts → StatePermissionConsent (the gate
+	// that now precedes Review).
 	m3 := updateKey(t, m2, tea.KeyEnter)
-	if m3.State() != setup.StateReview {
-		t.Errorf("Enter at EmojiPref (no conflicts): state = %v, want StateReview", m3.State())
+	if m3.State() != setup.StatePermissionConsent {
+		t.Errorf("Enter at EmojiPref (no conflicts): state = %v, want StatePermissionConsent", m3.State())
+	}
+	// Enter at the consent gate → StateReview.
+	m4 := updateKey(t, m3, tea.KeyEnter)
+	if m4.State() != setup.StateReview {
+		t.Errorf("Enter at PermissionConsent: state = %v, want StateReview", m4.State())
 	}
 }
 
@@ -741,9 +753,9 @@ func TestUpdate_AgentSetup_Skip_BypassesEmojiPref(t *testing.T) {
 	for range installer.PersonaPresets {
 		m = updateKey(t, m, tea.KeyDown)
 	}
-	m2 := updateKey(t, m, tea.KeyEnter) // Skip → Review (EmojiPref never entered)
-	if m2.State() != setup.StateReview {
-		t.Errorf("Enter on Skip: state = %v, want StateReview (EmojiPref bypassed)", m2.State())
+	m2 := updateKey(t, m, tea.KeyEnter) // Skip → PermissionConsent (EmojiPref never entered)
+	if m2.State() != setup.StatePermissionConsent {
+		t.Errorf("Enter on Skip: state = %v, want StatePermissionConsent (EmojiPref bypassed)", m2.State())
 	}
 }
 
@@ -755,7 +767,8 @@ func TestUpdate_Review_EnterGoesToInstalling(t *testing.T) {
 	m = updateKey(t, m, tea.KeyEnter) // SelectProvider → ModelSetup
 	m = updateKey(t, m, tea.KeyEnter) // SelectProvider → AgentSetup
 	m = updateKey(t, m, tea.KeyEnter) // AgentSetup → EmojiPref
-	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → Review
+	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → PermissionConsent
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
 	if m.State() != setup.StateReview {
 		t.Fatalf("expected StateReview, got %v", m.State())
 	}
@@ -773,13 +786,19 @@ func TestUpdate_Review_EscGoesToEmojiPref(t *testing.T) {
 	m = updateKey(t, m, tea.KeyEnter) // SelectProvider → ModelSetup
 	m = updateKey(t, m, tea.KeyEnter) // SelectProvider → AgentSetup
 	m = updateKey(t, m, tea.KeyEnter) // AgentSetup → EmojiPref
-	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → Review (no conflicts)
+	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → PermissionConsent (no conflicts)
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
 	if m.State() != setup.StateReview {
 		t.Fatalf("expected StateReview, got %v", m.State())
 	}
+	// Esc from Review lands on the consent gate, then chains back to EmojiPref.
 	m2 := updateKey(t, m, tea.KeyEsc)
-	if m2.State() != setup.StateEmojiPref {
-		t.Errorf("Esc at Review (no conflicts, not skipped): state = %v, want StateEmojiPref", m2.State())
+	if m2.State() != setup.StatePermissionConsent {
+		t.Errorf("Esc at Review (no conflicts, not skipped): state = %v, want StatePermissionConsent", m2.State())
+	}
+	m3 := updateKey(t, m2, tea.KeyEsc)
+	if m3.State() != setup.StateEmojiPref {
+		t.Errorf("Esc at PermissionConsent (no conflicts, not skipped): state = %v, want StateEmojiPref", m3.State())
 	}
 }
 
@@ -793,13 +812,20 @@ func TestUpdate_Review_Skip_EscGoesToAgentSetup(t *testing.T) {
 	for range installer.PersonaPresets {
 		m = updateKey(t, m, tea.KeyDown)
 	}
-	m = updateKey(t, m, tea.KeyEnter) // Skip → Review
+	m = updateKey(t, m, tea.KeyEnter) // Skip → PermissionConsent
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
 	if m.State() != setup.StateReview {
 		t.Fatalf("expected StateReview, got %v", m.State())
 	}
+	// Esc from Review lands on the consent gate, then chains back to AgentSetup
+	// (the skip path).
 	m2 := updateKey(t, m, tea.KeyEsc)
-	if m2.State() != setup.StateAgentSetup {
-		t.Errorf("Esc at Review (skipped): state = %v, want StateAgentSetup", m2.State())
+	if m2.State() != setup.StatePermissionConsent {
+		t.Errorf("Esc at Review (skipped): state = %v, want StatePermissionConsent", m2.State())
+	}
+	m3 := updateKey(t, m2, tea.KeyEsc)
+	if m3.State() != setup.StateAgentSetup {
+		t.Errorf("Esc at PermissionConsent (skipped): state = %v, want StateAgentSetup", m3.State())
 	}
 }
 
@@ -819,9 +845,13 @@ func TestUpdate_AgentSetup_EnterSkip_GoesToReview(t *testing.T) {
 	m = updateKey(t, m, tea.KeyDown)
 	m = updateKey(t, m, tea.KeyDown)
 
-	m2 := updateKey(t, m, tea.KeyEnter) // Skip → Review
-	if m2.State() != setup.StateReview {
-		t.Errorf("Enter on Skip: state = %v, want StateReview", m2.State())
+	m2 := updateKey(t, m, tea.KeyEnter) // Skip → PermissionConsent
+	if m2.State() != setup.StatePermissionConsent {
+		t.Fatalf("Enter on Skip: state = %v, want StatePermissionConsent", m2.State())
+	}
+	m3 := updateKey(t, m2, tea.KeyEnter) // PermissionConsent → Review
+	if m3.State() != setup.StateReview {
+		t.Errorf("Enter at PermissionConsent (skip path): state = %v, want StateReview", m3.State())
 	}
 }
 
@@ -911,9 +941,13 @@ func advanceToAgentWriteMode(t *testing.T) setup.Model {
 
 func TestUpdate_AgentWriteMode_EnterGoesToReview(t *testing.T) {
 	m := advanceToAgentWriteMode(t)
-	m2 := updateKey(t, m, tea.KeyEnter)
-	if m2.State() != setup.StateReview {
-		t.Errorf("Enter at AgentWriteMode: state = %v, want StateReview", m2.State())
+	m2 := updateKey(t, m, tea.KeyEnter) // AgentWriteMode → PermissionConsent
+	if m2.State() != setup.StatePermissionConsent {
+		t.Fatalf("Enter at AgentWriteMode: state = %v, want StatePermissionConsent", m2.State())
+	}
+	m3 := updateKey(t, m2, tea.KeyEnter) // PermissionConsent → Review
+	if m3.State() != setup.StateReview {
+		t.Errorf("Enter at PermissionConsent (conflict path): state = %v, want StateReview", m3.State())
 	}
 }
 
@@ -948,13 +982,20 @@ func TestUpdate_AgentWriteMode_SpaceCyclesAllModes(t *testing.T) {
 
 func TestUpdate_AgentWriteMode_ReviewEscGoesBackToAgentWriteMode(t *testing.T) {
 	m := advanceToAgentWriteMode(t)
-	m = updateKey(t, m, tea.KeyEnter) // AgentWriteMode → Review
+	m = updateKey(t, m, tea.KeyEnter) // AgentWriteMode → PermissionConsent
+	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
 	if m.State() != setup.StateReview {
 		t.Fatalf("expected StateReview, got %v", m.State())
 	}
-	m2 := updateKey(t, m, tea.KeyEsc) // Review → AgentWriteMode (has conflicts)
-	if m2.State() != setup.StateAgentWriteMode {
-		t.Errorf("Esc at Review (with conflicts): state = %v, want StateAgentWriteMode", m2.State())
+	// Esc from Review lands on the consent gate, then chains back to
+	// AgentWriteMode (the conflict path).
+	m2 := updateKey(t, m, tea.KeyEsc) // Review → PermissionConsent
+	if m2.State() != setup.StatePermissionConsent {
+		t.Fatalf("Esc at Review (with conflicts): state = %v, want StatePermissionConsent", m2.State())
+	}
+	m3 := updateKey(t, m2, tea.KeyEsc) // PermissionConsent → AgentWriteMode
+	if m3.State() != setup.StateAgentWriteMode {
+		t.Errorf("Esc at PermissionConsent (with conflicts): state = %v, want StateAgentWriteMode", m3.State())
 	}
 }
 

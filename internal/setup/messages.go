@@ -36,6 +36,24 @@ type AgentInstallDoneMsg struct {
 	Results []installer.AgentConfigResult
 }
 
+// PermissionOverlayDoneMsg is sent when the permission overlay write completes.
+// It carries the full result (including any error or rollback) so the Done
+// screen can report the outcome.
+type PermissionOverlayDoneMsg struct {
+	Result installer.PermissionOverlayResult
+}
+
+// PermissionOverlayCmd runs installer.WritePermissionOverlay in a goroutine and
+// reports PermissionOverlayDoneMsg when it completes. It mirrors AgentInstallCmd.
+// It is batched into the install only when the user accepted the consent step;
+// declining never fires this command, so nothing is written.
+func PermissionOverlayCmd(mode installer.AgentWriteMode) tea.Cmd {
+	return func() tea.Msg {
+		result, _ := installer.WritePermissionOverlay(mode)
+		return PermissionOverlayDoneMsg{Result: result}
+	}
+}
+
 // EnvironmentCheckProgressMsg is sent by each probe in EnvironmentCheckCmd
 // as soon as it resolves. One message per row — carries the row label so
 // Update() can locate and update the correct CheckRow in preflightSections.
