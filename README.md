@@ -80,7 +80,7 @@ flowchart TD
 
 Each specialist runs its own isolated steps. Steps that produce artifacts run as separate sub-agents, so they don't pollute each other's context. Artifacts are saved to a persistent memory layer (default: [Engram](https://github.com/Gentleman-Programming/engram)) — not to files on disk — so work survives across sessions and the next specialist picks it up automatically.
 
-The same skill tree installs natively into either host — see [Agent portability](docs/agent-portability.md) for how one embedded source renders to both Claude Code and OpenCode.
+The same skill tree installs natively into either host — one embedded source renders to both Claude Code and OpenCode.
 
 ## The specialists
 
@@ -111,9 +111,6 @@ Invoke any of these from inside your AI assistant:
 ## Learn more
 
 - **[Documentation](https://vitualizz.github.io/asdt)** — getting started, the specialist model, recipes, and more
-- [Contributing](docs/contributing.md)
-- [Development](docs/development.md)
-- [Agent portability](docs/agent-portability.md)
 
 ## License
 

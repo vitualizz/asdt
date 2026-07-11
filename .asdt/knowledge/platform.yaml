@@ -1,5 +1,5 @@
 schema_version: "1"
-scanned_at: 2026-06-12T09:33:10Z
+scanned_at: 2026-07-11T22:06:01Z
 detected_stack:
   - go
   - node
