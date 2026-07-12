@@ -88,8 +88,6 @@ go test ./internal/prompt/...
 
 `go:embed` re-reads files at build time, so `go test` and `go run` always reflect your latest edits — no caching to worry about.
 
-Note: prompt edits change `prompt_version` hashes in artifact envelopes. This is expected — do not manually set `prompt_version` in fixture files.
-
 ## Project structure
 
 ```

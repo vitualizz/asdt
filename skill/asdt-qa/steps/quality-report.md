@@ -30,7 +30,6 @@ architect's dual-output `technical-handoff`; persist it once under this step's
 
 Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
 
-<!-- ASDT:GENERATED:schema-test-plan -->
 Schema:
 ```yaml
 payload:
@@ -56,4 +55,3 @@ payload:
       story_id: ""
   open_items: []
 ```
-<!-- /ASDT:GENERATED:schema-test-plan -->

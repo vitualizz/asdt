@@ -126,5 +126,3 @@ Shared skills are capability fragments reused across multiple specialists — pl
 
 - One logical change per PR.
 - `go test ./...` must pass.
-- If your change modifies an artifact schema, update golden fixtures in `testdata/golden/`.
-- Prompt changes automatically affect `prompt_version` hashes in artifact envelopes — this is expected. Do not manually set `prompt_version` in fixture files.

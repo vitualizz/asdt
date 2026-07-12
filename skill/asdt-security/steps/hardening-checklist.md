@@ -37,7 +37,6 @@ on this step's workflow.yaml entry — `{project}/{change}/security/hardening-ch
 which collides with neither the primary key nor any intermediate artifact name);
 return envelope covering both persisted keys.
 
-<!-- ASDT:GENERATED:schema-security-findings -->
 security-findings schema:
 ```yaml
 payload:
@@ -53,9 +52,7 @@ payload:
   overall_risk: "Low" # Overall risk rating for this feature before hardening. | one of: Low|Medium|High|Critical
   open_items: []
 ```
-<!-- /ASDT:GENERATED:schema-security-findings -->
 
-<!-- ASDT:GENERATED:schema-hardening-checklist -->
 hardening-checklist schema:
 ```yaml
 payload:
@@ -76,4 +73,3 @@ payload:
   summary: ""
   open_items: []
 ```
-<!-- /ASDT:GENERATED:schema-hardening-checklist -->

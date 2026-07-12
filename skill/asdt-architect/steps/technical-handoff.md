@@ -27,7 +27,6 @@ Produces: `architectural-decision` (final) and `system-design` (final)
 
 Persist `architectural-decision` via mem_save under this step's `output_topic_key` in workflow.yaml; persist the second final artifact `system-design` under its own distinct per-type topic_key (see the NOTE on this step's workflow.yaml entry — do not collide with the intermediate `architect/system-design` produced earlier by the system-design step); return envelope covering both persisted keys.
 
-<!-- ASDT:GENERATED:schema-architectural-decision -->
 architectural-decision schema:
 ```yaml
 payload:
@@ -46,9 +45,7 @@ payload:
   summary: ""
   open_items: []
 ```
-<!-- /ASDT:GENERATED:schema-architectural-decision -->
 
-<!-- ASDT:GENERATED:schema-system-design -->
 system-design schema:
 ```yaml
 payload:
@@ -72,4 +69,3 @@ payload:
   key_sequence: []
   open_items: []
 ```
-<!-- /ASDT:GENERATED:schema-system-design -->

@@ -67,7 +67,6 @@ the primary key nor any intermediate artifact produced earlier in this
 specialist's chain: `feature-brief`, `design-tokens`, `ia`, `flows`, `components`, `design-critique`).
 Return an envelope covering both persisted keys.
 
-<!-- ASDT:GENERATED:schema-ux-brief -->
 ux-brief schema:
 ```yaml
 payload:
@@ -94,9 +93,7 @@ payload:
     navigation_path: ""
   open_items: []
 ```
-<!-- /ASDT:GENERATED:schema-ux-brief -->
 
-<!-- ASDT:GENERATED:schema-component-spec -->
 component-spec schema:
 ```yaml
 payload:
@@ -151,4 +148,3 @@ payload:
   needs_review: false
   open_items: []
 ```
-<!-- /ASDT:GENERATED:schema-component-spec -->
