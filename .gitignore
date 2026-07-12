@@ -1,6 +1,7 @@
 # Compiled binaries
 /asdt
 /asdt-tui
+/asdt-schemagen
 
 # Go test artifacts
 *.test
