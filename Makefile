@@ -1,10 +1,7 @@
-.PHONY: build test lint clean hooks debt-scan generate
+.PHONY: build test lint clean hooks debt-scan
 
 build:
 	go build ./...
-
-generate:
-	go run ./cmd/asdt-schemagen
 
 test:
 	go test ./...

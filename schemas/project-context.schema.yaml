@@ -1,124 +1,99 @@
 # project-context.schema.yaml
 # Schema for .asdt/knowledge/project-context.yaml
-# Produced by /asdt-init Step 4 (Detect project context) and WRITTEN to the
-# filesystem (unlike the mem_save-only specialist schemas).
-$schema: "http://json-schema.org/draft-07/schema#"
-$id: "https://github.com/vitualizz/asdt/schemas/project-context.schema.yaml"
-title: ProjectContext
-description: >
-  Detected project context persisted to .asdt/knowledge/project-context.yaml by
-  /asdt-init. Each detection field carries the detected value alongside its
-  source and confidence so downstream specialists can weigh how much to trust it.
-type: object
+# Produced by /asdt-init Step 4 (Detect project context).
+# schema_version "1" — increment when breaking changes are introduced.
 
-required:
-  - schema_version
-  - detected_at
-  - is_monorepo
-  - test_runner
-  - naming_style
-  - architectural_style
+schema_version: "1"
 
-properties:
+fields:
   schema_version:
     type: string
+    required: true
     description: "Schema version string. Currently '1'. Increment on breaking changes."
 
   detected_at:
     type: string
-    format: date-time
+    format: datetime
+    required: true
     description: "UTC timestamp when this file was written (ISO 8601)."
 
   is_monorepo:
-    type: object
+    type: detection
+    required: true
     description: "Whether the project root is a monorepo."
-    properties:
+    detection:
       value:
         type: string
         enum: ["true", "false"]
       source:
         type: string
         enum: [detected, inferred, manual]
-        description: >
-          detected = value determined by a bounded command with direct file
-          evidence; inferred = value inferred from indirect pattern matching
-          without direct file evidence; manual = value explicitly set by the user
-          during review (never silently overwritten).
       confidence:
         type: string
         enum: [high, medium, low]
-        description: >
-          high = confident match, treat as authoritative convention; medium =
-          likely match, confirm before diverging; low = weak signal, treat as a
-          best-effort guess.
 
   test_runner:
-    type: object
+    type: detection
+    required: true
     description: "The primary test runner command for this project."
-    properties:
+    detection:
       value:
         type: string
-        description: 'Examples: "go test ./...", "make test", "jest", "vitest", "unknown".'
+        examples: ["go test ./...", "make test", "jest", "vitest", "unknown"]
       source:
         type: string
         enum: [detected, inferred, manual]
-        description: >
-          detected = value determined by a bounded command with direct file
-          evidence; inferred = value inferred from indirect pattern matching
-          without direct file evidence; manual = value explicitly set by the user
-          during review (never silently overwritten).
       confidence:
         type: string
         enum: [high, medium, low]
-        description: >
-          high = confident match, treat as authoritative convention; medium =
-          likely match, confirm before diverging; low = weak signal, treat as a
-          best-effort guess.
 
   naming_style:
-    type: object
+    type: detection
+    required: true
     description: "Dominant identifier casing style detected from sampled source files."
-    properties:
+    detection:
       value:
         type: string
-        description: >
-          Examples: "snake_case filenames, PascalCase exported symbols",
-          "camelCase", "PascalCase", "mixed", "unknown".
+        examples:
+          - "snake_case filenames, PascalCase exported symbols"
+          - "camelCase"
+          - "PascalCase"
+          - "mixed"
+          - "unknown"
       source:
         type: string
         enum: [detected, inferred, manual]
-        description: >
-          detected = value determined by a bounded command with direct file
-          evidence; inferred = value inferred from indirect pattern matching
-          without direct file evidence; manual = value explicitly set by the user
-          during review (never silently overwritten).
       confidence:
         type: string
         enum: [high, medium, low]
-        description: >
-          high = confident match, treat as authoritative convention; medium =
-          likely match, confirm before diverging; low = weak signal, treat as a
-          best-effort guess.
 
   architectural_style:
-    type: object
+    type: detection
+    required: true
     description: "Dominant architectural pattern detected from top-level directory layout."
-    properties:
+    detection:
       value:
         type: string
         enum: [hexagonal, mvc, modular, layered, unknown]
       source:
         type: string
         enum: [detected, inferred, manual]
-        description: >
-          detected = value determined by a bounded command with direct file
-          evidence; inferred = value inferred from indirect pattern matching
-          without direct file evidence; manual = value explicitly set by the user
-          during review (never silently overwritten).
       confidence:
         type: string
         enum: [high, medium, low]
-        description: >
-          high = confident match, treat as authoritative convention; medium =
-          likely match, confirm before diverging; low = weak signal, treat as a
-          best-effort guess.
+
+detection_types:
+  detected:
+    description: "Value determined by a bounded command with direct file evidence."
+  inferred:
+    description: "Value inferred from indirect pattern matching without direct file evidence."
+  manual:
+    description: "Value explicitly set by the user during review. Never silently overwritten."
+
+confidence_thresholds:
+  high:
+    description: "Confident match — treat as authoritative convention."
+  medium:
+    description: "Likely match — confirm before diverging from this convention."
+  low:
+    description: "Weak signal — treat as a best-effort guess."

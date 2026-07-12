@@ -24,20 +24,92 @@ import (
 // P2 tightening (recursive/nested key comparison + type-aware checks) is
 // deliberately out of scope here and tracked under schema-sot P2/architect.
 
-// finalArtifactSpecs derives the FINAL artifacts from the canonical schemaSpecs
-// registry (see schema_gen.go) by filtering on SchemaKindFinalArtifact. The old
-// standalone schemaArtifact struct + literal table were removed: the registry is
-// now the single source of the finals set, so drift guards and the generator
-// cannot disagree. The former `generated` bool is exactly Kind == final_artifact,
-// which every element of this filtered slice satisfies by construction.
-func finalArtifactSpecs() []SchemaSpec {
-	var finals []SchemaSpec
-	for _, spec := range schemaSpecs {
-		if spec.Kind == SchemaKindFinalArtifact {
-			finals = append(finals, spec)
-		}
-	}
-	return finals
+// schemaArtifact maps a FINAL artifact to its producing step .md, its canonical
+// schema file, and the fence label that identifies its inline payload block
+// within a (possibly multi-fence) step .md. A static table is used deliberately:
+// the set of finals is fixed and small (7), so an explicit table is clearer and
+// more robust than re-deriving the mapping from `Produces:` markers at runtime.
+type schemaArtifact struct {
+	name       string
+	mdPath     string // relative to skill/
+	schemaFile string // relative to schemas/
+	fenceLabel string // substring of the label line preceding the ```yaml fence
+
+	// generated marks an artifact whose inline block is now MACHINE-GENERATED
+	// from its canonical schema (schema-sot Wave 2). Generated rows leave the
+	// set-parity drift path (TestSchemaInlineDrift) and are instead held to a
+	// strict byte-equal contract by TestSchemaInlineGenerated. markerBegin /
+	// markerEnd bound that generated region inside the step .md and are empty
+	// for non-generated rows.
+	generated   bool
+	markerBegin string
+	markerEnd   string
+}
+
+var schemaArtifacts = []schemaArtifact{
+	{
+		name:        "architectural-decision",
+		mdPath:      "asdt-architect/steps/technical-handoff.md",
+		schemaFile:  "architectural-decision.schema.yaml",
+		fenceLabel:  "architectural-decision schema:",
+		generated:   true,
+		markerBegin: "<!-- ASDT:GENERATED:schema-architectural-decision -->",
+		markerEnd:   "<!-- /ASDT:GENERATED:schema-architectural-decision -->",
+	},
+	{
+		name:        "system-design",
+		mdPath:      "asdt-architect/steps/technical-handoff.md",
+		schemaFile:  "system-design.schema.yaml",
+		fenceLabel:  "system-design schema:",
+		generated:   true,
+		markerBegin: "<!-- ASDT:GENERATED:schema-system-design -->",
+		markerEnd:   "<!-- /ASDT:GENERATED:schema-system-design -->",
+	},
+	{
+		name:        "ux-brief",
+		mdPath:      "asdt-ux-ui/steps/ux-handoff.md",
+		schemaFile:  "ux-brief.schema.yaml",
+		fenceLabel:  "ux-brief schema:",
+		generated:   true,
+		markerBegin: "<!-- ASDT:GENERATED:schema-ux-brief -->",
+		markerEnd:   "<!-- /ASDT:GENERATED:schema-ux-brief -->",
+	},
+	{
+		name:        "component-spec",
+		mdPath:      "asdt-ux-ui/steps/ux-handoff.md",
+		schemaFile:  "component-spec.schema.yaml",
+		fenceLabel:  "component-spec schema:",
+		generated:   true,
+		markerBegin: "<!-- ASDT:GENERATED:schema-component-spec -->",
+		markerEnd:   "<!-- /ASDT:GENERATED:schema-component-spec -->",
+	},
+	{
+		name:        "security-findings",
+		mdPath:      "asdt-security/steps/hardening-checklist.md",
+		schemaFile:  "security-findings.schema.yaml",
+		fenceLabel:  "security-findings schema:",
+		generated:   true,
+		markerBegin: "<!-- ASDT:GENERATED:schema-security-findings -->",
+		markerEnd:   "<!-- /ASDT:GENERATED:schema-security-findings -->",
+	},
+	{
+		name:        "hardening-checklist",
+		mdPath:      "asdt-security/steps/hardening-checklist.md",
+		schemaFile:  "hardening-checklist.schema.yaml",
+		fenceLabel:  "hardening-checklist schema:",
+		generated:   true,
+		markerBegin: "<!-- ASDT:GENERATED:schema-hardening-checklist -->",
+		markerEnd:   "<!-- /ASDT:GENERATED:schema-hardening-checklist -->",
+	},
+	{
+		name:        "test-plan",
+		mdPath:      "asdt-qa/steps/quality-report.md",
+		schemaFile:  "test-plan.schema.yaml",
+		fenceLabel:  "Schema:",
+		generated:   true,
+		markerBegin: "<!-- ASDT:GENERATED:schema-test-plan -->",
+		markerEnd:   "<!-- /ASDT:GENERATED:schema-test-plan -->",
+	},
 }
 
 // Known pre-existing schema↔inline drift pending reconciliation (schema-sot
@@ -226,36 +298,32 @@ func TestSchemaInlineDrift(t *testing.T) {
 	skills := skillDir(t)
 	schemas := schemaDir(t)
 
-	for _, art := range finalArtifactSpecs() {
+	for _, art := range schemaArtifacts {
 		art := art
-		t.Run(art.Name, func(t *testing.T) {
-			// Every final is machine-generated (Kind == final_artifact), so it is
-			// covered by the byte-equal path (TestSchemaInlineGenerated) and skips
-			// the set-parity path here.
-			generated := art.Kind == SchemaKindFinalArtifact
-			if generated {
+		t.Run(art.name, func(t *testing.T) {
+			if art.generated {
 				t.Skip("generated rows covered by TestSchemaInlineGenerated")
 				return
 			}
-			mdPath := filepath.Join(skills, filepath.FromSlash(art.MDPath))
-			schemaPath := filepath.Join(schemas, filepath.FromSlash(art.SchemaFile))
+			mdPath := filepath.Join(skills, filepath.FromSlash(art.mdPath))
+			schemaPath := filepath.Join(schemas, art.schemaFile)
 
 			schemaKeys, ok := schemaPropertyKeys(t, schemaPath)
 			if !ok {
-				t.Fatalf("%s: schema file %s missing or has no top-level properties", art.Name, schemaPath)
+				t.Fatalf("%s: schema file %s missing or has no top-level properties", art.name, schemaPath)
 			}
 
-			inlineKeys, ok := inlinePayloadKeys(t, mdPath, art.FenceLabel)
+			inlineKeys, ok := inlinePayloadKeys(t, mdPath, art.fenceLabel)
 			if !ok {
-				t.Fatalf("%s: could not resolve inline payload fence %q in %s", art.Name, art.FenceLabel, mdPath)
+				t.Fatalf("%s: could not resolve inline payload fence %q in %s", art.name, art.fenceLabel, mdPath)
 			}
 
 			extra := diff(inlineKeys, schemaKeys)
 			missing := diff(schemaKeys, inlineKeys)
 
-			base, baselined := schemaDriftBaseline[art.Name]
+			base, baselined := schemaDriftBaseline[art.name]
 			if !baselined {
-				t.Fatalf("%s: no baseline entry — every final artifact must have a documented baseline", art.Name)
+				t.Fatalf("%s: no baseline entry — every final artifact must have a documented baseline", art.name)
 			}
 
 			newExtra := extraDiff(extra, base.Extra)
@@ -270,7 +338,7 @@ func TestSchemaInlineDrift(t *testing.T) {
 					"  baseline extra no longer present:       %v\n"+
 					"  baseline missing no longer present:     %v\n"+
 					"  -> reconcile the canonical source or update the baseline intentionally",
-					art.Name, art.MDPath, newExtra, newMissing, goneExtra, goneMissing)
+					art.name, art.mdPath, newExtra, newMissing, goneExtra, goneMissing)
 			}
 		})
 	}
@@ -288,34 +356,37 @@ func TestSchemaInlineGenerated(t *testing.T) {
 	schemas := schemaDir(t)
 
 	any := false
-	for _, art := range finalArtifactSpecs() {
+	for _, art := range schemaArtifacts {
+		if !art.generated {
+			continue
+		}
 		any = true
 		art := art
-		t.Run(art.Name, func(t *testing.T) {
-			mdPath := filepath.Join(skills, filepath.FromSlash(art.MDPath))
-			schemaPath := filepath.Join(schemas, filepath.FromSlash(art.SchemaFile))
+		t.Run(art.name, func(t *testing.T) {
+			mdPath := filepath.Join(skills, filepath.FromSlash(art.mdPath))
+			schemaPath := filepath.Join(schemas, art.schemaFile)
 
 			schemaBytes, err := os.ReadFile(schemaPath)
 			if err != nil {
-				t.Fatalf("%s: read schema %s: %v", art.Name, schemaPath, err)
+				t.Fatalf("%s: read schema %s: %v", art.name, schemaPath, err)
 			}
 			contentBytes, err := os.ReadFile(mdPath)
 			if err != nil {
-				t.Fatalf("%s: read md %s: %v", art.Name, mdPath, err)
+				t.Fatalf("%s: read md %s: %v", art.name, mdPath, err)
 			}
 
-			want, err := renderSchemaExampleRegion(schemaBytes, art.FenceLabel)
+			want, err := renderSchemaExampleRegion(schemaBytes, art.fenceLabel)
 			if err != nil {
-				t.Fatalf("%s: render schema example region: %v", art.Name, err)
+				t.Fatalf("%s: render schema example region: %v", art.name, err)
 			}
 
 			// R-005: BOTH markers must be present; absence fails loud here,
 			// it does NOT silently skip the byte-equal contract.
-			got, err := extractMarkerRegion(contentBytes, art.MarkerBegin, art.MarkerEnd)
+			got, err := extractMarkerRegion(contentBytes, art.markerBegin, art.markerEnd)
 			if err != nil {
 				t.Fatalf("%s: generated-region markers missing/malformed in %s: %v\n"+
 					"  expected begin %q and end %q to bound the generated block",
-					art.Name, art.MDPath, err, art.MarkerBegin, art.MarkerEnd)
+					art.name, art.mdPath, err, art.markerBegin, art.markerEnd)
 			}
 
 			if got != want {
@@ -323,7 +394,7 @@ func TestSchemaInlineGenerated(t *testing.T) {
 					"  the committed block diverges from the schema-rendered block.\n"+
 					"  Re-run the schema-sot generator (or sync the .md) so committed == rendered.\n"+
 					"--- COMMITTED (between markers) ---\n%s\n--- RENDERED (from %s) ---\n%s\n--- END ---",
-					art.Name, art.MDPath, got, art.SchemaFile, want)
+					art.name, art.mdPath, got, art.schemaFile, want)
 			}
 
 			// R-002: golden round-trip — the rendered payload must be a fixed
@@ -331,17 +402,17 @@ func TestSchemaInlineGenerated(t *testing.T) {
 			// schema-shaped re-encode is not meaningful here; instead assert the
 			// renderer is idempotent: rendering the same schema twice yields
 			// identical bytes, and the rendered payload parses as valid YAML.
-			want2, err := renderSchemaExampleRegion(schemaBytes, art.FenceLabel)
+			want2, err := renderSchemaExampleRegion(schemaBytes, art.fenceLabel)
 			if err != nil {
-				t.Fatalf("%s: re-render for round-trip: %v", art.Name, err)
+				t.Fatalf("%s: re-render for round-trip: %v", art.name, err)
 			}
 			if want != want2 {
-				t.Errorf("%s: renderer is NOT deterministic — two renders differ", art.Name)
+				t.Errorf("%s: renderer is NOT deterministic — two renders differ", art.name)
 			}
 			payload := renderedPayloadBody(t, want)
 			var parsed map[string]yaml.Node
 			if err := yaml.Unmarshal([]byte(payload), &parsed); err != nil {
-				t.Errorf("%s: rendered payload is not valid YAML: %v\n%s", art.Name, err, payload)
+				t.Errorf("%s: rendered payload is not valid YAML: %v\n%s", art.name, err, payload)
 			}
 		})
 	}
@@ -369,121 +440,36 @@ func renderedPayloadBody(t *testing.T, region string) string {
 // (TestSchemaInlineGenerated) and MUST have an EMPTY baseline entry. The two
 // conditions are XOR, and every artifact must have a baseline key.
 func TestSchemaInlineCoverage(t *testing.T) {
-	for _, art := range finalArtifactSpecs() {
+	for _, art := range schemaArtifacts {
 		art := art
-		t.Run(art.Name, func(t *testing.T) {
-			base, ok := schemaDriftBaseline[art.Name]
+		t.Run(art.name, func(t *testing.T) {
+			base, ok := schemaDriftBaseline[art.name]
 			if !ok {
-				t.Fatalf("%s: no baseline key — every artifact must have a baseline entry", art.Name)
+				t.Fatalf("%s: no baseline key — every artifact must have a baseline entry", art.name)
 			}
 
 			baselineEmpty := len(base.Extra) == 0 && len(base.Missing) == 0
 
 			// XOR: generated IFF baseline empty IFF markers present.
-			generated := art.Kind == SchemaKindFinalArtifact
-			if generated {
+			if art.generated {
 				if !baselineEmpty {
 					t.Errorf("%s: generated artifact MUST have an empty baseline (got Extra=%v Missing=%v)",
-						art.Name, base.Extra, base.Missing)
+						art.name, base.Extra, base.Missing)
 				}
-				if art.MarkerBegin == "" || art.MarkerEnd == "" {
-					t.Errorf("%s: generated artifact MUST declare both markers", art.Name)
+				if art.markerBegin == "" || art.markerEnd == "" {
+					t.Errorf("%s: generated artifact MUST declare both markers", art.name)
 				}
 			} else {
 				if baselineEmpty {
 					// A non-generated artifact with an empty baseline would be
 					// silently uncovered by either path — disallowed by R-006.
 					t.Errorf("%s: non-generated artifact has an EMPTY baseline — it would be covered by NO path; either generate it or document its drift baseline",
-						art.Name)
+						art.name)
 				}
-				if art.MarkerBegin != "" || art.MarkerEnd != "" {
-					t.Errorf("%s: non-generated artifact must NOT declare markers", art.Name)
+				if art.markerBegin != "" || art.markerEnd != "" {
+					t.Errorf("%s: non-generated artifact must NOT declare markers", art.name)
 				}
 			}
 		})
-	}
-}
-
-// TestSchemaRegistryCoverage is the registry↔filesystem completeness guard for
-// the expanded schema-sot registry. It reads every schemas/*.schema.yaml (root
-// and developer/, sorted) and asserts a bijection with schemaSpecs, plus the
-// per-kind field invariant. It fails LOUD naming the specific offending file so
-// a newly-added schema that was not registered (or a registered file that was
-// deleted/renamed) is caught immediately.
-func TestSchemaRegistryCoverage(t *testing.T) {
-	schemas := schemaDir(t)
-
-	// Collect every schema file on disk as a path relative to schemas/, keeping
-	// the developer/ prefix. ReadDir returns sorted entries, so iteration is
-	// deterministic.
-	onDisk := map[string]bool{}
-	rootEntries, err := os.ReadDir(schemas)
-	if err != nil {
-		t.Fatalf("read schemas dir %s: %v", schemas, err)
-	}
-	for _, e := range rootEntries {
-		if e.IsDir() {
-			continue
-		}
-		if strings.HasSuffix(e.Name(), ".schema.yaml") {
-			onDisk[e.Name()] = true
-		}
-	}
-	devDir := filepath.Join(schemas, "developer")
-	if _, statErr := os.Stat(devDir); statErr == nil {
-		devEntries, err := os.ReadDir(devDir)
-		if err != nil {
-			t.Fatalf("read schemas/developer dir %s: %v", devDir, err)
-		}
-		for _, e := range devEntries {
-			if e.IsDir() {
-				continue
-			}
-			if strings.HasSuffix(e.Name(), ".schema.yaml") {
-				onDisk["developer/"+e.Name()] = true
-			}
-		}
-	}
-
-	// Every registry entry must map to an existing file, exactly once.
-	registered := map[string]int{}
-	for _, spec := range schemaSpecs {
-		registered[spec.SchemaFile]++
-		if registered[spec.SchemaFile] > 1 {
-			t.Errorf("schema file %q is registered more than once in schemaSpecs", spec.SchemaFile)
-		}
-		if !onDisk[spec.SchemaFile] {
-			t.Errorf("schemaSpecs entry %q (%s) has NO matching file under schemas/", spec.Name, spec.SchemaFile)
-		}
-	}
-
-	// Every file on disk must appear in the registry exactly once.
-	for file := range onDisk {
-		if registered[file] == 0 {
-			t.Errorf("schema file %q exists on disk but is NOT registered in schemaSpecs", file)
-		}
-	}
-
-	// Per-kind field invariant + producing-block resolvability for finals.
-	root := filepath.Join("..", "..")
-	for _, spec := range schemaSpecs {
-		spec := spec
-		if spec.Kind == SchemaKindFinalArtifact {
-			if spec.MDPath == "" || spec.FenceLabel == "" || spec.MarkerBegin == "" || spec.MarkerEnd == "" {
-				t.Errorf("final_artifact %q must set MDPath/FenceLabel/MarkerBegin/MarkerEnd (got MDPath=%q FenceLabel=%q MarkerBegin=%q MarkerEnd=%q)",
-					spec.Name, spec.MDPath, spec.FenceLabel, spec.MarkerBegin, spec.MarkerEnd)
-				continue
-			}
-			// Producing block must be resolvable: schema + md readable, markers
-			// present, and the example region renderable/spliceable.
-			if _, _, err := renderSchemaRegionForSpec(root, spec); err != nil {
-				t.Errorf("final_artifact %q producing block is not resolvable: %v", spec.Name, err)
-			}
-		} else {
-			if spec.MDPath != "" || spec.FenceLabel != "" || spec.MarkerBegin != "" || spec.MarkerEnd != "" {
-				t.Errorf("non-final schema %q (kind %s) must leave MDPath/FenceLabel/MarkerBegin/MarkerEnd empty (got MDPath=%q FenceLabel=%q MarkerBegin=%q MarkerEnd=%q)",
-					spec.Name, spec.Kind, spec.MDPath, spec.FenceLabel, spec.MarkerBegin, spec.MarkerEnd)
-			}
-		}
 	}
 }
