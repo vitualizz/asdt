@@ -5,8 +5,6 @@ order: 14
 locale: en
 ---
 
-import ClaudeVsOpenCodeCompare from '@components/ClaudeVsOpenCodeCompare.astro'
-
 # AI Assistants
 
 ASDT is not a standalone app. It installs **into** your AI assistant — it copies its specialist skills, generates executor agents, and wires up its configuration inside the tool you already use. The installer TUI (`asdt-tui`) does this for you and adapts each artifact to the assistant's native format.
@@ -25,8 +23,6 @@ Regardless of assistant, an install produces the same logical pieces:
 The details of each piece differ per assistant. Here is the full comparison — a couple of terms in the table are worth a plain-language note before you hit them: **`XDG_CONFIG_HOME`** is just the standard folder-location variable Linux/macOS tools check before falling back to a default config path, and the **permission overlay** row (Claude Code only, more on it below) is an optional **structural JSON merge** — combining ASDT's settings into your existing config file without overwriting the rest of it — that turns on **bypass mode**, a Claude Code setting that stops asking for permission on every action, behind a **deny-net**: the fixed list of files and settings the installer refuses to touch even when those permission prompts are skipped.
 
 ## Claude Code vs OpenCode
-
-<ClaudeVsOpenCodeCompare lang="en" />
 
 ### Why command wrappers only exist for OpenCode
 
