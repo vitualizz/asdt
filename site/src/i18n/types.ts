@@ -116,6 +116,5 @@ export interface UIStrings {
     recipes: string
     tutorial: string
     specialistComparison: string
-    changelog: string
   }
 }

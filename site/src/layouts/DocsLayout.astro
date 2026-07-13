@@ -48,14 +48,40 @@ const slugToLabel: Record<string, string> = {
   recipes: t.docs.recipes,
   tutorial: t.docs.tutorial,
   'specialist-comparison': t.docs.specialistComparison,
-  changelog: t.docs.changelog,
+  'ai-assistants': isEs ? 'Asistentes de IA' : 'AI Assistants',
+  configuration: isEs ? 'Configuración' : 'Configuration',
+  'how-it-works': isEs ? 'Cómo funciona' : 'How It Works',
+  'specialist-model': isEs ? 'Modelo de especialistas' : 'Specialist Model',
+  'memory-and-engram': isEs ? 'Base de conocimiento y memoria' : 'Knowledge Base & Memory',
+  contributing: isEs ? 'Contribuir' : 'Contributing',
+  development: isEs ? 'Desarrollo' : 'Development',
 }
 
 const navGroups = [
   { label: isEs ? 'Empezar' : 'Getting Started', slugs: ['getting-started', 'tutorial', 'configuration'] },
-  { label: isEs ? 'Conceptos' : 'Concepts', slugs: ['how-it-works', 'specialist-model', 'memory-and-engram'] },
-  { label: isEs ? 'Especialistas' : 'Specialists', slugs: ['skills', 'specialists/pm', 'specialists/architect', 'specialists/developer', 'specialists/qa', 'specialists/security', 'specialists/ux-ui', 'specialists/researcher', 'specialist-comparison'] },
-  { label: isEs ? 'Referencia' : 'Reference', slugs: ['commands', 'user-flows', 'troubleshooting', 'recipes', 'changelog'] },
+  { label: isEs ? 'Conceptos' : 'Concepts', slugs: ['how-it-works', 'specialist-model', 'memory-and-engram', 'ai-assistants'] },
+  {
+    label: isEs ? 'Especialistas' : 'Specialists',
+    subgroups: [
+      {
+        label: isEs ? 'Resumen' : 'Overview',
+        slugs: ['skills', 'specialist-comparison'],
+      },
+      {
+        label: isEs ? 'Detalle' : 'Detail',
+        slugs: [
+          'specialists/researcher',
+          'specialists/pm',
+          'specialists/ux-ui',
+          'specialists/architect',
+          'specialists/developer',
+          'specialists/qa',
+          'specialists/security',
+        ],
+      },
+    ],
+  },
+  { label: isEs ? 'Referencia' : 'Reference', slugs: ['commands', 'user-flows', 'troubleshooting', 'recipes'] },
   { label: isEs ? 'Contribuir' : 'Contributing', slugs: ['contributing', 'development'] },
 ]
 
@@ -89,26 +115,36 @@ function docHref(slug: string) {
       />
       <nav class="doc-nav">
         {navGroups.map((group) => {
-          const groupEntries = group.slugs.map((s) => sortedBySlug[s]).filter(Boolean)
+          const clusters = group.subgroups
+            ? group.subgroups.map((sg) => ({ label: sg.label as string | null, entries: sg.slugs.map((s) => sortedBySlug[s]).filter(Boolean) }))
+            : [{ label: null as string | null, entries: (group.slugs ?? []).map((s) => sortedBySlug[s]).filter(Boolean) }]
+          const groupEntries = clusters.flatMap((c) => c.entries)
           if (groupEntries.length === 0) return null
           return (
             <div class="doc-nav-section">
               <p class="doc-nav-group">{group.label}</p>
-              {groupEntries.map((entry) => {
-                const slug = entry.id.replace(/^en\//, '')
-                const label = slugToLabel[slug] ?? entry.data.title
-                const href = docHref(slug)
-                const isCurrent = currentSlug === slug
-                return (
-                  <a
-                    href={href}
-                    aria-current={isCurrent ? 'page' : undefined}
-                    class:list={['doc-nav-link', { active: isCurrent }]}
-                  >
-                    {label}
-                  </a>
+              {clusters.map((cluster) => (
+                cluster.entries.length === 0 ? null : (
+                  <Fragment>
+                    {cluster.label && <p class="doc-nav-subgroup">{cluster.label}</p>}
+                    {cluster.entries.map((entry) => {
+                      const slug = entry.id.replace(/^en\//, '')
+                      const label = slugToLabel[slug] ?? entry.data.title
+                      const href = docHref(slug)
+                      const isCurrent = currentSlug === slug
+                      return (
+                        <a
+                          href={href}
+                          aria-current={isCurrent ? 'page' : undefined}
+                          class:list={['doc-nav-link', { active: isCurrent }]}
+                        >
+                          {label}
+                        </a>
+                      )
+                    })}
+                  </Fragment>
                 )
-              })}
+              ))}
             </div>
           )
         })}
@@ -236,6 +272,18 @@ function docHref(slug: string) {
   margin-bottom: 10px;
   padding-left: 14px;
 }
+.doc-nav-subgroup {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  opacity: 0.7;
+  margin: 10px 0 3px 12px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border-soft);
+}
+.doc-nav-subgroup:first-of-type { margin-top: 2px; }
 .doc-nav-link {
   display: block;
   padding: 6px 12px;
@@ -323,7 +371,8 @@ function docHref(slug: string) {
   border: 1px solid var(--border-soft);
   padding: 2px 7px;
   border-radius: 6px;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 .article :global(pre) {
   position: relative;
@@ -365,16 +414,16 @@ function docHref(slug: string) {
 }
 .article :global(ul) { list-style: none; }
 .article :global(ul li) {
-  display: flex; gap: 11px;
+  display: block; position: relative; padding-left: 17px;
   font-size: 15.5px; color: oklch(0.86 0.008 285); line-height: 1.6;
 }
 .article :global(ul li::before) {
   content: '';
-  flex-shrink: 0;
+  position: absolute;
+  left: 0; top: 0.62em;
   width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--color-accent);
-  margin-top: 10px;
 }
 .article :global(ol) { list-style: decimal; padding-left: 20px; }
 .article :global(ol li) { font-size: 15.5px; color: oklch(0.86 0.008 285); line-height: 1.6; }

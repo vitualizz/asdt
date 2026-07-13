@@ -33,6 +33,7 @@ export const en: UIStrings = {
     sub: 'Focused roles, each with their craft. Invoke any one directly, or ask /asdt to suggest the route.',
     advisorStrip: 'Start here',
     items: [
+      { id: 'researcher', name: 'Researcher', desc: 'Explores fuzzy problems before requirements exist: divergent ideation, feasibility scans, one recommended direction.', command: '/asdt-researcher' },
       { id: 'pm', name: 'Product Manager', desc: 'Turns loose ideas into user stories with clear scope and defined criteria.', command: '/asdt-pm' },
       { id: 'architect', name: 'Architect', desc: 'Makes technical decisions: system design, API contracts, decision records.', command: '/asdt-architect' },
       { id: 'developer', name: 'Developer', desc: 'Turns specs and designs into production code, with an implementation plan.', command: '/asdt-developer' },
@@ -54,6 +55,7 @@ export const en: UIStrings = {
     title: 'How it works',
     sub: 'Describe what you need — /asdt tells you which specialists to involve and in what order. Each reads the previous one\'s artifacts from the shared knowledge base.',
     nodes: [
+      { id: 'researcher', label: 'Researcher' },
       { id: 'pm', label: 'PM' },
       { id: 'architect', label: 'Architect' },
       { id: 'developer', label: 'Developer' },
@@ -62,7 +64,7 @@ export const en: UIStrings = {
       { id: 'ux-ui', label: 'UX/UI' },
     ],
     a11yTitle: 'ASDT specialist pipeline',
-    a11yDesc: 'Diagram showing six specialists in sequence: PM, Architect, Developer, QA, Security, UX/UI — all connected through a shared knowledge base.',
+    a11yDesc: 'Diagram showing seven specialists in sequence: Researcher, PM, Architect, Developer, QA, Security, UX/UI — all connected through a shared knowledge base.',
   },
   recipes: {
     kicker: '02 · How it works',
@@ -138,6 +140,5 @@ export const en: UIStrings = {
     recipes: 'Recipes',
     tutorial: 'Tutorial',
     specialistComparison: 'Specialist Comparison',
-    changelog: 'Changelog',
   },
 }

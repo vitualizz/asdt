@@ -33,6 +33,7 @@ export const es: UIStrings = {
     sub: 'Roles enfocados, cada uno con su oficio. Invocá a cualquiera directamente, o pedile a /asdt que te sugiera la ruta.',
     advisorStrip: 'El punto de partida',
     items: [
+      { id: 'researcher', name: 'Investigador', desc: 'Explora problemas difusos antes de que existan requisitos: ideación divergente, análisis de viabilidad y una dirección recomendada.', command: '/asdt-researcher' },
       { id: 'pm', name: 'Product Manager', desc: 'Convierte ideas sueltas en historias de usuario con alcance claro y criterios definidos.', command: '/asdt-pm' },
       { id: 'architect', name: 'Arquitecto', desc: 'Toma las decisiones técnicas: diseño del sistema, contratos de API y registros de decisión.', command: '/asdt-architect' },
       { id: 'developer', name: 'Developer', desc: 'Convierte especificaciones y diseños en código de producción, con plan de implementación.', command: '/asdt-developer' },
@@ -54,6 +55,7 @@ export const es: UIStrings = {
     title: 'Cómo funciona',
     sub: 'Describí lo que necesitás — /asdt te dice qué especialistas usar y en qué orden. Cada uno lee los artefactos del anterior desde la base de conocimiento compartida.',
     nodes: [
+      { id: 'researcher', label: 'Investigador' },
       { id: 'pm', label: 'PM' },
       { id: 'architect', label: 'Arquitecto' },
       { id: 'developer', label: 'Developer' },
@@ -62,7 +64,7 @@ export const es: UIStrings = {
       { id: 'ux-ui', label: 'UX/UI' },
     ],
     a11yTitle: 'Pipeline de especialistas ASDT',
-    a11yDesc: 'Diagrama que muestra seis especialistas en secuencia: PM, Arquitecto, Developer, QA, Seguridad, UX/UI — todos conectados a través de una base de conocimiento compartida.',
+    a11yDesc: 'Diagrama que muestra siete especialistas en secuencia: Investigador, PM, Arquitecto, Developer, QA, Seguridad, UX/UI — todos conectados a través de una base de conocimiento compartida.',
   },
   recipes: {
     kicker: '02 · Cómo funciona',
@@ -138,6 +140,5 @@ export const es: UIStrings = {
     recipes: 'Recetas',
     tutorial: 'Tutorial',
     specialistComparison: 'Comparación de especialistas',
-    changelog: 'Historial de cambios',
   },
 }
