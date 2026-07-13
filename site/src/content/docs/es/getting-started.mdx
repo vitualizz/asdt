@@ -1,0 +1,85 @@
+---
+title: Comenzando
+description: Instalá y ejecutá tu primer pipeline ASDT en minutos.
+order: 1
+locale: es
+---
+
+import ModelPresetTierCard from '@components/ModelPresetTierCard.astro'
+
+# Comenzando
+
+## Requisitos
+
+Antes de usar ASDT necesitás:
+
+- **Claude Code** u **OpenCode** — instalado y autenticado (son los únicos asistentes que ASDT soporta hoy)
+- **[Engram](https://github.com/Gentleman-Programming/engram)** — el memory provider, requerido para la persistencia entre sesiones. Tiene que estar en tu `PATH` antes de instalar
+- Una terminal (bash o zsh)
+
+> **¿Compilando desde el código fuente?** Se requiere Go 1.22+. El instalador de una línea descarga un binario precompilado — no necesitás compilador.
+
+## Instalación
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vitualizz/asdt/main/install.sh | bash
+```
+
+Descarga el último binario precompilado (`asdt-tui`) para tu plataforma e instala en `~/.local/bin/`. No necesitás Go ni compilador.
+
+> Si `~/.local/bin` no está en tu `PATH`, el instalador te muestra la línea exacta para agregar a tu shell profile.
+
+## Ejecutá el instalador
+
+```bash
+asdt-tui
+```
+
+`asdt-tui` es una interfaz interactiva de terminal. Desde el menú principal, elegí **Install / Update Skills** y te guía por un flujo corto:
+
+1. **Idioma** — elegí el idioma en el que habla ASDT: `en` (inglés), `es-419` (español latinoamericano) o `es-ES` (español de España). Tu elección aplica tanto a la interfaz del instalador como a los especialistas instalados.
+2. **Chequeo del entorno** — verifica tu sistema operativo, shell, Engram y Codegraph (un índice de búsqueda de código opcional). **Engram es una barrera obligatoria**: *Continue* permanece deshabilitado hasta que Engram esté en tu `PATH`. Que falte Codegraph es solo una advertencia leve y nunca te bloquea.
+3. **Asistentes** — elegí a cuál apuntar: **Claude Code**, **OpenCode** o ambos. Cada uno muestra una insignia de presente/faltante.
+4. **Memory provider** — Engram es el proveedor contra el que instala ASDT.
+5. **Preset de modelo** — elegí cuánta potencia de modelo usa cada paso de los especialistas (ver abajo).
+6. **Persona** — opcionalmente elegí una persona para los asistentes instalados, y si deben usar emojis. Podés saltar este paso por completo.
+7. **Permisos** — una barrera opt-in para el overlay de permisos de Claude Code. Rechazar es el valor por defecto seguro y no escribe nada.
+8. **Review → Install → Done** — confirmá tus selecciones, mirá correr la instalación y listo. Un **Dashboard** de solo lectura en el menú principal muestra el estado por asistente en cualquier momento.
+
+### Presets de modelo
+
+El paso de modelo ofrece cinco presets — cada uno mapea cada paso de especialista a un nivel de modelo:
+
+<ModelPresetTierCard lang="es" />
+
+## Inicializá tu proyecto
+
+Abrí tu asistente de IA en la carpeta de tu proyecto y ejecutá:
+
+```
+/asdt-init
+```
+
+Detecta tu stack, hace un par de preguntas, y escribe `.asdt/config.yaml` con valores por defecto razonables.
+
+## Tu primer pipeline
+
+```
+/asdt Agregar autenticación de usuario con email y contraseña
+```
+
+ASDT analiza la petición y recomienda una secuencia de especialistas — por ejemplo: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Confirmá el plan y ejecutá cada comando. Cada especialista guarda su output en la base de conocimiento para que el siguiente retome donde dejó el anterior.
+
+## Ejecutar especialistas individuales
+
+```
+/asdt-pm Agregar modo oscuro a la página de configuración
+/asdt-architect Diseñar la estrategia de caché
+/asdt-developer Implementar el componente de perfil de usuario
+```
+
+## Próximos pasos
+
+- Aprendé cómo persiste la memoria entre sesiones en [Memory & Engram](/asdt/docs/memory-and-engram).
+- Entendé el modelo por dentro en [How It Works](/asdt/docs/how-it-works).
+- Conocé cada especialista en [Skills](/asdt/docs/skills).

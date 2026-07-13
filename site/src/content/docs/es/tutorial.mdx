@@ -1,0 +1,198 @@
+---
+title: 'Tutorial: Tu primer pipeline'
+description: 'Tutorial paso a paso de ASDT: instalar, inicializar y correr un pipeline completo PM → Arquitecto → Developer para "Agregar un formulario de contacto con validación".'
+order: 3
+locale: es
+---
+
+import TutorialPipelineStepper from '@components/TutorialPipelineStepper.astro'
+
+# Tutorial: Tu primer pipeline
+
+En este tutorial vas a instalar ASDT y correr un pipeline completo PM → Arquitecto → Developer para una feature concreta: **agregar un formulario de contacto con validación**.
+
+ASDT funciona con dos asistentes de IA — **Claude Code** y **OpenCode**. Los pasos de abajo son idénticos para ambos; donde difieren (ubicación de la configuración, reinicio, autenticación) se muestran ambos lado a lado. Elegí el que uses.
+
+Tiempo estimado: 15 minutos.
+
+<TutorialPipelineStepper lang="es" />
+
+## Requisitos
+
+Antes de empezar, asegurate de tener:
+
+- **Claude Code** u **OpenCode** instalado y autenticado. Si tu sesión expiró, volvé a autenticarte con el flujo de login de tu asistente (`claude` para Claude Code, `opencode` para OpenCode).
+- **Engram** corriendo como servidor MCP, conectado a la configuración MCP de tu asistente. Ver [Base de conocimiento y memoria](/asdt/docs/memory-and-engram) para el setup.
+- Una terminal **bash o zsh**.
+
+## Paso 1 — Instalar ASDT
+
+Ejecutá el script de instalación:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vitualizz/asdt/main/install.sh | bash
+```
+
+El binario se coloca en `~/.local/bin/asdt-tui`. Si tu shell no lo encuentra, agregá esto a tu shell profile:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Después instalá las skills de los especialistas en tu asistente:
+
+```bash
+asdt-tui
+```
+
+Este menú interactivo te deja elegir tu(s) asistente(s) y copia los archivos de skill. Instala en:
+
+- **Claude Code** → `~/.claude/skills` (agentes ejecutores en `~/.claude/agents/`)
+- **OpenCode** → `~/.config/opencode/skills` (agentes ejecutores en `~/.config/opencode/agents/`, más wrappers de comandos en `~/.config/opencode/commands/`)
+
+Luego **reiniciá tu asistente** — tanto Claude Code como OpenCode cargan las definiciones de skills (y comandos) al iniciar.
+
+Si `asdt-tui` muestra `command not found`, ver [Solución de problemas](/asdt/docs/troubleshooting).
+
+## Paso 2 — Inicializar ASDT en tu proyecto
+
+Abrí tu asistente (Claude Code u OpenCode) en el directorio de tu proyecto y ejecutá:
+
+```text
+/asdt-init
+```
+
+Esto crea `.asdt/config.yaml` (configuración del memory provider) y `.asdt/knowledge/platform.yaml` (stack detectado), para que cada especialista adapte su output a tu proyecto.
+
+## Paso 3 — Pedirle a ASDT una recomendación de pipeline
+
+En tu asistente, ejecutá:
+
+```text
+/asdt "Agregar un formulario de contacto con validación"
+```
+
+ASDT analiza tu petición y recomienda qué especialistas involucrar y en qué orden.
+
+```text
+# Output de ejemplo — tus resultados variarán según tu proyecto
+
+Analizando: "Agregar un formulario de contacto con validación"
+
+Pipeline recomendado:
+  1. /asdt-pm        → Definir alcance y criterios de aceptación
+  2. /asdt-architect → Diseñar el enfoque de validación y el contrato de la API
+  3. /asdt-developer → Implementar el handler del formulario y la lógica de validación
+
+Ejecutá cada comando en orden. Cada especialista lee el output del anterior automáticamente.
+```
+
+## Paso 4 — Correr el Product Manager
+
+```text
+/asdt-pm "Agregar un formulario de contacto con validación"
+```
+
+El PM fija el alcance, escribe las historias de usuario y guarda un artefacto `pm/backlog-entry` en la base de conocimiento (ver [Base de conocimiento y memoria](/asdt/docs/memory-and-engram)).
+
+```text
+# Output de ejemplo — tus resultados variarán según tu proyecto
+
+Corriendo especialista PM...
+
+Producido: pm/backlog-entry
+
+  Feature: Formulario de contacto con validación
+  
+  Historias de usuario:
+    US-01: Como visitante, quiero enviar un formulario de contacto para poder comunicarme con el equipo.
+      AC1: Campos del formulario: nombre (requerido), email (requerido, formato válido), mensaje (requerido, máx 500 caracteres).
+      AC2: El envío muestra un mensaje de éxito y envía una notificación por email.
+      AC3: Los campos inválidos muestran mensajes de error en línea sin perder el input existente.
+    
+    US-02: Como visitante, quiero que el formulario impida el envío si mi email es inválido
+      para no tener que esperar un rebote para saber que algo salió mal.
+      AC1: El campo email valida el formato al perder el foco y al enviar.
+      AC2: El botón de envío queda deshabilitado mientras existan errores de validación.
+
+  En alcance: UI del formulario, validación del lado del cliente, handler de envío, notificación por email.
+  Fuera de alcance: CAPTCHA, rate limiting, tracking de analytics.
+
+Artefacto guardado en la base de conocimiento.
+```
+
+## Paso 5 — Correr el Arquitecto
+
+```text
+/asdt-architect
+```
+
+El Arquitecto lee el backlog del PM automáticamente, evalúa enfoques técnicos y produce un Registro de Decisión de Arquitectura (ADR) y el diseño del sistema.
+
+```text
+# Output de ejemplo — tus resultados variarán según tu proyecto
+
+Corriendo especialista Arquitecto...
+Cargando: pm/backlog-entry ✓
+
+Producido: architectural-decision + system-design
+
+  ADR: Usar la Constraint Validation API nativa de HTML5 con mejora progresiva
+  
+  Decisión: Usar la Constraint Validation API nativa del navegador para la validación de campos,
+  complementada con una capa delgada de JS para mensajes de error personalizados y manejo del evento blur.
+  
+  Alternativas consideradas:
+    - Validación con schema de Zod (rechazada: sobreingeniería para un formulario de contacto)
+    - React Hook Form (rechazada: introduce una dependencia innecesaria)
+  
+  Diseño del sistema:
+    - POST /api/contact — acepta { name, email, message }, devuelve 200 o 422
+    - Notificación por email vía nodemailer (dependencia existente)
+    - Sin escritura en base de datos — los datos del formulario se reenvían directamente por email
+
+Artefactos guardados en la base de conocimiento.
+```
+
+## Paso 6 — Correr el Developer
+
+```text
+/asdt-developer
+```
+
+El Developer lee el ADR y el diseño del sistema, divide el trabajo en tareas ordenadas y produce un plan de implementación (o escribe código en modo escritura).
+
+```text
+# Output de ejemplo — tus resultados variarán según tu proyecto
+
+Corriendo especialista Developer...
+Cargando: architectural-decision ✓
+Cargando: system-design ✓
+
+Producido: developer/dev-implementation
+
+  Plan de implementación:
+
+  T-01  Crear src/components/ContactForm.astro
+        — Markup del formulario con atributos de validación nativa
+        
+  T-02  Crear src/pages/api/contact.ts
+        — Handler POST: validar, enviar email vía nodemailer, devolver 200/422
+        
+  T-03  Crear src/styles/contact-form.css
+        — Estilos de estado de error para campos inválidos
+        
+  T-04  Actualizar src/pages/contact.astro
+        — Importar y renderizar el componente ContactForm
+
+Artefacto guardado en la base de conocimiento.
+```
+
+## Qué sigue
+
+Tu pipeline está completo. Desde acá podés:
+
+- Correr **[QA](/asdt/docs/specialists/qa)** (`/asdt-qa`) para validar la cobertura de los criterios de aceptación y generar un plan de pruebas.
+- Correr **[Security](/asdt/docs/specialists/security)** (`/asdt-security`) para revisar el handler del formulario en busca de vulnerabilidades OWASP.
+- Explorar **[Recetas](/asdt/docs/recipes)** para secuencias de comandos de otros escenarios comunes.
+- Ver **[Solución de problemas](/asdt/docs/troubleshooting)** si algo salió mal.

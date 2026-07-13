@@ -1,0 +1,104 @@
+---
+title: Comandos
+description: Referencia completa de todos los comandos CLI y comandos slash de ASDT.
+order: 4
+locale: es
+---
+
+import CommandCard from '@components/CommandCard.astro'
+
+# Comandos
+
+Referencia rápida de cada comando de ASDT — elegí una tarjeta para saltar directo a sus detalles completos más abajo.
+
+<CommandCard locale="es" />
+
+## CLI
+
+### `asdt-tui`
+
+La única herramienta CLI. Una app interactiva de terminal — ejecutala sin argumentos:
+
+```bash
+asdt-tui
+```
+
+Revisa tu setup, te deja elegir qué asistente(s) apuntar (Claude Code, OpenCode, o ambos), e instala o actualiza las skills de los especialistas ASDT. Todo se maneja desde el menú en pantalla — no hay subcomandos ni flags.
+
+> Inicializar un proyecto (escribir `.asdt/config.yaml`) **no** es un comando CLI — es el comando slash `/asdt-init`, que se ejecuta dentro de tu asistente. Ver abajo.
+
+## Comandos Slash (Claude Code / OpenCode)
+
+Comandos Slash — comandos que escribís directamente en tu asistente de IA, prefijados con `/`.
+
+### `/asdt-init`
+
+Inicializa ASDT en el proyecto actual. Detecta tu stack y crea `.asdt/config.yaml` y `.asdt/knowledge/platform.yaml`. Ejecutalo dentro de tu asistente, en la carpeta de tu proyecto.
+
+```
+/asdt-init
+```
+
+### `/asdt`
+
+Sugerencia de ruteo del pipeline. Describí qué querés construir — ASDT analiza el pedido, recomienda qué especialistas involucrar y en qué orden, y espera tu confirmación antes de listar los comandos a ejecutar.
+
+```
+/asdt Agregar verificación de email al flujo de registro
+```
+
+### `/asdt-researcher`
+
+Corre solo al especialista Researcher — el especialista de descubrimiento para problemas difusos (ideación divergente, escaneo de factibilidad, brief de descubrimiento). Corre antes del PM cuando el problema todavía no está bien definido.
+
+```
+/asdt-researcher Explorar formas de reducir el abandono en el onboarding
+```
+
+### `/asdt-pm`
+
+Corre solo al especialista Product Manager.
+
+```
+/asdt-pm Rediseñar la página de configuración de notificaciones
+```
+
+### `/asdt-architect`
+
+Corre solo al especialista Architect.
+
+```
+/asdt-architect Diseñar la arquitectura de sincronización en tiempo real
+```
+
+### `/asdt-developer`
+
+Corre solo al especialista Developer.
+
+```
+/asdt-developer Implementar el componente de sidebar
+```
+
+### `/asdt-qa`
+
+Corre solo al especialista QA.
+
+```
+/asdt-qa Revisar el flujo de checkout en busca de casos borde
+```
+
+### `/asdt-security`
+
+Corre solo al especialista Security.
+
+```
+/asdt-security Revisar la integración de OAuth
+```
+
+### `/asdt-ux-ui`
+
+Corre solo al especialista UX/UI.
+
+```
+/asdt-ux-ui Diseñar el flujo de onboarding
+```

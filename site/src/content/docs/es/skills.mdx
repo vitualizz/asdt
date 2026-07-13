@@ -1,0 +1,19 @@
+---
+title: Índice de skills
+description: Todos los especialistas de ASDT de un vistazo — qué hace cada uno, el comando que lo invoca y dónde se ubica en el pipeline.
+order: 19
+locale: es
+---
+
+import SkillsIndex from '@components/SkillsIndex.astro'
+import { useTranslations } from '@i18n/utils'
+
+export const t = useTranslations('es')
+
+# Índice de skills
+
+Todos los especialistas de ASDT de un vistazo, en orden de pipeline. Cada uno es invocable de forma independiente con su comando — usá esta grilla para elegir el especialista correcto cuando solo necesitás una perspectiva.
+
+<SkillsIndex t={t} locale="es" />
+
+Cuando el trabajo abarca múltiples perspectivas, salteá la grilla y ejecutá `/asdt <descripción del feature>` — el orquestador clasifica el cambio y lo enruta por los especialistas correctos en el orden correcto.
