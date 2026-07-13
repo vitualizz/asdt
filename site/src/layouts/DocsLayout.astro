@@ -5,7 +5,7 @@ import DocsSearch from '@components/DocsSearch.astro'
 import StepFlow from '@components/StepFlow.astro'
 import PipelinePositionBadge from '@components/PipelinePositionBadge.astro'
 import ArtifactFlowTrace from '@components/ArtifactFlowTrace.astro'
-import { useTranslations, getBaseHref } from '@i18n/utils'
+import { useTranslations, getBaseHref, getLocalePath } from '@i18n/utils'
 import type { Locale } from '@i18n/utils'
 import type { SpecialistId } from '@data/artifact-graph'
 import { getCollection } from 'astro:content'
@@ -27,48 +27,50 @@ interface Props {
 
 const { title, description, lang, isFallback = false, currentSlug, headings = [] } = Astro.props
 const t = useTranslations(lang)
-const isEs = lang === 'es'
 
 const allDocs = await getCollection('docs', (entry) => entry.data.locale === 'en')
 const sorted = allDocs.sort((a, b) => a.data.order - b.data.order)
 
+const localizedTitles: Record<string, string> =
+  lang === 'es'
+    ? Object.fromEntries(
+        (await getCollection('docs', (entry) => entry.data.locale === 'es'))
+          .map((e) => [e.id.replace(/^es\//, ''), e.data.title])
+      )
+    : {}
+
+function labelFor(slug: string, fallbackTitle: string): string {
+  return slugToLabel[slug] ?? localizedTitles[slug] ?? fallbackTitle
+}
+
 const slugToLabel: Record<string, string> = {
   'getting-started': t.docs.gettingStarted,
-  'specialists/pm': 'Product Manager',
-  'specialists/architect': 'Architect',
-  'specialists/developer': 'Developer',
-  'specialists/qa': 'QA Engineer',
-  'specialists/security': 'Security',
-  'specialists/ux-ui': 'UX/UI Designer',
-  'specialists/researcher': 'Researcher',
-  skills: t.docs.skillsIndex,
   commands: t.docs.commands,
   'user-flows': t.docs.userFlows,
   troubleshooting: t.docs.troubleshooting,
   recipes: t.docs.recipes,
   tutorial: t.docs.tutorial,
-  'specialist-comparison': t.docs.specialistComparison,
-  'ai-assistants': isEs ? 'Asistentes de IA' : 'AI Assistants',
-  configuration: isEs ? 'Configuración' : 'Configuration',
-  'how-it-works': isEs ? 'Cómo funciona' : 'How It Works',
-  'specialist-model': isEs ? 'Modelo de especialistas' : 'Specialist Model',
-  'memory-and-engram': isEs ? 'Base de conocimiento y memoria' : 'Knowledge Base & Memory',
-  contributing: isEs ? 'Contribuir' : 'Contributing',
-  development: isEs ? 'Desarrollo' : 'Development',
+  'ai-assistants': t.docs.aiAssistants,
+  configuration: t.docs.configuration,
+  'how-it-works': t.docs.howItWorksTitle,
+  'specialist-model': t.docs.specialistModel,
+  'memory-and-engram': t.docs.memoryAndEngram,
+  contributing: t.docs.contributing,
+  development: t.docs.development,
 }
 
 const navGroups = [
-  { label: isEs ? 'Empezar' : 'Getting Started', slugs: ['getting-started', 'tutorial', 'configuration'] },
-  { label: isEs ? 'Conceptos' : 'Concepts', slugs: ['how-it-works', 'specialist-model', 'memory-and-engram', 'ai-assistants'] },
+  { label: t.docs.groupGettingStarted, slugs: ['getting-started', 'tutorial', 'configuration'] },
+  { label: t.docs.groupConcepts, slugs: ['how-it-works', 'specialist-model', 'memory-and-engram', 'ai-assistants'] },
   {
-    label: isEs ? 'Especialistas' : 'Specialists',
+    label: t.docs.specialists,
     subgroups: [
       {
-        label: isEs ? 'Resumen' : 'Overview',
-        slugs: ['skills', 'specialist-comparison'],
+        label: t.docs.subgroupOverview,
+        slugs: ['specialists'],
       },
       {
-        label: isEs ? 'Detalle' : 'Detail',
+        label: t.docs.subgroupDetail,
         slugs: [
           'specialists/researcher',
           'specialists/pm',
@@ -81,15 +83,15 @@ const navGroups = [
       },
     ],
   },
-  { label: isEs ? 'Referencia' : 'Reference', slugs: ['commands', 'user-flows', 'troubleshooting', 'recipes'] },
-  { label: isEs ? 'Contribuir' : 'Contributing', slugs: ['contributing', 'development'] },
+  { label: t.docs.groupReference, slugs: ['commands', 'user-flows', 'troubleshooting', 'recipes'] },
+  { label: t.docs.contributing, slugs: ['contributing', 'development'] },
 ]
 
 const sortedBySlug = Object.fromEntries(
   sorted.map((e) => [e.id.replace(/^en\//, ''), e])
 )
 
-const currentLabel = slugToLabel[currentSlug] ?? title
+const currentLabel = labelFor(currentSlug, title)
 const specialistId = currentSlug.startsWith('specialists/')
   ? currentSlug.replace('specialists/', '')
   : null
@@ -101,12 +103,12 @@ const prevEntry = currentIndex > 0 ? sorted[currentIndex - 1] : null
 const nextEntry = currentIndex < sorted.length - 1 ? sorted[currentIndex + 1] : null
 
 function docHref(slug: string) {
-  return isEs ? getBaseHref(`/es/docs/${slug}`) : getBaseHref(`/docs/${slug}`)
+  return getLocalePath(`/docs/${slug}`, lang)
 }
 ---
 <BaseLayout lang={lang} title={title} description={description}>
   <div class="docs-shell">
-    <aside class="docs-side" aria-label={isEs ? 'Documentación' : 'Documentation'}>
+    <aside class="docs-side" aria-label={t.docs.sidebarAriaLabel}>
       <DocsSearch
         lang={lang}
         placeholder={t.docs.searchPlaceholder}
@@ -129,7 +131,7 @@ function docHref(slug: string) {
                     {cluster.label && <p class="doc-nav-subgroup">{cluster.label}</p>}
                     {cluster.entries.map((entry) => {
                       const slug = entry.id.replace(/^en\//, '')
-                      const label = slugToLabel[slug] ?? entry.data.title
+                      const label = labelFor(slug, entry.data.title)
                       const href = docHref(slug)
                       const isCurrent = currentSlug === slug
                       return (
@@ -205,17 +207,17 @@ function docHref(slug: string) {
       )}
 
       {(prevEntry || nextEntry) && (
-        <nav class="doc-pagination" aria-label={isEs ? 'Navegación de páginas' : 'Page navigation'}>
+        <nav class="doc-pagination" aria-label={t.docs.pageNavAriaLabel}>
           {prevEntry ? (
             <a href={docHref(prevEntry.id.replace(/^en\//, ''))} class="pag-link pag-prev">
-              <span class="pag-dir">← {isEs ? 'Anterior' : 'Previous'}</span>
-              <span class="pag-title">{slugToLabel[prevEntry.id.replace(/^en\//, '')] ?? prevEntry.data.title}</span>
+              <span class="pag-dir">← {t.docs.prev}</span>
+              <span class="pag-title">{labelFor(prevEntry.id.replace(/^en\//, ''), prevEntry.data.title)}</span>
             </a>
           ) : <div />}
           {nextEntry ? (
             <a href={docHref(nextEntry.id.replace(/^en\//, ''))} class="pag-link pag-next">
-              <span class="pag-dir">{isEs ? 'Siguiente' : 'Next'} →</span>
-              <span class="pag-title">{slugToLabel[nextEntry.id.replace(/^en\//, '')] ?? nextEntry.data.title}</span>
+              <span class="pag-dir">{t.docs.next} →</span>
+              <span class="pag-title">{labelFor(nextEntry.id.replace(/^en\//, ''), nextEntry.data.title)}</span>
             </a>
           ) : <div />}
         </nav>

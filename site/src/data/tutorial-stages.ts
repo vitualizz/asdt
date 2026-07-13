@@ -2,8 +2,6 @@ import { SPECIALIST_COLOR, type SpecialistId } from './artifact-graph'
 
 export interface TutorialStage {
   id: string
-  labelEn: string
-  labelEs: string
   /** Heading id in src/content/docs/en/tutorial.mdx, verified against the built page. */
   anchorIdEn: string
   /** Heading id in src/content/docs/es/tutorial.mdx (Spanish slugs differ), verified against the built page. */
@@ -21,32 +19,24 @@ const NEUTRAL_STAGE_COLOR = '--color-accent'
 export const tutorialStages: TutorialStage[] = [
   {
     id: 'install',
-    labelEn: 'Install',
-    labelEs: 'Instalar',
     anchorIdEn: 'step-1--install-asdt',
     anchorIdEs: 'paso-1--instalar-asdt',
     color: NEUTRAL_STAGE_COLOR,
   },
   {
     id: 'initialize',
-    labelEn: 'Initialize',
-    labelEs: 'Inicializar',
     anchorIdEn: 'step-2--initialize-asdt-in-your-project',
     anchorIdEs: 'paso-2--inicializar-asdt-en-tu-proyecto',
     color: NEUTRAL_STAGE_COLOR,
   },
   {
     id: 'recommendation',
-    labelEn: 'Recommendation',
-    labelEs: 'Recomendación',
     anchorIdEn: 'step-3--ask-asdt-for-a-pipeline-recommendation',
     anchorIdEs: 'paso-3--pedirle-a-asdt-una-recomendación-de-pipeline',
     color: NEUTRAL_STAGE_COLOR,
   },
   {
     id: 'pm',
-    labelEn: 'PM',
-    labelEs: 'PM',
     anchorIdEn: 'step-4--run-the-product-manager',
     anchorIdEs: 'paso-4--correr-el-product-manager',
     specialistId: 'pm',
@@ -54,8 +44,6 @@ export const tutorialStages: TutorialStage[] = [
   },
   {
     id: 'architect',
-    labelEn: 'Architect',
-    labelEs: 'Arquitecto',
     anchorIdEn: 'step-5--run-the-architect',
     anchorIdEs: 'paso-5--correr-el-arquitecto',
     specialistId: 'architect',
@@ -63,8 +51,6 @@ export const tutorialStages: TutorialStage[] = [
   },
   {
     id: 'developer',
-    labelEn: 'Developer',
-    labelEs: 'Developer',
     anchorIdEn: 'step-6--run-the-developer',
     anchorIdEs: 'paso-6--correr-el-developer',
     specialistId: 'developer',

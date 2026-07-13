@@ -6,7 +6,6 @@ import type { Locale } from '@i18n/utils'
 
 interface Props { t: UIStrings; lang: Locale }
 const { t, lang } = Astro.props
-const isEs = lang === 'es'
 ---
 <section class="hero">
   <div class="deco deco-ring" style="width:440px; height:440px; top:-140px; right:-160px; --dc:var(--color-accent);" aria-hidden="true"></div>
@@ -15,7 +14,7 @@ const isEs = lang === 'es'
 
   <div class="v3-wrap">
     <p class="eyebrow"><span class="dot"></span>{t.hero.eyebrow}</p>
-    <h1>{t.hero.headline} <span class="grad">{t.hero.headlineGrad}</span>{isEs ? ', en tu terminal' : ', in your terminal'}</h1>
+    <h1>{t.hero.headline} <span class="grad">{t.hero.headlineGrad}</span>{t.hero.headlineSuffix}</h1>
     <p class="sub">{t.hero.sub}</p>
 
     <div class="hero-ctas">

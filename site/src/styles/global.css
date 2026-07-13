@@ -40,6 +40,11 @@
   --c-sec:  oklch(0.72 0.145 25);
   --c-ux:   oklch(0.75 0.145 340);
   --c-res:  oklch(0.75 0.145 195);
+
+  --color-surface-2: var(--surface-2);
+  --color-border-soft: var(--border-soft);
+  --color-faint: var(--faint);
+  --color-bg-deep: var(--bg-deep);
 }
 
 :root {

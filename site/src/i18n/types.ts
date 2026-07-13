@@ -23,6 +23,7 @@ export interface UIStrings {
     langPickerLabel: string
     specialists: string
     howItWorks: string
+    githubStarLabel: string
   }
   a11y: {
     skipToContent: string
@@ -33,6 +34,7 @@ export interface UIStrings {
     eyebrow: string
     headline: string
     headlineGrad: string
+    headlineSuffix: string
     sub: string
     cta: string
     secondaryCta: string
@@ -52,6 +54,7 @@ export interface UIStrings {
   }
   terminal: {
     tabs: [string, string, string, string]
+    tryLabel: string
   }
   pipeline: {
     title: string
@@ -111,10 +114,70 @@ export interface UIStrings {
     flowStep: string
     flowOf: string
     flowTitle: string
-    skillsIndex: string
     troubleshooting: string
     recipes: string
     tutorial: string
-    specialistComparison: string
+    aiAssistants: string
+    configuration: string
+    howItWorksTitle: string
+    specialistModel: string
+    memoryAndEngram: string
+    contributing: string
+    development: string
+    groupGettingStarted: string
+    groupConcepts: string
+    subgroupOverview: string
+    subgroupDetail: string
+    groupReference: string
+    sidebarAriaLabel: string
+    pageNavAriaLabel: string
+    prev: string
+    next: string
+  }
+  commandCard: {
+    slashLabel: string
+    cliLabel: string
+  }
+  modelPreset: {
+    recommendedLabel: string
+    defaultLabel: string
+    customizeCta: {
+      title: string
+      desc: string
+    }
+  }
+  specialistComparison: {
+    invokeWhen: string
+    doNotUseWhen: string
+    exampleCommand: string
+    fullDetailsLink: string
+  }
+  recipesBrowser: {
+    legend: string
+    empty: string
+    showingPrefix: string
+    recipeWord: string
+    recipeWordPlural: string
+    forWord: string
+  }
+  data: {
+    specialistSteps: Record<string, { purpose: string; produces: string }>
+    pipelineFlows: Record<string, {
+      title: string
+      steps: Record<string, { description: string }>
+    }>
+    recipes: Record<string, { title: string; note: string; kbNote?: string }>
+    recipeCategories: Record<string, { label: string }>
+    commands: Record<string, { title: string; oneLiner: string }>
+    specialistComparison: Record<string, {
+      teaser: string
+      invokeWhen: string
+      produces: string
+      doNotUseWhen: string
+    }>
+    tutorialStages: Record<string, { label: string }>
+    artifactAnatomy: Record<string, { desc: string }>
+    modelPresets: Record<string, { label: string; desc: string }>
+    artifactSentinels: Record<string, { label: string }>
   }
 }

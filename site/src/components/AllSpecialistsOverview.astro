@@ -3,14 +3,14 @@ import { specialistSteps } from '@data/specialist-steps'
 import { PIPELINE_ORDER, SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
 import type { SpecialistId } from '@data/artifact-graph'
 import type { Locale } from '@i18n/utils'
-import { getBaseHref } from '@i18n/utils'
+import { getLocalePath, useTranslations } from '@i18n/utils'
 
 interface Props {
   lang: Locale
 }
 
 const { lang } = Astro.props
-const isEs = lang === 'es'
+const t = useTranslations(lang)
 
 interface Row {
   id: SpecialistId
@@ -21,19 +21,15 @@ interface Row {
   href: string
 }
 
-// All copy shown here (labels, step ids, purpose sentences) comes verbatim from
-// specialist-steps.ts / artifact-graph.ts — same reuse convention as StepFlow.astro
-// and ArtifactFlowTrace.astro, which keep this data English-only on both locales.
 const rows: Row[] = PIPELINE_ORDER.map((id) => {
   const config = specialistSteps[id]
   const isRisk = config.tierType === 'risk-surface'
   const maxKey = isRisk ? 'high' : 'complex'
   const stepIds: string[] = config.tiers[maxKey as keyof typeof config.tiers] ?? Object.keys(config.steps)
   const lastStepId = stepIds[stepIds.length - 1]
-  const purpose = config.steps[lastStepId]?.purpose ?? ''
-  const href = isEs
-    ? getBaseHref(`/es/docs/specialists/${id}`)
-    : getBaseHref(`/docs/specialists/${id}`)
+  const lastStep = config.steps[lastStepId]
+  const purpose = (lastStep ? t.data.specialistSteps[`${id}:${lastStep.id}`]?.purpose : undefined) ?? ''
+  const href = getLocalePath(`/docs/specialists/${id}`, lang)
 
   return {
     id,
@@ -46,115 +42,23 @@ const rows: Row[] = PIPELINE_ORDER.map((id) => {
 })
 ---
 
-<ul class="aso-list" role="list">
+<ul class="m-0 flex list-none flex-col gap-2.5 p-0" role="list">
   {rows.map((row) => (
-    <li class="aso-item" role="listitem">
+    <li class="m-0" role="listitem">
       <a
         href={row.href}
-        class="aso-card"
+        class="grid grid-cols-[130px_1fr] grid-rows-[auto_auto] items-start gap-x-5 gap-y-1 rounded-xl border border-border-soft bg-[oklch(from_var(--sc)_l_c_h/0.03)] px-5 py-4 no-underline transition-[transform,border-color,background] duration-200 hover:-translate-y-0.5 hover:border-[oklch(from_var(--sc)_l_c_h/0.4)] hover:bg-[oklch(from_var(--sc)_l_c_h/0.06)] focus-visible:outline-2 focus-visible:outline-[var(--sc)] focus-visible:outline-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0 max-[640px]:grid-cols-1 max-[640px]:grid-rows-[auto_auto_auto]"
         style={`--sc: var(${row.color})`}
         aria-label={`${row.label}: ${row.purpose}`}
       >
-        <span class="aso-name">{row.label}</span>
-        <p class="aso-purpose">{row.purpose}</p>
-        <div class="aso-pills" aria-hidden="true">
+        <span class="col-start-1 row-start-1 row-span-2 pt-0.5 font-mono text-sm font-semibold text-[var(--sc)] max-[640px]:row-span-1 max-[640px]:pt-0">{row.label}</span>
+        <p class="col-start-2 row-start-1 m-0 text-[14.5px] leading-[1.55] text-text-muted max-[640px]:col-start-1 max-[640px]:row-start-2">{row.purpose}</p>
+        <div class="col-start-2 row-start-2 mt-2 flex flex-wrap gap-1.5 max-[640px]:col-start-1 max-[640px]:row-start-3 max-[640px]:mt-1.5" aria-hidden="true">
           {row.stepIds.map((stepId) => (
-            <span class="aso-pill">{stepId}</span>
+            <span class="whitespace-nowrap rounded-full border border-border-soft bg-surface-2 px-2 py-0.5 font-mono text-[10.5px] text-faint">{stepId}</span>
           ))}
         </div>
       </a>
     </li>
   ))}
 </ul>
-
-<style>
-.aso-list {
-  list-style: none;
-  padding: 0;
-  margin: 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.aso-item { margin: 0; }
-
-.aso-card {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  grid-template-rows: auto auto;
-  align-items: start;
-  gap: 4px 20px;
-  padding: 16px 20px;
-  border: 1px solid var(--border-soft);
-  border-radius: 12px;
-  background: oklch(from var(--sc) l c h / 0.03);
-  text-decoration: none;
-  transition: transform 0.2s, border-color 0.2s, background 0.2s;
-}
-
-.aso-card:hover {
-  transform: translateY(-2px);
-  border-color: oklch(from var(--sc) l c h / 0.4);
-  background: oklch(from var(--sc) l c h / 0.06);
-}
-
-.aso-card:focus-visible {
-  outline: 2px solid var(--sc);
-  outline-offset: 2px;
-}
-
-.aso-name {
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--sc);
-  padding-top: 2px;
-}
-
-.aso-purpose {
-  grid-column: 2;
-  grid-row: 1;
-  margin: 0;
-  font-size: 14.5px;
-  color: var(--color-text-muted);
-  line-height: 1.55;
-}
-
-.aso-pills {
-  grid-column: 2;
-  grid-row: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.aso-pill {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--faint);
-  border: 1px solid var(--border-soft);
-  background: var(--surface-2);
-  padding: 2px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .aso-card {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-  }
-  .aso-name { grid-column: 1; grid-row: 1; padding-top: 0; }
-  .aso-purpose { grid-column: 1; grid-row: 2; }
-  .aso-pills { grid-column: 1; grid-row: 3; margin-top: 6px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .aso-card { transition: none; }
-  .aso-card:hover { transform: none; }
-}
-</style>

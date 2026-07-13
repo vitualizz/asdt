@@ -3,7 +3,7 @@ import { specialistComparison } from '@data/specialist-comparison'
 import type { SpecialistComparisonRow } from '@data/specialist-comparison'
 import { SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
 import type { SpecialistId } from '@data/artifact-graph'
-import { useTranslations } from '@i18n/utils'
+import { useTranslations, getLocalePath } from '@i18n/utils'
 import type { Locale } from '@i18n/utils'
 
 interface Props {
@@ -13,7 +13,6 @@ interface Props {
 
 const { lang, rows = specialistComparison } = Astro.props
 const t = useTranslations(lang)
-const isEs = lang === 'es'
 
 // Reuses SpecialistCard.astro's icon vocabulary verbatim for the 6 shared ids;
 // researcher (not covered there) gets an added search-glyph icon.
@@ -27,49 +26,59 @@ const iconPaths: Record<SpecialistId, string> = {
   researcher: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.35-4.35',
 }
 
-const labelInvoke = isEs ? 'Invocar cuando…' : 'Invoke when…'
+const labelInvoke = t.specialistComparison.invokeWhen
 const labelProduces = t.docs.produces
-const labelDoNotUse = isEs ? 'No usar cuando…' : 'Do NOT use when…'
-const labelExample = isEs ? 'Comando de ejemplo' : 'Example command'
+const labelDoNotUse = t.specialistComparison.doNotUseWhen
+const labelExample = t.specialistComparison.exampleCommand
 
 function commandLiteral(exampleCommand: string): string {
   return exampleCommand.split(' ')[0]
 }
 ---
 
-<div class="cmp-accordion">
+<div class="my-6 flex flex-col gap-2.5">
   {rows.map((row) => {
     const colorVar = SPECIALIST_COLOR[row.specialistId]
     const name = SPECIALIST_LABEL[row.specialistId]
     const iconPath = iconPaths[row.specialistId]
+    const copy = t.data.specialistComparison[row.specialistId]
     return (
-      <details class="cmp-row" style={`--sc: var(${colorVar});`}>
-        <summary class="cmp-summary">
-          <span class="cmp-icon" aria-hidden="true">
+      <details
+        class="group overflow-hidden rounded-xl border border-border-soft bg-surface-2 open:border-[oklch(from_var(--sc)_l_c_h/0.30)] open:bg-[oklch(from_var(--sc)_l_c_h/0.06)]"
+        style={`--sc: var(${colorVar});`}
+      >
+        <summary class="cmp-summary flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-3 py-3.5 px-[18px] hover:bg-[oklch(from_var(--sc)_l_c_h/0.04)] max-[640px]:py-3 max-[640px]:px-3.5">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] border border-[oklch(from_var(--sc)_l_c_h/0.30)] bg-[oklch(from_var(--sc)_l_c_h/0.12)] text-[var(--sc)]" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d={iconPath} />
             </svg>
           </span>
-          <span class="cmp-name">{name}</span>
-          <code class="cmp-cmd">{commandLiteral(row.exampleCommand)}</code>
-          <span class="cmp-teaser">{isEs ? row.teaserEs : row.teaserEn}</span>
-          <svg class="cmp-chevron" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="shrink-0 text-[15.5px] font-semibold text-[var(--sc)]">{name}</span>
+          <code class="shrink-0 whitespace-nowrap rounded-full border border-[oklch(from_var(--sc)_l_c_h/0.35)] bg-[oklch(from_var(--sc)_l_c_h/0.08)] px-2.5 py-0.5 font-mono text-[11.5px] text-[var(--sc)]">{commandLiteral(row.exampleCommand)}</code>
+          <span class="min-w-0 flex-[1_1_220px] text-sm leading-normal text-text-muted max-[640px]:order-5 max-[640px]:basis-full">{copy.teaser}</span>
+          <svg class="shrink-0 ml-auto text-faint motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-in-out group-open:rotate-180" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 9l6 6 6-6" />
           </svg>
         </summary>
-        <div class="cmp-body">
-          <dl class="cmp-fields">
-            <dt>{labelInvoke}</dt>
-            <dd>{isEs ? row.invokeWhenEs : row.invokeWhenEn}</dd>
-            <dt>{labelProduces}</dt>
-            <dd>{isEs ? row.producesEs : row.producesEn}</dd>
-            <dt>{labelDoNotUse}</dt>
-            <dd>{isEs ? row.doNotUseWhenEs : row.doNotUseWhenEn}</dd>
-            <dt>{labelExample}</dt>
-            <dd>
-              <pre class="cmp-pre"><code>{row.exampleCommand}</code></pre>
+        <div class="pt-1 pr-[18px] pb-5 pl-16 max-[640px]:px-3.5 max-[640px]:pt-1 max-[640px]:pb-[18px]">
+          <dl class="m-0 flex flex-col gap-1">
+            <dt class="mt-3.5 font-mono text-[10px] tracking-[0.1em] uppercase text-faint first:mt-0">{labelInvoke}</dt>
+            <dd class="cmp-dd mx-0 mt-1 mb-0 text-[14.5px] leading-[1.6] text-[oklch(0.86_0.008_285)]">{copy.invokeWhen}</dd>
+            <dt class="mt-3.5 font-mono text-[10px] tracking-[0.1em] uppercase text-faint first:mt-0">{labelProduces}</dt>
+            <dd class="cmp-dd mx-0 mt-1 mb-0 text-[14.5px] leading-[1.6] text-[oklch(0.86_0.008_285)]">{copy.produces}</dd>
+            <dt class="mt-3.5 font-mono text-[10px] tracking-[0.1em] uppercase text-faint first:mt-0">{labelDoNotUse}</dt>
+            <dd class="cmp-dd mx-0 mt-1 mb-0 text-[14.5px] leading-[1.6] text-[oklch(0.86_0.008_285)]">{copy.doNotUseWhen}</dd>
+            <dt class="mt-3.5 font-mono text-[10px] tracking-[0.1em] uppercase text-faint first:mt-0">{labelExample}</dt>
+            <dd class="cmp-dd mx-0 mt-1 mb-0 text-[14.5px] leading-[1.6] text-[oklch(0.86_0.008_285)]">
+              <pre class="m-0 overflow-x-auto rounded-md border border-border bg-bg-deep px-3.5 py-3"><code class="border-0 bg-none p-0 font-mono text-[13px] leading-[1.7] whitespace-pre text-inherit">{row.exampleCommand}</code></pre>
             </dd>
           </dl>
+          <a
+            href={getLocalePath(`/docs/specialists/${row.specialistId}`, lang)}
+            class="mt-4 inline-flex items-center gap-1 text-[13.5px] font-medium text-[var(--sc)] hover:underline"
+          >
+            {t.specialistComparison.fullDetailsLink}
+          </a>
         </div>
       </details>
     )
@@ -77,36 +86,9 @@ function commandLiteral(exampleCommand: string): string {
 </div>
 
 <style>
-.cmp-accordion {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 24px 0;
-}
-
-.cmp-row {
-  border: 1px solid var(--border-soft);
-  border-radius: 12px;
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-.cmp-row[open] {
-  background: oklch(from var(--sc) l c h / 0.06);
-  border-color: oklch(from var(--sc) l c h / 0.30);
-}
-
-.cmp-summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 14px 18px;
-}
-
+/* <details><summary> ships a default disclosure marker in both the
+   ::marker (Firefox) and ::-webkit-details-marker (Chrome/Safari) forms;
+   neither has a Tailwind utility, so removal stays scoped. */
 .cmp-summary::-webkit-details-marker {
   display: none;
 }
@@ -115,131 +97,7 @@ function commandLiteral(exampleCommand: string): string {
   content: '';
 }
 
-.cmp-summary:hover {
-  background: oklch(from var(--sc) l c h / 0.04);
-}
-
-.cmp-icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  color: var(--sc);
-  background: oklch(from var(--sc) l c h / 0.12);
-  border: 1px solid oklch(from var(--sc) l c h / 0.30);
-}
-
-.cmp-name {
-  flex-shrink: 0;
-  font-weight: 600;
-  font-size: 15.5px;
-  color: var(--sc);
-}
-
-.cmp-cmd {
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--sc);
-  border: 1px solid oklch(from var(--sc) l c h / 0.35);
-  background: oklch(from var(--sc) l c h / 0.08);
-  border-radius: 999px;
-  padding: 2px 10px;
-  white-space: nowrap;
-}
-
-.cmp-teaser {
-  flex: 1 1 220px;
-  min-width: 0;
-  font-size: 14px;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
-.cmp-chevron {
-  flex-shrink: 0;
-  margin-left: auto;
-  color: var(--faint);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .cmp-chevron {
-    transition: transform 0.2s ease;
-  }
-}
-
-.cmp-row[open] .cmp-chevron {
-  transform: rotate(180deg);
-}
-
-.cmp-body {
-  padding: 4px 18px 20px 64px;
-}
-
-.cmp-fields {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cmp-fields dt {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--faint);
-  margin-top: 14px;
-}
-
-.cmp-fields dt:first-child {
-  margin-top: 0;
-}
-
-.cmp-fields dd {
-  margin: 4px 0 0;
-  font-size: 14.5px;
-  color: oklch(0.86 0.008 285);
-  line-height: 1.6;
-}
-
-.cmp-pre {
-  margin: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--bg-deep);
-  padding: 12px 14px;
-  overflow-x: auto;
-}
-
-.cmp-pre code {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.7;
-  color: inherit;
-  white-space: pre;
-  background: none;
-  border: none;
-  padding: 0;
-}
-
-@media (max-width: 640px) {
-  .cmp-summary {
-    padding: 12px 14px;
-  }
-  .cmp-teaser {
-    flex-basis: 100%;
-    order: 5;
-  }
-  .cmp-body {
-    padding: 4px 14px 18px 14px;
-  }
-}
-
-html[data-theme='light'] .cmp-fields dd {
+html[data-theme='light'] .cmp-dd {
   color: var(--color-text);
 }
 </style>

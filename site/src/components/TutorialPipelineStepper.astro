@@ -1,6 +1,6 @@
 ---
 import { tutorialStages, type TutorialStage } from '@data/tutorial-stages'
-import type { Locale } from '@i18n/utils'
+import { useTranslations, type Locale } from '@i18n/utils'
 
 interface Props {
   lang: Locale
@@ -13,33 +13,41 @@ interface Props {
 }
 
 const { lang, stages = tutorialStages, clickable = false, label } = Astro.props
-const isEs = lang === 'es'
+const t = useTranslations(lang)
 ---
 
-<div class="tps">
-  {label && <p class="tps-label">{label}</p>}
-  <ol class="tps-track">
+<div class="mt-5 mb-7">
+  {label && (
+    <p class="mb-2.5 font-mono text-[10px] uppercase tracking-[0.16em] text-faint">{label}</p>
+  )}
+  <ol class="tps-track m-0 flex list-none flex-wrap items-center gap-x-0 gap-y-1 p-0 max-[680px]:flex-col max-[680px]:items-stretch max-[680px]:gap-0">
     {stages.map((stage, i) => {
-      const stageLabel = isEs ? stage.labelEs : stage.labelEn
+      const stageLabel = t.data.tutorialStages[stage.id as keyof typeof t.data.tutorialStages].label
+      const anchor = lang === 'es' ? stage.anchorIdEs : stage.anchorIdEn
       return (
         <li
-          class="tps-item"
+          class="tps-item flex items-center max-[680px]:flex-col max-[680px]:items-stretch"
           data-stage-id={stage.id}
-          data-anchor={isEs ? stage.anchorIdEs : stage.anchorIdEn}
+          data-anchor={anchor}
           style={`--sc: var(${stage.color})`}
         >
           {clickable ? (
-            <a href={`#${isEs ? stage.anchorIdEs : stage.anchorIdEn}`} class="tps-node">
-              <span class="tps-marker" aria-hidden="true" />
+            <a
+              href={`#${anchor}`}
+              class="tps-node inline-flex items-center gap-[7px] whitespace-nowrap rounded-sm border border-[oklch(from_var(--sc)_l_c_h/0.18)] bg-[oklch(from_var(--sc)_l_c_h/0.05)] py-[3px] pr-[10px] pl-[6px] font-mono text-[11.5px] text-[oklch(from_var(--sc)_l_c_h/0.50)] no-underline hover:border-[oklch(from_var(--sc)_l_c_h/0.35)] hover:bg-[oklch(from_var(--sc)_l_c_h/0.10)] hover:text-[var(--sc)] max-[680px]:w-full max-[680px]:justify-start"
+            >
+              <span class="tps-marker block h-2 w-2 shrink-0 rounded-full border-[1.5px] border-[oklch(from_var(--sc)_l_c_h/0.45)] bg-transparent" aria-hidden="true" />
               <span class="tps-text">{stageLabel}</span>
             </a>
           ) : (
-            <span class="tps-node">
-              <span class="tps-marker" aria-hidden="true" />
+            <span class="tps-node inline-flex items-center gap-[7px] whitespace-nowrap rounded-sm border border-[oklch(from_var(--sc)_l_c_h/0.18)] bg-[oklch(from_var(--sc)_l_c_h/0.05)] py-[3px] pr-[10px] pl-[6px] font-mono text-[11.5px] text-[oklch(from_var(--sc)_l_c_h/0.50)] max-[680px]:w-full max-[680px]:justify-start">
+              <span class="tps-marker block h-2 w-2 shrink-0 rounded-full border-[1.5px] border-[oklch(from_var(--sc)_l_c_h/0.45)] bg-transparent" aria-hidden="true" />
               <span class="tps-text">{stageLabel}</span>
             </span>
           )}
-          {i !== stages.length - 1 && <span class="tps-connector" aria-hidden="true" />}
+          {i !== stages.length - 1 && (
+            <span class="tps-connector relative block h-px w-4 shrink-0 bg-border-soft max-[680px]:ml-[9px] max-[680px]:h-[14px] max-[680px]:w-px" aria-hidden="true" />
+          )}
         </li>
       )
     })}
@@ -114,74 +122,6 @@ const isEs = lang === 'es'
 </script>
 
 <style>
-.tps {
-  margin: 20px 0 28px;
-}
-
-.tps-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--faint);
-  margin: 0 0 10px;
-}
-
-.tps-track {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 0;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.tps-item {
-  display: flex;
-  align-items: center;
-}
-
-.tps-node {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  padding: 3px 10px 3px 6px;
-  border-radius: 6px;
-  border: 1px solid oklch(from var(--sc) l c h / 0.18);
-  color: oklch(from var(--sc) l c h / 0.50);
-  background: oklch(from var(--sc) l c h / 0.05);
-  white-space: nowrap;
-  text-decoration: none;
-}
-
-.tps-marker {
-  display: block;
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 1.5px solid oklch(from var(--sc) l c h / 0.45);
-  background: transparent;
-}
-
-a.tps-node:hover {
-  color: var(--sc);
-  background: oklch(from var(--sc) l c h / 0.10);
-  border-color: oklch(from var(--sc) l c h / 0.35);
-}
-
-.tps-connector {
-  display: block;
-  width: 16px;
-  height: 1px;
-  background: var(--border-soft);
-  position: relative;
-  flex-shrink: 0;
-}
-
 .tps-connector::after {
   content: '';
   position: absolute;
@@ -230,28 +170,6 @@ a.tps-node:hover {
 }
 
 @media (max-width: 680px) {
-  .tps-track {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-  }
-
-  .tps-item {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .tps-node {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .tps-connector {
-    width: 1px;
-    height: 14px;
-    margin-left: 9px;
-  }
-
   .tps-connector::after {
     right: -3px;
     top: auto;

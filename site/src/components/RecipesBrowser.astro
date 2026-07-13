@@ -13,12 +13,11 @@
 import { recipes, RECIPE_CATEGORIES } from '@data/recipes'
 import { SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
 import type { Locale } from '@i18n/utils'
+import { useTranslations } from '@i18n/utils'
 
 interface Props { lang: Locale }
 const { lang } = Astro.props
-const isEs = lang === 'es'
-
-const legendText = isEs ? 'Filtrar por objetivo' : 'Filter by goal'
+const t = useTranslations(lang)
 
 function categoryCount(id: string): number {
   return id === 'all' ? recipes.length : recipes.filter((r) => r.category === id).length
@@ -26,16 +25,16 @@ function categoryCount(id: string): number {
 
 function statusText(id: string, label: string): string {
   const count = categoryCount(id)
-  if (isEs) return `Mostrando ${count} receta${count === 1 ? '' : 's'} para "${label}".`
-  return `Showing ${count} recipe${count === 1 ? '' : 's'} for "${label}".`
+  const word = count === 1 ? t.recipesBrowser.recipeWord : t.recipesBrowser.recipeWordPlural
+  return `${t.recipesBrowser.showingPrefix} ${count} ${word} ${t.recipesBrowser.forWord} "${label}".`
 }
 ---
-<div class="recipes-browser recipes-shell">
-  <fieldset class="rb-fieldset">
-    <legend class="rb-legend">{legendText}</legend>
-    <div class="recipe-tabs">
+<div class="recipes-browser recipes-shell relative border border-border-soft rounded-[18px] bg-[oklch(0.165_0.014_285/0.75)] p-7 w-full box-border">
+  <fieldset class="rb-fieldset border-0 m-0 p-0">
+    <legend class="rb-legend font-mono text-xs tracking-[0.06em] uppercase text-faint p-0 [margin:0_0_14px]">{t.recipesBrowser.legend}</legend>
+    <div class="recipe-tabs flex flex-wrap gap-2">
       {RECIPE_CATEGORIES.map((cat) => {
-        const label = isEs ? cat.labelEs : cat.labelEn
+        const label = t.data.recipeCategories[cat.id].label
         return (
           <span class="rb-option">
             <input
@@ -45,86 +44,65 @@ function statusText(id: string, label: string): string {
               value={cat.id}
               checked={cat.id === 'all'}
             />
-            <label for={`rb-${cat.id}`}>{label}</label>
+            <label for={`rb-${cat.id}`} class="cursor-pointer select-none font-mono text-[13px] text-text-muted border border-border-soft rounded-full px-[18px] py-2 transition-[color,border-color,background] duration-150 hover:text-text hover:border-border">{label}</label>
           </span>
         )
       })}
     </div>
   </fieldset>
 
-  <p class="rb-sr-status" aria-live="polite">
+  <p class="rb-sr-status sr-only" aria-live="polite">
     {RECIPE_CATEGORIES.map((cat) => {
-      const label = isEs ? cat.labelEs : cat.labelEn
+      const label = t.data.recipeCategories[cat.id].label
       return (
         <span class="rb-sr-status-item" data-for={cat.id}>{statusText(cat.id, label)}</span>
       )
     })}
   </p>
 
-  <div class="recipe-list">
+  <div class="recipe-list grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 mt-7 max-[640px]:grid-cols-1">
     {recipes.map((recipe) => {
-      const title = isEs ? recipe.titleEs : recipe.titleEn
-      const note = isEs ? recipe.noteEs : recipe.noteEn
-      const kbNote = isEs ? recipe.kbNoteEs : recipe.kbNoteEn
+      const title = t.data.recipes[recipe.id].title
+      const note = t.data.recipes[recipe.id].note
+      const kbNote = t.data.recipes[recipe.id].kbNote
       return (
-        <article class="recipe-card" data-category={recipe.category}>
-          <h3 class="recipe-title">{title}</h3>
-          <p class="recipe-note">{note}</p>
-          <div class="chip-row">
+        <article class="recipe-card flex flex-col gap-3 border border-border-soft rounded-[14px] bg-surface-2 p-5" data-category={recipe.category}>
+          <h3 class="recipe-title text-base font-semibold text-text m-0">{title}</h3>
+          <p class="recipe-note text-sm text-text-muted leading-[1.55] m-0">{note}</p>
+          <div class="chip-row flex flex-wrap items-center gap-2">
             {recipe.chips.map((chip) => (
-              <span class="chip" style={`--c: var(${SPECIALIST_COLOR[chip.specialistId]});`}>
+              <span
+                class="chip inline-flex items-center gap-2 font-mono text-[12.5px] font-medium text-text border border-[oklch(from_var(--c)_l_c_h/0.38)] bg-[oklch(from_var(--c)_l_c_h/0.10)] rounded-full py-[6px] px-[13px]"
+                style={`--c: var(${SPECIALIST_COLOR[chip.specialistId]});`}
+              >
                 <span class="dot" aria-hidden="true"></span>
                 {SPECIALIST_LABEL[chip.specialistId]}
               </span>
             ))}
           </div>
-          {kbNote && <p class="recipe-kb-note">{kbNote}</p>}
-          <pre><code>{recipe.commands.join('\n')}</code></pre>
+          {kbNote && <p class="recipe-kb-note text-xs text-faint font-mono m-0">{kbNote}</p>}
+          <pre class="relative m-0 border border-border rounded-[12px] bg-bg-deep px-4 py-[14px] font-mono text-[12.5px] leading-[1.8] overflow-x-auto"><code class="border-0 bg-none p-0 whitespace-pre [font-size:inherit] text-text">{recipe.commands.join('\n')}</code></pre>
         </article>
       )
     })}
 
-    <p class="recipe-list-empty" aria-live="polite">
-      {isEs ? 'No hay recetas para este filtro todavía — probá "Todas".' : 'No recipes match this filter yet — try All.'}
+    <p class="recipe-list-empty hidden col-span-full text-center text-sm text-faint m-0 py-5" aria-live="polite">
+      {t.recipesBrowser.empty}
     </p>
   </div>
 </div>
 
 <style>
-.recipes-browser {
-  position: relative;
-}
-.recipes-shell {
-  border: 1px solid var(--border-soft);
-  border-radius: 18px;
-  background: oklch(0.165 0.014 285 / 0.75);
-  padding: 28px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 /* Filter fieldset — native radiogroup, visually styled as a tab-like strip.
    No role="tablist"/"tab"/aria-selected anywhere: the accessible name and
-   keyboard model come entirely from <fieldset>/<legend> + native radios. */
-.rb-fieldset {
-  border: 0;
-  margin: 0;
-  padding: 0;
-}
-.rb-legend {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--faint);
-  padding: 0;
-  margin: 0 0 14px;
-}
-.recipe-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+   keyboard model come entirely from <fieldset>/<legend> + native radios.
+
+   The rules below are the plumbing the :has() selectors further down depend
+   on: `.rb-option{display:contents}` keeps the wrapping <span> out of the
+   flex layout so input+label behave as direct flex children, and the radio
+   is visually hidden (not display:none, so it stays focusable/announced)
+   rather than styled — its checked/focus-visible state is what the :has()
+   rules below key off of. */
 .rb-option { display: contents; }
 .rb-option input[type='radio'] {
   position: absolute;
@@ -133,18 +111,6 @@ function statusText(id: string, label: string): string {
   height: 1px;
   pointer-events: none;
 }
-.recipe-tabs label {
-  cursor: pointer;
-  user-select: none;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--color-text-muted);
-  border: 1px solid var(--border-soft);
-  border-radius: 999px;
-  padding: 8px 18px;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-}
-.recipe-tabs label:hover { color: var(--color-text); border-color: var(--color-border); }
 
 .recipes-browser:has(#rb-all:checked) label[for='rb-all'],
 .recipes-browser:has(#rb-from-scratch:checked) label[for='rb-from-scratch'],
@@ -172,17 +138,6 @@ function statusText(id: string, label: string): string {
    toggled via :has() so only the currently-selected category's status
    text is present in the accessible tree (triggers the aria-live polite
    announcement without any JS). */
-.rb-sr-status {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
 .rb-sr-status-item { display: none; }
 .recipes-browser:has(#rb-all:checked) .rb-sr-status-item[data-for='all'],
 .recipes-browser:has(#rb-from-scratch:checked) .rb-sr-status-item[data-for='from-scratch'],
@@ -192,81 +147,9 @@ function statusText(id: string, label: string): string {
   display: inline;
 }
 
-/* Recipe list + card-level filtering (CSS-only, :has()-driven). */
-.recipe-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-  margin-top: 28px;
-}
-.recipe-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  background: var(--surface-2, oklch(0.19 0.012 285));
-  padding: 20px;
-}
-.recipe-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
-}
-.recipe-note {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  line-height: 1.55;
-  margin: 0;
-}
-.recipe-kb-note {
-  font-size: 12px;
-  color: var(--faint);
-  font-family: var(--font-mono);
-  margin: 0;
-}
-.recipe-card pre {
-  position: relative;
-  margin: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--bg-deep, oklch(0.13 0.01 285));
-  padding: 14px 16px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  line-height: 1.8;
-  overflow-x: auto;
-}
-.recipe-card pre code {
-  background: none;
-  border: none;
-  padding: 0;
-  white-space: pre;
-  font-size: inherit;
-  color: var(--color-text);
-}
-
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.chip {
-  --c: var(--color-accent);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--color-text);
-  border: 1px solid oklch(from var(--c) l c h / 0.38);
-  background: oklch(from var(--c) l c h / 0.10);
-  border-radius: 999px;
-  padding: 6px 13px;
-}
+/* Specialist-color dot — kept scoped alongside the :has() system because its
+   box-shadow reads the same dynamic --c custom property (set inline per
+   chip) through an oklch(from ...) expression. */
 .chip .dot {
   width: 7px;
   height: 7px;
@@ -291,23 +174,10 @@ function statusText(id: string, label: string): string {
 
 /* Empty state — only ever surfaces if a category's data becomes empty in
    the future; currently every bucket has >=1 recipe. */
-.recipe-list-empty {
-  display: none;
-  grid-column: 1 / -1;
-  text-align: center;
-  font-size: 14px;
-  color: var(--faint);
-  margin: 0;
-  padding: 20px 0;
-}
 .recipes-browser:has(#rb-from-scratch:checked):not(:has(.recipe-card[data-category='from-scratch'])) .recipe-list-empty,
 .recipes-browser:has(#rb-add-to-existing:checked):not(:has(.recipe-card[data-category='add-to-existing'])) .recipe-list-empty,
 .recipes-browser:has(#rb-review-harden:checked):not(:has(.recipe-card[data-category='review-harden'])) .recipe-list-empty,
 .recipes-browser:has(#rb-understand-document:checked):not(:has(.recipe-card[data-category='understand-document'])) .recipe-list-empty {
   display: block;
-}
-
-@media (max-width: 640px) {
-  .recipe-list { grid-template-columns: 1fr; }
 }
 </style>

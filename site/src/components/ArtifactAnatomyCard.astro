@@ -1,4 +1,6 @@
 ---
+import { artifactAnatomy } from '@data/artifact-anatomy'
+import { useTranslations } from '@i18n/utils'
 import type { Locale } from '@i18n/utils'
 
 interface Props {
@@ -6,148 +8,24 @@ interface Props {
 }
 
 const { lang } = Astro.props
-const isEs = lang === 'es'
-
-interface AnatomyField {
-  label: string
-  value: string
-  desc: string
-}
-
-const fields: AnatomyField[] = isEs
-  ? [
-      {
-        label: 'Title',
-        value: 'add-auth/developer/dev-spec',
-        desc: 'El nombre legible del artefacto.',
-      },
-      {
-        label: 'Topic Key',
-        value: 'asdt/add-auth/developer/dev-spec',
-        desc: 'La clave con la que se recupera automáticamente, sin matching difuso.',
-      },
-      {
-        label: 'Type',
-        value: 'decision',
-        desc: 'La categoría del artefacto — architecture, decision, bugfix, etc.',
-      },
-      {
-        label: 'Project',
-        value: 'asdt',
-        desc: 'El proyecto al que pertenece, para que los resultados no se mezclen entre proyectos.',
-      },
-    ]
-  : [
-      {
-        label: 'Title',
-        value: 'add-auth/developer/dev-spec',
-        desc: 'The human-readable name of the artifact.',
-      },
-      {
-        label: 'Topic Key',
-        value: 'asdt/add-auth/developer/dev-spec',
-        desc: 'The machine key used to retrieve it automatically, no fuzzy matching involved.',
-      },
-      {
-        label: 'Type',
-        value: 'decision',
-        desc: 'The artifact\'s category — architecture, decision, bugfix, etc.',
-      },
-      {
-        label: 'Project',
-        value: 'asdt',
-        desc: 'The project it belongs to, so results never mix across projects.',
-      },
-    ]
+const t = useTranslations(lang)
 ---
 
-<dl class="aac">
-  {fields.map((field) => (
-    <div class="aac-field">
-      <dt class="aac-badge">{field.label}</dt>
-      <dd class="aac-body">
-        <code class="aac-value">{field.value}</code>
-        <span class="aac-desc">{field.desc}</span>
+<dl class="aac flex flex-col gap-3 mb-8 p-5 border border-border-soft rounded-[12px] bg-[oklch(from_var(--color-accent)_l_c_h/0.02)]">
+  {artifactAnatomy.map((field) => (
+    <div class="flex items-baseline flex-wrap gap-x-[14px] gap-y-[10px] max-[599px]:flex-col max-[599px]:items-start max-[599px]:gap-2">
+      <dt class="shrink-0 font-mono text-[10px] tracking-[0.14em] uppercase text-faint border border-border-soft rounded-sm px-[9px] py-[3px] min-w-[90px] text-center max-[599px]:text-left">{field.label}</dt>
+      <dd class="m-0 flex flex-col gap-1 flex-[1_1_220px] min-w-0">
+        <code class="aac-value font-mono text-[12.5px] text-accent bg-[oklch(from_var(--color-accent)_l_c_h/0.08)] border border-[oklch(from_var(--color-accent)_l_c_h/0.25)] rounded-sm px-[9px] py-[3px] inline-block w-fit max-w-full [overflow-wrap:break-word] break-words">{field.value}</code>
+        <span class="text-[13px] text-faint leading-normal">{t.data.artifactAnatomy[field.id].desc}</span>
       </dd>
     </div>
   ))}
 </dl>
 
 <style>
-.aac {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0 0 32px;
-  padding: 20px;
-  border: 1px solid var(--border-soft);
-  border-radius: 12px;
-  background: oklch(from var(--color-accent) l c h / 0.02);
-}
-
-.aac-field {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-}
-
-.aac-badge {
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
-  border: 1px solid var(--border-soft);
-  border-radius: 6px;
-  padding: 3px 9px;
-  min-width: 90px;
-  text-align: center;
-}
-
-.aac-body {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1 1 220px;
-  min-width: 0;
-}
-
-.aac-value {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  color: var(--color-accent);
-  background: oklch(from var(--color-accent) l c h / 0.08);
-  border: 1px solid oklch(from var(--color-accent) l c h / 0.25);
-  border-radius: 6px;
-  padding: 3px 9px;
-  display: inline-block;
-  width: fit-content;
-  max-width: 100%;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.aac-desc {
-  font-size: 13px;
-  color: var(--faint);
-  line-height: 1.5;
-}
-
-@media (max-width: 599px) {
-  .aac-field {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .aac-badge {
-    text-align: left;
-  }
-}
-
+/* Light theme needs a lighter accent wash than the dark default — kept scoped
+   since Tailwind's dark-mode variant isn't wired to this site's data-theme attr. */
 html[data-theme='light'] .aac {
   background: oklch(from var(--color-accent) l c h / 0.03);
 }
