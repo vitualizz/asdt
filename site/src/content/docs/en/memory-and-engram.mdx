@@ -5,6 +5,8 @@ order: 7
 locale: en
 ---
 
+import ArtifactAnatomyCard from '@components/ArtifactAnatomyCard.astro'
+
 # Knowledge Base & Memory
 
 ## Why memory matters
@@ -22,7 +24,7 @@ Every specialist step produces one artifact. That artifact is saved to the knowl
 
 When the next specialist runs, it queries the knowledge base by key. If the artifact exists, it proceeds normally. If it's missing, it notes the gap in `open_items` and continues with available context — no hard failures, no blocked pipelines.
 
-This means run order is flexible. You can start with any specialist. You can pause between steps. The knowledge base holds the state.
+This means run order is flexible. You can start with any specialist. You can pause between steps — even switch assistants — and the knowledge base holds the state. An artifact saved from Claude Code is readable by a later step run in OpenCode, and vice versa, because both read and write the same Engram store.
 
 ## Memory providers
 
@@ -39,11 +41,11 @@ Today, **Engram** is the supported memory provider. More providers are planned.
 
 [Engram](https://github.com/Gentleman-Programming/engram) is an MCP (Model Context Protocol) server that provides persistent, project-scoped memory for AI assistants.
 
-Engram must be running before you invoke any specialist (or whichever memory provider you have configured). Artifacts saved to Engram survive the end of a Claude Code session — that is the property ASDT depends on for cross-session pipeline continuity.
+Engram must be running before you invoke any specialist (or whichever memory provider you have configured). Artifacts saved to Engram survive the end of an assistant session — that is the property ASDT depends on for cross-session pipeline continuity, whether you run Claude Code or OpenCode.
 
 #### Installation
 
-Follow the [Engram setup guide](https://github.com/Gentleman-Programming/engram) to install and start the MCP server. Then add it to your AI assistant's MCP configuration.
+Follow the [Engram setup guide](https://github.com/Gentleman-Programming/engram) to install and start the MCP server. Then wire it into your assistant's MCP configuration — Claude Code and OpenCode each expose their own MCP setup, so follow the one for the assistant you use. Both connect to the same Engram server; only the wiring location differs.
 
 #### Verifying it's running
 
@@ -55,14 +57,11 @@ The init specialist checks for memory provider connectivity as part of setup and
 
 ## How artifacts are stored
 
-Each artifact is saved with:
+Each artifact is saved with four fields:
 
-- **`title`** — human-readable, e.g. `"add-auth/developer/dev-implementation"`
-- **`topic_key`** — machine-readable key for retrieval, e.g. `"add-auth/developer/dev-implementation"`
-- **`type`** — `architecture`, `decision`, `bugfix`, etc.
-- **`project`** — the project name, used to scope search results
+<ArtifactAnatomyCard lang="en" />
 
-When a specialist needs a prior artifact, it calls `mem_search` with the topic_key, then `mem_get_observation` to retrieve the full content. This is a one-step lookup — no fuzzy matching, no context scanning.
+When a specialist needs a prior artifact, it calls `mem_search` — the find call a specialist uses to look up an artifact by its `topic_key` (the exact label used to save and re-find it) — then `mem_get_observation`, the fetch call that pulls the full content once the label matches. This is a one-step lookup — no fuzzy matching, no context scanning.
 
 ## Cross-session continuity
 
@@ -78,7 +77,7 @@ Session boundaries don't matter. Monday's Architect output is as readable to Thu
 
 ## Project scoping
 
-Every `mem_save` call includes a `project` field. ASDT derives the project name from `.asdt/config.yaml` or the directory name. Artifacts are searchable within a project scope — running ASDT on two different projects doesn't mix their memory.
+Every `mem_save` call — the save call a specialist uses to store its own artifact — includes a `project` field. ASDT derives the project name from `.asdt/config.yaml` or the directory name. Artifacts are searchable within a project scope — running ASDT on two different projects doesn't mix their memory.
 
 ## What Engram is not
 

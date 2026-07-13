@@ -1,0 +1,71 @@
+---
+title: AI Assistants
+description: How ASDT installs into each supported AI assistant — Claude Code and OpenCode — including install dirs, agent config, command wrappers, the permission overlay, and how memory is wired.
+order: 14
+locale: en
+---
+
+import ClaudeVsOpenCodeCompare from '@components/ClaudeVsOpenCodeCompare.astro'
+
+# AI Assistants
+
+ASDT is not a standalone app. It installs **into** your AI assistant — it copies its specialist skills, generates executor agents, and wires up its configuration inside the tool you already use. The installer TUI (`asdt-tui`) does this for you and adapts each artifact to the assistant's native format.
+
+Today ASDT supports two assistants: **Claude Code** and **OpenCode**. Both get the full specialist team; the difference is only in *where* files land and *what shape* they take.
+
+## What gets installed
+
+Regardless of assistant, an install produces the same logical pieces:
+
+- **Specialist skills** — the ASDT skill tree (Architect, Developer, QA, Security, UX/UI, and the shared fragments), copied into the assistant's skills directory.
+- **Executor agents** — two generated agent definitions, `asdt-analyst` (read-only) and `asdt-builder` (write-capable), that carry out individual pipeline steps.
+- **Agent config** — your persona and language preferences, written into the assistant's native global config.
+- **An install manifest** — a `.install-meta.json` file recording what the last install wrote, so re-running can update cleanly and prune stale files.
+
+The details of each piece differ per assistant. Here is the full comparison — a couple of terms in the table are worth a plain-language note before you hit them: **`XDG_CONFIG_HOME`** is just the standard folder-location variable Linux/macOS tools check before falling back to a default config path, and the **permission overlay** row (Claude Code only, more on it below) is an optional **structural JSON merge** — combining ASDT's settings into your existing config file without overwriting the rest of it — that turns on **bypass mode**, a Claude Code setting that stops asking for permission on every action, behind a **deny-net**: the fixed list of files and settings the installer refuses to touch even when those permission prompts are skipped.
+
+## Claude Code vs OpenCode
+
+<ClaudeVsOpenCodeCompare lang="en" />
+
+### Why command wrappers only exist for OpenCode
+
+Claude Code discovers and activates skills natively, so it needs no extra entry point — you call the specialist directly. OpenCode does not surface skills as slash-commands the same way, so ASDT generates a small command file per specialist that simply says "load and activate this specialist skill." This is why you'll see `~/.config/opencode/commands/` populated for OpenCode but no equivalent directory for Claude Code.
+
+### The permission overlay (Claude Code only)
+
+As introduced above, the overlay is an **optional** structural JSON merge into your global `~/.claude/settings.json`: it turns on bypass mode (`permissions.defaultMode = "bypassPermissions"`) behind a curated deny-net — the deny list is the real control under bypass, and it protects its own settings file and the rest of `~/.claude` from being edited.
+
+It is written safely: a pre-write backup is kept, the write is atomic (temp file + fsync + rename), and the result is validated after writing — if validation fails, ASDT rolls back to the backup so Claude Code always launches. Re-running is idempotent: it unions to the same deny set with no duplicates, and stale rules from prior installs are pruned first. OpenCode has no equivalent because its executor agents carry their permissions inline (the analyst denies edits and restricts Bash to an inspection-only allowlist; the builder allows edits but denies delegation).
+
+### Executor agents on both
+
+Both assistants receive the same two executor agent *types*, rendered into each tool's format:
+
+- **`asdt-analyst`** — read-only. It inspects the repo and persists one artifact, never writing to the working tree. In Claude Code its `tools:` line is an explicit allowlist; in OpenCode it's `edit: deny`, `task: deny`, and a Bash allowlist (`git log`, `git diff`, `ls`, `grep`, ...) with a catch-all `deny`.
+- **`asdt-builder`** — write-capable. It creates and edits files within its declared targets, then persists one artifact. In OpenCode that's `edit: allow`, `task: deny`, `bash: allow`.
+
+Both agents also get the memory tools they need to save and retrieve artifacts (see below).
+
+## How memory (Engram) is wired
+
+ASDT depends on a **memory provider** for cross-session, cross-specialist continuity. Today that provider is **Engram**, an MCP (Model Context Protocol) server. See [Knowledge Base & Memory](/asdt/docs/memory-and-engram) for the full model.
+
+Memory is wired per assistant through **MCP configuration** — you add the Engram MCP server to whichever assistant you're using, following Engram's own setup guide. Once it's connected, the generated executor agents already reference the memory tools (`mem_save`, `mem_search`, `mem_get_observation`, and — for the builder — `mem_update`) under both the plugin-scoped and bare MCP names, so they resolve regardless of how Engram is registered.
+
+ASDT does not hard-code an MCP config path for you: the exact file where MCP servers are declared is the assistant's concern, so follow your assistant's MCP setup docs. What ASDT guarantees is that once Engram is reachable, every specialist step can persist and retrieve its one artifact by key.
+
+## After installing: reload your assistant
+
+Newly installed skills, agents, and config are picked up when the assistant loads them. If you install (or re-install) while your assistant is already running, restart or reload it so it re-reads its skills and agents directories.
+
+## How a new assistant is added (adapters)
+
+Support for each assistant is expressed as a set of small **adapters** — that's the layer that lets ASDT speak each tool's native dialect. Adding a new assistant means adding an entry to each of these lists (all in `internal/installer/`):
+
+- **`Descriptors`** — the assistant's identity and its skills root directory.
+- **`AgentAdapters`** — how to render the executor agents into the assistant's native agent format.
+- **`AgentConfigAdapters`** — where and how to persist the agent config (persona/language).
+- **`CommandAdapters`** — optional; only assistants that need generated command wrappers carry an entry (Claude Code carries none).
+
+Anything assistant-specific — like Claude Code's permission overlay — lives in its own file behind its own guard. Because each concern is a separate adapter list, a new assistant is additive: you implement its rendering and paths, register it, and the shared skill-copy, manifest, and prune logic apply to it unchanged.

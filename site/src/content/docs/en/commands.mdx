@@ -5,7 +5,13 @@ order: 4
 locale: en
 ---
 
+import CommandCard from '@components/CommandCard.astro'
+
 # Commands
+
+Quick reference for every ASDT command — pick a card to jump straight to its full details below.
+
+<CommandCard locale="en" />
 
 ## CLI
 
@@ -23,6 +29,8 @@ It checks your setup, lets you pick which assistant(s) to target (Claude Code, O
 
 ## Slash Commands (Claude Code / OpenCode)
 
+Slash Commands — commands you type directly into your AI assistant, prefixed with `/`.
+
 ### `/asdt-init`
 
 Initialize ASDT in the current project. Detects your stack and creates `.asdt/config.yaml` and `.asdt/knowledge/platform.yaml`. Run it inside your assistant, in your project folder.
@@ -37,6 +45,14 @@ Pipeline routing suggestion. Describe what you want to build — ASDT analyzes t
 
 ```
 /asdt Add email verification to the signup flow
+```
+
+### `/asdt-researcher`
+
+Runs the Researcher specialist only — the discovery specialist for fuzzy problems (divergent ideation, feasibility scan, discovery brief). Runs before the PM when the problem isn't yet well-defined.
+
+```
+/asdt-researcher Explore ways to reduce onboarding drop-off
 ```
 
 ### `/asdt-pm`

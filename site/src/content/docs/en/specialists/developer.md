@@ -15,7 +15,7 @@ The Developer Specialist transforms existing requirements, UX specs, and archite
 
 Two operating modes gate actual file writes. In **plan-only mode** (default), the specialist produces code as snippets in the knowledge base — no host repo changes. In **writing mode**, declared file targets are resolved and validated before any write happens — if a needed path is outside the declared targets, it stops and reports the issue rather than freelancing a write.
 
-`explore` and `spec` are irrenunciable — they always run regardless of complexity. The `test` step is conditional: it only runs when `strict_tdd: true` is set in `.asdt/config.yaml`.
+`explore` and `spec` are irrenunciable — they always run regardless of complexity. The `test` step is conditional: it only runs when `strict_tdd: true` is set in `.asdt/config.yaml` — when it's `false` or absent, the step is skipped. When it does run, it generates test code, not test plans.
 
 ## When to invoke it
 
