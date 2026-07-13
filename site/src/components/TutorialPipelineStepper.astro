@@ -1,0 +1,226 @@
+---
+import { tutorialStages, type TutorialStage } from '@data/tutorial-stages'
+import { useTranslations, type Locale } from '@i18n/utils'
+
+interface Props {
+  lang: Locale
+  /** Defaults to the tutorial's own 6-stage sequence (src/data/tutorial-stages.ts). */
+  stages?: TutorialStage[]
+  /** Renders each stage as a link jumping to its heading anchor. Defaults to false (display-only progress). */
+  clickable?: boolean
+  /** Optional small kicker label above the track (caller supplies localized copy — no i18n keys added here). */
+  label?: string
+}
+
+const { lang, stages = tutorialStages, clickable = false, label } = Astro.props
+const t = useTranslations(lang)
+---
+
+<div class="mt-5 mb-7">
+  {label && (
+    <p class="mb-2.5 font-mono text-[10px] uppercase tracking-[0.16em] text-faint">{label}</p>
+  )}
+  <ol class="tps-track m-0 flex list-none flex-wrap items-center gap-x-0 gap-y-1 p-0 max-[680px]:flex-col max-[680px]:items-stretch max-[680px]:gap-0">
+    {stages.map((stage, i) => {
+      const stageLabel = t.data.tutorialStages[stage.id as keyof typeof t.data.tutorialStages].label
+      const anchor = lang === 'es' ? stage.anchorIdEs : stage.anchorIdEn
+      return (
+        <li
+          class="tps-item flex items-center max-[680px]:flex-col max-[680px]:items-stretch"
+          data-stage-id={stage.id}
+          data-anchor={anchor}
+          style={`--sc: var(${stage.color})`}
+        >
+          {clickable ? (
+            <a
+              href={`#${anchor}`}
+              class="tps-node inline-flex items-center gap-[7px] whitespace-nowrap rounded-sm border border-[oklch(from_var(--sc)_l_c_h/0.18)] bg-[oklch(from_var(--sc)_l_c_h/0.05)] py-[3px] pr-[10px] pl-[6px] font-mono text-[11.5px] text-[oklch(from_var(--sc)_l_c_h/0.50)] no-underline hover:border-[oklch(from_var(--sc)_l_c_h/0.35)] hover:bg-[oklch(from_var(--sc)_l_c_h/0.10)] hover:text-[var(--sc)] max-[680px]:w-full max-[680px]:justify-start"
+            >
+              <span class="tps-marker block h-2 w-2 shrink-0 rounded-full border-[1.5px] border-[oklch(from_var(--sc)_l_c_h/0.45)] bg-transparent" aria-hidden="true" />
+              <span class="tps-text">{stageLabel}</span>
+            </a>
+          ) : (
+            <span class="tps-node inline-flex items-center gap-[7px] whitespace-nowrap rounded-sm border border-[oklch(from_var(--sc)_l_c_h/0.18)] bg-[oklch(from_var(--sc)_l_c_h/0.05)] py-[3px] pr-[10px] pl-[6px] font-mono text-[11.5px] text-[oklch(from_var(--sc)_l_c_h/0.50)] max-[680px]:w-full max-[680px]:justify-start">
+              <span class="tps-marker block h-2 w-2 shrink-0 rounded-full border-[1.5px] border-[oklch(from_var(--sc)_l_c_h/0.45)] bg-transparent" aria-hidden="true" />
+              <span class="tps-text">{stageLabel}</span>
+            </span>
+          )}
+          {i !== stages.length - 1 && (
+            <span class="tps-connector relative block h-px w-4 shrink-0 bg-border-soft max-[680px]:ml-[9px] max-[680px]:h-[14px] max-[680px]:w-px" aria-hidden="true" />
+          )}
+        </li>
+      )
+    })}
+  </ol>
+</div>
+
+<script>
+  function initStepper(track: HTMLElement) {
+    const items = Array.from(track.querySelectorAll<HTMLElement>('[data-stage-id]'))
+    const entries = items
+      .map((item) => {
+        const anchor = item.dataset.anchor
+        const heading = anchor ? document.getElementById(anchor) : null
+        return heading ? { item, heading } : null
+      })
+      .filter((entry): entry is { item: HTMLElement; heading: HTMLElement } => entry !== null)
+
+    if (!entries.length) return
+
+    const intersecting = new Map<Element, boolean>()
+    entries.forEach(({ heading }) => intersecting.set(heading, false))
+
+    function setActive(index: number) {
+      items.forEach((item, i) => {
+        item.classList.toggle('is-active', i === index)
+        item.classList.toggle('is-completed', i < index)
+        const node = item.querySelector('.tps-node')
+        if (!node) return
+        if (i === index) node.setAttribute('aria-current', 'step')
+        else node.removeAttribute('aria-current')
+      })
+    }
+
+    function computeActive() {
+      let activeIndex = 0
+      let anyIntersecting = false
+      entries.forEach(({ heading }, i) => {
+        if (intersecting.get(heading)) {
+          activeIndex = i
+          anyIntersecting = true
+        }
+      })
+
+      // Fallback for gaps between the observed "active band" (e.g. long sections):
+      // pick the last heading already scrolled past the top of the viewport.
+      if (!anyIntersecting) {
+        entries.forEach(({ heading }, i) => {
+          const rect = heading.getBoundingClientRect()
+          if (rect.top <= window.innerHeight * 0.3) activeIndex = i
+        })
+      }
+
+      setActive(activeIndex)
+    }
+
+    const observer = new IntersectionObserver(
+      (observed) => {
+        observed.forEach((entry) => {
+          intersecting.set(entry.target, entry.isIntersecting)
+        })
+        computeActive()
+      },
+      // Thin band near the top of the viewport: a heading is "current" once
+      // it crosses into the top ~30% and hasn't yet been scrolled past ~10%.
+      { rootMargin: '-10% 0px -70% 0px', threshold: 0 }
+    )
+
+    entries.forEach(({ heading }) => observer.observe(heading))
+  }
+
+  document.querySelectorAll<HTMLElement>('.tps-track').forEach(initStepper)
+</script>
+
+<style>
+.tps-connector::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  width: 0;
+  height: 0;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  border-left: 5px solid var(--border-soft);
+}
+
+/* completed: filled marker + solid connector + medium-strength text, not color alone */
+.tps-item.is-completed .tps-node {
+  color: oklch(from var(--sc) l c h / 0.75);
+  background: oklch(from var(--sc) l c h / 0.10);
+  border-color: oklch(from var(--sc) l c h / 0.30);
+}
+
+.tps-item.is-completed .tps-marker {
+  background: var(--sc);
+  border-color: var(--sc);
+}
+
+.tps-item.is-completed .tps-connector {
+  background: var(--sc);
+}
+
+.tps-item.is-completed .tps-connector::after {
+  border-left-color: var(--sc);
+}
+
+/* active: full-strength color + filled ring marker + bold text, still not color-only
+   (font-weight + marker fill differ from both default and completed states) */
+.tps-item.is-active .tps-node {
+  color: var(--sc);
+  background: oklch(from var(--sc) l c h / 0.14);
+  border-color: var(--sc);
+  font-weight: 600;
+}
+
+.tps-item.is-active .tps-marker {
+  background: var(--sc);
+  border-color: var(--sc);
+  box-shadow: 0 0 0 3px oklch(from var(--sc) l c h / 0.22);
+}
+
+@media (max-width: 680px) {
+  .tps-connector::after {
+    right: -3px;
+    top: auto;
+    bottom: -1px;
+    border-top: 5px solid var(--border-soft);
+    border-left: 3.5px solid transparent;
+    border-right: 3.5px solid transparent;
+    border-bottom: none;
+  }
+
+  .tps-item.is-completed .tps-connector::after {
+    border-top-color: var(--sc);
+  }
+}
+
+html[data-theme='light'] .tps-node {
+  border-color: oklch(from var(--sc) l c h / 0.25);
+  color: oklch(from var(--sc) l c h / 0.62);
+  background: oklch(from var(--sc) l c h / 0.08);
+}
+
+html[data-theme='light'] .tps-item.is-completed .tps-node {
+  color: oklch(from var(--sc) l c h / 0.80);
+  background: oklch(from var(--sc) l c h / 0.12);
+  border-color: oklch(from var(--sc) l c h / 0.35);
+}
+
+html[data-theme='light'] .tps-item.is-active .tps-node {
+  color: var(--sc);
+  background: oklch(from var(--sc) l c h / 0.16);
+  border-color: var(--sc);
+}
+
+/*
+ * HIGH #3 (design-critique obs 3736): scroll-driven color/background/border
+ * transitions are gated behind prefers-reduced-motion: no-preference. With
+ * NO media-query match (i.e. reduced motion is preferred), the rules above
+ * apply instantly with zero transition — there is no separate "turn it off"
+ * override to fall out of sync with; smooth transitions only exist at all
+ * inside this block.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .tps-node,
+  .tps-marker,
+  .tps-connector,
+  .tps-connector::after {
+    transition:
+      color 0.18s ease,
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+}
+</style>

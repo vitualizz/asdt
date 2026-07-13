@@ -1,0 +1,24 @@
+---
+title: Specialists
+description: Every ASDT specialist at a glance — pick the right one fast by trigger condition, artifact output, and when NOT to invoke it, or run /asdt when the work spans multiple perspectives.
+order: 19
+locale: en
+---
+
+import SpecialistComparisonAccordion from '@components/SpecialistComparisonAccordion.astro'
+
+# Specialists
+
+Use this page to pick the right specialist in under 60 seconds. Expand any row below to see when to invoke that specialist, what it produces, when NOT to use it, and an example command. AC (acceptance criteria — the checklist that defines "done") and CWE (a public catalog of common vulnerability types) show up in a few rows below.
+
+<SpecialistComparisonAccordion lang="en" />
+
+When the work spans multiple perspectives, skip the rows above and run `/asdt <feature description>` — the orchestrator classifies the change and routes it through the right specialists in the right order.
+
+### Switching specialists
+
+There is no "wrong" specialist to recover from — specialists work independently, so switching costs nothing. You can run any specialist directly at any point; each one reads prior artifacts from the shared knowledge base automatically. If a request doesn't fit the specialist you picked, `/asdt` will recommend a more suitable one.
+
+Example: if you ran `/asdt-developer` before creating an ADR, run `/asdt-architect` to produce the decision record, then re-invoke `/asdt-developer`. The Developer will read the ADR automatically on its next run.
+
+See [Troubleshooting](/asdt/docs/troubleshooting) for step-by-step recovery procedures.

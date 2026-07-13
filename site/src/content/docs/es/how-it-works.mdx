@@ -5,6 +5,8 @@ order: 5
 locale: es
 ---
 
+import AllSpecialistsOverview from '@components/AllSpecialistsOverview.astro'
+
 # Cómo funciona
 
 ## El modelo de ejecución
@@ -23,22 +25,15 @@ Esto significa:
 
 - **Los especialistas están desacoplados.** El Developer lee el registro de decisión del Arquitecto como un documento — no como una variable compartida ni un import de archivo.
 - **Los artefactos sobreviven a las sesiones.** Ejecutás PM el lunes, continuás con el Arquitecto el jueves. La base de conocimiento retiene el contexto.
-- **Los inputs faltantes se degradan sin errores.** Si falta un artefacto, el siguiente especialista lo anota en `open_items` y continúa con lo que tiene disponible.
+- **Los inputs faltantes se degradan sin errores.** Si falta un artefacto, el siguiente especialista lo anota en una lista de pendientes llamada `open_items` y continúa con lo que tiene disponible.
 
 ## Los especialistas se adaptan a la complejidad
 
-Cada especialista ejecuta la profundidad de pasos adecuada para la complejidad de la petición. Un bugfix rápido corre menos pasos que un nuevo sistema de autenticación. La tabla a continuación muestra la secuencia completa a complejidad moderada:
+Cada especialista ejecuta la profundidad de pasos adecuada para la complejidad de la petición. Un bugfix rápido corre menos pasos que un nuevo sistema de autenticación. La descripción a continuación muestra la secuencia completa a complejidad moderada:
 
-| Especialista | Pasos |
-|---|---|
-| PM | `feature-intake` → `user-stories` → `scope-analysis` → `backlog-entry` |
-| Arquitecto | `load-constraints` → `evaluate-approaches` → `decision-record` → `system-design` → `risk-analysis` → `technical-handoff` |
-| Developer | `explore` → `spec` → `design` → `tasks` → `implement` |
-| QA | `load-requirements` → `ac-validation` → `edge-case-analysis` → `test-strategy` → `test-case-generation` → `quality-report` |
-| Seguridad | `threat-modeling` → `attack-surface` → `owasp-analysis` → `hardening-checklist` |
-| UX/UI | `feature-brief` → `information-architecture` → `user-flows` → `component-mapping` → `responsive-strategy` → `ux-handoff` |
+<AllSpecialistsOverview lang="es" />
 
-Los pasos se ejecutan como sub-agentes aislados — no comparten contexto entre sí, lo que evita que el razonamiento temprano contamine los pasos posteriores. Cada paso lee solo sus inputs declarados, escribe un artefacto y pasa el control.
+Los pasos se ejecutan como sub-agentes aislados (ejecuciones de IA independientes y de una sola tarea que no ven el razonamiento de las demás) — no comparten contexto entre sí, lo que evita que el razonamiento temprano contamine los pasos posteriores. Cada paso lee solo sus inputs declarados, escribe un artefacto y pasa el control.
 
 ## El humano siempre está en el circuito
 

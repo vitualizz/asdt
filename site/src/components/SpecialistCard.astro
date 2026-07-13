@@ -1,19 +1,26 @@
 ---
 import type { SpecialistItem } from '@i18n/types'
+import { SPECIALIST_COLOR } from '@data/artifact-graph'
+import type { SpecialistId } from '@data/artifact-graph'
 
-interface Props { specialist: SpecialistItem }
-const { specialist } = Astro.props
+interface Props {
+  specialist: SpecialistItem
+  /** Optional base-aware href (build it with getBaseHref() at the call site). When set, the
+   * card renders as a keyboard-focusable <a> instead of a static <article>. */
+  href?: string
+}
+const { specialist, href } = Astro.props
 
-const colorMap: Record<string, string> = {
-  pm: 'var(--c-pm)',
-  architect: 'var(--c-arch)',
-  developer: 'var(--c-dev)',
-  qa: 'var(--c-qa)',
-  security: 'var(--c-sec)',
-  'ux-ui': 'var(--c-ux)',
+// Canonical accent color source: src/data/artifact-graph.ts (SPECIALIST_COLOR), which only
+// covers the 7 pipeline SpecialistId values. `orchestrator` is not a pipeline specialist, so it
+// falls back to a small LOCAL map — kept here (not upstream) so the landing page's
+// SpecialistAdvisor-adjacent surfaces keep their accent if ever rendered through this card.
+const LOCAL_COLOR_FALLBACK: Record<string, string> = {
   orchestrator: 'var(--color-accent)',
 }
 
+// No canonical icon-path source exists (artifact-graph.ts only defines color + label), so icon
+// paths stay local to this component for all ids, including the orchestrator fallback.
 const iconPaths: Record<string, string> = {
   pm: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
   architect: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
@@ -21,13 +28,23 @@ const iconPaths: Record<string, string> = {
   qa: 'M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
   security: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
   'ux-ui': 'M2 13.5V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.5M22 10.5 12 5 2 10.5M12 5v14',
+  // No dedicated icon for `researcher` existed before this reconciliation — it intentionally
+  // keeps falling back to the orchestrator glyph below, unchanged from prior behavior.
   orchestrator: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
 }
 
-const color = colorMap[specialist.id] ?? 'var(--color-accent)'
+function isSpecialistId(id: string): id is SpecialistId {
+  return id in SPECIALIST_COLOR
+}
+
+const color = isSpecialistId(specialist.id)
+  ? `var(${SPECIALIST_COLOR[specialist.id]})`
+  : (LOCAL_COLOR_FALLBACK[specialist.id] ?? 'var(--color-accent)')
 const iconPath = iconPaths[specialist.id] ?? iconPaths.orchestrator
+
+const Tag = href ? 'a' : 'article'
 ---
-<article class="spec-card" style={`--c: ${color};`}>
+<Tag class="spec-card" style={`--c: ${color};`} {...(href ? { href } : {})}>
   <div class="spec-top">
     <div class="card-icon">
       <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -40,7 +57,7 @@ const iconPath = iconPaths[specialist.id] ?? iconPaths.orchestrator
     <h3>{specialist.name}</h3>
     <p>{specialist.desc}</p>
   </div>
-</article>
+</Tag>
 
 <style>
 .spec-card {
@@ -55,7 +72,10 @@ const iconPath = iconPaths[specialist.id] ?? iconPaths.orchestrator
   background: oklch(0.175 0.012 285 / 0.7);
   padding: 24px;
   transition: border-color 0.2s, box-shadow 0.25s, transform 0.2s;
+  color: inherit;
+  text-decoration: none;
 }
+a.spec-card { cursor: pointer; }
 .spec-card:hover {
   transform: translateY(-2px);
   border-color: oklch(from var(--c) l c h / 0.45);

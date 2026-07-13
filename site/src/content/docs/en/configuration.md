@@ -41,7 +41,7 @@ test_runner: vitest
 lint: eslint
 ```
 
-Fields are free-form — specialists read what's present and skip what's missing. You can add custom fields like `deployment: vercel` or `database: postgres` and reference them in specialist prompts via the `platform-context` shared skill.
+Fields are free-form — specialists read what's present and skip what's missing. You can add custom fields like `deployment: vercel` or `database: postgres` and reference them in specialist prompts via the `platform-context` shared skill (an instruction fragment every specialist step loads automatically).
 
 ## Environment variables
 

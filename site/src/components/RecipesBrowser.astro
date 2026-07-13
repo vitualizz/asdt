@@ -1,0 +1,183 @@
+---
+// RecipesBrowser — docs-scoped recipe filter + list for recipes.md (Phase 2, docs-ux-overhaul).
+//
+// Keyboard/semantic model (resolves ux-ui/design-critique obs 3736 HIGH #1):
+// native <fieldset>/<legend> radiogroup — NOT a role="tablist"/"tab" pattern.
+// The <input type="radio"> + <label> pair already ships its own correct
+// keyboard model (arrow keys move between radios in the group, Tab enters/exits
+// the group once) with zero extra ARIA. Layering tablist/tab roles on top of
+// that DOM — as RecipesTabs.astro's landing-page version does — creates a
+// conflicting announcement (native "radio button" vs ARIA "tab"). This
+// component intentionally does NOT copy that role="tablist" attribute from
+// RecipesTabs; visual styling is reused, ARIA is not.
+import { recipes, RECIPE_CATEGORIES } from '@data/recipes'
+import { SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
+import type { Locale } from '@i18n/utils'
+import { useTranslations } from '@i18n/utils'
+
+interface Props { lang: Locale }
+const { lang } = Astro.props
+const t = useTranslations(lang)
+
+function categoryCount(id: string): number {
+  return id === 'all' ? recipes.length : recipes.filter((r) => r.category === id).length
+}
+
+function statusText(id: string, label: string): string {
+  const count = categoryCount(id)
+  const word = count === 1 ? t.recipesBrowser.recipeWord : t.recipesBrowser.recipeWordPlural
+  return `${t.recipesBrowser.showingPrefix} ${count} ${word} ${t.recipesBrowser.forWord} "${label}".`
+}
+---
+<div class="recipes-browser recipes-shell relative border border-border-soft rounded-[18px] bg-[oklch(0.165_0.014_285/0.75)] p-7 w-full box-border">
+  <fieldset class="rb-fieldset border-0 m-0 p-0">
+    <legend class="rb-legend font-mono text-xs tracking-[0.06em] uppercase text-faint p-0 [margin:0_0_14px]">{t.recipesBrowser.legend}</legend>
+    <div class="recipe-tabs flex flex-wrap gap-2">
+      {RECIPE_CATEGORIES.map((cat) => {
+        const label = t.data.recipeCategories[cat.id].label
+        return (
+          <span class="rb-option">
+            <input
+              type="radio"
+              name="rb-goal"
+              id={`rb-${cat.id}`}
+              value={cat.id}
+              checked={cat.id === 'all'}
+            />
+            <label for={`rb-${cat.id}`} class="cursor-pointer select-none font-mono text-[13px] text-text-muted border border-border-soft rounded-full px-[18px] py-2 transition-[color,border-color,background] duration-150 hover:text-text hover:border-border">{label}</label>
+          </span>
+        )
+      })}
+    </div>
+  </fieldset>
+
+  <p class="rb-sr-status sr-only" aria-live="polite">
+    {RECIPE_CATEGORIES.map((cat) => {
+      const label = t.data.recipeCategories[cat.id].label
+      return (
+        <span class="rb-sr-status-item" data-for={cat.id}>{statusText(cat.id, label)}</span>
+      )
+    })}
+  </p>
+
+  <div class="recipe-list grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 mt-7 max-[640px]:grid-cols-1">
+    {recipes.map((recipe) => {
+      const title = t.data.recipes[recipe.id].title
+      const note = t.data.recipes[recipe.id].note
+      const kbNote = t.data.recipes[recipe.id].kbNote
+      return (
+        <article class="recipe-card flex flex-col gap-3 border border-border-soft rounded-[14px] bg-surface-2 p-5" data-category={recipe.category}>
+          <h3 class="recipe-title text-base font-semibold text-text m-0">{title}</h3>
+          <p class="recipe-note text-sm text-text-muted leading-[1.55] m-0">{note}</p>
+          <div class="chip-row flex flex-wrap items-center gap-2">
+            {recipe.chips.map((chip) => (
+              <span
+                class="chip inline-flex items-center gap-2 font-mono text-[12.5px] font-medium text-text border border-[oklch(from_var(--c)_l_c_h/0.38)] bg-[oklch(from_var(--c)_l_c_h/0.10)] rounded-full py-[6px] px-[13px]"
+                style={`--c: var(${SPECIALIST_COLOR[chip.specialistId]});`}
+              >
+                <span class="dot" aria-hidden="true"></span>
+                {SPECIALIST_LABEL[chip.specialistId]}
+              </span>
+            ))}
+          </div>
+          {kbNote && <p class="recipe-kb-note text-xs text-faint font-mono m-0">{kbNote}</p>}
+          <pre class="relative m-0 border border-border rounded-[12px] bg-bg-deep px-4 py-[14px] font-mono text-[12.5px] leading-[1.8] overflow-x-auto"><code class="border-0 bg-none p-0 whitespace-pre [font-size:inherit] text-text">{recipe.commands.join('\n')}</code></pre>
+        </article>
+      )
+    })}
+
+    <p class="recipe-list-empty hidden col-span-full text-center text-sm text-faint m-0 py-5" aria-live="polite">
+      {t.recipesBrowser.empty}
+    </p>
+  </div>
+</div>
+
+<style>
+/* Filter fieldset — native radiogroup, visually styled as a tab-like strip.
+   No role="tablist"/"tab"/aria-selected anywhere: the accessible name and
+   keyboard model come entirely from <fieldset>/<legend> + native radios.
+
+   The rules below are the plumbing the :has() selectors further down depend
+   on: `.rb-option{display:contents}` keeps the wrapping <span> out of the
+   flex layout so input+label behave as direct flex children, and the radio
+   is visually hidden (not display:none, so it stays focusable/announced)
+   rather than styled — its checked/focus-visible state is what the :has()
+   rules below key off of. */
+.rb-option { display: contents; }
+.rb-option input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.recipes-browser:has(#rb-all:checked) label[for='rb-all'],
+.recipes-browser:has(#rb-from-scratch:checked) label[for='rb-from-scratch'],
+.recipes-browser:has(#rb-add-to-existing:checked) label[for='rb-add-to-existing'],
+.recipes-browser:has(#rb-review-harden:checked) label[for='rb-review-harden'],
+.recipes-browser:has(#rb-understand-document:checked) label[for='rb-understand-document'] {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+  background: oklch(from var(--color-accent) l c h / 0.1);
+}
+
+/* Visible focus ring on the hidden radio's label — the radio is visually
+   hidden (not display:none, so it stays focusable/announced), and focus
+   is surfaced on its paired label via :has(). */
+.recipes-browser:has(#rb-all:focus-visible) label[for='rb-all'],
+.recipes-browser:has(#rb-from-scratch:focus-visible) label[for='rb-from-scratch'],
+.recipes-browser:has(#rb-add-to-existing:focus-visible) label[for='rb-add-to-existing'],
+.recipes-browser:has(#rb-review-harden:focus-visible) label[for='rb-review-harden'],
+.recipes-browser:has(#rb-understand-document:focus-visible) label[for='rb-understand-document'] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Screen-reader-only filter-state announcement — one span per category,
+   toggled via :has() so only the currently-selected category's status
+   text is present in the accessible tree (triggers the aria-live polite
+   announcement without any JS). */
+.rb-sr-status-item { display: none; }
+.recipes-browser:has(#rb-all:checked) .rb-sr-status-item[data-for='all'],
+.recipes-browser:has(#rb-from-scratch:checked) .rb-sr-status-item[data-for='from-scratch'],
+.recipes-browser:has(#rb-add-to-existing:checked) .rb-sr-status-item[data-for='add-to-existing'],
+.recipes-browser:has(#rb-review-harden:checked) .rb-sr-status-item[data-for='review-harden'],
+.recipes-browser:has(#rb-understand-document:checked) .rb-sr-status-item[data-for='understand-document'] {
+  display: inline;
+}
+
+/* Specialist-color dot — kept scoped alongside the :has() system because its
+   box-shadow reads the same dynamic --c custom property (set inline per
+   chip) through an oklch(from ...) expression. */
+.chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 7px oklch(from var(--c) l c h / 0.80);
+}
+
+/* Category filtering — 'all' shows every card; every other category hides
+   all cards then re-shows only the matching data-category. */
+.recipes-browser:has(#rb-from-scratch:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-from-scratch:checked) .recipe-card[data-category='from-scratch'] { display: flex; }
+
+.recipes-browser:has(#rb-add-to-existing:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-add-to-existing:checked) .recipe-card[data-category='add-to-existing'] { display: flex; }
+
+.recipes-browser:has(#rb-review-harden:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-review-harden:checked) .recipe-card[data-category='review-harden'] { display: flex; }
+
+.recipes-browser:has(#rb-understand-document:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-understand-document:checked) .recipe-card[data-category='understand-document'] { display: flex; }
+
+/* Empty state — only ever surfaces if a category's data becomes empty in
+   the future; currently every bucket has >=1 recipe. */
+.recipes-browser:has(#rb-from-scratch:checked):not(:has(.recipe-card[data-category='from-scratch'])) .recipe-list-empty,
+.recipes-browser:has(#rb-add-to-existing:checked):not(:has(.recipe-card[data-category='add-to-existing'])) .recipe-list-empty,
+.recipes-browser:has(#rb-review-harden:checked):not(:has(.recipe-card[data-category='review-harden'])) .recipe-list-empty,
+.recipes-browser:has(#rb-understand-document:checked):not(:has(.recipe-card[data-category='understand-document'])) .recipe-list-empty {
+  display: block;
+}
+</style>

@@ -1,0 +1,59 @@
+---
+import { commands as commandData } from '@data/commands'
+import type { CommandEntry } from '@data/commands'
+import { SPECIALIST_COLOR } from '@data/artifact-graph'
+import type { Locale } from '@i18n/utils'
+import { useTranslations } from '@i18n/utils'
+
+interface Props {
+  /** 'en' | 'es' — selects which locale's copy from t.data.commands renders. */
+  locale: Locale
+  /** Defaults to the full commands.ts dataset (10 entries: 1 CLI + 9 slash commands). */
+  commands?: CommandEntry[]
+}
+const { locale, commands = commandData } = Astro.props
+const t = useTranslations(locale)
+
+function accentFor(cmd: CommandEntry): string {
+  return cmd.specialistId ? `var(${SPECIALIST_COLOR[cmd.specialistId]})` : 'var(--color-accent)'
+}
+
+function badgeLabel(cmd: CommandEntry): string {
+  return cmd.badge === 'cli' ? t.commandCard.cliLabel : t.commandCard.slashLabel
+}
+---
+<ul class="grid gap-4 list-none m-0 p-0 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]" role="list">
+  {commands.map((cmd) => (
+    <li class="h-full">
+      <a
+        href={`#${cmd.anchor}`}
+        class="cmd-card relative overflow-hidden flex flex-col gap-4 h-full border border-border-soft rounded-[18px] bg-[oklch(0.175_0.012_285/0.7)] p-6 text-inherit no-underline transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[oklch(from_var(--c)_l_c_h/0.45)] hover:shadow-[0_14px_44px_-18px_oklch(from_var(--c)_l_c_h/0.55)]"
+        style={`--c: ${accentFor(cmd)};`}
+      >
+        <div class="flex items-center justify-between gap-3.5 flex-wrap">
+          <span class="font-mono text-[10.5px] tracking-[0.1em] uppercase text-faint border border-border-soft rounded-full px-2.5 py-[3px] whitespace-nowrap">{badgeLabel(cmd)}</span>
+          <code class="font-mono text-[12px] text-[var(--c)] border border-[oklch(from_var(--c)_l_c_h/0.35)] bg-[oklch(from_var(--c)_l_c_h/0.08)] rounded-full px-[11px] py-[3px] whitespace-nowrap">{cmd.command}</code>
+        </div>
+        <div>
+          <h3 class="text-[17.5px] font-semibold mb-[5px]">{t.data.commands[cmd.anchor].title}</h3>
+          <p class="text-[14.5px] text-text-muted leading-[1.6]">{t.data.commands[cmd.anchor].oneLiner}</p>
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+/* Radial glow pseudo-element: no Tailwind equivalent for ::before content/gradient. */
+.cmd-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(140px 90px at 24px 24px, oklch(from var(--c) l c h / 0.09), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.cmd-card:hover::before { opacity: 1; }
+</style>

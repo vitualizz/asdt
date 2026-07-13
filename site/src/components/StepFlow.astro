@@ -1,5 +1,6 @@
 ---
 import { specialistSteps } from '@data/specialist-steps'
+import { useTranslations } from '@i18n/utils'
 import type { Locale } from '@i18n/utils'
 
 interface Props {
@@ -14,7 +15,8 @@ interface Props {
     produces: string
   }
 }
-const { specialist, labels } = Astro.props
+const { specialist, labels, lang } = Astro.props
+const t = useTranslations(lang)
 const config = specialistSteps[specialist]
 if (!config) return
 
@@ -67,11 +69,12 @@ const defaultTier = isRisk ? 'high' : 'complex'
               const step = config.steps[id]
               if (!step) return null
               const active = tierSteps.includes(id)
+              const stepText = t.data.specialistSteps[`${specialist}:${step.id}`]
               return (
                 <div class="sf-row" data-active={active ? 'true' : 'false'}>
                   <code class="sf-id">{step.id}</code>
-                  <p class="sf-purpose">{step.purpose}</p>
-                  <span class="sf-produces">→ {step.produces}</span>
+                  <p class="sf-purpose">{stepText?.purpose}</p>
+                  <span class="sf-produces">→ {stepText?.produces}</span>
                 </div>
               )
             })}

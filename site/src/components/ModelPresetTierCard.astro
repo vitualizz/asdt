@@ -1,0 +1,61 @@
+---
+import type { Locale } from '@i18n/utils'
+import { useTranslations } from '@i18n/utils'
+import { modelPresets } from '@data/model-presets'
+
+interface Props {
+  lang: Locale
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+---
+
+<ul
+  class="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-[14px] p-0 max-[599px]:grid-cols-1"
+  role="list"
+>
+  {
+    modelPresets.map((preset) => (
+      <li
+        class:list={[
+          'border-border-soft relative flex flex-col gap-2 overflow-hidden rounded-[14px] border bg-[oklch(0.175_0.012_285/0.7)] p-4 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[oklch(from_var(--color-accent)_l_c_h/0.45)] hover:shadow-[0_14px_44px_-18px_oklch(from_var(--color-accent)_l_c_h/0.4)]',
+          {
+            'border-[oklch(from_var(--color-accent)_l_c_h/0.5)] bg-[oklch(from_var(--color-accent)_l_c_h/0.06)]':
+              preset.recommended,
+          },
+        ]}
+      >
+        <div class="flex flex-wrap items-center gap-2">
+          <h3 class="text-text m-0 text-[16px] font-semibold">
+            {t.data.modelPresets[preset.id].label}
+          </h3>
+          {preset.recommended && (
+            <span class="text-accent rounded-full border border-[oklch(from_var(--color-accent)_l_c_h/0.4)] bg-[oklch(from_var(--color-accent)_l_c_h/0.12)] px-[9px] py-[3px] font-mono text-[10.5px] tracking-[0.06em] whitespace-nowrap uppercase">
+              {t.modelPreset.recommendedLabel}
+            </span>
+          )}
+          {preset.default && (
+            <span class="border-border-soft text-faint rounded-full border px-[9px] py-[3px] font-mono text-[10.5px] tracking-[0.06em] whitespace-nowrap uppercase">
+              {t.modelPreset.defaultLabel}
+            </span>
+          )}
+        </div>
+        <p class="text-text-muted m-0 text-[13.5px] leading-[1.55]">
+          {t.data.modelPresets[preset.id].desc}
+        </p>
+      </li>
+    ))
+  }
+</ul>
+
+<div
+  class="border-border-soft flex flex-col gap-1 rounded-[12px] border border-dashed p-[14px_18px]"
+>
+  <p class="m-0 text-[14.5px] font-semibold">
+    {t.modelPreset.customizeCta.title}
+  </p>
+  <p class="text-faint m-0 text-[13px]">
+    {t.modelPreset.customizeCta.desc}
+  </p>
+</div>

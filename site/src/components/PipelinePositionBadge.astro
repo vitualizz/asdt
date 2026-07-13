@@ -2,7 +2,7 @@
 import { PIPELINE_ORDER, SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
 import type { SpecialistId } from '@data/artifact-graph'
 import type { Locale } from '@i18n/utils'
-import { getBaseHref } from '@i18n/utils'
+import { getLocalePath } from '@i18n/utils'
 
 interface Props {
   specialistId: SpecialistId
@@ -10,7 +10,6 @@ interface Props {
   label: string
 }
 const { specialistId, lang, label } = Astro.props
-const isEs = lang === 'es'
 ---
 
 <div class="ppb">
@@ -18,9 +17,7 @@ const isEs = lang === 'es'
   <div class="ppb-track" role="list">
     {PIPELINE_ORDER.map((id) => {
       const isCurrent = id === specialistId
-      const href = isEs
-        ? getBaseHref(`/es/docs/specialists/${id}`)
-        : getBaseHref(`/docs/specialists/${id}`)
+      const href = getLocalePath(`/docs/specialists/${id}`, lang)
       return (
         <div class="ppb-item" role="listitem">
           {isCurrent ? (

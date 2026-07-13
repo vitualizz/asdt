@@ -7,7 +7,6 @@ interface Props {
   lang: Locale
 }
 const { t, lang } = Astro.props
-const isEs = lang === 'es'
 ---
 <div class="term-stage">
   <div class="term" data-lang={lang}>
@@ -21,14 +20,14 @@ const isEs = lang === 'es'
       <span class="title">~/app — claude</span>
     </div>
     <div class="term-tabs">
-      <span class="hint">{isEs ? 'Pruébalo' : 'Try it'}</span>
+      <span class="hint">{t.terminal.tryLabel}</span>
       <label for="ts-1">{t.terminal.tabs[0]}</label>
       <label for="ts-2">{t.terminal.tabs[1]}</label>
       <label for="ts-3">{t.terminal.tabs[2]}</label>
       <label for="ts-4" class="tab-play">{t.terminal.tabs[3]}</label>
     </div>
     <div class="term-body">
-      {isEs ? (
+      {lang === 'es' ? (
         <>
           {/* session 1 — routing advisor */}
           <div class="term-session session-1">

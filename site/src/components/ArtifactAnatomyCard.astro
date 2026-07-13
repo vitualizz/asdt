@@ -1,0 +1,37 @@
+---
+import { artifactAnatomy } from '@data/artifact-anatomy'
+import { useTranslations } from '@i18n/utils'
+import type { Locale } from '@i18n/utils'
+
+interface Props {
+  lang: Locale
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+---
+
+<dl class="aac flex flex-col gap-3 mb-8 p-5 border border-border-soft rounded-[12px] bg-[oklch(from_var(--color-accent)_l_c_h/0.02)]">
+  {artifactAnatomy.map((field) => (
+    <div class="flex items-baseline flex-wrap gap-x-[14px] gap-y-[10px] max-[599px]:flex-col max-[599px]:items-start max-[599px]:gap-2">
+      <dt class="shrink-0 font-mono text-[10px] tracking-[0.14em] uppercase text-faint border border-border-soft rounded-sm px-[9px] py-[3px] min-w-[90px] text-center max-[599px]:text-left">{field.label}</dt>
+      <dd class="m-0 flex flex-col gap-1 flex-[1_1_220px] min-w-0">
+        <code class="aac-value font-mono text-[12.5px] text-accent bg-[oklch(from_var(--color-accent)_l_c_h/0.08)] border border-[oklch(from_var(--color-accent)_l_c_h/0.25)] rounded-sm px-[9px] py-[3px] inline-block w-fit max-w-full [overflow-wrap:break-word] break-words">{field.value}</code>
+        <span class="text-[13px] text-faint leading-normal">{t.data.artifactAnatomy[field.id].desc}</span>
+      </dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+/* Light theme needs a lighter accent wash than the dark default — kept scoped
+   since Tailwind's dark-mode variant isn't wired to this site's data-theme attr. */
+html[data-theme='light'] .aac {
+  background: oklch(from var(--color-accent) l c h / 0.03);
+}
+
+html[data-theme='light'] .aac-value {
+  background: oklch(from var(--color-accent) l c h / 0.10);
+  border-color: oklch(from var(--color-accent) l c h / 0.35);
+}
+</style>

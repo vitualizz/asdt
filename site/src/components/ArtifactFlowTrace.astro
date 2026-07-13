@@ -2,6 +2,7 @@
 import { artifactGraph, SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
 import type { SpecialistId } from '@data/artifact-graph'
 import type { Locale } from '@i18n/utils'
+import { useTranslations } from '@i18n/utils'
 
 interface Props {
   specialistId: SpecialistId
@@ -9,8 +10,9 @@ interface Props {
   labelReads: string
   labelWrites: string
 }
-const { specialistId, labelReads, labelWrites } = Astro.props
+const { specialistId, lang, labelReads, labelWrites } = Astro.props
 const artifacts = artifactGraph[specialistId]
+const t = useTranslations(lang)
 
 function resolveSourceColor(key: string): string {
   for (const [id, data] of Object.entries(artifactGraph)) {
@@ -29,7 +31,7 @@ function resolveSourceColor(key: string): string {
       {artifacts.reads.map((ref) => (
         <li>
           {ref.sentinel ? (
-            <span class="aft-sentinel">{ref.key}</span>
+            <span class="aft-sentinel">{t.data.artifactSentinels[ref.key]?.label ?? ref.key}</span>
           ) : (
             <span
               class:list={['aft-badge', { 'aft-badge--optional': ref.optional }]}

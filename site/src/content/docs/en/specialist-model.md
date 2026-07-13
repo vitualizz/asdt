@@ -9,11 +9,11 @@ locale: en
 
 ## Why specialists, not a pipeline
 
-The first version of ASDT modeled software delivery as a fixed four-phase FSM: `requirements → plan → implement → review`. Adding a new role required a new Go package, a new struct, and a new switch arm — code, not prompt authoring. The FSM hardcoded `requirements` as the only valid entry point, so a security engineer or UX designer had no valid place in the model without restructuring the entire graph.
+The first version of ASDT modeled software delivery as a fixed four-phase FSM (a finite-state machine — a rigid flow that only moves through a fixed set of steps in a fixed order): `requirements → plan → implement → review`. Adding a new role required a new Go package, a new struct, and a new switch arm — code, not prompt authoring. The FSM hardcoded `requirements` as the only valid entry point, so a security engineer or UX designer had no valid place in the model without restructuring the entire graph.
 
 This is the wrong model. Real software delivery is performed by a team of specialists, each owning an independent discipline. A security engineer doesn't wait for a developer to finish before reviewing auth code. A UX designer doesn't follow a requirements → plan workflow — they follow their own creative process.
 
-**ADR-006** formalized the switch: a Specialist is a composable, independent unit defined by its identity, its own workflow steps, its artifact contract, and an independence guarantee — any specialist may run first.
+An Architecture Decision Record (ADR-006) — the internal design note that guarantees any specialist can run independently, in any order — formalized the switch: a Specialist is a composable, independent unit defined by its identity, its own workflow steps, its artifact contract, and an independence guarantee — any specialist may run first.
 
 ## What defines a specialist
 
@@ -34,7 +34,7 @@ Adding a new specialist requires exactly two things:
 1. One `SpecialistDescriptor` value literal in the registry
 2. One `skill/{id}/SKILL.md` tree with step files
 
-Zero new Go packages, zero new switch arms. The `asdt-*` embed glob in `skill/embedded.go` picks up any directory matching the pattern and ships it in the next build. See [Contributing](/docs/contributing) for the full authoring contract.
+Zero new Go packages, zero new switch arms. The `asdt-*` embed glob in `skill/embedded.go` picks up any directory matching the pattern and ships it in the next build. See [Contributing](/asdt/docs/contributing) for the full authoring contract.
 
 ## The independence guarantee
 

@@ -1,0 +1,67 @@
+---
+title: Asistentes de IA
+description: Cómo se instala ASDT en cada asistente de IA compatible — Claude Code y OpenCode — incluyendo directorios de instalación, configuración de agentes, envoltorios de comandos, la capa de permisos y cómo se conecta la memoria.
+order: 14
+locale: es
+---
+
+# Asistentes de IA
+
+ASDT no es una aplicación independiente. Se instala **dentro** de tu asistente de IA: copia sus skills de especialistas, genera los agentes ejecutores y configura todo dentro de la herramienta que ya usas. La TUI del instalador (`asdt-tui`) hace esto por ti y adapta cada artefacto al formato nativo de cada asistente.
+
+Hoy ASDT admite dos asistentes: **Claude Code** y **OpenCode**. Ambos reciben el equipo completo de especialistas; la diferencia está solo en *dónde* aterrizan los archivos y *qué forma* toman.
+
+## Qué se instala
+
+Independientemente del asistente, una instalación produce las mismas piezas lógicas:
+
+- **Skills de especialistas** — el árbol de skills de ASDT (Architect, Developer, QA, Security, UX/UI y los fragmentos compartidos), copiado en el directorio de skills del asistente.
+- **Agentes ejecutores** — dos definiciones de agente generadas, `asdt-analyst` (solo lectura) y `asdt-builder` (con capacidad de escritura), que llevan a cabo los pasos individuales del pipeline.
+- **Configuración del agente** — tus preferencias de persona e idioma, escritas en la configuración global nativa del asistente.
+- **Un manifiesto de instalación** — un archivo `.install-meta.json` que registra lo que escribió la última instalación, para que volver a ejecutar pueda actualizar de forma limpia y eliminar archivos obsoletos.
+
+Los detalles de cada pieza difieren según el asistente. Aquí está la comparación completa — un par de términos de la tabla merecen una nota en lenguaje simple antes de que te los encuentres: **`XDG_CONFIG_HOME`** es solo la variable estándar de ubicación de carpeta que las herramientas de Linux/macOS revisan antes de usar una ruta de configuración por defecto, y la fila de **capa de permisos** (solo Claude Code, más abajo hay más detalle) es una **fusión estructural JSON** opcional — combinar la configuración de ASDT dentro de tu archivo de configuración existente sin sobrescribir el resto — que activa el **modo bypass**, un ajuste de Claude Code que deja de pedir permiso en cada acción, detrás de una **red de denegación**: la lista fija de archivos y configuraciones que el instalador se niega a tocar incluso cuando esos avisos de permiso se están saltando.
+
+## Claude Code vs OpenCode
+
+### Por qué los envoltorios de comandos solo existen para OpenCode
+
+Claude Code descubre y activa las skills de forma nativa, así que no necesita un punto de entrada extra: llamas al especialista directamente. OpenCode no expone las skills como slash-commands de la misma manera, por eso ASDT genera un pequeño archivo de comando por especialista que simplemente dice "carga y activa esta skill de especialista". Por eso verás `~/.config/opencode/commands/` poblado para OpenCode, pero ningún directorio equivalente para Claude Code.
+
+### La capa de permisos (solo Claude Code)
+
+Como se explicó arriba, la capa es una fusión estructural JSON **opcional** en tu `~/.claude/settings.json` global: activa el modo bypass (`permissions.defaultMode = "bypassPermissions"`) detrás de una red de denegación curada — la lista de denegación es el control real bajo bypass, y protege su propio archivo de configuración y el resto de `~/.claude` de ser editados.
+
+Se escribe de forma segura: se guarda una copia de respaldo previa, la escritura es atómica (archivo temporal + fsync + rename) y el resultado se valida después de escribir — si la validación falla, ASDT revierte a la copia de respaldo para que Claude Code siempre arranque. Volver a ejecutar es idempotente: unifica al mismo conjunto de denegación sin duplicados, y las reglas obsoletas de instalaciones anteriores se eliminan primero. OpenCode no tiene equivalente porque sus agentes ejecutores llevan sus permisos inline (el analyst deniega ediciones y restringe Bash a una lista de solo inspección; el builder permite ediciones pero deniega la delegación).
+
+### Agentes ejecutores en ambos
+
+Ambos asistentes reciben los mismos dos *tipos* de agente ejecutor, generados en el formato de cada herramienta:
+
+- **`asdt-analyst`** — solo lectura. Inspecciona el repositorio y persiste un artefacto, sin escribir nunca en el árbol de trabajo. En Claude Code su línea `tools:` es una lista explícita de permitidos; en OpenCode es `edit: deny`, `task: deny` y una lista de Bash permitida (`git log`, `git diff`, `ls`, `grep`, ...) con un `deny` general.
+- **`asdt-builder`** — con capacidad de escritura. Crea y edita archivos dentro de sus objetivos declarados y luego persiste un artefacto. En OpenCode eso es `edit: allow`, `task: deny`, `bash: allow`.
+
+Ambos agentes también reciben las herramientas de memoria que necesitan para guardar y recuperar artefactos (ver más abajo).
+
+## Cómo se conecta la memoria (Engram)
+
+ASDT depende de un **proveedor de memoria** para la continuidad entre sesiones y entre especialistas. Hoy ese proveedor es **Engram**, un servidor MCP (Model Context Protocol). Consulta [Base de conocimiento y memoria](/asdt/es/docs/memory-and-engram) para el modelo completo.
+
+La memoria se conecta por asistente a través de la **configuración MCP**: agregas el servidor MCP de Engram al asistente que estés usando, siguiendo la guía de instalación propia de Engram. Una vez conectado, los agentes ejecutores generados ya referencian las herramientas de memoria (`mem_save`, `mem_search`, `mem_get_observation` y — para el builder — `mem_update`) tanto bajo los nombres MCP con prefijo de plugin como bajo los nombres simples, de modo que se resuelven sin importar cómo esté registrado Engram.
+
+ASDT no codifica una ruta de configuración MCP por ti: el archivo exacto donde se declaran los servidores MCP es asunto del asistente, así que sigue la documentación de configuración MCP de tu asistente. Lo que ASDT garantiza es que, una vez que Engram sea accesible, cada paso de especialista puede persistir y recuperar su único artefacto por clave.
+
+## Después de instalar: recarga tu asistente
+
+Las skills, agentes y configuración recién instalados se toman en cuenta cuando el asistente los carga. Si instalas (o reinstalas) mientras tu asistente ya está en ejecución, reinícialo o recárgalo para que vuelva a leer sus directorios de skills y agentes.
+
+## Cómo se agrega un nuevo asistente (adaptadores)
+
+El soporte de cada asistente se expresa como un conjunto de pequeños **adaptadores**: esa es la capa que le permite a ASDT hablar el dialecto nativo de cada herramienta. Agregar un nuevo asistente significa añadir una entrada a cada una de estas listas (todas en `internal/installer/`):
+
+- **`Descriptors`** — la identidad del asistente y su directorio raíz de skills.
+- **`AgentAdapters`** — cómo generar los agentes ejecutores en el formato de agente nativo del asistente.
+- **`AgentConfigAdapters`** — dónde y cómo persistir la configuración del agente (persona/idioma).
+- **`CommandAdapters`** — opcional; solo los asistentes que necesitan envoltorios de comandos generados llevan una entrada (Claude Code no lleva ninguna).
+
+Cualquier cosa específica de un asistente — como la capa de permisos de Claude Code — vive en su propio archivo detrás de su propia guarda. Como cada aspecto es una lista de adaptadores separada, un nuevo asistente es aditivo: implementas su generación y rutas, lo registras, y la lógica compartida de copia de skills, manifiesto y limpieza (prune) se le aplica sin cambios.

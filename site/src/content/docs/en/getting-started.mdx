@@ -1,0 +1,85 @@
+---
+title: Getting Started
+description: Install and run your first ASDT pipeline in minutes.
+order: 1
+locale: en
+---
+
+import ModelPresetTierCard from '@components/ModelPresetTierCard.astro'
+
+# Getting Started
+
+## Requirements
+
+Before using ASDT, you need:
+
+- **Claude Code** or **OpenCode** — installed and authenticated (these are the only assistants ASDT targets today)
+- **[Engram](https://github.com/Gentleman-Programming/engram)** — the memory provider, required for cross-session persistence. It must be on your `PATH` before you install
+- A terminal (bash or zsh)
+
+> **Building from source?** Go 1.22+ is required. Running the one-line installer downloads a pre-built binary — no compiler needed.
+
+## Installation
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vitualizz/asdt/main/install.sh | bash
+```
+
+Downloads the latest pre-built binary (`asdt-tui`) for your platform and installs it to `~/.local/bin/`. No Go or compiler needed.
+
+> If `~/.local/bin` is not on your `PATH`, the installer prints the exact line to add to your shell profile.
+
+## Run the installer
+
+```bash
+asdt-tui
+```
+
+`asdt-tui` is an interactive terminal UI. From the main menu, choose **Install / Update Skills** and it walks you through a short guided flow:
+
+1. **Language** — pick the language ASDT speaks in: `en` (English), `es-419` (Latin American Spanish), or `es-ES` (peninsular Spanish). Your choice drives both the installer UI and the installed specialists.
+2. **Environment check** — probes your OS, shell, Engram, and Codegraph (an optional code-search index). **Engram is a hard gate**: *Continue* stays disabled until Engram is found on your `PATH`. A missing Codegraph is only a soft warning and never blocks you.
+3. **Assistants** — choose which to target: **Claude Code**, **OpenCode**, or both. Each shows a present/missing badge.
+4. **Memory provider** — Engram is the provider ASDT installs against.
+5. **Model preset** — pick how much model horsepower each specialist step uses (see below).
+6. **Persona** — optionally pick a persona for the installed assistants, and whether they should use emojis. You can skip this entirely.
+7. **Permissions** — an opt-in gate for the Claude Code permission overlay. Declining is the safe default and writes nothing.
+8. **Review → Install → Done** — confirm your selections, watch the install run, and you're set. A read-only **Dashboard** on the main menu shows per-assistant status any time.
+
+### Model presets
+
+The model step offers five presets — each maps every specialist step to a model tier:
+
+<ModelPresetTierCard lang="en" />
+
+## Initialize your project
+
+Open your AI assistant in your project folder and run:
+
+```
+/asdt-init
+```
+
+It detects your stack, asks a couple of questions, and writes `.asdt/config.yaml` with sensible defaults.
+
+## Your first pipeline
+
+```
+/asdt Add user authentication with email and password
+```
+
+ASDT analyzes the request and recommends a specialist sequence — for example: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Confirm the plan, then run each command. Each specialist saves its output to the knowledge base so the next one picks up where the previous left off.
+
+## Running individual specialists
+
+```
+/asdt-pm Add dark mode to the settings page
+/asdt-architect Design the caching strategy
+/asdt-developer Implement the user profile component
+```
+
+## Next steps
+
+- Learn how memory persists across sessions in [Memory & Engram](/asdt/docs/memory-and-engram).
+- Browse the full command set in [Commands](/asdt/docs/commands).
+- Hit a snag? See [Troubleshooting](/asdt/docs/troubleshooting).

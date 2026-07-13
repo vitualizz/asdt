@@ -62,7 +62,7 @@ rm -rf /tmp/asdt-sandbox
 
 ## Adding a new specialist — wiring checklist
 
-Full authoring details are in [Contributing](/docs/contributing). The one step contributing doesn't highlight:
+Full authoring details are in [Contributing](/asdt/docs/contributing). The one step contributing doesn't highlight:
 
 **Wire it into the embed.** Open `skill/embedded.go`:
 

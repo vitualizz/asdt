@@ -1,0 +1,64 @@
+---
+import { specialistSteps } from '@data/specialist-steps'
+import { PIPELINE_ORDER, SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
+import type { SpecialistId } from '@data/artifact-graph'
+import type { Locale } from '@i18n/utils'
+import { getLocalePath, useTranslations } from '@i18n/utils'
+
+interface Props {
+  lang: Locale
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+
+interface Row {
+  id: SpecialistId
+  label: string
+  color: string
+  purpose: string
+  stepIds: string[]
+  href: string
+}
+
+const rows: Row[] = PIPELINE_ORDER.map((id) => {
+  const config = specialistSteps[id]
+  const isRisk = config.tierType === 'risk-surface'
+  const maxKey = isRisk ? 'high' : 'complex'
+  const stepIds: string[] = config.tiers[maxKey as keyof typeof config.tiers] ?? Object.keys(config.steps)
+  const lastStepId = stepIds[stepIds.length - 1]
+  const lastStep = config.steps[lastStepId]
+  const purpose = (lastStep ? t.data.specialistSteps[`${id}:${lastStep.id}`]?.purpose : undefined) ?? ''
+  const href = getLocalePath(`/docs/specialists/${id}`, lang)
+
+  return {
+    id,
+    label: SPECIALIST_LABEL[id],
+    color: SPECIALIST_COLOR[id],
+    purpose,
+    stepIds,
+    href,
+  }
+})
+---
+
+<ul class="m-0 flex list-none flex-col gap-2.5 p-0" role="list">
+  {rows.map((row) => (
+    <li class="m-0" role="listitem">
+      <a
+        href={row.href}
+        class="grid grid-cols-[130px_1fr] grid-rows-[auto_auto] items-start gap-x-5 gap-y-1 rounded-xl border border-border-soft bg-[oklch(from_var(--sc)_l_c_h/0.03)] px-5 py-4 no-underline transition-[transform,border-color,background] duration-200 hover:-translate-y-0.5 hover:border-[oklch(from_var(--sc)_l_c_h/0.4)] hover:bg-[oklch(from_var(--sc)_l_c_h/0.06)] focus-visible:outline-2 focus-visible:outline-[var(--sc)] focus-visible:outline-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0 max-[640px]:grid-cols-1 max-[640px]:grid-rows-[auto_auto_auto]"
+        style={`--sc: var(${row.color})`}
+        aria-label={`${row.label}: ${row.purpose}`}
+      >
+        <span class="col-start-1 row-start-1 row-span-2 pt-0.5 font-mono text-sm font-semibold text-[var(--sc)] max-[640px]:row-span-1 max-[640px]:pt-0">{row.label}</span>
+        <p class="col-start-2 row-start-1 m-0 text-[14.5px] leading-[1.55] text-text-muted max-[640px]:col-start-1 max-[640px]:row-start-2">{row.purpose}</p>
+        <div class="col-start-2 row-start-2 mt-2 flex flex-wrap gap-1.5 max-[640px]:col-start-1 max-[640px]:row-start-3 max-[640px]:mt-1.5" aria-hidden="true">
+          {row.stepIds.map((stepId) => (
+            <span class="whitespace-nowrap rounded-full border border-border-soft bg-surface-2 px-2 py-0.5 font-mono text-[10.5px] text-faint">{stepId}</span>
+          ))}
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>

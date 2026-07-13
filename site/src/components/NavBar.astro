@@ -9,7 +9,6 @@ import { ASDT_REPO } from '@data/urls'
 
 interface Props { lang: Locale; t: UIStrings; currentPath: string }
 const { lang, t, currentPath } = Astro.props
-const isEs = lang === 'es'
 ---
 <header class="nav">
   <div class="nav-inner">
@@ -23,7 +22,7 @@ const isEs = lang === 'es'
       <a href={getBaseHref('/docs/getting-started')}>{t.nav.docs}</a>
       <a class="star-link" href={ASDT_REPO} target="_blank" rel="noopener noreferrer">
         <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        {isEs ? 'Star en GitHub' : 'Star on GitHub'}
+        {t.nav.githubStarLabel}
       </a>
       <span class="nav-pill"><span class="dot"></span>v0.4.2</span>
       <LanguagePicker lang={lang} currentPath={currentPath} label={t.nav.langPickerLabel} />

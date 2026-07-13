@@ -10,23 +10,28 @@ interface Props {
 }
 const { flow, lang } = Astro.props
 const t = useTranslations(lang)
+const flowT = t.data.pipelineFlows[flow.id]
+const steps = flow.steps.map((s) => ({
+  ...s,
+  description: flowT.steps[s.id].description,
+}))
 ---
 
 <div class="fwb-wrap">
   <FlowWalker
     client:visible
-    flow={flow}
-    lang={lang}
+    title={flowT.title}
+    steps={steps}
     labelStep={t.docs.flowStep}
     labelOf={t.docs.flowOf}
   />
 
   <noscript>
     <ol class="fwb-static">
-      {flow.steps.map((s) => (
+      {steps.map((s) => (
         <li class="fwb-static-step">
           <code class="fwb-static-cmd">{s.command}</code>
-          <p>{lang === 'es' ? s.descriptionEs : s.descriptionEn}</p>
+          <p>{s.description}</p>
         </li>
       ))}
     </ol>
@@ -34,10 +39,10 @@ const t = useTranslations(lang)
 
   <div class="fwb-print-all" aria-hidden="true">
     <ol class="fwb-static">
-      {flow.steps.map((s) => (
+      {steps.map((s) => (
         <li class="fwb-static-step">
           <code class="fwb-static-cmd">{s.command}</code>
-          <p>{lang === 'es' ? s.descriptionEs : s.descriptionEn}</p>
+          <p>{s.description}</p>
         </li>
       ))}
     </ol>
@@ -94,17 +99,6 @@ const t = useTranslations(lang)
   color: var(--sc);
   background: oklch(from var(--sc) l c h / 0.08);
   padding: 14px 18px;
-  border-bottom: 1px solid oklch(from var(--border-soft) l c h / 0.5);
-}
-
-.fwb-wrap :global(.fw-produces) {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  letter-spacing: 0.02em;
-  color: oklch(from var(--sc) l c h / 0.85);
-  background: oklch(from var(--sc) l c h / 0.05);
-  padding: 9px 18px;
   border-bottom: 1px solid oklch(from var(--border-soft) l c h / 0.5);
 }
 
