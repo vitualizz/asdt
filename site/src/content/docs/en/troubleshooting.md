@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: 'Fix common ASDT errors: command not found, PATH issues, Engram not connected, Claude Code auth failure, specialist not appearing, wrong specialist chosen.'
+description: 'Fix common ASDT errors: command not found, PATH issues, Engram not connected, Claude Code auth failure, specialist not appearing, switching specialists.'
 order: 11
 locale: en
 ---
@@ -76,13 +76,13 @@ If ASDT reports that the configured model is unavailable, your `.asdt/config.yam
 
 ## Specialist issues
 
-### Wrong specialist chosen — how to recover
+### Switching specialists
 
-Stop the current run. Nothing is lost — prior artifacts remain in the knowledge base. Invoke the correct specialist directly.
+There's no wrong specialist to recover from — each one works independently and reads prior artifacts from the shared knowledge base, so switching costs nothing. If a request doesn't fit the specialist you invoked, just stop and run a different one directly; nothing is lost.
 
 **Example:** If you ran `/asdt-developer` before producing an ADR, run `/asdt-architect` to create the decision record. Then re-run `/asdt-developer` — it reads the ADR automatically.
 
-See [Specialist Comparison](/asdt/docs/specialist-comparison) to choose the right specialist for your scenario.
+If you're not sure which specialist fits your request, run `/asdt` — it recommends a more suitable one when your request doesn't fit. See [Specialists](/asdt/docs/specialists) to choose the right specialist for your scenario.
 
 ### Specialist command not appearing in your assistant
 

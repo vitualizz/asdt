@@ -1,6 +1,6 @@
 ---
 title: Solución de problemas
-description: 'Solucioná errores comunes de ASDT: command not found, problemas de PATH, Engram sin conectar, fallo de autenticación, especialista que no aparece, especialista equivocado.'
+description: 'Solucioná errores comunes de ASDT: command not found, problemas de PATH, Engram sin conectar, fallo de autenticación, especialista que no aparece, cambiar de especialista.'
 order: 11
 locale: es
 ---
@@ -76,13 +76,13 @@ Si ASDT reporta que el modelo configurado no está disponible, tu `.asdt/config.
 
 ## Problemas de especialistas
 
-### Especialista equivocado — cómo recuperarse
+### Cambiar de especialista
 
-Detené la corrida actual. No se pierde nada — los artefactos previos permanecen en la base de conocimiento. Invocá el especialista correcto directamente.
+No existe un especialista equivocado del que tengas que recuperarte — cada uno trabaja de forma independiente y lee los artefactos previos desde la base de conocimiento compartida, así que cambiar no te cuesta nada. Si una petición no encaja con el especialista que invocaste, simplemente detené la corrida y ejecutá otro directamente; no se pierde nada.
 
 **Ejemplo:** Si corriste `/asdt-developer` antes de producir un ADR, ejecutá `/asdt-architect` para crear el registro de decisión. Luego volvé a correr `/asdt-developer` — lee el ADR automáticamente.
 
-Ver [Comparación de especialistas](/asdt/docs/specialist-comparison) para elegir el especialista correcto para tu escenario.
+Si no estás seguro de qué especialista se ajusta a tu petición, ejecutá `/asdt` — recomienda uno más adecuado cuando tu petición no encaja. Ver [Especialistas](/asdt/es/docs/specialists) para elegir el especialista correcto para tu escenario.
 
 ### El comando del especialista no aparece en tu asistente
 
