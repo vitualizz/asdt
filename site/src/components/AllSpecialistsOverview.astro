@@ -1,0 +1,160 @@
+---
+import { specialistSteps } from '@data/specialist-steps'
+import { PIPELINE_ORDER, SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
+import type { SpecialistId } from '@data/artifact-graph'
+import type { Locale } from '@i18n/utils'
+import { getBaseHref } from '@i18n/utils'
+
+interface Props {
+  lang: Locale
+}
+
+const { lang } = Astro.props
+const isEs = lang === 'es'
+
+interface Row {
+  id: SpecialistId
+  label: string
+  color: string
+  purpose: string
+  stepIds: string[]
+  href: string
+}
+
+// All copy shown here (labels, step ids, purpose sentences) comes verbatim from
+// specialist-steps.ts / artifact-graph.ts — same reuse convention as StepFlow.astro
+// and ArtifactFlowTrace.astro, which keep this data English-only on both locales.
+const rows: Row[] = PIPELINE_ORDER.map((id) => {
+  const config = specialistSteps[id]
+  const isRisk = config.tierType === 'risk-surface'
+  const maxKey = isRisk ? 'high' : 'complex'
+  const stepIds: string[] = config.tiers[maxKey as keyof typeof config.tiers] ?? Object.keys(config.steps)
+  const lastStepId = stepIds[stepIds.length - 1]
+  const purpose = config.steps[lastStepId]?.purpose ?? ''
+  const href = isEs
+    ? getBaseHref(`/es/docs/specialists/${id}`)
+    : getBaseHref(`/docs/specialists/${id}`)
+
+  return {
+    id,
+    label: SPECIALIST_LABEL[id],
+    color: SPECIALIST_COLOR[id],
+    purpose,
+    stepIds,
+    href,
+  }
+})
+---
+
+<ul class="aso-list" role="list">
+  {rows.map((row) => (
+    <li class="aso-item" role="listitem">
+      <a
+        href={row.href}
+        class="aso-card"
+        style={`--sc: var(${row.color})`}
+        aria-label={`${row.label}: ${row.purpose}`}
+      >
+        <span class="aso-name">{row.label}</span>
+        <p class="aso-purpose">{row.purpose}</p>
+        <div class="aso-pills" aria-hidden="true">
+          {row.stepIds.map((stepId) => (
+            <span class="aso-pill">{stepId}</span>
+          ))}
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+.aso-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aso-item { margin: 0; }
+
+.aso-card {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  grid-template-rows: auto auto;
+  align-items: start;
+  gap: 4px 20px;
+  padding: 16px 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: oklch(from var(--sc) l c h / 0.03);
+  text-decoration: none;
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.aso-card:hover {
+  transform: translateY(-2px);
+  border-color: oklch(from var(--sc) l c h / 0.4);
+  background: oklch(from var(--sc) l c h / 0.06);
+}
+
+.aso-card:focus-visible {
+  outline: 2px solid var(--sc);
+  outline-offset: 2px;
+}
+
+.aso-name {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--sc);
+  padding-top: 2px;
+}
+
+.aso-purpose {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.aso-pills {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.aso-pill {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--faint);
+  border: 1px solid var(--border-soft);
+  background: var(--surface-2);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .aso-card {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  .aso-name { grid-column: 1; grid-row: 1; padding-top: 0; }
+  .aso-purpose { grid-column: 1; grid-row: 2; }
+  .aso-pills { grid-column: 1; grid-row: 3; margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aso-card { transition: none; }
+  .aso-card:hover { transform: none; }
+}
+</style>

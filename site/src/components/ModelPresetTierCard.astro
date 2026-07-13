@@ -1,0 +1,137 @@
+---
+import type { Locale } from '@i18n/utils'
+import { modelPresets, CUSTOMIZE_CTA } from '@data/model-presets'
+
+interface Props {
+  lang: Locale
+}
+
+const { lang } = Astro.props
+const isEs = lang === 'es'
+
+const recommendedLabel = isEs ? 'Recomendado' : 'Recommended'
+const defaultLabel = isEs ? 'Por defecto' : 'Default'
+---
+
+<ul class="mpt-grid" role="list">
+  {modelPresets.map((preset) => (
+    <li class:list={['mpt-card', { 'mpt-card--recommended': preset.recommended }]}>
+      <div class="mpt-top">
+        <h3 class="mpt-name">{isEs ? preset.labelEs : preset.labelEn}</h3>
+        {preset.recommended && <span class="mpt-badge mpt-badge--accent">{recommendedLabel}</span>}
+        {preset.default && <span class="mpt-badge mpt-badge--neutral">{defaultLabel}</span>}
+      </div>
+      <p class="mpt-desc">{isEs ? preset.descEs : preset.descEn}</p>
+    </li>
+  ))}
+</ul>
+
+<div class="mpt-cta">
+  <p class="mpt-cta-title">{isEs ? CUSTOMIZE_CTA.titleEs : CUSTOMIZE_CTA.titleEn}</p>
+  <p class="mpt-cta-desc">{isEs ? CUSTOMIZE_CTA.descEs : CUSTOMIZE_CTA.descEn}</p>
+</div>
+
+<style>
+.mpt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.mpt-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: oklch(0.175 0.012 285 / 0.7);
+  padding: 16px;
+  transition: border-color 0.2s, box-shadow 0.25s, transform 0.2s;
+}
+
+.mpt-card:hover {
+  transform: translateY(-2px);
+  border-color: oklch(from var(--color-accent) l c h / 0.45);
+  box-shadow: 0 14px 44px -18px oklch(from var(--color-accent) l c h / 0.4);
+}
+
+.mpt-card--recommended {
+  border-color: oklch(from var(--color-accent) l c h / 0.5);
+  background: oklch(from var(--color-accent) l c h / 0.06);
+}
+
+.mpt-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mpt-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.mpt-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.mpt-badge--accent {
+  color: var(--color-accent);
+  border: 1px solid oklch(from var(--color-accent) l c h / 0.4);
+  background: oklch(from var(--color-accent) l c h / 0.12);
+}
+
+.mpt-badge--neutral {
+  color: var(--faint);
+  border: 1px solid var(--border-soft);
+  background: transparent;
+}
+
+.mpt-desc {
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.mpt-cta {
+  border: 1px dashed var(--border-soft);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mpt-cta-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mpt-cta-desc {
+  font-size: 13px;
+  color: var(--faint);
+  margin: 0;
+}
+
+@media (max-width: 599px) {
+  .mpt-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

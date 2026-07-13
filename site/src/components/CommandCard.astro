@@ -1,0 +1,113 @@
+---
+import { commands as commandData } from '@data/commands'
+import type { CommandEntry } from '@data/commands'
+import { SPECIALIST_COLOR } from '@data/artifact-graph'
+import type { Locale } from '@i18n/utils'
+
+interface Props {
+  /** 'en' | 'es' — picks which localized copy fields from commands.ts render. */
+  locale: Locale
+  /** Defaults to the full commands.ts dataset (10 entries: 1 CLI + 9 slash commands). */
+  commands?: CommandEntry[]
+}
+const { locale, commands = commandData } = Astro.props
+const isEs = locale === 'es'
+
+function accentFor(cmd: CommandEntry): string {
+  return cmd.specialistId ? `var(${SPECIALIST_COLOR[cmd.specialistId]})` : 'var(--color-accent)'
+}
+
+function badgeLabel(cmd: CommandEntry): string {
+  if (cmd.badge === 'cli') return isEs ? 'CLI' : 'CLI'
+  return isEs ? 'Comando' : 'Slash command'
+}
+---
+<ul class="cmd-grid" role="list">
+  {commands.map((cmd) => (
+    <li class="cmd-item">
+      <a href={`#${cmd.anchor}`} class="cmd-card" style={`--c: ${accentFor(cmd)};`}>
+        <div class="cmd-top">
+          <span class="cmd-badge">{badgeLabel(cmd)}</span>
+          <code class="cmd-name">{cmd.command}</code>
+        </div>
+        <div class="cmd-body">
+          <h3>{isEs ? cmd.titleEs : cmd.titleEn}</h3>
+          <p>{isEs ? cmd.oneLinerEs : cmd.oneLinerEn}</p>
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+.cmd-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cmd-card {
+  --c: var(--color-accent);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: oklch(0.175 0.012 285 / 0.7);
+  padding: 24px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.25s, transform 0.2s;
+}
+.cmd-card:hover {
+  transform: translateY(-2px);
+  border-color: oklch(from var(--c) l c h / 0.45);
+  box-shadow: 0 14px 44px -18px oklch(from var(--c) l c h / 0.55);
+}
+.cmd-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(140px 90px at 24px 24px, oklch(from var(--c) l c h / 0.09), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.cmd-card:hover::before { opacity: 1; }
+.cmd-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.cmd-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.cmd-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--c);
+  border: 1px solid oklch(from var(--c) l c h / 0.35);
+  background: oklch(from var(--c) l c h / 0.08);
+  border-radius: 999px;
+  padding: 3px 11px;
+  white-space: nowrap;
+}
+.cmd-body h3 { font-size: 17.5px; font-weight: 600; margin-bottom: 5px; }
+.cmd-body p { font-size: 14.5px; color: var(--color-text-muted); line-height: 1.6; }
+</style>

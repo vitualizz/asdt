@@ -1,0 +1,313 @@
+---
+// RecipesBrowser — docs-scoped recipe filter + list for recipes.md (Phase 2, docs-ux-overhaul).
+//
+// Keyboard/semantic model (resolves ux-ui/design-critique obs 3736 HIGH #1):
+// native <fieldset>/<legend> radiogroup — NOT a role="tablist"/"tab" pattern.
+// The <input type="radio"> + <label> pair already ships its own correct
+// keyboard model (arrow keys move between radios in the group, Tab enters/exits
+// the group once) with zero extra ARIA. Layering tablist/tab roles on top of
+// that DOM — as RecipesTabs.astro's landing-page version does — creates a
+// conflicting announcement (native "radio button" vs ARIA "tab"). This
+// component intentionally does NOT copy that role="tablist" attribute from
+// RecipesTabs; visual styling is reused, ARIA is not.
+import { recipes, RECIPE_CATEGORIES } from '@data/recipes'
+import { SPECIALIST_COLOR, SPECIALIST_LABEL } from '@data/artifact-graph'
+import type { Locale } from '@i18n/utils'
+
+interface Props { lang: Locale }
+const { lang } = Astro.props
+const isEs = lang === 'es'
+
+const legendText = isEs ? 'Filtrar por objetivo' : 'Filter by goal'
+
+function categoryCount(id: string): number {
+  return id === 'all' ? recipes.length : recipes.filter((r) => r.category === id).length
+}
+
+function statusText(id: string, label: string): string {
+  const count = categoryCount(id)
+  if (isEs) return `Mostrando ${count} receta${count === 1 ? '' : 's'} para "${label}".`
+  return `Showing ${count} recipe${count === 1 ? '' : 's'} for "${label}".`
+}
+---
+<div class="recipes-browser recipes-shell">
+  <fieldset class="rb-fieldset">
+    <legend class="rb-legend">{legendText}</legend>
+    <div class="recipe-tabs">
+      {RECIPE_CATEGORIES.map((cat) => {
+        const label = isEs ? cat.labelEs : cat.labelEn
+        return (
+          <span class="rb-option">
+            <input
+              type="radio"
+              name="rb-goal"
+              id={`rb-${cat.id}`}
+              value={cat.id}
+              checked={cat.id === 'all'}
+            />
+            <label for={`rb-${cat.id}`}>{label}</label>
+          </span>
+        )
+      })}
+    </div>
+  </fieldset>
+
+  <p class="rb-sr-status" aria-live="polite">
+    {RECIPE_CATEGORIES.map((cat) => {
+      const label = isEs ? cat.labelEs : cat.labelEn
+      return (
+        <span class="rb-sr-status-item" data-for={cat.id}>{statusText(cat.id, label)}</span>
+      )
+    })}
+  </p>
+
+  <div class="recipe-list">
+    {recipes.map((recipe) => {
+      const title = isEs ? recipe.titleEs : recipe.titleEn
+      const note = isEs ? recipe.noteEs : recipe.noteEn
+      const kbNote = isEs ? recipe.kbNoteEs : recipe.kbNoteEn
+      return (
+        <article class="recipe-card" data-category={recipe.category}>
+          <h3 class="recipe-title">{title}</h3>
+          <p class="recipe-note">{note}</p>
+          <div class="chip-row">
+            {recipe.chips.map((chip) => (
+              <span class="chip" style={`--c: var(${SPECIALIST_COLOR[chip.specialistId]});`}>
+                <span class="dot" aria-hidden="true"></span>
+                {SPECIALIST_LABEL[chip.specialistId]}
+              </span>
+            ))}
+          </div>
+          {kbNote && <p class="recipe-kb-note">{kbNote}</p>}
+          <pre><code>{recipe.commands.join('\n')}</code></pre>
+        </article>
+      )
+    })}
+
+    <p class="recipe-list-empty" aria-live="polite">
+      {isEs ? 'No hay recetas para este filtro todavía — probá "Todas".' : 'No recipes match this filter yet — try All.'}
+    </p>
+  </div>
+</div>
+
+<style>
+.recipes-browser {
+  position: relative;
+}
+.recipes-shell {
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: oklch(0.165 0.014 285 / 0.75);
+  padding: 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Filter fieldset — native radiogroup, visually styled as a tab-like strip.
+   No role="tablist"/"tab"/aria-selected anywhere: the accessible name and
+   keyboard model come entirely from <fieldset>/<legend> + native radios. */
+.rb-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.rb-legend {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 0;
+  margin: 0 0 14px;
+}
+.recipe-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rb-option { display: contents; }
+.rb-option input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+.recipe-tabs label {
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 8px 18px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.recipe-tabs label:hover { color: var(--color-text); border-color: var(--color-border); }
+
+.recipes-browser:has(#rb-all:checked) label[for='rb-all'],
+.recipes-browser:has(#rb-from-scratch:checked) label[for='rb-from-scratch'],
+.recipes-browser:has(#rb-add-to-existing:checked) label[for='rb-add-to-existing'],
+.recipes-browser:has(#rb-review-harden:checked) label[for='rb-review-harden'],
+.recipes-browser:has(#rb-understand-document:checked) label[for='rb-understand-document'] {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+  background: oklch(from var(--color-accent) l c h / 0.1);
+}
+
+/* Visible focus ring on the hidden radio's label — the radio is visually
+   hidden (not display:none, so it stays focusable/announced), and focus
+   is surfaced on its paired label via :has(). */
+.recipes-browser:has(#rb-all:focus-visible) label[for='rb-all'],
+.recipes-browser:has(#rb-from-scratch:focus-visible) label[for='rb-from-scratch'],
+.recipes-browser:has(#rb-add-to-existing:focus-visible) label[for='rb-add-to-existing'],
+.recipes-browser:has(#rb-review-harden:focus-visible) label[for='rb-review-harden'],
+.recipes-browser:has(#rb-understand-document:focus-visible) label[for='rb-understand-document'] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Screen-reader-only filter-state announcement — one span per category,
+   toggled via :has() so only the currently-selected category's status
+   text is present in the accessible tree (triggers the aria-live polite
+   announcement without any JS). */
+.rb-sr-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.rb-sr-status-item { display: none; }
+.recipes-browser:has(#rb-all:checked) .rb-sr-status-item[data-for='all'],
+.recipes-browser:has(#rb-from-scratch:checked) .rb-sr-status-item[data-for='from-scratch'],
+.recipes-browser:has(#rb-add-to-existing:checked) .rb-sr-status-item[data-for='add-to-existing'],
+.recipes-browser:has(#rb-review-harden:checked) .rb-sr-status-item[data-for='review-harden'],
+.recipes-browser:has(#rb-understand-document:checked) .rb-sr-status-item[data-for='understand-document'] {
+  display: inline;
+}
+
+/* Recipe list + card-level filtering (CSS-only, :has()-driven). */
+.recipe-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+.recipe-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: var(--surface-2, oklch(0.19 0.012 285));
+  padding: 20px;
+}
+.recipe-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+.recipe-note {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+.recipe-kb-note {
+  font-size: 12px;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  margin: 0;
+}
+.recipe-card pre {
+  position: relative;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--bg-deep, oklch(0.13 0.01 285));
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.8;
+  overflow-x: auto;
+}
+.recipe-card pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  white-space: pre;
+  font-size: inherit;
+  color: var(--color-text);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.chip {
+  --c: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text);
+  border: 1px solid oklch(from var(--c) l c h / 0.38);
+  background: oklch(from var(--c) l c h / 0.10);
+  border-radius: 999px;
+  padding: 6px 13px;
+}
+.chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 7px oklch(from var(--c) l c h / 0.80);
+}
+
+/* Category filtering — 'all' shows every card; every other category hides
+   all cards then re-shows only the matching data-category. */
+.recipes-browser:has(#rb-from-scratch:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-from-scratch:checked) .recipe-card[data-category='from-scratch'] { display: flex; }
+
+.recipes-browser:has(#rb-add-to-existing:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-add-to-existing:checked) .recipe-card[data-category='add-to-existing'] { display: flex; }
+
+.recipes-browser:has(#rb-review-harden:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-review-harden:checked) .recipe-card[data-category='review-harden'] { display: flex; }
+
+.recipes-browser:has(#rb-understand-document:checked) .recipe-card { display: none; }
+.recipes-browser:has(#rb-understand-document:checked) .recipe-card[data-category='understand-document'] { display: flex; }
+
+/* Empty state — only ever surfaces if a category's data becomes empty in
+   the future; currently every bucket has >=1 recipe. */
+.recipe-list-empty {
+  display: none;
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 14px;
+  color: var(--faint);
+  margin: 0;
+  padding: 20px 0;
+}
+.recipes-browser:has(#rb-from-scratch:checked):not(:has(.recipe-card[data-category='from-scratch'])) .recipe-list-empty,
+.recipes-browser:has(#rb-add-to-existing:checked):not(:has(.recipe-card[data-category='add-to-existing'])) .recipe-list-empty,
+.recipes-browser:has(#rb-review-harden:checked):not(:has(.recipe-card[data-category='review-harden'])) .recipe-list-empty,
+.recipes-browser:has(#rb-understand-document:checked):not(:has(.recipe-card[data-category='understand-document'])) .recipe-list-empty {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .recipe-list { grid-template-columns: 1fr; }
+}
+</style>

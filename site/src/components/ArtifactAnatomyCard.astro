@@ -1,0 +1,159 @@
+---
+import type { Locale } from '@i18n/utils'
+
+interface Props {
+  lang: Locale
+}
+
+const { lang } = Astro.props
+const isEs = lang === 'es'
+
+interface AnatomyField {
+  label: string
+  value: string
+  desc: string
+}
+
+const fields: AnatomyField[] = isEs
+  ? [
+      {
+        label: 'Title',
+        value: 'add-auth/developer/dev-spec',
+        desc: 'El nombre legible del artefacto.',
+      },
+      {
+        label: 'Topic Key',
+        value: 'asdt/add-auth/developer/dev-spec',
+        desc: 'La clave con la que se recupera automáticamente, sin matching difuso.',
+      },
+      {
+        label: 'Type',
+        value: 'decision',
+        desc: 'La categoría del artefacto — architecture, decision, bugfix, etc.',
+      },
+      {
+        label: 'Project',
+        value: 'asdt',
+        desc: 'El proyecto al que pertenece, para que los resultados no se mezclen entre proyectos.',
+      },
+    ]
+  : [
+      {
+        label: 'Title',
+        value: 'add-auth/developer/dev-spec',
+        desc: 'The human-readable name of the artifact.',
+      },
+      {
+        label: 'Topic Key',
+        value: 'asdt/add-auth/developer/dev-spec',
+        desc: 'The machine key used to retrieve it automatically, no fuzzy matching involved.',
+      },
+      {
+        label: 'Type',
+        value: 'decision',
+        desc: 'The artifact\'s category — architecture, decision, bugfix, etc.',
+      },
+      {
+        label: 'Project',
+        value: 'asdt',
+        desc: 'The project it belongs to, so results never mix across projects.',
+      },
+    ]
+---
+
+<dl class="aac">
+  {fields.map((field) => (
+    <div class="aac-field">
+      <dt class="aac-badge">{field.label}</dt>
+      <dd class="aac-body">
+        <code class="aac-value">{field.value}</code>
+        <span class="aac-desc">{field.desc}</span>
+      </dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+.aac {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 32px;
+  padding: 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: oklch(from var(--color-accent) l c h / 0.02);
+}
+
+.aac-field {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.aac-badge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 3px 9px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.aac-body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.aac-value {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--color-accent);
+  background: oklch(from var(--color-accent) l c h / 0.08);
+  border: 1px solid oklch(from var(--color-accent) l c h / 0.25);
+  border-radius: 6px;
+  padding: 3px 9px;
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.aac-desc {
+  font-size: 13px;
+  color: var(--faint);
+  line-height: 1.5;
+}
+
+@media (max-width: 599px) {
+  .aac-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .aac-badge {
+    text-align: left;
+  }
+}
+
+html[data-theme='light'] .aac {
+  background: oklch(from var(--color-accent) l c h / 0.03);
+}
+
+html[data-theme='light'] .aac-value {
+  background: oklch(from var(--color-accent) l c h / 0.10);
+  border-color: oklch(from var(--color-accent) l c h / 0.35);
+}
+</style>
