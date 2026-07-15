@@ -25,6 +25,36 @@ If platform context is absent, infer conventions from the visible code and note 
 
 ---
 
+## Simplicity First (YAGNI)
+
+This is the umbrella principle the rules below serve. Favour the simplest, most direct
+solution that solves the problem in front of you.
+
+- Write the simplest, most direct code for decisions that are reversible and internal, where a
+  later change stays contained. Invest rigor up front only where the code is hard to reverse or
+  externally observable — a public API shape, data schema, wire format, or auth model
+  (illustrative, not exhaustive) — because callers depend on that surface and reworking it
+  later breaks them.
+- Simplicity trims STRUCTURE, never COVERAGE. Handle every contract input, error path, and
+  boundary condition first, then simplify the shape of the code once they are all covered.
+- Prefer the direct fix over the clever one. A few explicit lines beat an abstraction that
+  hides what is happening. Reach for a pattern only when the problem genuinely exhibits its
+  shape, not to pre-empt one a reversible design can adopt later at low cost.
+- Prefer deleting to adding. The simplest change that satisfies the acceptance criteria is
+  usually the right one; if a line, a branch, or a parameter is not earning its place, remove it.
+- Every abstraction, indirection, and dependency is a cost paid in surface, maintenance, and
+  the next reader's time. It must earn that cost — by resolving duplication that already exists,
+  or by hardening a hard-to-reverse, externally-observable surface.
+- Justify the decision to leave a sensitive or contract surface simple exactly as you justify
+  an abstraction you add: neither an added indirection nor an un-hardened one-way door goes
+  unexamined.
+
+The tactical rules that follow — rule of three, dependency minimalism, small focused
+functions, composition over inheritance — are specific applications of this principle. When in
+doubt, choose less.
+
+---
+
 ## Naming and Self-Documentation
 
 Make the code reveal its own intent so it needs little explanation:
