@@ -1,0 +1,9 @@
+schema_version: "2"
+scanned_at: 2026-07-15T19:00:56Z
+design_fingerprint:
+  i18n: { value: "custom (locale files)", source: detected, confidence: medium }
+  css_approach: { value: tailwind, source: detected, confidence: high }
+  orm: { value: none, source: detected, confidence: medium }
+  state_management: { value: none, source: detected, confidence: medium }
+  ci_cd: { value: github-actions, source: detected, confidence: high }
+  lint: { value: golangci-lint, source: detected, confidence: high }

@@ -1,0 +1,32 @@
+schema_version: "2"
+scanned_at: 2026-07-15T19:00:56Z
+stack: [go, node]
+file_structure: cmd/ for binaries, internal/ for private packages
+design_fingerprint:
+  i18n: custom (locale files)
+  css_approach: tailwind
+  ci_cd: github-actions
+  lint: golangci-lint
+is_monorepo: { value: "true", source: detected, confidence: medium }
+test_runner: { value: "make test", source: detected, confidence: medium }
+naming_style: { value: "snake_case filenames, PascalCase exported symbols", source: detected, confidence: medium }
+architectural_style: { value: "hexagonal", source: detected, confidence: high }
+
+# ASDT:NUANCE:BEGIN
+human_nuance:
+  - topic: "installTransformPipeline"
+    type: architectural
+    note: "Source skills are never copied verbatim — the installer (writeSkillFile) transforms them at install time based on what the user configures in the TUI: workflow.yaml files get per-step model injection, and only the root SKILL.md regenerates its §9.2 region from the workflow.yaml files (per-specialist asdt-*/SKILL.md carry no markers, by design)."
+    source: manual
+    origin: user
+  - topic: "evaluatorPurity"
+    type: repo_practice
+    note: "Every grader Evaluator is pure and never panics, even on malformed payloads — it returns errored(...) rather than crashing. Adding a probe type means an entry in the evaluators dispatch map plus the ProbeType constant."
+    source: manual
+    origin: user
+  - topic: "workflowYamlSourceOfTruth"
+    type: architectural
+    note: "Each specialist's workflow.yaml is the source of truth walked by parallel generators — WorkflowModelSteps (model-selection map) and parseRegistry (the SKILL.md §9.2 registry + drift test). Renaming or reordering a step is not local: it propagates to model selection, the generated §9.2 region, and the drift test at once."
+    source: manual
+    origin: user
+# ASDT:NUANCE:END

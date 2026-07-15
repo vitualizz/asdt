@@ -74,7 +74,7 @@ When an expected artifact is not found, do NOT stop or error. Follow this protoc
      - "system-design.yaml absent — no architectural constraints applied; flag complex decisions as open_items"
    ```
 
-2. Continue with whatever context is available (platform.yaml, visible code, the feature description provided at invocation).
+2. Continue with whatever context is available (knowledge.yaml, visible code, the feature description provided at invocation).
 
 3. Mark implementation steps that depend on absent artifacts with a note in their `rationale`:
    ```
@@ -90,7 +90,7 @@ After loading all found artifacts, produce an internal summary (not written to t
 ```
 Loaded:
   - requirements-spec.yaml: {N} user stories, scope {in/out counts}
-  - platform.yaml: stack={stack}, conventions={summary}
+  - knowledge.yaml: stack={stack}, conventions={summary}
 
 Missing:
   - system-design.yaml

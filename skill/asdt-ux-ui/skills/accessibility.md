@@ -46,7 +46,7 @@ Target: **WCAG 2.1 Level AA**. Every new component must meet this baseline befor
 
 Tools: [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/), [Colour Contrast Analyser](https://www.tpgi.com/color-contrast-checker/).
 
-Flag any color pair in `component-spec.yaml` that you cannot verify against `platform.yaml` tokens.
+Flag any color pair in `component-spec.yaml` that you cannot verify against `knowledge.yaml` tokens.
 
 ## Focus Management
 

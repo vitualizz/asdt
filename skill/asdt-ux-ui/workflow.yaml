@@ -8,7 +8,7 @@ steps:
 
   - name: platform-analysis
     skill: ../asdt-shared/skills/platform-context.md
-    description: Load and inject platform conventions and design system fingerprint from platform.yaml
+    description: Load and inject platform conventions and design system fingerprint from knowledge.yaml
     execution: inline
 
   - name: feature-brief

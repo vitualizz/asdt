@@ -1,3 +1,4 @@
 memory:
   provider: engram
 strict_tdd: false
+code_intelligence: codegraph

@@ -8,60 +8,58 @@ Inject the project's detected platform knowledge into any specialist's context. 
 
 ## Reuse Guard (project-level)
 
-Before any analysis, check if `.asdt/knowledge/platform-summary.yaml` exists.
+Before any analysis, check if `.asdt/knowledge/knowledge.yaml` exists.
 
-If it does, **do not re-analyze**. Read that file and inject its contents as context, as-is. The `/asdt-init` command produces this file deterministically via bounded scan probes; re-deriving it with the LLM wastes tokens and yields non-deterministic stack interpretations.
+If it does, **do not re-analyze**. Read that file and inject the value-only fields described below (base injection ≤ 500 tokens — provenance and inline `source`/`confidence` NEVER enter this base path). The `/asdt-init` command produces this file deterministically via bounded scan probes; re-deriving it with the LLM wastes tokens and yields non-deterministic stack interpretations.
 
-Only if `.asdt/knowledge/platform-summary.yaml` is **absent**, fall back to finding and reading `.asdt/knowledge/platform.yaml` (next section) and injecting the extracted fields described below.
+Only if `.asdt/knowledge/knowledge.yaml` is **absent**, follow Graceful Degradation below.
 
 ---
 
-## How to Find platform.yaml
+## How to Find knowledge.yaml
 
-> Fallback path — used only when the Reuse Guard above found no `platform-summary.yaml`.
+Walk up from CWD until you find `.asdt/knowledge/knowledge.yaml`. This is the same nearest-ancestor search used for `.asdt/` itself.
 
-Walk up from CWD until you find `.asdt/knowledge/platform.yaml`. This is the same nearest-ancestor search used for `.asdt/` itself.
-
-Path: `.asdt/knowledge/platform.yaml` relative to the resolved ASDT root.
+Path: `.asdt/knowledge/knowledge.yaml` relative to the resolved ASDT root.
 
 ---
 
 ## What to Inject
 
-When `platform.yaml` is found, extract and inject the following fields into the specialist's context (summarized to under 500 tokens):
+When `knowledge.yaml` is found, extract and inject the following fields into the specialist's context (summarized to under 500 tokens — values only, never `source`/`confidence` annotations):
 
 | Field | What to inject |
 |---|---|
-| `detected_stack` | Languages, frameworks, runtimes detected (e.g. "Go 1.22, no frontend framework") |
-| `conventions.naming` | Naming conventions in use (e.g. "snake_case for files, PascalCase for exported Go types") |
-| `conventions.file_structure` | Directory layout pattern (e.g. "internal/ for packages, cmd/ for binaries") |
-| `design_fingerprint` | Per-concern tooling map — inject each present concern via the lines below; omit concerns whose value is empty |
+| `stack` | Languages, frameworks, runtimes detected (e.g. "Go 1.22, no frontend framework") |
+| `naming_style.value` | Naming conventions in use (e.g. "snake_case for files, PascalCase for exported Go types") |
+| `file_structure` | Directory layout pattern (e.g. "internal/ for packages, cmd/ for binaries") |
+| `design_fingerprint` | Per-concern tooling map (flat `{concern: value}` scalars) — inject each present concern via the lines below; omit concerns whose value is empty |
 | `design_fingerprint.i18n` | Internationalization library in use — if present |
 | `design_fingerprint.css_approach` | CSS approach in use — if present |
 | `design_fingerprint.state_management` | State-management library in use — if present |
 | `design_fingerprint.orm` | ORM / data-access layer in use — if present |
 | `design_fingerprint.ci_cd` | CI/CD platform in use — if present |
 | `design_fingerprint.lint` | Linter / formatter in use — if present |
-| `design_fingerprint.code_intelligence` | Code-intelligence index present — drives the Tooling line below; if present |
+| `code_intelligence` (in `.asdt/config.yaml`) | Code-intelligence index present — drives the Tooling line below; read from `config.yaml`, NOT from `design_fingerprint`; if present |
 
-Discard: full file listings, raw config, `layout_patterns`, `scanned_at`, `schema_version`. If the extracted content exceeds 500 tokens, summarize each field to its single most important fact.
+Discard: full file listings, raw config, `scanned_at`, `schema_version`, and the write-only `provenance.yaml` sidecar (it never enters any injection path). If the extracted content exceeds 500 tokens, summarize each field to its single most important fact.
 
-Do not inject the entire `platform.yaml` verbatim. Summarize only the fields relevant to the specialist's current step.
+Do not inject the entire `knowledge.yaml` verbatim. Summarize only the fields relevant to the specialist's current step.
 
 ---
 
 ## Graceful Degradation
 
-If `platform.yaml` does not exist:
+If `knowledge.yaml` does not exist:
 
 1. Do NOT halt the specialist workflow.
 2. Record the absence in the artifact's `open_items[]`:
    ```
-   "platform.yaml absent — conventions inferred from visible code patterns"
+   "knowledge.yaml absent — conventions inferred from visible code patterns"
    ```
 3. Proceed using conventions inferred from the code visible in the current context (file naming, import style, directory layout).
 
-If `platform.yaml` exists but is partially populated (some fields empty or missing), inject only the fields that are present. Do not halt or record an error for missing optional fields.
+If `knowledge.yaml` exists but is partially populated (some fields empty or missing), inject only the fields that are present. Do not halt or record an error for missing optional fields.
 
 ---
 
@@ -70,7 +68,7 @@ If `platform.yaml` exists but is partially populated (some fields empty or missi
 Build the injection from only the fields that are actually present — omit a line entirely when its source field is empty or missing. Never emit a label with nothing after it (`Architecture: ` on its own conveys nothing and still costs tokens):
 
 ```
-Stack: {detected_stack values, comma-separated}
+Stack: {stack values, comma-separated}
 Conventions: {naming style, if present}{ | file structure note, if present}
 i18n: {design_fingerprint.i18n, if present}
 CSS: {design_fingerprint.css_approach, if present}
@@ -81,7 +79,7 @@ Lint: {design_fingerprint.lint, if present}
 Tooling: codegraph index available — prefer codegraph over grep/read loops
 ```
 
-`Conventions` joins its two parts with ` | ` only when BOTH are present. If only one is present, emit that one alone with no separator. If neither is present, omit the `Conventions` line too. Each `design_fingerprint` concern line is emitted only when its value is present — omit the line entirely otherwise. The `Tooling` line is emitted with EXACTLY this wording, and ONLY when `design_fingerprint.code_intelligence` is present; omit it when there is no code-intelligence index.
+`Conventions` joins its two parts with ` | ` only when BOTH are present. If only one is present, emit that one alone with no separator. If neither is present, omit the `Conventions` line too. Each `design_fingerprint` concern line is emitted only when its value is present — omit the line entirely otherwise. The `Tooling` line is emitted with EXACTLY this wording, and ONLY when the `code_intelligence` key is present in `.asdt/config.yaml` (NOT `design_fingerprint` — that map no longer carries it); omit the line when the key is absent.
 
 Fully-populated example:
 ```
@@ -96,7 +94,7 @@ Lint: eslint
 Tooling: codegraph index available — prefer codegraph over grep/read loops
 ```
 
-Partially-populated example — e.g. a `platform.yaml` from `/asdt-init` for a Go-only repo, where the node-only packs (`i18n`, `css_approach`, `state_management`) never fire and only the always-on and Go packs contribute:
+Partially-populated example — e.g. a `knowledge.yaml` from `/asdt-init` for a Go-only repo, where the node-only packs (`i18n`, `css_approach`, `state_management`) never fire and only the always-on and Go packs contribute:
 ```
 Stack: Go
 Conventions: cmd/ for binaries, internal/ for private packages
@@ -109,12 +107,13 @@ Tooling: codegraph index available — prefer codegraph over grep/read loops
 
 ## Conditional: Project Context
 
-> Load this section only if `.asdt/knowledge/project-context.yaml` exists.
+> Load this section only if `.asdt/knowledge/knowledge.yaml` exists.
 > If the file is absent, skip this entire section silently.
-> If `schema_version` != `"1"`, skip and note `project-context.yaml: schema_version mismatch, skipped` in open_items.
+> If `schema_version` != `"2"`, skip and note `knowledge.yaml: schema_version mismatch, skipped` in open_items.
 
 The following fields describe the structural and stylistic context of this project,
-as detected by `/asdt-init`. Each field carries a `source` (detected | inferred | manual)
+as detected by `/asdt-init` — the four inline FieldValue fields of `knowledge.yaml`.
+Each field carries a `source` (detected | inferred | manual)
 and a `confidence` (high | medium | low). Fields with an empty `value` are omitted.
 
 **Monorepo**: {{ is_monorepo.value }}  *({{ is_monorepo.source }}, {{ is_monorepo.confidence }})*
@@ -126,7 +125,7 @@ When writing code or tests, treat `detected/high` fields as authoritative conven
 Treat `inferred/medium` fields as likely conventions — confirm before diverging.
 Treat `manual` fields as user-declared — never override without explicit user approval.
 
-If a `human_nuance:` list is present, read each entry directly here as a user-authored note about that topic — it is intentionally NOT auto-injected (source: manual, origin: user, no confidence rating).
+If a `human_nuance:` list is present (the fenced region at the tail of `knowledge.yaml`), read each entry directly here as a user-authored note about that topic — it is intentionally NOT auto-injected (source: manual, origin: user, no confidence rating).
 
 ---
 

@@ -56,7 +56,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | Step | File | Execution | Reads | Writes |
 |------|------|-----------|-------|--------|
 | knowledge-recall | ../asdt-shared/skills/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| platform-analysis | ../asdt-shared/skills/platform-context.md | inline | platform.yaml | *(no artifact — injects platform context)* |
+| platform-analysis | ../asdt-shared/skills/platform-context.md | inline | knowledge.yaml | *(no artifact — injects platform context)* |
 | load-constraints | steps/load-constraints.md | subagent | platform context (injected) | `architect/constraints-analysis` |
 | evaluate-approaches | steps/evaluate-approaches.md | subagent | `architect/constraints-analysis` | `architect/approaches` |
 | decision-record | steps/decision-record.md | subagent | `architect/approaches` | `architect/adr` |
