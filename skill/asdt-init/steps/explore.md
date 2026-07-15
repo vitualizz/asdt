@@ -145,13 +145,16 @@ No source files sampled → `unknown`/inferred/low.
 | `lib/` present (no `src/`) | `layered` | detected | medium |
 | No match at root nor at `{lang_root}` | `unknown` | inferred | low |
 
+When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting architectural styles). Here "rows" are the five layout predicates in table order — count how many DISTINCT predicates the same directory listing satisfies; the count is a mechanical row-id count over the one command's output, never a judgment call.
+
 ### Step 5 — Detect design fingerprint
 
 The `design_fingerprint` records _how_ the codebase is built — its i18n, CSS,
 ORM, state-management, CI/CD, lint, and code-intelligence tooling. Each concern
 is a **pack** with the same discipline as the §4 probes: one bounded command,
-one exact mapping table, first matching row wins, no model judgment. Fired packs
-land in `platform.yaml` (not `project-context.yaml`); each is a `FieldValue`.
+one exact mapping table, first matching row wins, no model judgment. Each fired
+pack emits a `FieldValue` recorded in `provenance.yaml` (the write-only sidecar);
+its flat value surfaces in `knowledge.yaml`'s `design_fingerprint`.
 
 **Fire gate.** Decide which packs run from Step 1's `detected_stack` alone — a
 pure lookup, no file reads. A pack that does not fire emits **NO key and NO
@@ -211,7 +214,7 @@ grep -oE '"(tailwindcss|styled-components|@emotion/[a-z]+|sass|less|@stitches/[a
 | no dep, but a `*.module.css` file exists (dual fd/find) | `css-modules` | detected | medium |
 | none of the above | `none` | detected | medium |
 
-CSS-modules probe: `fd -d 3 -g '*.module.css' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -name '*.module.css' -not -path '*/node_modules/*' | head -1`).
+When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting css approaches). CSS-modules probe: `fd -d 3 -g '*.module.css' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -name '*.module.css' -not -path '*/node_modules/*' | head -1`).
 
 **Pack: `orm`** *(fires: node | go | python — evaluate the FIRST of these in `detected_stack` order; first-lang-wins)*:
 
@@ -241,6 +244,8 @@ Run only the winning language's command against its `{lang_root}`; each pipes `|
 | (winning lang) | no match | `none` | medium |
 
 Every row is `source: detected`.
+
+When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting ORMs). Distinct rows are counted WITHIN the winning language's rows only — only the winning language's command ran, so rows of a losing language never count toward distinctness.
 
 **Pack: `state_management`** *(fires: node)*:
 

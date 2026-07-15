@@ -46,7 +46,7 @@ This is a light flow — but it has one gate only the orchestrator can pass corr
   - **explore** (subagent, `agent: analyst`) — launch `steps/explore.md` via your native delegation primitive, passing "Engram confirmed present" into its prompt as an established fact. It detects the stack and context, flags `ambiguities[]`, and returns `init/stack-detection`. It writes NO files.
   - **enrichment** (inline — your own context) — run the codegraph-backed survey that surfaces ≤3 structurally central yet non-obvious symbols as skippable `nuance.*` ambiguities (see Step 2.4 below). Positive-evidence-only, degrades gracefully, and NEVER fails.
   - **clarify** (inline — your own context) — resolve `stack-detection.ambiguities[]` plus enrichment's `nuance.*` ambiguities with the human, ONE question at a time, then compose the `### CLARIFY ANSWERS` block (see the clarify contract in the Workflow below).
-  - **write** (subagent, `agent: builder`) — launch `steps/write.md`, injecting both `init/stack-detection` and the `### CLARIFY ANSWERS` block. It writes the four `.asdt` files and returns `init/write-summary`.
+  - **write** (subagent, `agent: builder`) — launch `steps/write.md`, injecting both `init/stack-detection` and the `### CLARIFY ANSWERS` block. It writes the three `.asdt` files and returns `init/write-summary`.
 
 **PRE-EXPLORE recalibration gate.** Before launching explore, check for an
 existing `.asdt/config.yaml`. If it exists, this project was already
@@ -95,6 +95,16 @@ Resolve the capability LADDER against your OWN tool list, top rung first:
    combined caller+callee degree; skip trivially-named getters, setters, and plain
    DTOs (their name already tells the whole story). Deterministic tie-break: order
    by file path, then by symbol name.
+
+   **Architecture-altitude rubric (typed nuance).** A candidate QUALIFIES only
+   when its non-obviousness spans ≥ 2 files, a module boundary, or a
+   cross-cutting invariant — architecture altitude. REJECT single-function
+   gotchas: a single-function detail is below architecture altitude and is
+   deliberately not asked. Classify each qualifying
+   candidate as exactly one type: `architectural` (a structural invariant or
+   design decision), `repo_practice` (a convention this repo enforces), or
+   `inconsistency_to_review` (something that contradicts the repo's own
+   patterns).
 2. **Rung 2 — codegraph absent, tree-sitter CLI present** (probe
    `tree-sitter --version`). Syntax is not centrality — a parse tree cannot tell you
    which symbol matters most — so DO NOT surface anything from this rung. Emit
@@ -106,8 +116,10 @@ Resolve the capability LADDER against your OWN tool list, top rung first:
 
 **Emission.** For each chunk chosen at Rung 1, emit exactly one `Ambiguity`:
 
-- `field`: `nuance.<slug>` — a short, stable slug derived from the symbol name
-  (e.g. `nuance.replaceMarkerRegion`).
+- `field`: `nuance.<type>.<slug>` — `<type>` is the classified type
+  (`architectural` | `repo_practice` | `inconsistency_to_review`) and `<slug>`
+  is a short, stable slug derived from the symbol
+  name (e.g. `nuance.architectural.replaceMarkerRegion`).
 - `question`: prose asking the human to note what makes this symbol non-obvious —
   its role, an invariant, a gotcha a newcomer would miss.
 - `options`: `[]` (free-form note, never a menu).
@@ -116,6 +128,9 @@ Resolve the capability LADDER against your OWN tool list, top rung first:
   `blocking_open_item`.
 
 Emit no more than three. Nothing structurally interesting → no question at all.
+Across the whole clarify pass — explore's convention-ambiguity questions plus
+these — the total ceiling is ≤ 7 questions, and the skip-all shortcut is always
+available.
 
 ### Step 2.5 — Clarify *(inline — your own context, between explore and write)*
 
@@ -136,7 +151,7 @@ The inline contract:
    in one answer.
 2. Collect the answers into `answers{}` (field → value). `nuance.*` answers land in
    `answers{}` like any other field; the `write` step routes them to
-   `human_nuance` in `project-context.yaml` (see `steps/write.md`).
+   `human_nuance` in `knowledge.yaml` (see `steps/write.md`).
 3. Compose the `### CLARIFY ANSWERS` block and inject it into write's prompt —
    it is REQUIRED even when there was nothing to ask:
 
@@ -159,21 +174,24 @@ produces; it carries no artifact of its own.
 
 ### Step 3 — Write configuration files *(in `write`)*
 
-The file-writing mechanics — the `.asdt/config.yaml` (`memory.provider: engram`)
-write, the `platform.yaml` scan and `conventions.file_structure` derivation, the
-`platform-summary.yaml` derived FROM `platform.yaml`, and the
-`project-context.yaml` build from `stack-detection.fields` + applied answers —
+The file-writing mechanics — the `.asdt/config.yaml` write
+(`memory.provider: engram` plus the positive-evidence-only `code_intelligence`
+key), the `knowledge.yaml` build from `stack-detection.fields` + applied
+answers (flat `stack`/`file_structure`/`design_fingerprint` values, the four
+inline FieldValue fields, and the fenced `human_nuance` tail region), and the
+write-only `provenance.yaml` sidecar (fingerprint provenance FieldValues) —
 live in **`steps/write.md`**, along with the idempotency check, the
-`source: manual` preservation rule, and the halt contract. The write sub-agent
-owns all four file writes. Do not duplicate the write mechanics here.
+`source: manual` preservation rule, and the halt
+contract. The write sub-agent owns all three file writes. Do not duplicate the
+write mechanics here.
 
 ### Step 4 — Detect project context
 
-Produce `.asdt/knowledge/project-context.yaml` — a machine-written file that records _how_ the project is structured and coded (monorepo shape, test runner, naming style, architectural pattern). This is separate from `platform.yaml`, which records _what_ is installed.
+Populate the decision fields of `.asdt/knowledge/knowledge.yaml` — the four inline FieldValue fields that record _how_ the project is structured and coded (monorepo shape, test runner, naming style, architectural pattern). They live in the same `knowledge.yaml` that carries the flat stack and fingerprint values recording _what_ is installed.
 
-#### 4.1 Check for existing project-context.yaml
+#### 4.1 Check for existing knowledge.yaml
 
-Look for `{root}/knowledge/project-context.yaml`:
+Look for `{root}/knowledge/knowledge.yaml`:
 
 - **Absent** → fresh detection path (§4.2).
 - **Present** → recalibration path (§4.3).
@@ -186,21 +204,23 @@ plus the "one bounded command, first matching row wins, no model judgment" rule
 and the per-field `FieldValue` shape, live in **`steps/explore.md`** (§4 probes).
 explore detects every field, attaches `source`/`confidence`, and emits an
 `Ambiguity` for any low/medium-confidence field. The `write` sub-agent applies
-the clarify answers on top and writes `project-context.yaml`; explore itself
+the clarify answers on top and writes `knowledge.yaml`; explore itself
 writes nothing. Per ADR-013, all probes run as bounded shell commands with no
 dependency on this repo's Go code.
 
 Alongside them, seven **design-fingerprint packs** — `i18n`, `css_approach`,
 `orm`, `state_management`, `ci_cd`, `lint`, `code_intelligence` — fire
 conditionally on `detected_stack` (the fire gate and the per-pack command +
-mapping tables also live in **`steps/explore.md`**, §5). Their `FieldValue`s land
-in `platform.yaml`'s `design_fingerprint`, NOT `project-context.yaml`. A pack
+mapping tables also live in **`steps/explore.md`**, §5). Their values land in
+`knowledge.yaml`'s `design_fingerprint` as flat scalars, with their full
+`FieldValue` provenance in the write-only `provenance.yaml` sidecar. A pack
 that does not fire emits no key; `code_intelligence` is positive-evidence-only
-(absent → omitted, never an `Ambiguity`).
+(absent → omitted, never an `Ambiguity`) and its detected value is written to
+`.asdt/config.yaml`, never to `knowledge.yaml`.
 
-#### 4.3 Recalibration (project-context.yaml already exists)
+#### 4.3 Recalibration (knowledge.yaml already exists)
 
-When `project-context.yaml` already exists:
+When `knowledge.yaml` already exists:
 
 1. Run fresh detection → produce `NewContext` (same rules as §4.2).
 2. Compute a delta table:
@@ -217,17 +237,20 @@ When `project-context.yaml` already exists:
    | design_fingerprint.state_management | … | … | yes/no |
    | design_fingerprint.ci_cd | … | … | yes/no |
    | design_fingerprint.lint | … | … | yes/no |
-   | design_fingerprint.code_intelligence | … | … | yes/no |
+   | code_intelligence | … | … | yes/no |
 
-   The `design_fingerprint.*` rows track `platform.yaml` (only for packs that
-   fired); include a row only for a concern that is present in either the old or
-   the new fingerprint.
+   The `design_fingerprint.*` rows track `knowledge.yaml`'s flat values (only
+   for packs that fired), with old-value provenance read from the
+   `provenance.yaml` sidecar; include a row only for a concern that is present
+   in either the old or the new fingerprint. The `code_intelligence` row tracks
+   the `.asdt/config.yaml` key (positive-evidence-only) — include it only when
+   the key is present on either side.
 
 3. Present the delta table to the user.
 4. Ask ONE question: "Accept all changes, or review field by field?"
-5. If "accept all" → overwrite `project-context.yaml` with `NewContext`.
+5. If "accept all" → overwrite `knowledge.yaml` with `NewContext`.
 6. If "field by field" → for each changed field, ask the user to accept / reject / set manually. One question per field.
-7. **Human answers always win.** Fields where the existing `source=manual` are NEVER silently overwritten — they must appear in the delta table and require explicit user acceptance. This holds for `source=manual` `design_fingerprint.<concern>` entries in `platform.yaml` too.
+7. **Human answers always win.** Fields where the existing `source=manual` are NEVER silently overwritten — they must appear in the delta table and require explicit user acceptance. This holds for `design_fingerprint.<concern>` entries whose `provenance.yaml` sidecar `source` is `manual` too; if the sidecar is absent or unparseable, the write step re-detects the fingerprint fresh and records an open_item.
 
 #### 4.4 Confidence and source rules
 
@@ -249,13 +272,12 @@ Confidence thresholds are assigned by each probe's algorithm (see §4.2 rules). 
 
 #### 4.5 Output
 
-- `{root}/knowledge/project-context.yaml` written (fresh) or confirmed/updated (recalibration).
+- `{root}/knowledge/knowledge.yaml` written (fresh) or confirmed/updated (recalibration), with its `provenance.yaml` sidecar regenerated alongside.
 - Orchestrator receives a `DetectionSummary` for display to the user.
 - Proceed to Step 6.
 
 ### Step 6 — Confirm
 Tell the user:
 - Configuration written to `.asdt/config.yaml`
-- Detected stack and platform info written to `.asdt/knowledge/`
-- Project context written to `.asdt/knowledge/project-context.yaml`
+- Project knowledge written to `.asdt/knowledge/knowledge.yaml` (write-only provenance sidecar: `.asdt/knowledge/provenance.yaml`)
 - They can now use `/asdt-architect`, `/asdt-developer`, etc.

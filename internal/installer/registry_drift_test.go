@@ -305,12 +305,12 @@ func TestInitPlanTableMatchesWorkflow(t *testing.T) {
 	}
 }
 
-// TestNuanceIsolatedFromPlatformSummary defends the deliberate separation of the
-// human_nuance region: it belongs to project-context.yaml (write step 4) ONLY,
-// never to platform-summary.yaml (write step 3), and platform-context.md's
+// TestNuanceIsolatedFromProvenance defends the deliberate separation of the
+// human_nuance region: it belongs to knowledge.yaml (write step 2) ONLY,
+// never to provenance.yaml (write step 3), and platform-context.md's
 // auto-injection paths (Reuse Guard, What to Inject) must never pull it in — a
 // user-authored note is read directly, never auto-injected.
-func TestNuanceIsolatedFromPlatformSummary(t *testing.T) {
+func TestNuanceIsolatedFromProvenance(t *testing.T) {
 	root := skillDir(t)
 
 	writeMD, err := os.ReadFile(filepath.Join(root, "asdt-init", "steps", "write.md"))
@@ -319,22 +319,22 @@ func TestNuanceIsolatedFromPlatformSummary(t *testing.T) {
 	}
 	content := string(writeMD)
 
-	step3 := lineSliceBetween(content, "**`.asdt/knowledge/platform-summary.yaml`**", "**`.asdt/knowledge/project-context.yaml`**")
-	if step3 == "" {
-		t.Fatalf("could not isolate write.md step-3 platform-summary section")
+	step2 := lineSliceBetween(content, "**`.asdt/knowledge/knowledge.yaml`**", "**`.asdt/knowledge/provenance.yaml`**")
+	if step2 == "" {
+		t.Fatalf("could not isolate write.md step-2 knowledge section")
 	}
-	for _, forbidden := range []string{"human_nuance", "NUANCE", "project-context.yaml"} {
-		if strings.Contains(step3, forbidden) {
-			t.Errorf("write.md step-3 (platform-summary) must not reference %q", forbidden)
-		}
+	if !strings.Contains(step2, "human_nuance") {
+		t.Errorf("write.md step-2 (knowledge) must reference human_nuance")
 	}
 
-	step4 := lineSliceBetween(content, "**`.asdt/knowledge/project-context.yaml`**", "## Halt contract")
-	if step4 == "" {
-		t.Fatalf("could not isolate write.md step-4 project-context section")
+	step3 := lineSliceBetween(content, "**`.asdt/knowledge/provenance.yaml`**", "## Halt contract")
+	if step3 == "" {
+		t.Fatalf("could not isolate write.md step-3 provenance section")
 	}
-	if !strings.Contains(step4, "human_nuance") {
-		t.Errorf("write.md step-4 (project-context) must reference human_nuance")
+	for _, forbidden := range []string{"human_nuance", "NUANCE"} {
+		if strings.Contains(step3, forbidden) {
+			t.Errorf("write.md step-3 (provenance) must not reference %q", forbidden)
+		}
 	}
 
 	pcMD, err := os.ReadFile(filepath.Join(root, "asdt-shared", "skills", "platform-context.md"))

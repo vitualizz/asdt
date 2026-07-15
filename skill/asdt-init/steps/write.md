@@ -1,7 +1,8 @@
 # Write — Init Specialist
 
 ## Purpose
-Write the four `.asdt` files from the detected stack plus the human's clarify
+Write the three `.asdt` files — `config.yaml`, `knowledge.yaml`, and its
+write-only provenance sidecar — from the detected stack plus the human's clarify
 answers. This is init's only filesystem-writing step. It runs as a `builder`
 sub-agent: it cannot pause to ask questions — every question was already asked by
 the inline `clarify` step and the answers were injected into this prompt.
@@ -30,17 +31,23 @@ The Engram gate already passed PRE-EXPLORE (the orchestrator checked its own too
 list before launching explore). You do not re-run it.
 
 **Preserve `source: manual` fields. NEVER silently overwrite them.** When
-`.asdt/knowledge/project-context.yaml` already exists, any field whose existing
-`source` is `manual` was set by a human in a prior recalibration review. Carry it
-forward unchanged unless a clarify answer for that exact field explicitly
-overrides it. Surface every preserved field in `settings_preserved[]` so the
-outcome is auditable.
+`.asdt/knowledge/knowledge.yaml` already exists, any of its four inline
+FieldValue fields (`is_monorepo`, `test_runner`, `naming_style`,
+`architectural_style`) whose existing `source` is `manual` was set by a human in
+a prior recalibration review. Carry it forward unchanged unless a clarify answer
+for that exact field explicitly overrides it. Surface every preserved field in
+`settings_preserved[]` so the outcome is auditable.
 
-The same rule extends to `design_fingerprint.<concern>` entries in
-`.asdt/knowledge/platform.yaml`: a concern whose existing `source` is `manual` is
-carried forward unchanged unless a clarify answer for that exact concern
-overrides it, and it appears in `settings_preserved[]` too — a re-init NEVER
-silently overwrites a manually-set design_fingerprint concern.
+The `design_fingerprint` values in `knowledge.yaml` are flat scalars and carry
+no `source` annotation — their provenance lives in the write-only sidecar
+`.asdt/knowledge/provenance.yaml` (Processing step 3). During a recalibration,
+read the sidecar: a concern whose sidecar `source` is `manual` is carried
+forward unchanged unless a clarify answer for that exact concern overrides it,
+and it appears in `settings_preserved[]` too — a re-init NEVER silently
+overwrites a manually-set design_fingerprint concern. If the sidecar is absent
+or unparseable, re-detect the fingerprint fresh and add the open_item
+`"provenance.yaml unreadable — design_fingerprint re-detected"`; the write
+proceeds normally.
 
 ## Processing
 
@@ -48,60 +55,62 @@ silently overwrites a manually-set design_fingerprint concern.
 deliberate recalibration, never per-change.
 
 1. **`.asdt/config.yaml`** — write `memory.provider: engram` plus any preserved
-   settings carried forward from an existing config:
+   settings carried forward from an existing config. Preserve `memory.provider`,
+   `strict_tdd`, and EVERY unknown key byte-wise via the same preservation path
+   that carries `strict_tdd` forward today — this step never drops a key it does
+   not recognize.
+
+   `code_intelligence` is a top-level scalar, **positive-evidence-only**,
+   modeled on `strict_tdd`'s placement:
+
+   - The `code_intelligence` pack fired and matched → write
+     `code_intelligence: <value>` (e.g. `codegraph`). NO FieldValue wrapper —
+     the value is `detected`/`high` by construction.
+   - Nothing detected → the key is REMOVED from the file (never `none`, never
+     `unknown`).
 
    ```yaml
    memory:
      provider: engram
+   strict_tdd: false            # preserved byte-wise when present
+   code_intelligence: codegraph # positive evidence only; key removed when absent
    ```
 
-2. **`.asdt/knowledge/platform.yaml`** — populate only what the bounded scan
-   determined deterministically. `conventions.file_structure` is the one-line
-   sentence derived from top-level directory matches. Populate
-   `design_fingerprint` from `stack-detection.fields.design_fingerprint`: emit
-   one `FieldValue` entry per FIRED pack, in canonical order (`i18n`,
-   `css_approach`, `orm`, `state_management`, `ci_cd`, `lint`,
-   `code_intelligence`). Omit any pack that did not fire — no key. Write
-   `design_fingerprint: {}` only when nothing was emitted at all. A clarify
-   answer for a `design_fingerprint.<concern>` field makes that entry
-   `source: manual`; a default applied non-interactively keeps the detected
-   `source`/`confidence` and is recorded with `origin: default` — the write
-   NEVER halts on a design_fingerprint default:
+2. **`.asdt/knowledge/knowledge.yaml`** — the ONLY knowledge file specialists
+   read. Built from `stack-detection` with each applied clarify answer overlaid.
+   Canonical key order is BYTE-LOCKED (an unchanged re-run must produce a
+   zero-byte diff): `schema_version`, `scanned_at`, `stack`, `file_structure`,
+   `design_fingerprint`, `is_monorepo`, `test_runner`, `naming_style`,
+   `architectural_style`, then the fenced nuance region at the file tail.
+
+   - `schema_version: "2"` (string literal, quoted).
+   - `scanned_at`: current UTC timestamp, ISO 8601.
+   - `stack`: language ids in scan order, deduplicated
+     (`stack-detection.detected_stack`).
+   - `file_structure`: the one-line sentence derived from top-level directory
+     matches.
+   - `design_fingerprint`: FLAT `{concern: value}` scalars — NO
+     source/confidence annotations. Emit one scalar per FIRED pack in canonical
+     order (`i18n`, `css_approach`, `orm`, `state_management`, `ci_cd`,
+     `lint`); omit any concern whose value is `unknown` or `none`.
+     `code_intelligence` is NEVER written here — it lives in `config.yaml`
+     (step 1). Write `design_fingerprint: {}` only when nothing was emitted at
+     all.
+   - `is_monorepo`, `test_runner`, `naming_style`, `architectural_style`: the
+     four decision fields keep the inline FieldValue mapping
+     `{value, source, confidence}` — the ONLY mapping-form fields in this file.
+     A field answered by the human becomes `source: manual`; a default applied
+     non-interactively keeps the detected `source`/`confidence` and is recorded
+     with `origin: default` — the write NEVER halts on a default.
 
    ```yaml
-   schema_version: "1"
+   schema_version: "2"
    scanned_at: {current UTC timestamp, ISO 8601}
-   detected_stack: {stack-detection.detected_stack}
-   conventions:
-     file_structure: {one-line description}
-   design_fingerprint:        # one FieldValue per FIRED pack; {} only when none fired/emitted
-     css_approach: { value: "…", source: "…", confidence: "…" }
-     # … one entry per fired pack, in canonical order
-   ```
-
-3. **`.asdt/knowledge/platform-summary.yaml`** — derived FROM `platform.yaml`,
-   never re-analyzed from scratch. Flatten `design_fingerprint` to
-   `{concern: value}` scalars — drop the `source`/`confidence` annotations, and
-   omit any concern whose value is `unknown`, `none`, or absent:
-
-   ```yaml
-   schema_version: "1"
-   stack: {platform.yaml detected_stack}
-   file_structure: {platform.yaml conventions.file_structure}
-   design_fingerprint:        # flat {concern: value} scalars; omit unknown/none/absent
-     {concern}: {value}
-   ```
-
-4. **`.asdt/knowledge/project-context.yaml`** — built from
-   `stack-detection.fields` with each applied clarify answer overlaid. A field
-   answered by the human becomes `source: manual`. Record every applied
-   `Ambiguity` answer with its `origin` (`user` | `default`). The
-   `human_nuance` region (below) is rendered at the END of this file, after the
-   detected fields:
-
-   ```yaml
-   schema_version: "1"
-   detected_at: {current UTC timestamp, ISO 8601}
+   stack: {stack-detection.detected_stack}
+   file_structure: {one-line description}
+   design_fingerprint:        # flat {concern: value} scalars; omit unknown/none; no code_intelligence
+     css_approach: tailwind
+     ci_cd: github-actions
    is_monorepo: { value: "…", source: "…", confidence: "…" }
    test_runner: { value: "…", source: "…", confidence: "…" }
    naming_style: { value: "…", source: "…", confidence: "…" }
@@ -109,21 +118,27 @@ deliberate recalibration, never per-change.
    # ASDT:NUANCE:BEGIN
    human_nuance:
      - topic: "replaceMarkerRegion"
+       type: architectural
        note: "fail-loud on partial markers; any new region writer must mirror its halt semantics"
        source: manual
        origin: user
    # ASDT:NUANCE:END
    ```
 
-   **`human_nuance` — routing from clarify answers.** The enrichment step
-   (SKILL.md §2.4) surfaces `nuance.*` ambiguities; the human's answers arrive in
-   the `### CLARIFY ANSWERS` block's `answers{}`. For each answer key matching
-   `^nuance\.(.+)$`, take the captured suffix as the `topic` slug and the answer
-   value as the `note`:
+   **`human_nuance` — typed entries, routed from clarify answers.** The
+   enrichment step (SKILL.md §2.4) surfaces typed `nuance.*` ambiguities; the
+   human's answers arrive in the `### CLARIFY ANSWERS` block's `answers{}`. For
+   each answer key matching
+   `^nuance\.(architectural|repo_practice|inconsistency_to_review)\.(.+)$`, the
+   first capture is the entry `type`, the second capture is the `topic` slug,
+   and the answer value is the `note`:
 
    - **non-empty value** → append one entry
-     `{ topic: <slug>, note: <value>, source: manual, origin: user }`.
+     `{ topic: <slug>, type: <type>, note: <value>, source: manual, origin: user }`.
    - **empty value** (the human skipped it) → NO entry.
+
+   `type` is one of `architectural`, `repo_practice`, or
+   `inconsistency_to_review`.
 
    Non-`nuance.*` answer keys are unaffected — they overlay the detected fields
    exactly as before. When no `nuance.*` answer produces an entry, render the
@@ -133,7 +148,7 @@ deliberate recalibration, never per-change.
    `replaceMarkerRegion` fail-loud contract in
    `internal/installer/registry_gen.go` — same marker discipline, same
    halt-on-partial rule. Use the YAML-comment markers `# ASDT:NUANCE:BEGIN` and
-   `# ASDT:NUANCE:END`. When `project-context.yaml` already exists, read its bytes
+   `# ASDT:NUANCE:END`. When `knowledge.yaml` already exists, read its bytes
    and count the begin/end markers:
 
    - **Both counts 0 (region absent).** If there are non-empty entries to write —
@@ -146,18 +161,52 @@ deliberate recalibration, never per-change.
    - **end marker precedes begin marker** (reversed) → HALT with ZERO writes.
    - **Region present and valid.** Parse the existing entries and preserve them,
      then merge the new answers: append an entry for each new `topic`, and UPDATE
-     the `note` in place for any `topic` that already exists. Render the body —
-     the non-empty `human_nuance:` block, or `human_nuance: []` when the merge
-     leaves it empty. Idempotency: if the rendered body equals what already sits
-     between the markers, no-op (no write). Otherwise splice
+     the `note` (and `type`, when the answer key carries one) in place for any
+     `topic` that already exists. Render the body — the non-empty
+     `human_nuance:` block, or `human_nuance: []` when the merge leaves it
+     empty. Idempotency: if the rendered body equals what already sits between
+     the markers, no-op (no write). Otherwise splice
      `content[:regionStart] + body + content[endIdx:]`, exactly as
      `replaceMarkerRegion` does.
 
-   The existing `source: manual` flat-field preservation rule (above) is
-   UNCHANGED and applies alongside this region — `human_nuance` merging does not
-   alter how the detected fields carry manual values forward.
+   The `source: manual` flat-field preservation rule (Recalibration contract
+   above) is UNCHANGED and applies alongside this region — `human_nuance`
+   merging does not alter how the decision fields carry manual values forward.
 
-All four files stay bounded — their size grows with the number of detected
+3. **`.asdt/knowledge/provenance.yaml`** — the write-only provenance sidecar.
+   Written by this step and read SOLELY by this step during a later
+   recalibration — no specialist ever reads it, and it never enters any
+   injection path. Write it only AFTER `knowledge.yaml` (step 2) has been
+   written successfully.
+
+   - `schema_version: "2"` (string literal, quoted).
+   - `scanned_at`: MUST equal the `scanned_at` written to `knowledge.yaml` —
+     both files come from the same detection in the same write.
+   - `design_fingerprint`: a map of EVERY fired pack to its full FieldValue
+     `{value, source, confidence}` — INCLUDING packs whose value is `none`
+     (e.g. `orm: { value: none, source: detected, confidence: medium }`), so a
+     later recalibration can distinguish "probed, found absent" from "never
+     probed". Canonical concern order; `code_intelligence` excluded (it lives
+     in `config.yaml`).
+
+   ```yaml
+   schema_version: "2"
+   scanned_at: {same timestamp as knowledge.yaml}
+   design_fingerprint:        # one FieldValue per FIRED pack, INCLUDING none-valued
+     i18n: { value: "custom (locale files)", source: detected, confidence: medium }
+     orm: { value: none, source: detected, confidence: medium }
+   ```
+
+   A concern whose prior sidecar `source` is `manual` is carried forward
+   unchanged unless a clarify answer for that exact concern overrides it, and
+   is surfaced in `settings_preserved[]`. Regeneration invariant: the
+   fingerprint scalars in `knowledge.yaml` and the FieldValues here are written
+   together, in the same step, from the same detection — never regenerate or
+   hand-edit one alone. This file carries fingerprint provenance ONLY;
+   user-authored notes belong to the fenced tail region of `knowledge.yaml`
+   (step 2) and never appear here.
+
+All three files stay bounded — their size grows with the number of detected
 stacks and human notes, never with repo size.
 
 ## Halt contract
@@ -171,12 +220,12 @@ HALT with an error and ZERO writes if any condition holds:
 - **(b) `blocking_open_items[]` is non-empty.** A blocking open item means a
   non-skippable ambiguity went unresolved; writing config on top of it would
   bake in a wrong default. Halt and surface the items.
-- **(c) Malformed `human_nuance` markers in an existing `project-context.yaml`.**
+- **(c) Malformed `human_nuance` markers in an existing `knowledge.yaml`.**
   If the file has a partial or duplicated marker set — `# ASDT:NUANCE:BEGIN`
   count ≠ 1, `# ASDT:NUANCE:END` count ≠ 1, or the end marker preceding the begin
   marker — HALT with an error and ZERO writes. A damaged region must be caught,
   never half-written over. Both markers absent is NOT malformed — that is the
-  region-absent path handled in step 4, not a halt.
+  region-absent path handled in Processing step 2, not a halt.
 
 On halt, write nothing and return the error in the envelope.
 
