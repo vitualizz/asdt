@@ -34,7 +34,7 @@ payload:
 | `change_id` | string | Yes | The active change name (e.g. `"add-password-reset"`) |
 | `created_at` | string | Yes | ISO 8601 UTC timestamp of when the artifact was written |
 | `prompt_version` | string | Yes | SHA-256, first 8 hex chars, of the composed-prompt manifest (per ADR-003) — used for drift detection |
-| `input_refs` | []string | Yes | List of Engram topic_keys (`{project}/{change}/{specialist}/{artifact-type}`, per ADR-011) for every artifact read as input. Filesystem knowledge files (e.g. `.asdt/knowledge/platform.yaml`) keep their relative-path form — the only non-topic-key allowance. Empty list `[]` when no inputs were read |
+| `input_refs` | []string | Yes | List of Engram topic_keys (`{project}/{change}/{specialist}/{artifact-type}`, per ADR-011) for every artifact read as input. Filesystem knowledge files (e.g. `.asdt/knowledge/knowledge.yaml`) keep their relative-path form — the only non-topic-key allowance. Empty list `[]` when no inputs were read |
 | `payload` | map | Yes | Specialist-specific content. Must contain at minimum an `open_items` key |
 
 ---
@@ -56,7 +56,7 @@ Examples:
 ```yaml
 open_items:
   - "requirements-spec.yaml absent — proceeding with inferred scope from feature description"
-  - "platform.yaml absent — conventions inferred from visible code patterns"
+  - "knowledge.yaml absent — conventions inferred from visible code patterns"
   - "ux-brief.yaml absent — no user flow constraints applied to implementation plan"
 ```
 
@@ -88,10 +88,10 @@ If any validation rule fails, do NOT write the artifact. Record the failure and 
 input_refs:
   - my-app/add-password-reset/pm/requirements-spec
   - my-app/add-password-reset/ux-ui/ux-brief
-  - knowledge/platform.yaml
+  - knowledge/knowledge.yaml
 ```
 
-Filesystem knowledge files under `.asdt/` (e.g. `.asdt/knowledge/platform.yaml`) are the ONLY non-topic-key allowance — reference them by their relative path from the `.asdt/` root, as in the last example above.
+Filesystem knowledge files under `.asdt/` (e.g. `.asdt/knowledge/knowledge.yaml`) are the ONLY non-topic-key allowance — reference them by their relative path from the `.asdt/` root, as in the last example above.
 
 When a specialist expects an artifact but it is absent (degraded run), do NOT include the absent reference in `input_refs`. Record the absence in `open_items[]` instead.
 
@@ -107,7 +107,7 @@ created_at: "2026-06-04T10:30:00Z"
 prompt_version: "sha256:a1b2c3d4"
 input_refs:
   - my-app/add-password-reset/pm/requirements-spec
-  - knowledge/platform.yaml
+  - knowledge/knowledge.yaml
 payload:
   complexity_estimate: M
   open_items:

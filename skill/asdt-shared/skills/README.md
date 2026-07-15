@@ -31,7 +31,7 @@ These are **reference text injected into the active context**, not independently
 | File | Purpose |
 |---|---|
 | `knowledge-recall.md` | Queries organizational memory for prior decisions relevant to the current change. Used as the first inline step in most specialists. |
-| `platform-context.md` | Injects the project's detected platform knowledge (stack, conventions, design fingerprint) into a specialist's context. Includes the project-level reuse guard (prefer `.asdt/knowledge/platform-summary.yaml`) and the fallback extraction rules; also backs the inline `platform-analysis` workflow step. |
+| `platform-context.md` | Injects the project's detected platform knowledge (stack, conventions, design fingerprint) into a specialist's context. Includes the project-level reuse guard (reads `.asdt/knowledge/knowledge.yaml`); also backs the inline `platform-analysis` workflow step. |
 | `decision-preservation.md` | Saves a permanent organizational knowledge record after a significant decision is produced. Used as the final inline step in most specialists. |
 | `scope-definition.md` | Guidelines for defining explicit, unambiguous project scope. Used by Architect and Developer. |
 | `report.md` | Generates a structured handoff document from multiple intermediate artifacts; includes the extraction rules (200-token budget per artifact). Used as the consolidation step in UX/UI, Architect, QA, Security, and PM. |

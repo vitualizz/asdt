@@ -8,7 +8,7 @@ steps:
 
   - name: platform-analysis
     skill: ../asdt-shared/skills/platform-context.md
-    description: Load and inject platform conventions and architectural fingerprint from platform.yaml
+    description: Load and inject platform conventions and architectural fingerprint from knowledge.yaml
     execution: inline
 
   - name: threat-modeling

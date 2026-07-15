@@ -57,7 +57,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | Step | File | Execution | Reads | Writes |
 |------|------|-----------|-------|--------|
 | knowledge-recall | ../asdt-shared/skills/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| platform-analysis | ../asdt-shared/skills/platform-context.md | inline | platform.yaml | *(no artifact — injects platform context)* |
+| platform-analysis | ../asdt-shared/skills/platform-context.md | inline | knowledge.yaml | *(no artifact — injects platform context)* |
 | threat-modeling | steps/threat-modeling.md | subagent | platform context (injected), upstream artifacts (optional) | `security/stride-threats` |
 | attack-surface | steps/attack-surface.md | subagent | `security/stride-threats` | `security/attack-surface` |
 | owasp-analysis | steps/owasp-analysis.md | subagent | `security/attack-surface` | `security/owasp-findings` |

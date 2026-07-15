@@ -8,7 +8,7 @@ Guidelines for generating idiomatic, production-quality code at Step 5 (Code Gen
 
 ## Precedence
 
-When platform-context conventions or existing project conventions conflict with these defaults, the platform-context and project consistency take precedence. These guidelines apply only where no project-specific convention has been established. Platform-context injects the project's detected conventions (from `platform-summary.yaml`, or `platform.yaml` as fallback); treat its detected/high-confidence and manual fields as authoritative. Defer every language-specific idiom to it — never apply a default from this file over a convention the project has already established.
+When platform-context conventions or existing project conventions conflict with these defaults, the platform-context and project consistency take precedence. These guidelines apply only where no project-specific convention has been established. Platform-context injects the project's detected conventions (from `knowledge.yaml`); treat its detected/high-confidence and manual fields as authoritative. Defer every language-specific idiom to it — never apply a default from this file over a convention the project has already established.
 
 ---
 
