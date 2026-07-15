@@ -145,6 +145,174 @@ No source files sampled → `unknown`/inferred/low.
 | `lib/` present (no `src/`) | `layered` | detected | medium |
 | No match at root nor at `{lang_root}` | `unknown` | inferred | low |
 
+### Step 5 — Detect design fingerprint
+
+The `design_fingerprint` records _how_ the codebase is built — its i18n, CSS,
+ORM, state-management, CI/CD, lint, and code-intelligence tooling. Each concern
+is a **pack** with the same discipline as the §4 probes: one bounded command,
+one exact mapping table, first matching row wins, no model judgment. Fired packs
+land in `platform.yaml` (not `project-context.yaml`); each is a `FieldValue`.
+
+**Fire gate.** Decide which packs run from Step 1's `detected_stack` alone — a
+pure lookup, no file reads. A pack that does not fire emits **NO key and NO
+ambiguity** (it is silent, never `none`). `{node_root}`, `{go_root}`, and
+`{py_root}` are the `{lang_root}`s from Step 1 for `node`, `go`, and `python`.
+
+| Pack | Fires when | Scope |
+|---|---|---|
+| `i18n` | `node` ∈ `detected_stack` | `{node_root}` |
+| `css_approach` | `node` ∈ `detected_stack` | `{node_root}` |
+| `orm` | `node`, `go`, or `python` ∈ `detected_stack` | first such lang in `detected_stack` order (first-lang-wins) |
+| `state_management` | `node` ∈ `detected_stack` | `{node_root}` |
+| `ci_cd` | always | repo root |
+| `lint` | `node`, `go`, or `python` ∈ `detected_stack` | first such lang in `detected_stack` order (first-lang-wins) |
+| `code_intelligence` | always | repo root |
+
+**Firing outcome rules** (uniform across packs):
+
+- Fired, command matches a row → that row's value / `detected` / that row's confidence.
+- Fired, command runs clean with no match → the table's terminal `none` / `detected` / `medium` row.
+- Fired, command errors → `unknown` / `inferred` / `low` (non-fatal — record and continue).
+- `code_intelligence` is positive-evidence-only: absent → emit **no key** (never `none`, never `unknown`, never an Ambiguity).
+- Did not fire → no key, no ambiguity.
+
+**Pack: `i18n`** *(fires: node)* — grep the node manifest dependency block:
+
+```
+grep -oE '"(i18next|react-i18next|next-i18next|vue-i18n|react-intl|@formatjs/[a-z-]+|@lingui/[a-z-]+|svelte-i18n|@nuxtjs/i18n)"' {node_root}/package.json | tr -d '"' | LC_ALL=C sort -u | head -10
+```
+
+| Evidence (first match wins) | Value | Source | Confidence |
+|---|---|---|---|
+| `i18next`, `react-i18next`, or `next-i18next` | `i18next` | detected | high |
+| `vue-i18n` or `@nuxtjs/i18n` | `vue-i18n` | detected | high |
+| `react-intl` or any `@formatjs/*` | `react-intl (formatjs)` | detected | high |
+| any `@lingui/*` | `lingui` | detected | high |
+| `svelte-i18n` | `svelte-i18n` | detected | high |
+| no dep, but a `locales` directory exists (dual fd/find, depth ≤ 3) | `custom (locale files)` | detected | medium |
+| none of the above | `none` | detected | medium |
+
+When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting i18n libraries). Locale-dir fallback: `fd -d 3 -t d -H '^locales$' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -type d -name locales -not -path '*/node_modules/*' | head -1`).
+
+**Pack: `css_approach`** *(fires: node)*:
+
+```
+grep -oE '"(tailwindcss|styled-components|@emotion/[a-z]+|sass|less|@stitches/[a-z]+|@vanilla-extract/[a-z-]+)"' {node_root}/package.json | tr -d '"' | LC_ALL=C sort -u | head -10
+```
+
+| Evidence (first match wins) | Value | Source | Confidence |
+|---|---|---|---|
+| `tailwindcss` | `tailwind` | detected | high |
+| `styled-components` | `styled-components` | detected | high |
+| any `@emotion/*` | `emotion` | detected | high |
+| any `@vanilla-extract/*` | `vanilla-extract` | detected | high |
+| any `@stitches/*` | `stitches` | detected | high |
+| `sass` or `less` only (no CSS-in-JS above) | `sass/less preprocessor` | detected | medium |
+| no dep, but a `*.module.css` file exists (dual fd/find) | `css-modules` | detected | medium |
+| none of the above | `none` | detected | medium |
+
+CSS-modules probe: `fd -d 3 -g '*.module.css' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -name '*.module.css' -not -path '*/node_modules/*' | head -1`).
+
+**Pack: `orm`** *(fires: node | go | python — evaluate the FIRST of these in `detected_stack` order; first-lang-wins)*:
+
+Run only the winning language's command against its `{lang_root}`; each pipes `| LC_ALL=C sort -u | head -10`.
+
+- node — `grep -oE '"(prisma|@prisma/client|typeorm|drizzle-orm|sequelize|mongoose|@mikro-orm/[a-z-]+|knex)"' {node_root}/package.json | tr -d '"'`
+- go — `grep -oE '(gorm\.io/gorm|entgo\.io/ent|github\.com/uptrace/bun|github\.com/jmoiron/sqlx)' {go_root}/go.mod`
+- python — `grep -hioE '(sqlalchemy|django|tortoise-orm|peewee)' {py_root}/pyproject.toml {py_root}/requirements.txt 2>/dev/null`
+
+| Lang | Evidence (first match wins) | Value | Confidence |
+|---|---|---|---|
+| node | `prisma` or `@prisma/client` | `prisma` | high |
+| node | `typeorm` | `typeorm` | high |
+| node | `drizzle-orm` | `drizzle` | high |
+| node | `sequelize` | `sequelize` | high |
+| node | `mongoose` | `mongoose` | high |
+| node | any `@mikro-orm/*` | `mikro-orm` | high |
+| node | `knex` only | `knex (query builder)` | medium |
+| go | `gorm.io/gorm` | `gorm` | high |
+| go | `entgo.io/ent` | `ent` | high |
+| go | `github.com/uptrace/bun` | `bun` | high |
+| go | `github.com/jmoiron/sqlx` | `sqlx (query builder)` | medium |
+| python | `sqlalchemy` | `sqlalchemy` | high |
+| python | `django` | `django orm` | high |
+| python | `tortoise-orm` | `tortoise` | high |
+| python | `peewee` | `peewee` | high |
+| (winning lang) | no match | `none` | medium |
+
+Every row is `source: detected`.
+
+**Pack: `state_management`** *(fires: node)*:
+
+```
+grep -oE '"(redux|@reduxjs/toolkit|zustand|jotai|recoil|mobx|valtio|xstate|pinia|@ngrx/store|@tanstack/react-query|react-query|swr)"' {node_root}/package.json | tr -d '"' | LC_ALL=C sort -u | head -10
+```
+
+| Evidence (first match wins) | Value | Source | Confidence |
+|---|---|---|---|
+| `@reduxjs/toolkit` or `redux` | `redux` | detected | high |
+| `zustand` | `zustand` | detected | high |
+| `jotai` | `jotai` | detected | high |
+| `recoil` | `recoil` | detected | high |
+| `mobx` | `mobx` | detected | high |
+| `valtio` | `valtio` | detected | high |
+| `xstate` | `xstate` | detected | high |
+| `pinia` | `pinia` | detected | high |
+| `@ngrx/store` | `ngrx` | detected | high |
+| only `@tanstack/react-query`, `react-query`, or `swr` (no client-state lib above) | `react-query (server state)` | detected | medium |
+| none of the above | `none` | detected | medium |
+
+**Pack: `ci_cd`** *(fires: always — repo root)*:
+
+```
+{ ls -d .github/workflows 2>/dev/null; ls .gitlab-ci.yml .circleci/config.yml azure-pipelines.yml Jenkinsfile bitbucket-pipelines.yml .drone.yml 2>/dev/null; } | LC_ALL=C sort | head -10
+```
+
+| Evidence (first match wins) | Value | Source | Confidence |
+|---|---|---|---|
+| `.github/workflows` | `github-actions` | detected | high |
+| `.gitlab-ci.yml` | `gitlab-ci` | detected | high |
+| `.circleci/config.yml` | `circleci` | detected | high |
+| `azure-pipelines.yml` | `azure-pipelines` | detected | high |
+| `Jenkinsfile` | `jenkins` | detected | high |
+| `bitbucket-pipelines.yml` | `bitbucket-pipelines` | detected | high |
+| `.drone.yml` | `drone` | detected | high |
+| none of the above | `none` | detected | medium |
+
+**Pack: `lint`** *(fires: node | go | python — FIRST of these in `detected_stack` order; first-lang-wins)*:
+
+Config-file checks are fixed-path `ls` at `{lang_root}`; dep checks grep the manifest. Run only the winning language's command; each pipes `| LC_ALL=C sort -u | head -10`.
+
+- node — `{ ls {node_root}/.eslintrc* {node_root}/eslint.config.* {node_root}/biome.json {node_root}/.prettierrc* 2>/dev/null; grep -oE '"(eslint|@biomejs/biome|standard|prettier)"' {node_root}/package.json | tr -d '"'; }`
+- go — `ls {go_root}/.golangci.yml {go_root}/.golangci.yaml {go_root}/.golangci.toml 2>/dev/null`
+- python — `{ ls {py_root}/ruff.toml {py_root}/.flake8 {py_root}/.pylintrc 2>/dev/null; grep -hioE '(ruff|flake8|pylint)' {py_root}/pyproject.toml {py_root}/requirements.txt 2>/dev/null; }`
+
+| Lang | Evidence (first match wins) | Value | Confidence |
+|---|---|---|---|
+| node | `.eslintrc*`, `eslint.config.*`, or an `eslint` dep | `eslint` | high |
+| node | `@biomejs/biome` dep or `biome.json` | `biome` | high |
+| node | `standard` dep | `standard` | high |
+| node | only `prettier` / `.prettierrc*` (no linter above) | `prettier (format only)` | medium |
+| go | `.golangci.{yml,yaml,toml}` | `golangci-lint` | high |
+| go | no golangci config | `none (go vet only)` | medium |
+| python | `ruff` dep or `ruff.toml` | `ruff` | high |
+| python | `.flake8` or `flake8` dep | `flake8` | high |
+| python | `.pylintrc` or `pylint` dep | `pylint` | high |
+| (winning lang) | no match | `none` | medium |
+
+Every row is `source: detected`.
+
+**Pack: `code_intelligence`** *(fires: always — repo root; modeled on `is_monorepo`, positive-evidence-only)*:
+
+```
+ls -d .codegraph 2>/dev/null | head -1
+```
+
+| Evidence | Value | Source | Confidence |
+|---|---|---|---|
+| `.codegraph` present | `codegraph` | detected | high |
+| absent | *(emit NO key — never `none`, never `unknown`, never an Ambiguity)* |
+
 ### Confidence and source rules
 
 | Source | When to assign |
@@ -168,6 +336,14 @@ ambiguous (e.g. two stacks detected and the primary is unclear). Each ambiguity
 is the question the clarify step will ask the human. Do NOT resolve them here —
 explore detects and flags; clarify asks; write applies.
 
+**design_fingerprint ambiguities.** For every FIRED pack whose result is
+`medium` or `low` confidence — including a clean `none` result — emit exactly one
+`Ambiguity` whose `field` is the dotted name `design_fingerprint.<concern>` (e.g.
+`design_fingerprint.css_approach`), with `default` set to the detected value and
+`skippable: true` ALWAYS. A pack that did not fire emits NO ambiguity, and
+`code_intelligence` NEVER produces one (positive-evidence-only). design_fingerprint
+ambiguities are never `blocking_open_items`.
+
 ## Output
 Produces: `init/stack-detection`
 
@@ -185,7 +361,15 @@ payload:
     test_runner: { value: "", source: "", confidence: "" }
     naming_style: { value: "", source: "", confidence: "" }
     architectural_style: { value: "", source: "", confidence: "" }
-  ambiguities: []             # one Ambiguity per low/medium-confidence or genuinely ambiguous field
+    design_fingerprint:       # one FieldValue per FIRED pack; OMIT non-firing packs entirely (no key)
+      i18n: { value: "", source: "", confidence: "" }
+      css_approach: { value: "", source: "", confidence: "" }
+      orm: { value: "", source: "", confidence: "" }
+      state_management: { value: "", source: "", confidence: "" }
+      ci_cd: { value: "", source: "", confidence: "" }
+      lint: { value: "", source: "", confidence: "" }
+      code_intelligence: { value: "", source: "", confidence: "" }  # present only when .codegraph exists
+  ambiguities: []             # one Ambiguity per low/medium-confidence or genuinely ambiguous field; design_fingerprint ambiguities use dotted field names and are always skippable
   open_items: []
 ```
 

@@ -15,8 +15,12 @@ steps:
     output_topic_key: "{project}/{change}/init/stack-detection"
     reference_skills: []
 
+  - name: enrichment
+    description: Inline codegraph-backed survey that surfaces ≤3 structurally central yet non-obvious symbols as skippable nuance.* ambiguities; degrades gracefully when codegraph or tree-sitter is absent and never fails
+    execution: inline
+
   - name: clarify
-    description: Resolve stack-detection.ambiguities[] one question at a time; inject the resulting answers{} into write's prompt; non-interactive harness → per-field default for skippable, open_item otherwise
+    description: Resolve stack-detection.ambiguities[] plus enrichment's nuance.* ambiguities one question at a time; inject the resulting answers{} into write's prompt; non-interactive harness → per-field default for skippable, open_item otherwise
     execution: inline
 
   - name: write

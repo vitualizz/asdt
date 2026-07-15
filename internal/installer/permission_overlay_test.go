@@ -159,9 +159,10 @@ func TestMergePermissionOverlay_OverwriteForcesScalars(t *testing.T) {
 }
 
 // TestOverlayAsset_WriteVerbs covers AC-4: the shipped deny array carries the
-// real write verbs (Edit/Write/NotebookEdit — MultiEdit is not a Claude Code
-// permission-rule tool) for every write-protected path and uses **/ globs for
-// nested secrets.
+// Edit verb for every write-protected path and uses **/ globs for nested
+// secrets. Only Edit is shipped — Claude Code file-permission checks honor
+// Edit(path) rules and Edit covers ALL file-editing tools (Edit, Write,
+// NotebookEdit), so separate Write/NotebookEdit entries are inert noise.
 func TestOverlayAsset_WriteVerbs(t *testing.T) {
 	out, err := mergePermissionOverlay(nil, testOverlay(t), AgentModeOverwrite, nil)
 	if err != nil {
@@ -175,12 +176,20 @@ func TestOverlayAsset_WriteVerbs(t *testing.T) {
 		"**/.zshrc", "**/.bashrc", "**/.bash_profile", "**/.profile",
 		"**/.envrc", "**/.npmrc", "**/.gitconfig", "**/.mcp.json",
 	}
-	verbs := []string{"Edit", "Write", "NotebookEdit"}
 	for _, p := range protected {
-		for _, v := range verbs {
-			want := v + "(" + p + ")"
-			if !denyContains(deny, want) {
-				t.Errorf("deny missing %q", want)
+		want := "Edit(" + p + ")"
+		if !denyContains(deny, want) {
+			t.Errorf("deny missing %q", want)
+		}
+	}
+
+	// The ineffective Write/NotebookEdit verbs must NOT be shipped: the checks
+	// ignore them and they only trigger "use Edit instead" warnings.
+	for _, p := range protected {
+		for _, v := range []string{"Write", "NotebookEdit"} {
+			unwanted := v + "(" + p + ")"
+			if denyContains(deny, unwanted) {
+				t.Errorf("deny should not ship ineffective verb %q", unwanted)
 			}
 		}
 	}
@@ -310,13 +319,17 @@ func TestValidateOverlay_RejectsInvalid(t *testing.T) {
 }
 
 // TestSelfProtectionEntries: HOME-absolute self-defense rules cover both targets
-// across the three write verbs (Edit/Write/NotebookEdit) and contain no bare "~".
+// with the Edit verb only (Edit covers all file-editing tools) and contain no
+// bare "~".
 func TestSelfProtectionEntries(t *testing.T) {
 	entries := selfProtectionEntries("/home/alice")
-	if len(entries) != 6 {
-		t.Fatalf("want 6 self-protection entries, got %d: %v", len(entries), entries)
+	if len(entries) != 2 {
+		t.Fatalf("want 2 self-protection entries, got %d: %v", len(entries), entries)
 	}
 	for _, e := range entries {
+		if !strings.HasPrefix(e, "Edit(") {
+			t.Errorf("self-protection entry must use the Edit verb only: %q", e)
+		}
 		if !strings.Contains(e, "/home/alice/.claude") {
 			t.Errorf("self-protection entry not HOME-absolute: %q", e)
 		}

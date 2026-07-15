@@ -35,9 +35,14 @@ When `platform.yaml` is found, extract and inject the following fields into the 
 | `detected_stack` | Languages, frameworks, runtimes detected (e.g. "Go 1.22, no frontend framework") |
 | `conventions.naming` | Naming conventions in use (e.g. "snake_case for files, PascalCase for exported Go types") |
 | `conventions.file_structure` | Directory layout pattern (e.g. "internal/ for packages, cmd/ for binaries") |
-| `design_fingerprint` | Architectural pattern in use (e.g. "Hexagonal architecture, ports in internal/") |
-| `design_fingerprint.component_library` | Component library in use — if present |
+| `design_fingerprint` | Per-concern tooling map — inject each present concern via the lines below; omit concerns whose value is empty |
+| `design_fingerprint.i18n` | Internationalization library in use — if present |
 | `design_fingerprint.css_approach` | CSS approach in use — if present |
+| `design_fingerprint.state_management` | State-management library in use — if present |
+| `design_fingerprint.orm` | ORM / data-access layer in use — if present |
+| `design_fingerprint.ci_cd` | CI/CD platform in use — if present |
+| `design_fingerprint.lint` | Linter / formatter in use — if present |
+| `design_fingerprint.code_intelligence` | Code-intelligence index present — drives the Tooling line below; if present |
 
 Discard: full file listings, raw config, `layout_patterns`, `scanned_at`, `schema_version`. If the extracted content exceeds 500 tokens, summarize each field to its single most important fact.
 
@@ -67,22 +72,37 @@ Build the injection from only the fields that are actually present — omit a li
 ```
 Stack: {detected_stack values, comma-separated}
 Conventions: {naming style, if present}{ | file structure note, if present}
-Architecture: {design_fingerprint, only if present}
+i18n: {design_fingerprint.i18n, if present}
+CSS: {design_fingerprint.css_approach, if present}
+State: {design_fingerprint.state_management, if present}
+ORM: {design_fingerprint.orm, if present}
+CI/CD: {design_fingerprint.ci_cd, if present}
+Lint: {design_fingerprint.lint, if present}
+Tooling: codegraph index available — prefer codegraph over grep/read loops
 ```
 
-`Conventions` joins its two parts with ` | ` only when BOTH are present. If only one is present, emit that one alone with no separator. If neither is present, omit the `Conventions` line too.
+`Conventions` joins its two parts with ` | ` only when BOTH are present. If only one is present, emit that one alone with no separator. If neither is present, omit the `Conventions` line too. Each `design_fingerprint` concern line is emitted only when its value is present — omit the line entirely otherwise. The `Tooling` line is emitted with EXACTLY this wording, and ONLY when `design_fingerprint.code_intelligence` is present; omit it when there is no code-intelligence index.
 
 Fully-populated example:
 ```
-Stack: Go 1.22, no frontend framework
-Conventions: PascalCase exported types, snake_case files | internal/ for packages, cmd/ for binaries
-Architecture: Hexagonal — ports in internal/, adapters in cmd/
+Stack: Node (TypeScript), React
+Conventions: PascalCase exported symbols | src/features/ modular layout
+i18n: i18next
+CSS: tailwind
+State: redux
+ORM: prisma
+CI/CD: github-actions
+Lint: eslint
+Tooling: codegraph index available — prefer codegraph over grep/read loops
 ```
 
-Partially-populated example — e.g. a `platform.yaml` straight out of `/asdt-init`, which only runs bounded presence checks and intentionally leaves `conventions.naming` and `design_fingerprint` for a dedicated future analysis step:
+Partially-populated example — e.g. a `platform.yaml` from `/asdt-init` for a Go-only repo, where the node-only packs (`i18n`, `css_approach`, `state_management`) never fire and only the always-on and Go packs contribute:
 ```
 Stack: Go
 Conventions: cmd/ for binaries, internal/ for private packages
+CI/CD: github-actions
+Lint: golangci-lint
+Tooling: codegraph index available — prefer codegraph over grep/read loops
 ```
 
 ---
@@ -105,6 +125,8 @@ and a `confidence` (high | medium | low). Fields with an empty `value` are omitt
 When writing code or tests, treat `detected/high` fields as authoritative conventions.
 Treat `inferred/medium` fields as likely conventions — confirm before diverging.
 Treat `manual` fields as user-declared — never override without explicit user approval.
+
+If a `human_nuance:` list is present, read each entry directly here as a user-authored note about that topic — it is intentionally NOT auto-injected (source: manual, origin: user, no confidence rating).
 
 ---
 

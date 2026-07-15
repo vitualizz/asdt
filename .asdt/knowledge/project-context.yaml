@@ -1,6 +1,21 @@
 schema_version: "1"
-detected_at: 2026-07-11T22:06:01Z
+detected_at: 2026-07-15T06:07:27Z
 is_monorepo: { value: "true", source: "detected", confidence: "medium" }
 test_runner: { value: "make test", source: "detected", confidence: "medium" }
 naming_style: { value: "snake_case filenames, PascalCase exported symbols", source: "manual", confidence: "high" }
 architectural_style: { value: "hexagonal", source: "detected", confidence: "high" }
+# ASDT:NUANCE:BEGIN
+human_nuance:
+  - topic: "mergePermissionOverlay"
+    note: "Pure parse->merge->reserialize core of the permission overlay. Non-obvious: it reconciles against the prior ManagedDeny persisted in OverlayLog — pruning what ASDT wrote on a previous run and re-placing it, so deny rules never accumulate across runs."
+    source: manual
+    origin: user
+  - topic: "selfProtectionEntries"
+    note: "Intentionally emits ONLY the Edit(path) verb, because in Claude Code Edit already covers Write and NotebookEdit. Shipping separate Write(...)/NotebookEdit(...) entries is inert and only triggers 'use Edit instead' warnings. (Was a real bug that was fixed.)"
+    source: manual
+    origin: user
+  - topic: "parseRegistry"
+    note: "Walks each skill's */workflow.yaml and builds the canonical per-specialist registry. The non-obvious concept behind it is 'registry drift' — detecting when the generated registry desyncs from the actual workflow.yaml files."
+    source: manual
+    origin: user
+# ASDT:NUANCE:END

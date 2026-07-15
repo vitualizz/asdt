@@ -131,13 +131,18 @@ func loadOverlay() (map[string]any, error) {
 // overlay's own settings file and the rest of ~/.claude. These are injected at
 // write time so the deny-net's self-defense does not rely on "~"/glob expansion
 // behaving as expected inside Claude Code rule paths.
+//
+// Only the Edit verb is emitted: Claude Code file-permission checks honor
+// Edit(path) rules and Edit covers ALL file-editing tools (Edit, Write,
+// NotebookEdit). Shipping separate Write(...)/NotebookEdit(...) entries is inert
+// (the checks ignore them) and merely triggers "use Edit instead" warnings.
 func selfProtectionEntries(home string) []string {
 	claudeDir := filepath.Join(home, claudeDirName)
 	targets := []string{
 		filepath.Join(claudeDir, settingsFileName),
 		claudeDir + "/**",
 	}
-	verbs := []string{"Edit", "Write", "NotebookEdit"}
+	verbs := []string{"Edit"}
 	out := make([]string, 0, len(targets)*len(verbs))
 	for _, t := range targets {
 		for _, v := range verbs {

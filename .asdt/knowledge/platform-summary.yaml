@@ -3,3 +3,9 @@ stack:
   - go
   - node
 file_structure: "cmd/ for binaries, internal/ for private packages"
+design_fingerprint:
+  i18n: "custom (locale files)"
+  css_approach: "tailwind"
+  ci_cd: "github-actions"
+  lint: "golangci-lint"
+  code_intelligence: "codegraph"

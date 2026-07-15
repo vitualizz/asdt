@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 // TestRegistryDrift is the structural defense against the §9.2 "Parity check"
@@ -219,6 +222,211 @@ func trivialTableRows(content string) []string {
 		}
 	}
 	return dirs
+}
+
+// TestInitEnrichmentInlineStep asserts the asdt-init workflow classifies its
+// steps as the enrichment redesign requires: enrichment is a NEW inline step
+// sitting between knowledge-gate and clarify, explore and write remain the only
+// subagent steps, and because asdt-init is non-routable it never leaks into the
+// §9.2 inline-steps render.
+func TestInitEnrichmentInlineStep(t *testing.T) {
+	root := skillDir(t)
+
+	regs, err := parseRegistry(os.DirFS(root))
+	if err != nil {
+		t.Fatalf("parseRegistry: %v", err)
+	}
+
+	var initReg specialistRegistry
+	found := false
+	for _, r := range regs {
+		if r.Dir == "asdt-init" {
+			initReg = r
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("asdt-init not found in parsed registry")
+	}
+
+	wantInline := []string{"knowledge-gate", "enrichment", "clarify"}
+	if !reflect.DeepEqual(initReg.InlineSteps, wantInline) {
+		t.Errorf("asdt-init InlineSteps = %v, want %v", initReg.InlineSteps, wantInline)
+	}
+
+	wantSubagent := []string{"explore", "write"}
+	if !reflect.DeepEqual(initReg.SubagentSteps, wantSubagent) {
+		t.Errorf("asdt-init SubagentSteps = %v, want %v", initReg.SubagentSteps, wantSubagent)
+	}
+
+	// asdt-init is non-routable, so its inline steps must never render into the
+	// §9.2 inline-steps region — enrichment in particular must not leak.
+	region := renderInlineStepsRegion(regs)
+	if strings.Contains(region, "enrichment") {
+		t.Errorf("§9.2 inline-steps region leaked non-routable asdt-init step %q:\n%s", "enrichment", region)
+	}
+}
+
+// TestInitPlanTableMatchesWorkflow asserts the asdt-init SKILL.md Orchestration
+// Plan table Step column is byte-identical, in order, to the workflow.yaml step
+// sequence — so the hand-authored plan cannot drift from the executable flow.
+func TestInitPlanTableMatchesWorkflow(t *testing.T) {
+	root := skillDir(t)
+
+	wfData, err := os.ReadFile(filepath.Join(root, "asdt-init", "workflow.yaml"))
+	if err != nil {
+		t.Fatalf("read asdt-init/workflow.yaml: %v", err)
+	}
+	var wf registryFile
+	if err := yaml.Unmarshal(wfData, &wf); err != nil {
+		t.Fatalf("parse asdt-init/workflow.yaml: %v", err)
+	}
+	var wfSteps []string
+	for _, s := range wf.Steps {
+		wfSteps = append(wfSteps, s.Name)
+	}
+
+	mdData, err := os.ReadFile(filepath.Join(root, "asdt-init", "SKILL.md"))
+	if err != nil {
+		t.Fatalf("read asdt-init/SKILL.md: %v", err)
+	}
+	tableSteps := initPlanTableSteps(string(mdData))
+
+	want := []string{"knowledge-gate", "explore", "enrichment", "clarify", "write"}
+	if !reflect.DeepEqual(wfSteps, want) {
+		t.Errorf("workflow.yaml step order = %v, want %v", wfSteps, want)
+	}
+	if !reflect.DeepEqual(tableSteps, want) {
+		t.Errorf("SKILL.md plan-table Step column = %v, want %v", tableSteps, want)
+	}
+	if !reflect.DeepEqual(wfSteps, tableSteps) {
+		t.Errorf("plan-table drifted from workflow.yaml:\n--- workflow ---\n%v\n--- table ---\n%v", wfSteps, tableSteps)
+	}
+}
+
+// TestNuanceIsolatedFromPlatformSummary defends the deliberate separation of the
+// human_nuance region: it belongs to project-context.yaml (write step 4) ONLY,
+// never to platform-summary.yaml (write step 3), and platform-context.md's
+// auto-injection paths (Reuse Guard, What to Inject) must never pull it in — a
+// user-authored note is read directly, never auto-injected.
+func TestNuanceIsolatedFromPlatformSummary(t *testing.T) {
+	root := skillDir(t)
+
+	writeMD, err := os.ReadFile(filepath.Join(root, "asdt-init", "steps", "write.md"))
+	if err != nil {
+		t.Fatalf("read asdt-init/steps/write.md: %v", err)
+	}
+	content := string(writeMD)
+
+	step3 := lineSliceBetween(content, "**`.asdt/knowledge/platform-summary.yaml`**", "**`.asdt/knowledge/project-context.yaml`**")
+	if step3 == "" {
+		t.Fatalf("could not isolate write.md step-3 platform-summary section")
+	}
+	for _, forbidden := range []string{"human_nuance", "NUANCE", "project-context.yaml"} {
+		if strings.Contains(step3, forbidden) {
+			t.Errorf("write.md step-3 (platform-summary) must not reference %q", forbidden)
+		}
+	}
+
+	step4 := lineSliceBetween(content, "**`.asdt/knowledge/project-context.yaml`**", "## Halt contract")
+	if step4 == "" {
+		t.Fatalf("could not isolate write.md step-4 project-context section")
+	}
+	if !strings.Contains(step4, "human_nuance") {
+		t.Errorf("write.md step-4 (project-context) must reference human_nuance")
+	}
+
+	pcMD, err := os.ReadFile(filepath.Join(root, "asdt-shared", "skills", "platform-context.md"))
+	if err != nil {
+		t.Fatalf("read asdt-shared/skills/platform-context.md: %v", err)
+	}
+	pc := string(pcMD)
+
+	reuseGuard := lineSliceBetween(pc, "## Reuse Guard", "## How to Find")
+	if reuseGuard == "" {
+		t.Fatalf("could not isolate platform-context.md Reuse Guard section")
+	}
+	if strings.Contains(reuseGuard, "human_nuance") {
+		t.Errorf("platform-context.md Reuse Guard must not reference human_nuance")
+	}
+
+	whatToInject := lineSliceBetween(pc, "## What to Inject", "## Graceful Degradation")
+	if whatToInject == "" {
+		t.Fatalf("could not isolate platform-context.md What to Inject section")
+	}
+	if strings.Contains(whatToInject, "human_nuance") {
+		t.Errorf("platform-context.md What to Inject must not reference human_nuance")
+	}
+}
+
+// initPlanTableSteps extracts the ordered Step-column values of the asdt-init
+// SKILL.md Orchestration Plan table (the first column of each data row).
+func initPlanTableSteps(content string) []string {
+	lines := strings.Split(content, "\n")
+	var steps []string
+	inSection := false
+	inTable := false
+	for _, line := range lines {
+		if !inSection {
+			if strings.Contains(line, "## Orchestration Plan") {
+				inSection = true
+			}
+			continue
+		}
+		if !inTable {
+			if strings.Contains(line, "| Step | File | Execution | Reads | Writes |") {
+				inTable = true
+			}
+			continue
+		}
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "|") {
+			if trimmed == "" {
+				break // blank line ends the table
+			}
+			continue
+		}
+		if strings.HasPrefix(trimmed, "|---") || strings.HasPrefix(trimmed, "|--") {
+			continue // separator row
+		}
+		cells := strings.Split(trimmed, "|")
+		if len(cells) < 2 {
+			continue
+		}
+		if name := strings.TrimSpace(cells[1]); name != "" {
+			steps = append(steps, name)
+		}
+	}
+	return steps
+}
+
+// lineSliceBetween returns the lines of content from the first line containing
+// startHint (inclusive) up to but excluding the first line containing endHint
+// after it. When endHint is "" or is not found, the slice runs to EOF. Returns
+// "" when startHint itself is not found.
+func lineSliceBetween(content, startHint, endHint string) string {
+	lines := strings.Split(content, "\n")
+	start := -1
+	for i, line := range lines {
+		if strings.Contains(line, startHint) {
+			start = i
+			break
+		}
+	}
+	if start < 0 {
+		return ""
+	}
+	end := len(lines)
+	if endHint != "" {
+		for i := start + 1; i < len(lines); i++ {
+			if strings.Contains(lines[i], endHint) {
+				end = i
+				break
+			}
+		}
+	}
+	return strings.Join(lines[start:end], "\n")
 }
 
 // extractMarkerRegion returns the bytes strictly between beginMarker and

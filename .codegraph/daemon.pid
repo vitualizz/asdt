@@ -1,6 +1,6 @@
 {
-  "pid": 57191,
+  "pid": 145062,
   "version": "0.9.9",
-  "socketPath": "/home/vitualizz/LeeSpace/Work/VituLabs/AI-Software-Delivery-Team/.codegraph/daemon.sock",
-  "startedAt": 1780939409685
+  "socketPath": "/home/vitualizz/LeeSpace/Work/VituLabs/asdt/.codegraph/daemon.sock",
+  "startedAt": 1784091423049
 }
