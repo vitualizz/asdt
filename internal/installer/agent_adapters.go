@@ -88,6 +88,37 @@ var agentTypeSpecs = []agentTypeSpec{
 	},
 }
 
+// codegraphClaudeTools are the read-only codegraph MCP tools appended to executor
+// agent grants when the installer detects codegraph. Single namespace (codegraph
+// ships as a binary MCP, not a plugin), all read-only.
+var codegraphClaudeTools = []string{
+	"mcp__codegraph__codegraph_explore",
+	"mcp__codegraph__codegraph_search",
+	"mcp__codegraph__codegraph_callers",
+	"mcp__codegraph__codegraph_callees",
+	"mcp__codegraph__codegraph_impact",
+	"mcp__codegraph__codegraph_node",
+	"mcp__codegraph__codegraph_files",
+	"mcp__codegraph__codegraph_status",
+}
+
+// withCodegraphTools returns spec extended with the codegraph tool grants when
+// codegraph was detected, and spec unchanged otherwise. The extended copy gets
+// a freshly allocated ClaudeTools slice: a range copy of an agentTypeSpec still
+// aliases the global agentTypeSpecs backing array, so appending in place would
+// mutate the shared specs.
+func withCodegraphTools(spec agentTypeSpec, opts InstallOptions) agentTypeSpec {
+	if !opts.CodegraphFound {
+		return spec
+	}
+
+	tools := make([]string, 0, len(spec.ClaudeTools)+len(codegraphClaudeTools))
+	tools = append(tools, spec.ClaudeTools...)
+	tools = append(tools, codegraphClaudeTools...)
+	spec.ClaudeTools = tools
+	return spec
+}
+
 // analystBashAllowlist is the OpenCode bash permission whitelist for the
 // read-only analyst agent, in emission order. The catch-all "*": deny is
 // emitted last by writeOpenCodePermissions.
@@ -119,7 +150,9 @@ func renderClaudeAgent(spec agentTypeSpec, executorHeader string) string {
 }
 
 // renderOpenCodeAgent renders one agent type as an OpenCode subagent
-// definition with a structural permission block.
+// definition with a structural permission block. It ignores ClaudeTools by
+// design: the codegraph grant is Claude-only; OpenCode subagents receive MCP
+// tools implicitly.
 func renderOpenCodeAgent(spec agentTypeSpec, executorHeader string) string {
 	var b strings.Builder
 
@@ -175,7 +208,7 @@ func writeAgentBody(b *strings.Builder, executorHeader, constraints string) {
 // for one assistant, on top of the shared skill-tree copy.
 type AgentAdapterDescriptor struct {
 	AssistantID AssistantID
-	Generate    func(skillsFS fs.FS, agentRoot string) ([]string, error)
+	Generate    func(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error)
 }
 
 // AgentAdapters lists assistants that receive generated executor agent
@@ -219,12 +252,12 @@ func agentRootFor(id AssistantID) string {
 	}
 }
 
-func generateClaudeAgents(skillsFS fs.FS, agentRoot string) ([]string, error) {
-	return generateAgentFiles(skillsFS, agentRoot, renderClaudeAgent)
+func generateClaudeAgents(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error) {
+	return generateAgentFiles(skillsFS, agentRoot, opts, renderClaudeAgent)
 }
 
-func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string) ([]string, error) {
-	return generateAgentFiles(skillsFS, agentRoot, renderOpenCodeAgent)
+func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error) {
+	return generateAgentFiles(skillsFS, agentRoot, opts, renderOpenCodeAgent)
 }
 
 // generateAgentFiles writes one agent definition file per agent type spec
@@ -232,7 +265,7 @@ func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string) ([]string, error) 
 // skillsFS without the executor header (a partial fixture) generates nothing
 // — the embedded production FS is guaranteed to carry it. Per-file failures
 // are isolated: the first error is reported, the remaining specs still write.
-func generateAgentFiles(skillsFS fs.FS, agentRoot string, render func(agentTypeSpec, string) string) ([]string, error) {
+func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, render func(agentTypeSpec, string) string) ([]string, error) {
 	header, readErr := fs.ReadFile(skillsFS, executorHeaderPath)
 	if readErr != nil {
 		if os.IsNotExist(readErr) {
@@ -250,7 +283,8 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, render func(agentTypeS
 
 	for _, spec := range agentTypeSpecs {
 		target := filepath.Join(agentRoot, "asdt-"+spec.ID+".md")
-		content := render(spec, string(header))
+		effSpec := withCodegraphTools(spec, opts)
+		content := render(effSpec, string(header))
 
 		if writeErr := os.WriteFile(target, []byte(content), 0o644); writeErr != nil {
 			if firstErr == nil {
@@ -267,7 +301,7 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, render func(agentTypeS
 // generateAgents mirrors generateCommands: resolve the adapter and root for
 // the assistant (absence of either is the no-op), generate, fold written
 // paths into result.WrittenCommands and any error into result.Err.
-func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, result *InstallResult) {
+func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, opts InstallOptions, result *InstallResult) {
 	adapter, ok := agentAdapterFor(assistant.ID)
 	if !ok {
 		return
@@ -278,7 +312,7 @@ func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, result *Insta
 		return
 	}
 
-	written, genErr := adapter.Generate(skillsFS, agentRoot)
+	written, genErr := adapter.Generate(skillsFS, agentRoot, opts)
 	result.WrittenCommands = append(result.WrittenCommands, written...)
 	if genErr != nil {
 		result.Err = genErr

@@ -17,6 +17,12 @@ type InstallResult struct {
 	Err             error
 }
 
+// InstallOptions carries install-time environment detection results into agent
+// generation. Zero value = nothing detected = output identical to prior behavior.
+type InstallOptions struct {
+	CodegraphFound bool
+}
+
 // InstallWithModels copies skill files from skillsFS into each assistant's
 // SkillsDir, applies provider.CustomizeSkill to each file's content, and
 // returns one result per assistant. A failure for one assistant does not abort
@@ -25,11 +31,11 @@ type InstallResult struct {
 // value). models maps "{specialist}/{step}" to the model value injected into
 // that step's `model:` field as each workflow.yaml is written; a nil/empty map
 // installs files unmodified.
-func InstallWithModels(assistants []AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string, models map[string]string) []InstallResult {
+func InstallWithModels(assistants []AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string, models map[string]string, opts InstallOptions) []InstallResult {
 	results := make([]InstallResult, len(assistants))
 
 	for i, assistant := range assistants {
-		results[i] = installOne(assistant, provider, skillsFS, lang, models, false)
+		results[i] = installOne(assistant, provider, skillsFS, lang, models, false, opts)
 	}
 
 	return results
@@ -38,11 +44,11 @@ func InstallWithModels(assistants []AssistantDescriptor, provider ProviderDescri
 // InstallRemovingModels is InstallWithModels for the Chameleon preset: it
 // strips the `model:` field from every subagent step as each workflow.yaml is
 // written, so each step inherits the model the assistant already has defined.
-func InstallRemovingModels(assistants []AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string) []InstallResult {
+func InstallRemovingModels(assistants []AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string, opts InstallOptions) []InstallResult {
 	results := make([]InstallResult, len(assistants))
 
 	for i, assistant := range assistants {
-		results[i] = installOne(assistant, provider, skillsFS, lang, nil, true)
+		results[i] = installOne(assistant, provider, skillsFS, lang, nil, true, opts)
 	}
 
 	return results
@@ -84,7 +90,7 @@ func SiblingDestName(entry string) string {
 //   - loose files directly at the embedded tree root (e.g. "SKILL.md") —
 //     they belong to the consultant and are copied to
 //     {SkillsDir}/asdt/{filename}
-func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string, models map[string]string, removeModels bool) InstallResult {
+func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skillsFS fs.FS, lang string, models map[string]string, removeModels bool, opts InstallOptions) InstallResult {
 	result := InstallResult{AssistantID: assistant.ID}
 
 	if err := os.MkdirAll(assistant.SkillsDir, 0o755); err != nil {
@@ -118,7 +124,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 	}
 
 	generateCommands(assistant, skillsFS, &result)
-	generateAgents(assistant, skillsFS, &result)
+	generateAgents(assistant, skillsFS, opts, &result)
 
 	if result.Err == nil {
 		// Preserve existing persona, emoji preference, and language so a
