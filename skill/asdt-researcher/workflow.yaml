@@ -25,7 +25,8 @@ steps:
     inputs:
       - "{project}/{change}/researcher/ideation"
     output_topic_key: "{project}/{change}/researcher/feasibility"
-    reference_skills: []
+    reference_skills:
+      - ../asdt-shared/skills/platform-context.md
 
   - name: discovery-brief
     skill: steps/discovery-brief.md

@@ -28,6 +28,7 @@ steps:
     output_topic_key: "{project}/{change}/qa/ac-gaps"
     reference_skills:
       - skills/acceptance-criteria.md
+      - ../asdt-shared/skills/platform-context.md
 
   - name: edge-case-analysis
     skill: steps/edge-case-analysis.md
@@ -40,6 +41,7 @@ steps:
     output_topic_key: "{project}/{change}/qa/edge-cases"
     reference_skills:
       - skills/edge-case-analysis.md
+      - ../asdt-shared/skills/platform-context.md
 
   - name: test-strategy
     skill: steps/test-strategy.md
@@ -63,7 +65,8 @@ steps:
       - "{project}/{change}/qa/test-strategy"
       - "{project}/{change}/qa/edge-cases"
     output_topic_key: "{project}/{change}/qa/test-cases"
-    reference_skills: []
+    reference_skills:
+      - ../asdt-shared/skills/platform-context.md
 
   - name: quality-report
     skill: steps/quality-report.md

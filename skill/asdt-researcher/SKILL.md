@@ -5,6 +5,7 @@ user-invocable: true
 specialist-id: researcher
 shared-skills:
   - specialist-header
+  - platform-context
   - knowledge-recall
   - report
   - decision-preservation
