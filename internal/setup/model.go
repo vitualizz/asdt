@@ -69,9 +69,10 @@ const (
 
 // preflightState holds state for the StateEnvironmentCheck screen.
 type preflightState struct {
-	sections      []components.SectionGroup
-	done          bool
-	engramMissing bool
+	sections       []components.SectionGroup
+	done           bool
+	engramMissing  bool
+	codegraphFound bool
 }
 
 // wizardState holds install-wizard state across SelectAssistants → Installing → Done.
@@ -239,6 +240,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case EnvironmentCheckMsg:
 		m.preflight.done = true
 		m.preflight.engramMissing = !msg.EngramFound
+		m.preflight.codegraphFound = msg.CodegraphFound
 		return m, nil
 
 	case LanguagePrefMsg:
@@ -1034,6 +1036,7 @@ func (m Model) buildInstallCmd() tea.Cmd {
 	assistants := m.selectedAssistants()
 	provider := installer.Providers[m.wizard.provider]
 	lang := languageOptions[m.language.selected].Code
+	opts := installer.InstallOptions{CodegraphFound: m.preflight.codegraphFound}
 
 	var installCmd tea.Cmd
 	if m.wizard.modelGateChoice == installer.PresetChameleon {
@@ -1041,7 +1044,7 @@ func (m Model) buildInstallCmd() tea.Cmd {
 		// selectedModels map is empty, which would otherwise fall through to a
 		// verbatim install and wrongly keep the source defaults. Instead the
 		// remove-models path strips every model field.
-		installCmd = RemoveModelsInstallCmd(assistants, provider, m.skillsFS, lang)
+		installCmd = RemoveModelsInstallCmd(assistants, provider, m.skillsFS, lang, opts)
 	} else {
 		// Selections identical to the shipped defaults pass nil so workflow.yaml
 		// files install verbatim — a preset that reproduces the defaults
@@ -1051,7 +1054,7 @@ func (m Model) buildInstallCmd() tea.Cmd {
 		if m.countCustomizedModels() == 0 {
 			models = nil
 		}
-		installCmd = InstallCmd(assistants, provider, m.skillsFS, lang, models)
+		installCmd = InstallCmd(assistants, provider, m.skillsFS, lang, models, opts)
 	}
 
 	cmds := []tea.Cmd{installCmd}
@@ -1076,12 +1079,12 @@ func (m Model) buildInstallCmd() tea.Cmd {
 // per-assistant install strips the `model:` field from every subagent step as
 // its workflow.yaml is written. It mirrors InstallCmd's per-assistant batching
 // so the TUI still updates row-by-row.
-func RemoveModelsInstallCmd(assistants []installer.AssistantDescriptor, provider installer.ProviderDescriptor, skillsFS fs.FS, lang string) tea.Cmd {
+func RemoveModelsInstallCmd(assistants []installer.AssistantDescriptor, provider installer.ProviderDescriptor, skillsFS fs.FS, lang string, opts installer.InstallOptions) tea.Cmd {
 	cmds := make([]tea.Cmd, len(assistants))
 	for i, a := range assistants {
 		a := a // capture loop variable
 		cmds[i] = func() tea.Msg {
-			results := installer.InstallRemovingModels([]installer.AssistantDescriptor{a}, provider, skillsFS, lang)
+			results := installer.InstallRemovingModels([]installer.AssistantDescriptor{a}, provider, skillsFS, lang, opts)
 			if len(results) > 0 {
 				return AssistantInstallProgressMsg{Result: results[0]}
 			}

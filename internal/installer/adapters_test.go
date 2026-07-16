@@ -261,7 +261,7 @@ func TestInstallOne_ClaudeCodeUnaffectedByCommandAdapters(t *testing.T) {
 	root := filepath.Join(dir, "skills")
 	assistants := []AssistantDescriptor{{ID: AssistantClaudeCode, Name: "Claude Code", BinaryName: "sh", SkillsDir: root}}
 	provider := Providers[0]
-	results := InstallWithModels(assistants, provider, realisticSpecialistFS, "", nil)
+	results := InstallWithModels(assistants, provider, realisticSpecialistFS, "", nil, InstallOptions{})
 	if results[0].Err != nil {
 		t.Fatalf("install failed: %v", results[0].Err)
 	}

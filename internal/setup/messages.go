@@ -155,12 +155,12 @@ func LanguagePrefCmd() tea.Cmd {
 // lang is the language code chosen in the wizard, recorded in install metadata.
 // models carries the per-step model selections from StateModelSetup, injected
 // into each workflow.yaml as it is written; nil installs files unmodified.
-func InstallCmd(assistants []installer.AssistantDescriptor, provider installer.ProviderDescriptor, skillsFS fs.FS, lang string, models map[string]string) tea.Cmd {
+func InstallCmd(assistants []installer.AssistantDescriptor, provider installer.ProviderDescriptor, skillsFS fs.FS, lang string, models map[string]string, opts installer.InstallOptions) tea.Cmd {
 	cmds := make([]tea.Cmd, len(assistants))
 	for i, a := range assistants {
 		a := a // capture loop variable
 		cmds[i] = func() tea.Msg {
-			results := installer.InstallWithModels([]installer.AssistantDescriptor{a}, provider, skillsFS, lang, models)
+			results := installer.InstallWithModels([]installer.AssistantDescriptor{a}, provider, skillsFS, lang, models, opts)
 			if len(results) > 0 {
 				return AssistantInstallProgressMsg{Result: results[0]}
 			}

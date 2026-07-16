@@ -19,7 +19,7 @@ func TestInstall_DoesNotShipInstallerAssets(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), "skills")
 	a := AssistantDescriptor{ID: "copywalk-test", Name: "Copywalk Test", BinaryName: "sh", SkillsDir: skillsDir}
 
-	results := InstallWithModels([]AssistantDescriptor{a}, Providers[0], skill.FS(), "", nil)
+	results := InstallWithModels([]AssistantDescriptor{a}, Providers[0], skill.FS(), "", nil, InstallOptions{})
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
 	}

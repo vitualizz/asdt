@@ -29,53 +29,109 @@ var headerlessFS = fstest.MapFS{
 	"asdt-developer/SKILL.md": &fstest.MapFile{Data: []byte("# Developer")},
 }
 
+// codegraphToolsSuffix is the exact suffix appended to every Claude tools line
+// when codegraph is detected. Hardcoded (NOT derived from codegraphClaudeTools)
+// so any drift in the production var is caught here.
+const codegraphToolsSuffix = ", mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_callers, mcp__codegraph__codegraph_callees, mcp__codegraph__codegraph_impact, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_files, mcp__codegraph__codegraph_status"
+
+const analystBaseToolsLine = "tools: Read, Glob, Grep, Bash, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation"
+
+const builderBaseToolsLine = "tools: Read, Glob, Grep, Bash, Edit, Write, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_update, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_update"
+
 func TestGenerateClaudeAgents_ExactFrontmatterAndBody(t *testing.T) {
-	cases := []struct {
-		name          string
-		file          string
-		wantNameLine  string
-		wantToolsLine string
+	branches := []struct {
+		name             string
+		opts             InstallOptions
+		analystToolsLine string
+		builderToolsLine string
 	}{
 		{
-			name:          "analyst",
-			file:          "asdt-analyst.md",
-			wantNameLine:  "name: asdt-analyst",
-			wantToolsLine: "tools: Read, Glob, Grep, Bash, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation",
+			name:             "codegraph absent keeps prior tools lines byte-identical",
+			opts:             InstallOptions{CodegraphFound: false},
+			analystToolsLine: analystBaseToolsLine,
+			builderToolsLine: builderBaseToolsLine,
 		},
 		{
-			name:          "builder",
-			file:          "asdt-builder.md",
-			wantNameLine:  "name: asdt-builder",
-			wantToolsLine: "tools: Read, Glob, Grep, Bash, Edit, Write, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_update, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_update",
+			name:             "codegraph found appends the read-only codegraph grants",
+			opts:             InstallOptions{CodegraphFound: true},
+			analystToolsLine: analystBaseToolsLine + codegraphToolsSuffix,
+			builderToolsLine: builderBaseToolsLine + codegraphToolsSuffix,
 		},
 	}
 
-	agentRoot := filepath.Join(t.TempDir(), "agents")
-	written, err := generateClaudeAgents(agentFixtureFS, agentRoot)
-	if err != nil {
-		t.Fatalf("generateClaudeAgents returned error: %v", err)
-	}
-	if len(written) != len(cases) {
-		t.Fatalf("expected %d written agent files, got %d: %v", len(cases), len(written), written)
-	}
+	for _, branch := range branches {
+		t.Run(branch.name, func(t *testing.T) {
+			cases := []struct {
+				name          string
+				file          string
+				wantNameLine  string
+				wantToolsLine string
+			}{
+				{
+					name:          "analyst",
+					file:          "asdt-analyst.md",
+					wantNameLine:  "name: asdt-analyst",
+					wantToolsLine: branch.analystToolsLine,
+				},
+				{
+					name:          "builder",
+					file:          "asdt-builder.md",
+					wantNameLine:  "name: asdt-builder",
+					wantToolsLine: branch.builderToolsLine,
+				},
+			}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			data, readErr := os.ReadFile(filepath.Join(agentRoot, c.file))
-			if readErr != nil {
-				t.Fatalf("expected agent file %q to exist: %v", c.file, readErr)
+			agentRoot := filepath.Join(t.TempDir(), "agents")
+			written, err := generateClaudeAgents(agentFixtureFS, agentRoot, branch.opts)
+			if err != nil {
+				t.Fatalf("generateClaudeAgents returned error: %v", err)
 			}
-			content := string(data)
+			if len(written) != len(cases) {
+				t.Fatalf("expected %d written agent files, got %d: %v", len(cases), len(written), written)
+			}
 
-			if !strings.Contains(content, c.wantNameLine+"\n") {
-				t.Errorf("agent %q missing exact name line %q\ngot:\n%s", c.file, c.wantNameLine, content)
+			for _, c := range cases {
+				t.Run(c.name, func(t *testing.T) {
+					data, readErr := os.ReadFile(filepath.Join(agentRoot, c.file))
+					if readErr != nil {
+						t.Fatalf("expected agent file %q to exist: %v", c.file, readErr)
+					}
+					content := string(data)
+
+					if !strings.Contains(content, c.wantNameLine+"\n") {
+						t.Errorf("agent %q missing exact name line %q\ngot:\n%s", c.file, c.wantNameLine, content)
+					}
+					if !strings.Contains(content, c.wantToolsLine+"\n") {
+						t.Errorf("agent %q missing EXACT tools line\nwant: %s\ngot:\n%s", c.file, c.wantToolsLine, content)
+					}
+					assertAgentBody(t, c.file, content)
+					assertNoDelegationTools(t, c.file, c.wantToolsLine)
+				})
 			}
-			if !strings.Contains(content, c.wantToolsLine+"\n") {
-				t.Errorf("agent %q missing EXACT tools line\nwant: %s\ngot:\n%s", c.file, c.wantToolsLine, content)
-			}
-			assertAgentBody(t, c.file, content)
-			assertNoDelegationTools(t, c.file, c.wantToolsLine)
 		})
+	}
+}
+
+// TestGenerateClaudeAgents_CodegraphDoesNotMutateSpecs guards the shared
+// agentTypeSpecs global: a codegraph-enabled generation must not leak the
+// appended grants into a later codegraph-absent generation.
+func TestGenerateClaudeAgents_CodegraphDoesNotMutateSpecs(t *testing.T) {
+	withRoot := filepath.Join(t.TempDir(), "agents-with")
+	if _, err := generateClaudeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true}); err != nil {
+		t.Fatalf("codegraph-enabled run: %v", err)
+	}
+
+	withoutRoot := filepath.Join(t.TempDir(), "agents-without")
+	if _, err := generateClaudeAgents(agentFixtureFS, withoutRoot, InstallOptions{}); err != nil {
+		t.Fatalf("codegraph-absent run: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(withoutRoot, "asdt-analyst.md"))
+	if err != nil {
+		t.Fatalf("read analyst file: %v", err)
+	}
+	if strings.Contains(string(data), "mcp__codegraph__") {
+		t.Error("codegraph-absent generation carries codegraph grants — agentTypeSpecs was mutated by the earlier codegraph-enabled run")
 	}
 }
 
@@ -154,7 +210,7 @@ func parseOpenCodeAgentFile(t *testing.T, path string) (openCodeAgentFrontmatter
 
 func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 	agentRoot := filepath.Join(t.TempDir(), "agents")
-	written, err := generateOpenCodeAgents(agentFixtureFS, agentRoot)
+	written, err := generateOpenCodeAgents(agentFixtureFS, agentRoot, InstallOptions{})
 	if err != nil {
 		t.Fatalf("generateOpenCodeAgents returned error: %v", err)
 	}
@@ -218,8 +274,12 @@ func TestGenerateAgents_IdempotentDoubleGenerate(t *testing.T) {
 		name     string
 		generate func(skillsFS fstest.MapFS, agentRoot string) ([]string, error)
 	}{
-		{name: "claude", generate: func(fsys fstest.MapFS, root string) ([]string, error) { return generateClaudeAgents(fsys, root) }},
-		{name: "opencode", generate: func(fsys fstest.MapFS, root string) ([]string, error) { return generateOpenCodeAgents(fsys, root) }},
+		{name: "claude", generate: func(fsys fstest.MapFS, root string) ([]string, error) {
+			return generateClaudeAgents(fsys, root, InstallOptions{})
+		}},
+		{name: "opencode", generate: func(fsys fstest.MapFS, root string) ([]string, error) {
+			return generateOpenCodeAgents(fsys, root, InstallOptions{})
+		}},
 	}
 
 	for _, g := range generators {
@@ -250,10 +310,45 @@ func TestGenerateAgents_IdempotentDoubleGenerate(t *testing.T) {
 	}
 }
 
+// TestGenerateOpenCodeAgents_CodegraphNeutral asserts codegraph detection has
+// zero effect on OpenCode output: the grant is Claude-only (OpenCode subagents
+// receive MCP tools implicitly), so both branches must be byte-identical.
+func TestGenerateOpenCodeAgents_CodegraphNeutral(t *testing.T) {
+	withoutRoot := filepath.Join(t.TempDir(), "agents-without")
+	writtenWithout, err := generateOpenCodeAgents(agentFixtureFS, withoutRoot, InstallOptions{CodegraphFound: false})
+	if err != nil {
+		t.Fatalf("codegraph-absent run: %v", err)
+	}
+
+	withRoot := filepath.Join(t.TempDir(), "agents-with")
+	writtenWith, err := generateOpenCodeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true})
+	if err != nil {
+		t.Fatalf("codegraph-enabled run: %v", err)
+	}
+
+	if len(writtenWithout) != len(writtenWith) {
+		t.Fatalf("written counts differ: without=%d, with=%d", len(writtenWithout), len(writtenWith))
+	}
+
+	for i, pathWithout := range writtenWithout {
+		wantData, readErr := os.ReadFile(pathWithout)
+		if readErr != nil {
+			t.Fatalf("read %q: %v", pathWithout, readErr)
+		}
+		gotData, readErr := os.ReadFile(writtenWith[i])
+		if readErr != nil {
+			t.Fatalf("read %q: %v", writtenWith[i], readErr)
+		}
+		if string(wantData) != string(gotData) {
+			t.Errorf("OpenCode agent %q differs between codegraph branches; want byte-identical output", filepath.Base(pathWithout))
+		}
+	}
+}
+
 func TestGenerateAgentFiles_MissingExecutorHeaderIsNoOp(t *testing.T) {
 	agentRoot := filepath.Join(t.TempDir(), "agents")
 
-	written, err := generateClaudeAgents(headerlessFS, agentRoot)
+	written, err := generateClaudeAgents(headerlessFS, agentRoot, InstallOptions{})
 	if err != nil {
 		t.Fatalf("expected nil error for a fixture FS without the executor header, got: %v", err)
 	}
