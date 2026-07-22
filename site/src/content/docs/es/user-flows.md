@@ -30,11 +30,11 @@ Orden sugerido:
 ¿Continuar con este plan? (yes / modify / no)
 ```
 
-Confirmá el plan. ASDT te da los comandos exactos a ejecutar, con pasos de workflow adaptados para cada especialista. **Los ejecutás vos — ASDT no corre los especialistas automáticamente.**
+Confirmá el plan. ASDT te da los comandos exactos a ejecutar, con pasos de workflow adaptados para cada especialista. **Los ejecutas tú — ASDT no corre los especialistas automáticamente.**
 
 ## Ejecutar especialistas directamente
 
-Cuando ya sabés lo que necesitás, salteate `/asdt` e invocá el especialista directamente:
+Cuando ya sabes lo que necesitas, salteate `/asdt` e invocá el especialista directamente:
 
 ```
 /asdt-architect Diseñar la estrategia de rate-limiting para la API
@@ -46,13 +46,13 @@ Cada especialista ejecuta su workflow completo (explore → spec → design → 
 
 ## Retomar en mitad del pipeline
 
-Si ejecutaste algunos especialistas y querés continuar después, invocá el siguiente. Lee los artefactos previos de la base de conocimiento automáticamente — incluso de una sesión anterior:
+Si ejecutaste algunos especialistas y quieres continuar después, invocá el siguiente. Lee los artefactos previos de la base de conocimiento automáticamente — incluso de una sesión anterior:
 
 ```
 /asdt-developer Implementar basándose en el ADR del Arquitecto
 ```
 
-El Developer lee los artefactos del Arquitecto desde la base de conocimiento. No pasás contexto manualmente.
+El Developer lee los artefactos del Arquitecto desde la base de conocimiento. No pasas contexto manualmente.
 
 ## Memoria y continuidad
 

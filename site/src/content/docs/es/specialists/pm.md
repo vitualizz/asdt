@@ -26,7 +26,7 @@ El especialista PM nunca escribe decisiones de arquitectura, código de implemen
 
 ## Posición en el pipeline
 
-Funciona mejor como el **primer** especialista en un pipeline — su `backlog-entry` es la fuente principal de requisitos para Arquitecto, Developer y QA. Invocarlo después de que la arquitectura ya está decidida arriesga divergencia entre requisitos y diseño. Puede correr de forma standalone cuando solo necesitás requisitos formalizados sin continuar el pipeline.
+Funciona mejor como el **primer** especialista en un pipeline — su `backlog-entry` es la fuente principal de requisitos para Arquitecto, Developer y QA. Invocarlo después de que la arquitectura ya está decidida arriesga divergencia entre requisitos y diseño. Puede correr de forma standalone cuando solo necesitas requisitos formalizados sin continuar el pipeline.
 
 ## Qué produce
 

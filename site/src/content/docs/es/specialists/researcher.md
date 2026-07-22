@@ -1,13 +1,13 @@
 ---
 title: Researcher
-description: Explora problemas y oportunidades difusas mediante ideación divergente y escaneo de factibilidad, convergiendo en una única dirección recomendada — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabés qué construir.
+description: Explora problemas y oportunidades difusas mediante ideación divergente y escaneo de factibilidad, convergiendo en una única dirección recomendada — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabes qué construir.
 order: 26
 locale: es
 ---
 
 # Researcher (`/asdt-researcher`)
 
-> Explora problemas y oportunidades difusas mediante ideación divergente y escaneo de factibilidad, convergiendo en una única dirección recomendada — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabés qué construir.
+> Explora problemas y oportunidades difusas mediante ideación divergente y escaneo de factibilidad, convergiendo en una única dirección recomendada — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabes qué construir.
 
 ## Qué hace
 
@@ -26,7 +26,7 @@ El Researcher es solo analista — nunca escribe en el filesystem. Su único tra
 
 ## Posición en el pipeline
 
-El único especialista **pre-PM** del pipeline — corre antes de que existan los requisitos. El resumen y la dirección recomendada de su `discovery-brief` se renderizan como prosa y se entregan al feature-intake de `/asdt-pm` como la petición cruda, así PM arranca desde una dirección explorada y verificada en factibilidad en lugar de una suposición. Puede correr de forma standalone cuando solo necesitás exploración estructurada sin continuar hacia requisitos.
+El único especialista **pre-PM** del pipeline — corre antes de que existan los requisitos. El resumen y la dirección recomendada de su `discovery-brief` se renderizan como prosa y se entregan al feature-intake de `/asdt-pm` como la petición cruda, así PM arranca desde una dirección explorada y verificada en factibilidad en lugar de una suposición. Puede correr de forma standalone cuando solo necesitas exploración estructurada sin continuar hacia requisitos.
 
 ## Qué produce
 

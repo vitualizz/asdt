@@ -7,7 +7,7 @@ locale: es
 
 # Contribuir
 
-Las contribuciones de mayor impacto son los archivos `SKILL.md` de los specialists y las definiciones de los steps del workflow — no necesitás experiencia en Go. La capa de skills ES el producto. Si podés describir el rol de un specialist, sus workflow steps y sus contratos de artifacts, podés shippear un nuevo specialist.
+Las contribuciones de mayor impacto son los archivos `SKILL.md` de los specialists y las definiciones de los steps del workflow — no necesitas experiencia en Go. La capa de skills ES el producto. Si puedes describir el rol de un specialist, sus workflow steps y sus contratos de artifacts, puedes shippear un nuevo specialist.
 
 ## Agregar un nuevo specialist
 

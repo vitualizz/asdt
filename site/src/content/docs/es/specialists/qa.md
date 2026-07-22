@@ -19,7 +19,7 @@ El especialista QA no es elegible para complejidad trivial. En trivial vuelve a 
 
 ## Cuándo invocarlo
 
-- El código está listo para revisión y necesitás un quality gate antes de que salga a producción
+- El código está listo para revisión y necesitas un quality gate antes de que salga a producción
 - Los criterios de aceptación existen pero no han sido validados formalmente (atomicidad, mensurabilidad, independencia)
 - Querés cobertura sistemática de casos borde, no solo tests del happy path
 - Necesitás un plan de pruebas estructurado que un Developer pueda implementar sin adivinar

@@ -40,4 +40,4 @@ Cero paquetes de Go nuevos, cero ramas de switch nuevas. El glob de embed `asdt-
 
 Cualquier especialista puede correr primero — no hay un predecesor requerido. Si el Developer no encuentra ningún artefacto del Architect en Engram, sigue adelante con `open_items: ["architect/adr not found"]` y hace suposiciones razonables. El artefacto de implementación resultante es menos preciso que si el Architect hubiera corrido primero, pero es un output válido.
 
-Esta decisión de diseño prioriza la flexibilidad por sobre las garantías de corrección. Siempre podés correr especialistas fuera de orden. ASDT confía en que vos decidís cuándo involucrar a cada disciplina.
+Esta decisión de diseño prioriza la flexibilidad por sobre las garantías de corrección. Siempre puedes correr especialistas fuera de orden. ASDT confía en que tú decides cuándo involucrar a cada disciplina.

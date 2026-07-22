@@ -72,7 +72,7 @@ Seguí las indicaciones para volver a autenticarte y luego reiniciá el asistent
 
 Si ASDT reporta que el modelo configurado no está disponible, tu `.asdt/config.yaml` puede referenciar un ID de modelo desactualizado.
 
-**Solución:** Abrí `.asdt/config.yaml` y actualizá el campo `model` a un modelo que tu asistente pueda servir. Los IDs de modelo disponibles dependen de tu asistente y su provider configurado — para Claude Code, los modelos soportados están listados en la [documentación de Claude](https://docs.anthropic.com/en/docs/about-claude/models); para OpenCode, usá un ID de modelo expuesto por tu provider configurado. También podés elegir el preset **Chameleon** durante la instalación para quitar el campo `model:` por completo y dejar que cada asistente use su propio default.
+**Solución:** Abrí `.asdt/config.yaml` y actualizá el campo `model` a un modelo que tu asistente pueda servir. Los IDs de modelo disponibles dependen de tu asistente y su provider configurado — para Claude Code, los modelos soportados están listados en la [documentación de Claude](https://docs.anthropic.com/en/docs/about-claude/models); para OpenCode, usá un ID de modelo expuesto por tu provider configurado. También puedes elegir el preset **Chameleon** durante la instalación para quitar el campo `model:` por completo y dejar que cada asistente use su propio default.
 
 ## Problemas de especialistas
 
