@@ -20,6 +20,8 @@ type agentTypeSpec struct {
 	Description string   // one-line summary emitted into the frontmatter
 	ClaudeTools []string // exact Claude Code tools allowlist, in emission order
 	Constraints string   // English constraint prose appended after the executor header
+	Guidance    string   // gated section body appended after constraints; empty by
+	// default, set only by withCodegraphGuidance when CodegraphFound.
 }
 
 // AgentTypeNames lists the canonical ASDT agent type IDs in render order.
@@ -102,6 +104,29 @@ var codegraphClaudeTools = []string{
 	"mcp__codegraph__codegraph_status",
 }
 
+// codeIntelligenceGuidance is the shared "## Code intelligence" body appended
+// to an executor agent when codegraph is detected. Both agent types receive it
+// verbatim — it teaches the codegraph read-only tools and where Bash still wins.
+const codeIntelligenceGuidance = `## Code intelligence
+
+This repository is indexed by codegraph, and you hold its read-only tools.
+Query the index for anything symbol- or structure-shaped instead of
+scanning files by hand:
+
+- codegraph_explore FIRST for symbol, architecture, or "how does this
+  work" questions — one call returns the relevant source grouped by file.
+- codegraph_callers and codegraph_callees for call-graph questions ("what
+  calls this", "what does this call").
+- codegraph_impact for "what breaks if I change this".
+- codegraph_search to locate a symbol, codegraph_node to read one
+  definition in full; the remaining codegraph_* tools cover files and
+  index status.
+
+Bash grep and read stay the right tool for text the index does not model:
+schemas like Rails db/schema.rb, configs, locales, generated DSL. Reach for
+them there without hesitation.
+`
+
 // withCodegraphTools returns spec extended with the codegraph tool grants when
 // codegraph was detected, and spec unchanged otherwise. The extended copy gets
 // a freshly allocated ClaudeTools slice: a range copy of an agentTypeSpec still
@@ -116,6 +141,19 @@ func withCodegraphTools(spec agentTypeSpec, opts InstallOptions) agentTypeSpec {
 	tools = append(tools, spec.ClaudeTools...)
 	tools = append(tools, codegraphClaudeTools...)
 	spec.ClaudeTools = tools
+	return spec
+}
+
+// withCodegraphGuidance returns spec extended with the "## Code intelligence"
+// section body when codegraph was detected, and spec unchanged otherwise.
+// Unlike withCodegraphTools, Guidance is a plain string field: setting it on
+// the value copy carries no aliasing hazard (no shared backing array to mutate).
+func withCodegraphGuidance(spec agentTypeSpec, opts InstallOptions) agentTypeSpec {
+	if !opts.CodegraphFound {
+		return spec
+	}
+
+	spec.Guidance = codeIntelligenceGuidance
 	return spec
 }
 
@@ -144,7 +182,7 @@ func renderClaudeAgent(spec agentTypeSpec, executorHeader string) string {
 	b.WriteString(strings.Join(spec.ClaudeTools, ", "))
 	b.WriteString("\n")
 	b.WriteString("---\n\n")
-	writeAgentBody(&b, executorHeader, spec.Constraints)
+	writeAgentBody(&b, executorHeader, spec.Constraints, spec.Guidance)
 
 	return b.String()
 }
@@ -164,7 +202,7 @@ func renderOpenCodeAgent(spec agentTypeSpec, executorHeader string) string {
 	b.WriteString("permission:\n")
 	writeOpenCodePermissions(&b, spec.ID)
 	b.WriteString("---\n\n")
-	writeAgentBody(&b, executorHeader, spec.Constraints)
+	writeAgentBody(&b, executorHeader, spec.Constraints, spec.Guidance)
 
 	return b.String()
 }
@@ -190,9 +228,10 @@ func writeOpenCodePermissions(b *strings.Builder, id string) {
 	b.WriteString("    \"*\": deny\n")
 }
 
-// writeAgentBody emits the shared agent body: the executor header VERBATIM,
-// one blank line, then the agent type's constraint prose.
-func writeAgentBody(b *strings.Builder, executorHeader, constraints string) {
+// writeAgentBody emits the shared agent body in fixed order: the executor
+// header VERBATIM, one blank line, the agent type's constraint prose, then —
+// when non-empty — one blank line and the gated guidance section.
+func writeAgentBody(b *strings.Builder, executorHeader, constraints, guidance string) {
 	b.WriteString(executorHeader)
 	if !strings.HasSuffix(executorHeader, "\n") {
 		b.WriteString("\n")
@@ -201,6 +240,13 @@ func writeAgentBody(b *strings.Builder, executorHeader, constraints string) {
 	b.WriteString(constraints)
 	if !strings.HasSuffix(constraints, "\n") {
 		b.WriteString("\n")
+	}
+	if guidance != "" {
+		b.WriteString("\n")
+		b.WriteString(guidance)
+		if !strings.HasSuffix(guidance, "\n") {
+			b.WriteString("\n")
+		}
 	}
 }
 
@@ -283,7 +329,7 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, r
 
 	for _, spec := range agentTypeSpecs {
 		target := filepath.Join(agentRoot, "asdt-"+spec.ID+".md")
-		effSpec := withCodegraphTools(spec, opts)
+		effSpec := withCodegraphGuidance(withCodegraphTools(spec, opts), opts)
 		content := render(effSpec, string(header))
 
 		if writeErr := os.WriteFile(target, []byte(content), 0o644); writeErr != nil {

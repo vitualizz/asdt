@@ -8,7 +8,7 @@ Guidelines for generating idiomatic, production-quality code at Step 5 (Code Gen
 
 ## Precedence
 
-When platform-context conventions or existing project conventions conflict with these defaults, the platform-context and project consistency take precedence. These guidelines apply only where no project-specific convention has been established. Platform-context injects the project's detected conventions (from `knowledge.yaml`); treat its detected/high-confidence and manual fields as authoritative. Defer every language-specific idiom to it — never apply a default from this file over a convention the project has already established.
+When platform-context conventions or existing project conventions conflict with these defaults, the platform-context and project consistency take precedence. These guidelines apply only where no project-specific convention has been established. Platform-context injects the project's detected conventions (from `knowledge.yaml`); treat its detected/high-confidence and manual fields as authoritative. Defer every language-specific idiom to it — never apply a default from this file over a convention the project has already established. Exception: the no-comments rule below is never overridden by an inferred or informal project style — only an explicit, enforced convention (a lint or CI rule that fails the build without them, or a written repo style guide) can make comments required.
 
 ---
 
@@ -60,8 +60,8 @@ doubt, choose less.
 Make the code reveal its own intent so it needs little explanation:
 
 - Prefer intent-revealing names over comments. A reader should understand what an identifier holds or does from its name alone.
-- Comment sparingly; default to no comment. Add one only when intent cannot be carried by names and structure — for genuinely non-obvious logic, a rationale, or a constraint. Comment the WHY, never the WHAT: do not restate what the code plainly does.
-- Write every comment for a teammate reading the repository cold, with no knowledge of how the code was produced and no ASDT installed. Never reference the authoring process or tooling-internal artifacts in code — no mention of an assistant, a turn, an ADR, a ticket number, or any internal concept the reader may not have access to. If a rationale depends on such context, restate it in plain terms a reader without that context can act on.
+- Generated code carries no comments by default. Write a comment only when explicitly requested — by the user in the current request, or by an explicit, enforced project convention (a lint/CI rule or a written style guide) — never at your own discretion. If code seems to need a comment to be understood, rewrite it instead: better names, smaller functions, clearer structure.
+- When comments were explicitly requested, write every comment for a teammate reading the repository cold, with no knowledge of how the code was produced and no ASDT installed. Never reference the authoring process or tooling-internal artifacts in code — no mention of an assistant, a turn, an ADR, a ticket number, or any internal concept the reader may not have access to. If a rationale depends on such context, restate it in plain terms a reader without that context can act on.
 - Name all significant constants. Unnamed numbers and inline strings obscure intent exactly as opaque identifiers do, and make code fragile and unsearchable. Bind each meaningful literal to a named constant.
 
 ---

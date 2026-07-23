@@ -3,6 +3,7 @@ package installer
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -38,24 +39,43 @@ const analystBaseToolsLine = "tools: Read, Glob, Grep, Bash, mcp__plugin_engram_
 
 const builderBaseToolsLine = "tools: Read, Glob, Grep, Bash, Edit, Write, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_update, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_update"
 
+// codeIntelligenceHeading is the H2 that marks the gated codegraph guidance
+// section. Hardcoded (NOT derived from codeIntelligenceGuidance) so any drift
+// in the production const is caught here.
+const codeIntelligenceHeading = "## Code intelligence"
+
+// codeIntelligenceSubstrings are load-bearing markers of the gated guidance
+// body, hardcoded independently of the production const: each must appear
+// verbatim when codegraph is detected.
+var codeIntelligenceSubstrings = []string{
+	"## Code intelligence",
+	"codegraph_explore",
+	"codegraph_callers",
+	"codegraph_impact",
+	"schemas like Rails db/schema.rb, configs, locales, generated DSL",
+}
+
 func TestGenerateClaudeAgents_ExactFrontmatterAndBody(t *testing.T) {
 	branches := []struct {
 		name             string
 		opts             InstallOptions
 		analystToolsLine string
 		builderToolsLine string
+		wantGuidance     bool
 	}{
 		{
 			name:             "codegraph absent keeps prior tools lines byte-identical",
 			opts:             InstallOptions{CodegraphFound: false},
 			analystToolsLine: analystBaseToolsLine,
 			builderToolsLine: builderBaseToolsLine,
+			wantGuidance:     false,
 		},
 		{
 			name:             "codegraph found appends the read-only codegraph grants",
 			opts:             InstallOptions{CodegraphFound: true},
 			analystToolsLine: analystBaseToolsLine + codegraphToolsSuffix,
 			builderToolsLine: builderBaseToolsLine + codegraphToolsSuffix,
+			wantGuidance:     true,
 		},
 	}
 
@@ -104,7 +124,7 @@ func TestGenerateClaudeAgents_ExactFrontmatterAndBody(t *testing.T) {
 					if !strings.Contains(content, c.wantToolsLine+"\n") {
 						t.Errorf("agent %q missing EXACT tools line\nwant: %s\ngot:\n%s", c.file, c.wantToolsLine, content)
 					}
-					assertAgentBody(t, c.file, content)
+					assertAgentBody(t, c.file, content, branch.wantGuidance)
 					assertNoDelegationTools(t, c.file, c.wantToolsLine)
 				})
 			}
@@ -133,11 +153,16 @@ func TestGenerateClaudeAgents_CodegraphDoesNotMutateSpecs(t *testing.T) {
 	if strings.Contains(string(data), "mcp__codegraph__") {
 		t.Error("codegraph-absent generation carries codegraph grants — agentTypeSpecs was mutated by the earlier codegraph-enabled run")
 	}
+	if strings.Contains(string(data), codeIntelligenceHeading) {
+		t.Error("codegraph-absent generation carries the codegraph guidance section — agentTypeSpecs.Guidance was mutated by the earlier codegraph-enabled run")
+	}
 }
 
 // assertAgentBody verifies the body carries the executor header VERBATIM,
-// followed by the constraints prose, in that order.
-func assertAgentBody(t *testing.T, file, content string) {
+// followed by the constraints prose, in that order. When wantGuidance is true
+// it further requires the gated codegraph section to appear AFTER constraints
+// and to carry every drift marker; when false it requires the section absent.
+func assertAgentBody(t *testing.T, file, content string, wantGuidance bool) {
 	t.Helper()
 
 	headerIdx := strings.Index(content, testExecutorHeader)
@@ -152,6 +177,27 @@ func assertAgentBody(t *testing.T, file, content string) {
 	}
 	if constraintsIdx < headerIdx {
 		t.Errorf("agent %q constraints appear before the executor header; header must come first", file)
+	}
+
+	headingIdx := strings.Index(content, codeIntelligenceHeading)
+	if !wantGuidance {
+		if headingIdx != -1 {
+			t.Errorf("agent %q body carries the codegraph guidance section, want it absent", file)
+		}
+		return
+	}
+
+	if headingIdx == -1 {
+		t.Errorf("agent %q body does not contain the codegraph guidance heading %q", file, codeIntelligenceHeading)
+		return
+	}
+	if headingIdx < constraintsIdx {
+		t.Errorf("agent %q guidance section appears before the constraints; constraints must come first", file)
+	}
+	for _, want := range codeIntelligenceSubstrings {
+		if !strings.Contains(content, want) {
+			t.Errorf("agent %q guidance section missing expected substring %q", file, want)
+		}
 	}
 }
 
@@ -248,7 +294,7 @@ func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 		if len(bashMap) != len(analystBashAllowlist)+1 {
 			t.Errorf("analyst permission.bash has %d entries, want %d (whitelist + catch-all deny)", len(bashMap), len(analystBashAllowlist)+1)
 		}
-		assertAgentBody(t, "asdt-analyst.md", body)
+		assertAgentBody(t, "asdt-analyst.md", body, false)
 	})
 
 	t.Run("builder", func(t *testing.T) {
@@ -265,7 +311,7 @@ func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 		if bash, ok := fm.Permission.Bash.(string); !ok || bash != "allow" {
 			t.Errorf("builder permission.bash = %v (%T), want scalar %q", fm.Permission.Bash, fm.Permission.Bash, "allow")
 		}
-		assertAgentBody(t, "asdt-builder.md", body)
+		assertAgentBody(t, "asdt-builder.md", body, false)
 	})
 }
 
@@ -310,38 +356,49 @@ func TestGenerateAgents_IdempotentDoubleGenerate(t *testing.T) {
 	}
 }
 
-// TestGenerateOpenCodeAgents_CodegraphNeutral asserts codegraph detection has
-// zero effect on OpenCode output: the grant is Claude-only (OpenCode subagents
-// receive MCP tools implicitly), so both branches must be byte-identical.
-func TestGenerateOpenCodeAgents_CodegraphNeutral(t *testing.T) {
+// TestGenerateOpenCodeAgents_CodegraphStructuralNeutrality asserts codegraph
+// detection changes OpenCode output ONLY by appending the gated guidance
+// section — never its structure. This deliberately overturns the prior
+// byte-identity premise (an ADR-follow-up decision by the project owner): the
+// codegraph tool grant stays Claude-only, so the frontmatter must be identical
+// across branches, and the absent body must be an exact prefix of the with body
+// (the sole difference is the appended "## Code intelligence" section).
+func TestGenerateOpenCodeAgents_CodegraphStructuralNeutrality(t *testing.T) {
 	withoutRoot := filepath.Join(t.TempDir(), "agents-without")
-	writtenWithout, err := generateOpenCodeAgents(agentFixtureFS, withoutRoot, InstallOptions{CodegraphFound: false})
-	if err != nil {
+	if _, err := generateOpenCodeAgents(agentFixtureFS, withoutRoot, InstallOptions{CodegraphFound: false}); err != nil {
 		t.Fatalf("codegraph-absent run: %v", err)
 	}
 
 	withRoot := filepath.Join(t.TempDir(), "agents-with")
-	writtenWith, err := generateOpenCodeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true})
-	if err != nil {
+	if _, err := generateOpenCodeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true}); err != nil {
 		t.Fatalf("codegraph-enabled run: %v", err)
 	}
 
-	if len(writtenWithout) != len(writtenWith) {
-		t.Fatalf("written counts differ: without=%d, with=%d", len(writtenWithout), len(writtenWith))
-	}
+	for _, file := range []string{"asdt-analyst.md", "asdt-builder.md"} {
+		t.Run(file, func(t *testing.T) {
+			fmWithout, bodyWithout := parseOpenCodeAgentFile(t, filepath.Join(withoutRoot, file))
+			fmWith, bodyWith := parseOpenCodeAgentFile(t, filepath.Join(withRoot, file))
 
-	for i, pathWithout := range writtenWithout {
-		wantData, readErr := os.ReadFile(pathWithout)
-		if readErr != nil {
-			t.Fatalf("read %q: %v", pathWithout, readErr)
-		}
-		gotData, readErr := os.ReadFile(writtenWith[i])
-		if readErr != nil {
-			t.Fatalf("read %q: %v", writtenWith[i], readErr)
-		}
-		if string(wantData) != string(gotData) {
-			t.Errorf("OpenCode agent %q differs between codegraph branches; want byte-identical output", filepath.Base(pathWithout))
-		}
+			if !reflect.DeepEqual(fmWithout, fmWith) {
+				t.Errorf("agent %q frontmatter differs between codegraph branches; the grant is Claude-only, structure must be identical\nwithout: %+v\nwith:    %+v", file, fmWithout, fmWith)
+			}
+
+			if strings.Contains(bodyWithout, codeIntelligenceHeading) {
+				t.Errorf("agent %q codegraph-absent body carries the guidance heading, want it absent", file)
+			}
+			if !strings.Contains(bodyWith, codeIntelligenceHeading) {
+				t.Errorf("agent %q codegraph-enabled body is missing the guidance heading %q", file, codeIntelligenceHeading)
+			}
+			for _, want := range codeIntelligenceSubstrings {
+				if !strings.Contains(bodyWith, want) {
+					t.Errorf("agent %q codegraph-enabled body missing expected substring %q", file, want)
+				}
+			}
+
+			if !strings.HasPrefix(bodyWith, bodyWithout) {
+				t.Errorf("agent %q codegraph-enabled body is not a superset of the absent body; the only difference must be the appended guidance section", file)
+			}
+		})
 	}
 }
 
