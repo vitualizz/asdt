@@ -9,6 +9,7 @@ import { ASDT_REPO } from '@data/urls'
 
 interface Props { lang: Locale; t: UIStrings; currentPath: string }
 const { lang, t, currentPath } = Astro.props
+const tag = import.meta.env.PUBLIC_RELEASE_TAG
 ---
 <header class="nav">
   <div class="nav-inner">
@@ -24,7 +25,7 @@ const { lang, t, currentPath } = Astro.props
         <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         {t.nav.githubStarLabel}
       </a>
-      <span class="nav-pill"><span class="dot"></span>v0.4.2</span>
+      {tag && <span class="nav-pill"><span class="dot"></span>{tag}</span>}
       <LanguagePicker lang={lang} currentPath={currentPath} label={t.nav.langPickerLabel} />
       <ThemeToggle label={t.a11y.themeToggleLabel} />
     </nav>
