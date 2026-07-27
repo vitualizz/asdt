@@ -2,7 +2,7 @@
 
 ## Purpose
 
-STRIDE methodology for identifying and documenting threats. Applied during Step 1 of the Security workflow.
+STRIDE methodology for identifying and documenting threats. This file holds the full category catalogue; it is the reference skill loaded by the `threat-modeling` step of the Security workflow, which names only what to produce per category.
 
 ## STRIDE Categories
 
@@ -116,7 +116,7 @@ Goal: Bypass authentication
     └── No rate limiting on /login
 ```
 
-Document the highest-risk paths in the `threats[]` array of `threat-model.yaml`.
+Document the highest-risk paths in the `threats[]` array of the `security/stride-threats` payload.
 
 ## Data Flow Diagrams (Text-Based)
 

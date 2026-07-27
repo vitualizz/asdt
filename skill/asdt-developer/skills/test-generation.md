@@ -2,9 +2,11 @@
 
 ## Purpose
 
-This skill provides guidelines for generating high-quality, maintainable test cases. Apply these guidelines at Step 6 (Test Generation) of the Developer workflow when producing `test_snippets` for each implementation step.
+This skill provides guidelines for generating high-quality, maintainable test cases. Apply these guidelines in the `test` step of the Developer workflow, whether the step emits test snippets in its payload or writes real test files.
 
 The goal is tests that document intent, catch regressions, and are easy to extend — not tests that merely achieve coverage numbers.
+
+These guidelines are language-neutral. The `platform-context` shared skill is the first authority on the project's test framework, file naming, assertion style, and mocking idiom; defer every concrete syntax choice to it and apply the principles below within whatever idiom the project already uses.
 
 ---
 
@@ -19,102 +21,58 @@ Each test case must verify exactly one observable behavior. Multiple assertions 
 
 ## Table-Driven Tests
 
-Group related test cases into a table (slice of structs). This pattern reduces boilerplate, makes the intent of each case explicit, and makes it trivial to add new edge cases.
+Group related cases into a single data-driven table — a list of case records that the test iterates over — rather than copying a whole test body per case. This reduces boilerplate, makes the intent of each case explicit, and makes it trivial to add a new edge case. Every mainstream test framework offers this shape under some name (parameterized tests, shared examples, `each`-style loops, or a plain loop over a list of cases).
 
-```go
-func TestValidateResetToken(t *testing.T) {
-    tests := []struct {
-        name    string
-        token   ResetToken
-        wantErr bool
-        errMsg  string
-    }{
-        {
-            name:    "valid token passes",
-            token:   ResetToken{ID: "tok-1", ExpiresAt: time.Now().Add(15 * time.Minute)},
-            wantErr: false,
-        },
-        {
-            name:    "expired token returns error",
-            token:   ResetToken{ID: "tok-1", ExpiresAt: time.Now().Add(-1 * time.Minute)},
-            wantErr: true,
-            errMsg:  "token expired",
-        },
-        {
-            name:    "missing ID returns error",
-            token:   ResetToken{ExpiresAt: time.Now().Add(15 * time.Minute)},
-            wantErr: true,
-            errMsg:  "token ID is required",
-        },
-    }
+Each case record carries: a descriptive name, the input, and the expected outcome.
 
-    for _, tc := range tests {
-        t.Run(tc.name, func(t *testing.T) {
-            err := ValidateResetToken(tc.token)
-            if tc.wantErr {
-                if err == nil {
-                    t.Fatal("expected error, got nil")
-                }
-                if !strings.Contains(err.Error(), tc.errMsg) {
-                    t.Errorf("error %q does not contain %q", err.Error(), tc.errMsg)
-                }
-            } else if err != nil {
-                t.Fatalf("unexpected error: %v", err)
-            }
-        })
-    }
-}
 ```
+cases = [
+  { name: "valid token passes",          token: validToken(),                   expectError: false },
+  { name: "expired token returns error", token: validToken(expiresAt: past),    expectError: true, message: "token expired" },
+  { name: "missing id returns error",    token: validToken(id: none),           expectError: true, message: "token ID is required" },
+]
+
+for case in cases:
+    run subtest named case.name:
+        result = validateResetToken(case.token)
+        if case.expectError: assert result failed and its message contains case.message
+        else:                assert result succeeded
+```
+
+Give each case its own named subtest so a failure report names the exact case that broke.
 
 ---
 
 ## Test Fixtures, Not Hardcoded Values
 
-Extract repeated test setup into helper functions. Hardcoded values scattered across test cases make refactoring painful.
+Extract repeated setup into a small factory that returns a valid object, then have each case mutate only the one field it cares about. Hardcoded values scattered across cases make refactoring painful, and a case that mutates one field states its intent plainly.
 
-```go
-// Good — fixture builder
-func newValidResetToken(t *testing.T) ResetToken {
-    t.Helper()
-    return ResetToken{
-        ID:        "test-tok-001",
-        UserID:    "user-1",
-        ExpiresAt: time.Now().Add(15 * time.Minute),
-    }
-}
-
-// Usage
-tok := newValidResetToken(t)
-tok.ExpiresAt = time.Now().Add(-1 * time.Minute)  // mutate only what the test cares about
 ```
+validToken(overrides) -> ResetToken with sane defaults, overridden per case
+
+token = validToken()
+token.expiresAt = past   # this case is about expiry, and nothing else
+```
+
+Keep fixtures close to the tests that use them and register any needed cleanup through the framework's teardown hook.
 
 ---
 
-## Mock at the Boundary (Interfaces)
+## Mock at the Boundary
 
-Never mock concrete types. Mock the interface the code depends on. Every injected interface from the `code-generation` skill is a seam for testing.
+Never mock a concrete type. Substitute the abstraction the code under test depends on — the interface, protocol, port, or injected collaborator named in its constructor or arguments. Every injected dependency from the `code-generation` skill is a seam for testing.
 
-```go
-// The code under test depends on this interface
-type TokenStore interface {
-    Save(ctx context.Context, token ResetToken) error
-    FindByID(ctx context.Context, id string) (ResetToken, error)
-}
-
-// The mock implements the interface
-type mockTokenStore struct {
-    saveFn   func(ctx context.Context, token ResetToken) error
-    findFn   func(ctx context.Context, id string) (ResetToken, error)
-}
-
-func (m *mockTokenStore) Save(ctx context.Context, token ResetToken) error {
-    return m.saveFn(ctx, token)
-}
-
-func (m *mockTokenStore) FindByID(ctx context.Context, id string) (ResetToken, error) {
-    return m.findFn(ctx, id)
-}
 ```
+# The code under test depends on an abstraction with a minimal surface
+TokenStore: save(token) -> result, findById(id) -> token | notFound
+
+# The double implements that same surface, with per-test behavior injected
+fakeStore = TokenStore double where:
+    save     -> records the call and returns success
+    findById -> returns the token this case set up
+```
+
+In a language without an explicit interface construct, the abstraction is still the set of methods the consumer calls — keep that set small and substitute an object that satisfies it. Prefer a hand-written double or the project's established mocking library over inventing a new one.
 
 ---
 
@@ -122,7 +80,7 @@ func (m *mockTokenStore) FindByID(ctx context.Context, id string) (ResetToken, e
 
 Tests should assert the OUTCOME observable from the public interface, not the internal mechanism:
 
-- **Good**: assert that the returned artifact has the correct `schema_version` and `agent` fields.
+- **Good**: assert the value the function returned, the error it surfaced, or the state a collaborator was left in.
 - **Avoid**: assert that a specific private method was called, or that an internal counter was incremented.
 
 If a test breaks when you rename a private variable without changing observable behaviour, the test is testing implementation.
@@ -133,46 +91,43 @@ If a test breaks when you rename a private variable without changing observable 
 
 Every failed assertion must produce a message that identifies what was expected, what was received, and in what context.
 
-```go
-// Good
-if got.Status != "active" {
-    t.Errorf("Status: got %q, want %q", got.Status, "active")
-}
-
-// Avoid
-if got.Status != "active" {
-    t.Error("wrong status")
-}
 ```
+# Good
+assert got.status == "active", "status: got {got.status}, want \"active\""
+
+# Avoid
+assert got.status == "active", "wrong status"
+```
+
+When the framework already prints a rich diff of expected versus actual, let it — add a message only where the diff alone would not tell the reader which case or which field failed.
 
 ---
 
 ## No Real Filesystem or Network in Unit Tests
 
-- Use `t.TempDir()` for any test that writes files. The directory is automatically cleaned up.
-- Use `fstest.MapFS` or `os.DirFS` on a temp directory for filesystem-backed tests.
-- Never make real HTTP calls in unit tests. Use `httptest.NewServer` or a mock `Provider` interface.
-- Never read from `$HOME` or system paths in tests — they produce non-reproducible results in CI.
+- Use the project's temp-directory helper for any test that writes files, and let the framework clean it up.
+- For filesystem-backed logic, prefer the project's in-memory filesystem abstraction, or a temp directory scoped to the test, over touching real project paths.
+- Never make real HTTP calls in unit tests. Use the project's HTTP test double — a local stub server or a substituted client abstraction.
+- Never read from the user's home directory or other system paths in tests — they produce non-reproducible results in CI.
 
 ---
 
-## Coverage Requirement per Step
+## Coverage Requirement per Task
 
-For every implementation step in the plan, generate at minimum:
+For every implementation task, generate at minimum:
 
-1. One happy-path test (valid input → expected output)
-2. One failure test per distinct error condition documented in the implementation step
+1. One happy-path test (valid input → expected output).
+2. One failure test per distinct error condition the implementation documents.
 
-When the implementation step produces an ASDT artifact, also test:
-3. The artifact's envelope fields are all non-empty (`schema_version`, `agent`, `change_id`, `created_at`, `prompt_version`)
-4. `open_items[]` is present in the payload (even if empty)
+When the task produces a structured output payload, also assert that its required fields are populated and that `open_items` is present even when empty.
 
 ---
 
-## Test Snippet Format in implementation-plan.yaml
+## Test Snippet Format
 
-When producing `test_snippets` in the plan:
-- Set `file` to the test file path (e.g. `internal/auth/reset_test.go`).
-- Include the full test function, not a fragment.
-- Use the table-driven pattern for any step with more than one test case.
-- Reference the implementation snippet's function/type names directly so the relationship is traceable.
+When producing test snippets in the `test` step's payload:
+
+- Set `file` to the test file path the project's convention implies for the code under test.
+- Include the complete test unit, not a fragment.
+- Use the table-driven shape for any task with more than one case.
+- Reference the implementation's function and type names directly so the relationship is traceable.

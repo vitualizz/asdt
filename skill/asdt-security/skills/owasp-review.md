@@ -2,7 +2,7 @@
 
 ## Purpose
 
-OWASP Top 10 2021 checklist with detection patterns and remediation guidance. Applied during Step 3 of the Security workflow.
+OWASP Top 10 2021 checklist with detection patterns and remediation guidance. This file holds the full A01–A10 catalogue; it is the reference skill loaded by the `owasp-analysis` step of the Security workflow, which names only what to produce per category.
 
 ---
 

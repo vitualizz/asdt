@@ -7,8 +7,10 @@ artifacts — it does NOT overwrite `qa/qa-review`; `review` remains the holisti
 shipping verdict and may read this perf verdict.
 
 ## Inputs
-- `qa/test-plan`: extract coverage, quality_verdict, and any performance-relevant test cases (produced by `quality-report`).
-- `pm/nfr-targets`: the NFR targets to validate against (HARD cross-specialist InputRef — the FIRST QA read of a `pm/*` artifact; produced by PM `success-metrics`).
+- `qa/test-plan` — arrives as an `### INPUT {topic_key}` block. Extract: `ac_coverage`, `quality_verdict`, and any performance-relevant test cases (produced by `quality-report`).
+- `pm/nfr-targets` — arrives as an `### INPUT {topic_key}` block. Extract: each target's `dimension`, `target`, and `measurement_method` (cross-specialist input, produced by PM `success-metrics`).
+
+**DEGRADATION — `pm/nfr-targets` is optional (the PM `success-metrics` step runs at `moderate` and above, so no target exists below that tier)**: when it arrives as `### INPUT {project}/{change}/pm/nfr-targets: UNRESOLVED`, set `gate_verdict` to `no-target` with the explicit note "no target to validate against" and emit no per-dimension `pass` — NEVER emit a silent `go` when there is no target to validate against; append "pm/nfr-targets absent — performance gate returned no-target, nothing to validate against" to open_items. Never block on this input.
 
 ## Context budget
 test-plan summary + the nfr-targets list: max 1,200 tokens.
@@ -19,20 +21,18 @@ Apply the `nfr-budget` shared skill (`../asdt-shared/skills/nfr-budget.md`).
    to that target's `target` value, using its `measurement_method`.
 2. Emit verdict `pass` when the value meets the target, `fail` when it misses.
 3. Roll up the gate: `gate_verdict` is `go` ONLY if every target passes; otherwise `no-go`.
-4. **DEGRADATION** — if `pm/nfr-targets` arrived as an `### INPUT
-   {project}/{change}/pm/nfr-targets: UNRESOLVED` block (PM `success-metrics` did not
-   run): set `gate_verdict` to `no-target` with the explicit note "no target to
-   validate against", and record the gap in `open_items`. NEVER emit a silent `go`
-   when there is no target to validate against.
+   When `pm/nfr-targets` is UNRESOLVED the roll-up is `no-target`, never `go` — see the
+   DEGRADATION paragraph in Inputs.
 
 ## Output
-Produces: `{project}/{change}/qa/perf-validation`
+Produces: `qa/perf-validation`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
-Include a `summary` field (≤ 150 tokens) describing the gate outcome.
+Include a `summary` field (≤ 150 tokens) describing the gate outcome. Each validation
+re-states the NFR-target value-object per `../asdt-shared/skills/nfr-budget.md`, with
+`verdict` narrowed to the QA owner subset.
 
-Schema (each validation re-states the NFR-target value-object per
-`../asdt-shared/skills/nfr-budget.md`, `verdict` narrowed to the QA owner subset):
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
+
 ```yaml
 payload:
   validations:

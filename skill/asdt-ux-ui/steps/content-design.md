@@ -6,8 +6,6 @@ Catalog the text touchpoints surfaced by the user flows, elaborating the IA's
 inventory — NOT final copy. Representative copy is illustrative only; final wording is
 decided downstream.
 
-Model note: `sonnet`; tier `moderate|complex`.
-
 ## Inputs
 - `ux-ui/flows`: interaction sequences, state changes (where text surfaces appear)
 - `ux-ui/ia`: information architecture incl. the thin `content_intent` (`copy_direction` + `empty_state`/`error_state` intent hints)
@@ -39,9 +37,8 @@ flows + ia: ~800–1,200 tokens.
 ## Output
 Produces: `ux-ui/content-inventory`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   touchpoints:

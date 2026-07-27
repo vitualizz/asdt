@@ -25,7 +25,7 @@ steps:
 
   - name: write
     skill: steps/write.md
-    description: Write the four .asdt files from stack-detection plus the injected clarify answers; preserve source:manual fields; halt on absent CLARIFY ANSWERS block or blocking open items
+    description: Write the three .asdt files from stack-detection plus the injected clarify answers; preserve source:manual fields; halt on absent CLARIFY ANSWERS block or blocking open items
     execution: subagent
     model: sonnet
     agent: builder

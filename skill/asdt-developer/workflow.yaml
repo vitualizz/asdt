@@ -26,7 +26,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/developer/dev-exploration"
-      - "{project}/{change}/pm/backlog-entry"  # SOFT/optional — AC authority (ADR-019); degrade gracefully if absent
+      - "{project}/{change}/pm/backlog-entry"  # optional — acceptance-criteria authority; degrade gracefully if absent
     output_topic_key: "{project}/{change}/developer/dev-spec"
     reference_skills:
       - ../asdt-shared/skills/scope-definition.md
@@ -61,8 +61,8 @@ steps:
     model: opus  # real-file writing / code generation: high ambiguity, strongest reasoning
     agent: builder
     inputs:
-      - "{project}/{change}/developer/dev-tasks"
-      - "{project}/{change}/developer/dev-design"
+      - "{project}/{change}/developer/dev-tasks"  # optional (tier-gated: tasks runs at complex)
+      - "{project}/{change}/developer/dev-design"  # optional (tier-gated: design runs at moderate+)
     output_topic_key: "{project}/{change}/developer/dev-implementation"
     reference_skills:
       - skills/code-generation.md
@@ -75,7 +75,7 @@ steps:
     model: sonnet  # test enumeration from existing code: lower ambiguity, favor throughput
     agent: builder
     inputs:
-      - "{project}/{change}/developer/dev-tasks"
+      - "{project}/{change}/developer/dev-tasks"  # optional (tier-gated: tasks runs at complex)
       - "{project}/{change}/developer/dev-implementation"
     output_topic_key: "{project}/{change}/developer/dev-tests"
     reference_skills:

@@ -26,16 +26,18 @@ The Architect Specialist never writes implementation code, UX specs, or test pla
 
 ## Pipeline position
 
-Typically runs **after PM** (reads `backlog-entry`) and **before Developer** (Developer reads `architectural-decision` + `system-design`). At `simple` complexity it is not called at all — the Developer handles it directly. At `trivial`, it runs a single `load-constraints` consult. At `moderate` and `complex`, it runs a full evaluation and produces the complete architectural artifact set.
+Typically runs **after PM** (reads `backlog-entry`) and **before Developer** (Developer reads `architectural-decision` + `system-design-final`). At `simple` complexity it is not called at all — the Developer handles it directly. At `trivial`, it runs a single `load-constraints` consult. At `moderate`, it runs `load-constraints → evaluate-approaches → decision-record → technical-handoff`. Only `complex` adds the deeper steps — `system-design`, `cost-estimation`, and `risk-analysis`.
 
 ## What it produces
 
 Two final artifacts consumed by downstream specialists:
 
 - **`architectural-decision`** — the ADR with full context, decision, alternatives, consequences, and key constraints the Developer must not violate
-- **`system-design`** — data model, API surface, service boundaries, key sequence, and top risks
+- **`system-design-final`** — data model, API surface, service boundaries, key sequence, and top risks. This is the consolidated handoff artifact; the intermediate `architect/system-design` it is built from is a `complex`-only step output, not the thing downstream specialists read
 
 Consumed by: **Developer** (reads both), **QA** (reads `architectural-decision` to understand design context).
+
+At `complex`, the `cost-estimation` step also produces **`architect/cost-estimate`** — the operational and infrastructure cost profile of the chosen design. It reads the `complex`-tier `architect/system-design` plus an optional `pm/nfr-targets`; when the PM artifact is absent the step degrades gracefully and notes the gap rather than failing.
 
 ## Common patterns
 

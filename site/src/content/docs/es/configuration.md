@@ -41,7 +41,7 @@ test_runner: vitest
 lint: eslint
 ```
 
-Los campos son de formato libre — los especialistas leen lo que está presente y se saltean lo que falta. Podés agregar campos personalizados como `deployment: vercel` o `database: postgres` y referenciarlos en los prompts de los especialistas a través del *shared skill* `platform-context` (un fragmento de instrucciones que cada paso de cada especialista carga automáticamente).
+Los campos son de formato libre — los especialistas leen lo que está presente y se saltean lo que falta. Podés agregar campos personalizados como `deployment: vercel` o `database: postgres` y referenciarlos en los prompts de los especialistas a través del *shared skill* `platform-context`. Ese fragmento no es ambiental — se carga únicamente donde un especialista lo declara, ya sea como un paso inline `platform-analysis` en `workflow.yaml` o en la lista `reference_skills:` de un paso.
 
 ## Variables de entorno
 

@@ -78,7 +78,7 @@ When you receive a feature request:
 
 ### Routing semantics: `/asdt-init` and `/asdt-researcher`
 
-- **`/asdt-init` is NOT routable.** It is a setup-class command, invoked directly by name to scaffold a project. By design it sits outside `/asdt` routing (ADR-016 §4: "init is a setup-class command, NOT routable") — its absence from the routing table is intentional, not a gap.
+- **`/asdt-init` is NOT routable.** It is a setup-class command, invoked directly by name to scaffold a project, and it sits outside `/asdt` routing by design — its absence from the routing table is intentional, not a gap.
 - **`/asdt-researcher` IS routable.** It appears in this Specialist Registry and in the routing table as the pre-PM discovery stage: `/asdt` can dispatch to it when a problem is still fuzzy, and it can also be invoked directly when you want discovery before requirements.
 
 ---
@@ -98,22 +98,13 @@ Reasoning: {one-line explanation of keyword-family risk-surface classification}
 
 Recommended specialists:
   {specialist name} — {one-line rationale}
-    ## Tailored Workflow
-    steps: [{comma-separated step list}]
-    complexity: {trivial | simple | moderate | complex}
-    depth: standard
+    {Tailored Workflow block — format specified in `Tailored Workflow Generation`}
 
   {specialist name} — {one-line rationale}
-    ## Tailored Workflow
-    steps: [{comma-separated step list}]
-    complexity: {trivial | simple | moderate | complex}
-    depth: standard
+    {Tailored Workflow block — format specified in `Tailored Workflow Generation`}
 
   Security — {one-line rationale}
-    ## Tailored Workflow
-    steps: [{comma-separated step list}]
-    risk_surface: {none | moderate | high}
-    depth: standard
+    {Tailored Workflow block, Security variant — format specified in `Tailored Workflow Generation`}
 
 {If risk_surface == none: Security — risk_surface: none; not auto-invoked (available on demand via /asdt-security)}
 
@@ -127,7 +118,7 @@ Proceed with this plan? (yes / modify / no)
 
 If only one specialist is needed, the "Suggested order" line contains only that specialist's command.
 
-Security's per-specialist block carries `risk_surface: {tier}` in place of `complexity:` — it is gated by the independent risk-surface axis, never by complexity. When `risk_surface` is assessed as `none`, Security MUST NOT appear in the auto-invoked specialist list, but the routing plan MUST still explicitly surface the line `Security — risk_surface: none; not auto-invoked (available on demand via /asdt-security)` so it is never silently dropped.
+Every Tailored Workflow block written into this format follows the single canonical specification in `Tailored Workflow Generation` — including Security's variant, which is gated by the independent risk-surface axis rather than by complexity. When `risk_surface` is assessed as `none`, Security MUST NOT appear in the auto-invoked specialist list, but the routing plan MUST still explicitly surface the line `Security — risk_surface: none; not auto-invoked (available on demand via /asdt-security)` so it is never silently dropped.
 
 ---
 
@@ -135,18 +126,20 @@ Security's per-specialist block carries `risk_surface: {tier}` in place of `comp
 
 | Request | Specialists | Order | Complexity | Risk Surface |
 |---|---|---|---|---|
-| "build an onboarding flow for new users" | PM, UX/UI, Architect, Developer | `/asdt-pm` → `/asdt-ux-ui` → `/asdt-architect` → `/asdt-developer` | complex | none |
-| "add user subscription management" | PM, Architect, Developer, QA | `/asdt-pm` → `/asdt-architect` → `/asdt-developer` → `/asdt-qa` | complex | moderate |
+| "build an onboarding flow for new users" | PM, UX/UI, Architect, Developer | `/asdt-pm` → `/asdt-ux-ui` → `/asdt-architect` → `/asdt-developer` | moderate | none |
+| "add user subscription management" | PM, Architect, Developer, QA | `/asdt-pm` → `/asdt-architect` → `/asdt-developer` → `/asdt-qa` | moderate | none |
 | "add password reset" | Developer (Architect if token design is complex) | `/asdt-developer` | moderate | high |
-| "redesign the dashboard" | UX/UI, Developer | `/asdt-ux-ui` → `/asdt-developer` | moderate | none |
-| "review our auth for vulnerabilities" | Security | `/asdt-security` | moderate | high |
-| "build AI reports module from scratch" | PM, UX/UI, Architect, Developer | `/asdt-pm` → `/asdt-ux-ui` → `/asdt-architect` → `/asdt-developer` | complex | moderate |
-| "is our API scalable?" | Architect | `/asdt-architect` | complex | none |
-| "add login feature with tests" | Developer, QA | `/asdt-developer` → `/asdt-qa` | moderate | high |
-| "refactor the payment service" | Architect, Developer | `/asdt-architect` → `/asdt-developer` | complex | moderate |
-| "change password hashing MD5 → bcrypt" | Developer, Security | `/asdt-developer` → `/asdt-security` | simple | high |
+| "redesign the dashboard" | UX/UI, Developer | `/asdt-ux-ui` → `/asdt-developer` | moderate ✝ | none |
+| "review our auth for vulnerabilities" | Security | `/asdt-security` | moderate ✝ | moderate |
+| "build AI reports module from scratch" | PM, UX/UI, Architect, Developer | `/asdt-pm` → `/asdt-ux-ui` → `/asdt-architect` → `/asdt-developer` | complex | none |
+| "is our API scalable?" | Architect, Security | `/asdt-architect` → `/asdt-security` | complex ✝ | moderate |
+| "add login feature with tests" | Developer, QA | `/asdt-developer` → `/asdt-qa` | moderate | moderate |
+| "refactor the payment service" | Architect, Developer | `/asdt-architect` → `/asdt-developer` | complex | moderate ✝ |
+| "change password hashing MD5 → bcrypt" | Developer, Security | `/asdt-developer` → `/asdt-security` | simple ✝ | high |
 
-`complexity` and `risk_surface` are computed INDEPENDENTLY; a simple change can be high-risk — see the bcrypt row above: a one-line code change (`complexity: simple`) still triggers Security's full STRIDE chain (`risk_surface: high`) because it touches password hashing and secrets handling.
+✝ — no `Complexity Assessment` / `Risk-Surface Assessment` keyword matched on that axis for that request; the tier shown is the documented outcome of the ONE clarifying question `Complexity Assessment` / `Risk-Surface Assessment` prescribe for exactly that case. Every unmarked tier is computed directly from a keyword match.
+
+`complexity` and `risk_surface` are computed INDEPENDENTLY; a simple change can be high-risk — see the bcrypt row above: a one-line code change still triggers Security's full STRIDE chain (`risk_surface: high`) because it touches password hashing and secrets handling, while its `complexity: simple` carries a ✝ because no complexity keyword matched at all and the tier came from the clarifying question.
 
 ---
 
@@ -155,7 +148,9 @@ Security's per-specialist block carries `risk_surface: {tier}` in place of `comp
 Once the user confirms the plan (answers "yes" or equivalent):
 
 Tell the user to run each suggested specialist using its command in the suggested order.
-For each specialist, include a `## Tailored Workflow` block matching their complexity-based step list:
+Give each specialist exactly one `## Tailored Workflow` block, written in the canonical format specified in `Tailored Workflow Generation`, carrying the step list for that specialist's assessed tier. A specialist appears at most ONCE in a run order, with a single tier.
+
+Example run order for a `moderate` change routed to UX/UI, Architect, and Developer:
 
 ```
 Run each specialist in order:
@@ -170,7 +165,7 @@ depth: standard
 2. /asdt-architect "{change name or description}"
 
 ## Tailored Workflow
-steps: [knowledge-recall, load-constraints, evaluate-approaches, decision-record]
+steps: [load-constraints, evaluate-approaches, decision-record, technical-handoff]
 complexity: moderate
 depth: standard
 
@@ -181,17 +176,10 @@ steps: [explore, spec, design, implement]
 complexity: moderate
 depth: standard
 
-4. /asdt-developer "change the variable name"
-
-## Tailored Workflow
-steps: [explore]
-complexity: trivial
-depth: standard
-
 Each specialist will automatically load artifacts produced by previous specialists.
 ```
 
-For `trivial` requests, each invoked specialist receives its single-step `## Tailored Workflow` block exactly as for any other tier — only the `steps:` list and `complexity:` value differ. Specialists not invoked for a given request are simply omitted from the suggested run order, identical to how `simple` already omits the Architect specialist.
+A `trivial` request produces the same block shape — only the `steps:` list (one step) and the `complexity:` value differ. Specialists not invoked for a given request are simply omitted from the suggested run order, identical to how `simple` already omits the Architect specialist.
 
 Do NOT run the specialists yourself. Your job ends here.
 
@@ -207,6 +195,8 @@ To route this correctly, I need one piece of information:
 ```
 
 Then stop and wait for the answer.
+
+**Batch the gates**: this section, `Complexity Assessment`, and `Risk-Surface Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match is never raised.
 
 ### 9.1 Complexity Assessment
 
@@ -232,7 +222,7 @@ Then stop and wait for the answer.
 
 ### 9.1b Risk-Surface Assessment
 
-Independently of complexity, classify the feature request by risk surface using keyword-family heuristics. This assessment runs on EVERY request, in parallel with §9.1, and is never derived from or collapsed into the complexity assessment — a `simple` change can be `risk_surface: high`.
+Independently of complexity, classify the feature request by risk surface using keyword-family heuristics. This assessment runs on EVERY request, in parallel with `Complexity Assessment`, and is never derived from or collapsed into the complexity assessment — a `simple` change can be `risk_surface: high`.
 
 | Family | Keywords | Tier contribution |
 |--------|----------|-------------------|
@@ -260,27 +250,30 @@ Then stop and wait for the answer.
 
 Once complexity is determined, generate a `## Tailored Workflow` block for each recommended specialist. The block defines which steps that specialist should execute.
 
+Authority: each specialist's workflow.yaml owns step identity, execution mode, agent type, and model; each specialist's ## Orchestration Plan in its SKILL.md owns the tier→step lists; the `Tailored Workflow Generation` per-specialist table is a derived cache of both and never overrides them.
+
 ---
 
 ### Step List Validation (applies to every `steps:` list before emission)
 
 > **This algorithm runs on EVERY candidate `steps:` list — whether it is a `trivial` ad-hoc composition OR a preset tier (simple/moderate/complex). It is a structural guard against phantom-name and broken-dependency regressions. Execute it before emitting any `## Tailored Workflow` block.**
 
-> **Derivation rule**: When emitting a preset tier (trivial/simple/moderate/complex), derive the step list by reading the target specialist's `workflow.yaml` `name:` fields filtered to the preset's declared subset — treat the prose tables below as hints for which names to include, not as the authoritative source. The `workflow.yaml` file is authoritative. This prevents "valid-but-wrong" drift where a step name exists in `workflow.yaml` but belongs to a different tier.
+> **Derivation rule**: When emitting a preset tier (trivial/simple/moderate/complex), read the tier's step list from the target specialist's `## Orchestration Plan` and check every name in it against the `name:` fields in that specialist's `workflow.yaml`, per the authority sentence above — treat the compact tables below as a cache for quick access, never as the source. This prevents "valid-but-wrong" drift where a step name exists in `workflow.yaml` but belongs to a different tier.
 
 **Two-pass algorithm (for specialist S and its `workflow.yaml`):**
 
-**Pass 1 — Name check**: For each step name in the candidate list, verify it exists as a `name:` field in `S/workflow.yaml`. If any name is absent → REJECT the entire list, log the phantom name, and fall back to the nearest valid complexity preset (the smallest preset whose step set is a superset of the valid names in the candidate list).
+**Pass 1 — Name check**: For each step name in the candidate list, verify it exists as a `name:` field in `S/workflow.yaml`. If any name is absent → REJECT the entire list, report the rejected phantom name in the routing plan's own output so the user sees it, and fall back to the nearest valid complexity preset (the smallest preset whose step set is a superset of the valid names in the candidate list).
 
 **Pass 2 — Dependency completion (fixpoint)**: Repeat until a full sweep inserts nothing new:
 - For each step T in the list (front to back), find T's `inputs:` in `S/workflow.yaml`.
 - For each input topic_key I, identify which step P produces I (has `output_topic_key: I` in `S/workflow.yaml`).
 - If P has `execution: inline`: skip — inline steps inject into orchestrator context, not artifact storage, and are never required as explicit list entries.
+- If I's entry on T's `inputs:` line in `S/workflow.yaml` carries an end-of-line `# optional` comment (match the `# optional` prefix; everything after it is free-form rationale), OR no step in `S/workflow.yaml` declares `output_topic_key: I` at all (a cross-specialist input such as `pm/nfr-targets`): skip — do not resolve a producer, do not auto-insert, do not recurse; T's DEGRADATION paragraph handles the absence.
 - If P has `execution: subagent` AND P is NOT already in the list → AUTO-INSERT P immediately before T in the list.
 - Recurse on P (P may have its own `inputs:` requiring further insertions).
 - Repeat the full sweep until no new insertions occur (fixpoint).
 
-**Collapse fallback**: After Pass 2, compare the resulting validated list against each specialist's presets in ascending order (trivial → simple → moderate → complex). If the validated list equals or is a superset of a preset, relabel `complexity:` to the smallest preset whose step set is a superset of the validated list — never emit a grown list with a `complexity:` value lower than the work it actually represents (e.g., never label a list that grew to match `simple` as `complexity: trivial`).
+**Collapse fallback**: This comparison only runs when Pass 2 inserted at least one step; when Pass 2 left the validated list unchanged, the assessed tier label is left unchanged too — no comparison runs. When Pass 2 did insert at least one step, compare the resulting validated list against each specialist's presets in ascending order (trivial → simple → moderate → complex). If the validated list equals or is a superset of a preset, relabel `complexity:` to the smallest preset whose step set is a superset of the validated list — never emit a grown list with a `complexity:` value lower than the work it actually represents (e.g., never label a list that grew to match `simple` as `complexity: trivial`).
 
 **Inline steps** (outputs injected into context — NEVER required as explicit list producers):
 <!-- GENERATED REGION — do not hand-edit; regenerated at install time from each specialist's workflow.yaml by registry_gen.go. Edits here are overwritten. -->
@@ -291,12 +284,10 @@ Once complexity is determined, generate a `## Tailored Workflow` block for each 
 - Security: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - UX/UI: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - Developer: `knowledge-recall`, `decision-preservation`
-- Researcher: `context-recall`, `decision-preservation`
+- Researcher: `knowledge-recall`, `decision-preservation`
 <!-- /ASDT:GENERATED:9.2-inline-steps -->
 
-**Trivial eligibility**: The `trivial` tier applies ONLY when the orchestrator independently classifies complexity as `trivial` (§9.1). It is not user-selectable. A `trivial` list is exactly the specialist's single `inputs: []` subagent step — by construction it always passes Pass 2 (no declared inputs to satisfy). If a specialist has no useful single-step output (QA), `trivial` is not eligible for that specialist — fall back to `simple` and label the block `complexity: simple`.
-
----
+**Trivial eligibility**: The `trivial` tier applies ONLY when the orchestrator independently classifies complexity as `trivial` (`Complexity Assessment`). It is not user-selectable. A `trivial` list is exactly the specialist's single `inputs: []` subagent step — by construction it always passes Pass 2 (no declared inputs to satisfy). If a specialist has no useful single-step output (QA), `trivial` is not eligible for that specialist — fall back to `simple` and label the block `complexity: simple`.
 
 ---
 
@@ -314,7 +305,7 @@ Once complexity is determined, generate a `## Tailored Workflow` block for each 
 
 **Per-specialist step mapping:**
 
-Each specialist declares its own tier→step lists inside the `## Orchestration Plan` section of its `SKILL.md`. That section is the authoritative source. Before emitting any `## Tailored Workflow` block, read the target specialist's `## Orchestration Plan`. The compact reference below lists the trivial step for quick access — for non-trivial tiers, always load the specialist file.
+Before emitting any `## Tailored Workflow` block, read the target specialist's `## Orchestration Plan`, which declares that specialist's tier→step lists. The compact table below is the derived cache described in the authority sentence above: it lists the trivial step for quick access — for non-trivial tiers, always load the specialist file.
 
 | Specialist | File | Trivial step | Trivial eligible? |
 |---|---|---|---|
@@ -328,9 +319,9 @@ Each specialist declares its own tier→step lists inside the `## Orchestration 
 
 > **Adding a new specialist**: declare its tier→step mapping inside the `## Orchestration Plan` of its own `SKILL.md`, then add one row to this table. No other changes to this file are required for the tier mapping.
 
-> **Parity check**: specialist registration is manually mirrored in exactly 3 places — the §5 Specialist Registry, this §9.2 per-specialist table (plus its inline-steps list), and `skill/asdt-init/agents-template.md`'s ASDT Specialists table. Keep all 3 in sync when adding or renaming a specialist. The `name:` fields in each specialist's `workflow.yaml` are authoritative per the two-pass Step List Validation above.
+> **Parity check**: specialist registration is mirrored by hand in exactly 3 places — the `Specialist Registry`, this `Tailored Workflow Generation` per-specialist table (plus its inline-steps list), and `internal/installer/assets/agents-template.md`'s ASDT Specialists table. Keep all 3 in sync when adding or renaming a specialist. You are not the only guard: the repo's automated drift check (`TestRegistryDrift` in `internal/installer/registry_drift_test.go`) derives the canonical roster from the `workflow.yaml` files and fails the build when any of the 3 sites disagrees, and it also asserts the inline-steps region byte-for-byte against the generator.
 
-**Tailored Workflow block format:**
+**Tailored Workflow block format — CANONICAL.** This is the one specification of the block; `Output Format` and `After Confirmation` reference it rather than restating it.
 
 For Developer, Architect, QA, and UX/UI (complexity-gated):
 

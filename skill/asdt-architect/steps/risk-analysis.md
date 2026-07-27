@@ -4,9 +4,7 @@
 Identify the top risks introduced by this architectural decision and propose mitigations.
 
 ## Inputs
-- `architect/system-design`: data model, API surface, service boundaries
-
-Extract: service_boundaries.touched_modules, api_surface[].error_cases, data_model[].relationships.
+- `architect/system-design` — arrives as an `### INPUT {topic_key}` block; produced by the `system-design` step. Extract: `service_boundaries.touched_modules`, `api_surface[].error_cases`, `data_model[].relationships`.
 
 ## Context budget
 architect/system-design (boundaries + API only): max 1,000 tokens.
@@ -29,9 +27,8 @@ Focus on the top 3-5 risks. Do not list every possible risk — prioritize by li
 ## Output
 Produces: `architect/risks`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   risks:

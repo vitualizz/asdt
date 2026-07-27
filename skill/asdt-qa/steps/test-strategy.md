@@ -4,9 +4,7 @@
 Define the testing approach: which level tests cover which behaviors, and why.
 
 ## Inputs
-- `qa/edge-cases`: edge case inventory with priorities
-
-Extract: edge_cases[].technique, edge_cases[].priority, critical_count.
+- `qa/edge-cases` — arrives as an `### INPUT {topic_key}` block. Extract: `edge_cases[].technique`, `edge_cases[].priority`, `critical_count`.
 
 ## Context budget
 qa/edge-cases (technique + priority summary): max 800 tokens.
@@ -30,9 +28,8 @@ For each level, specify:
 ## Output
 Produces: `qa/test-strategy`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   unit:

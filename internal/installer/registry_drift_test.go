@@ -12,12 +12,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TestRegistryDrift is the structural defense against the §9.2 "Parity check"
-// prose drifting out of sync (which it already did). The canonical roster is
-// DERIVED from the 8 workflow.yaml via parseRegistry; each of the 3 mirror
-// sites is parsed for its specialist rows, normalized to canonical directory
-// names, and asserted against the roster the site is expected to carry. It also
-// asserts the §9.2 inline-steps list is byte-equal to renderInlineStepsRegion's
+// TestRegistryDrift is the structural defense against the `Tailored Workflow
+// Generation` "Parity check" prose drifting out of sync (which it already
+// did). The canonical roster is DERIVED from the 8 workflow.yaml via
+// parseRegistry; each of the 3 mirror sites is parsed for its specialist rows,
+// normalized to canonical directory names, and asserted against the roster the
+// site is expected to carry. It also asserts the `Tailored Workflow
+// Generation` inline-steps list is byte-equal to renderInlineStepsRegion's
 // output, so the install-time generator and the committed file agree.
 //
 // The guard asserts SET membership + routable booleans + the inline-steps list
@@ -55,13 +56,13 @@ func TestRegistryDrift(t *testing.T) {
 		rows        func(string) []string
 	}{
 		{
-			name:        "§5 Specialist Registry",
+			name:        "Specialist Registry",
 			path:        filepath.Join(root, "SKILL.md"),
 			excludeDirs: map[string]bool{},
 			rows:        section5Rows,
 		},
 		{
-			name:        "§9.2 trivial table",
+			name:        "Tailored Workflow Generation trivial table",
 			path:        filepath.Join(root, "SKILL.md"),
 			excludeDirs: map[string]bool{},
 			rows:        trivialTableRows,
@@ -112,8 +113,9 @@ func TestRegistryDrift(t *testing.T) {
 		}
 	}
 
-	// Inline-steps list parity: the committed §9.2 region must equal what the
-	// generator would render, so install-time regeneration is a no-op.
+	// Inline-steps list parity: the committed `Tailored Workflow Generation`
+	// region must equal what the generator would render, so install-time
+	// regeneration is a no-op.
 	skillMD, err := os.ReadFile(filepath.Join(root, "SKILL.md"))
 	if err != nil {
 		t.Fatalf("read SKILL.md: %v", err)
@@ -121,10 +123,10 @@ func TestRegistryDrift(t *testing.T) {
 	wantBody := renderInlineStepsRegion(regs)
 	gotBody, err := extractMarkerRegion(skillMD, inlineStepsBeginMarker, inlineStepsEndMarker)
 	if err != nil {
-		t.Fatalf("extract §9.2 inline-steps region: %v", err)
+		t.Fatalf("extract Tailored Workflow Generation inline-steps region: %v", err)
 	}
 	if gotBody != wantBody {
-		t.Errorf("§9.2 inline-steps region drifted from workflow.yaml derivation:\n--- committed ---\n%q\n--- derived ---\n%q", gotBody, wantBody)
+		t.Errorf("Tailored Workflow Generation inline-steps region drifted from workflow.yaml derivation:\n--- committed ---\n%q\n--- derived ---\n%q", gotBody, wantBody)
 	}
 }
 
@@ -144,7 +146,7 @@ func firstCommandDir(row string) string {
 	return ""
 }
 
-// section5Rows extracts the canonical dirs of the §5 Specialist Registry table.
+// section5Rows extracts the canonical dirs of the `Specialist Registry` table.
 func section5Rows(content string) []string {
 	return commandRowsBetween(content, "## 5. Specialist Registry", "| Specialist | Command |")
 }
@@ -193,9 +195,9 @@ func commandRowsBetween(content, sectionHint, headerHint string) []string {
 	return dirs
 }
 
-// trivialTableRows extracts the canonical dirs of the §9.2 per-specialist
-// trivial-step table, whose rows reference `skill/asdt-<name>/SKILL.md` paths
-// (no slash command).
+// trivialTableRows extracts the canonical dirs of the `Tailored Workflow
+// Generation` per-specialist trivial-step table, whose rows reference
+// `skill/asdt-<name>/SKILL.md` paths (no slash command).
 func trivialTableRows(content string) []string {
 	lines := strings.Split(content, "\n")
 	var dirs []string
@@ -227,8 +229,8 @@ func trivialTableRows(content string) []string {
 // TestInitEnrichmentInlineStep asserts the asdt-init workflow classifies its
 // steps as the enrichment redesign requires: enrichment is a NEW inline step
 // sitting between knowledge-gate and clarify, explore and write remain the only
-// subagent steps, and because asdt-init is non-routable it never leaks into the
-// §9.2 inline-steps render.
+// subagent steps, and because asdt-init is non-routable it never leaks into
+// the `Tailored Workflow Generation` inline-steps render.
 func TestInitEnrichmentInlineStep(t *testing.T) {
 	root := skillDir(t)
 
@@ -260,11 +262,12 @@ func TestInitEnrichmentInlineStep(t *testing.T) {
 		t.Errorf("asdt-init SubagentSteps = %v, want %v", initReg.SubagentSteps, wantSubagent)
 	}
 
-	// asdt-init is non-routable, so its inline steps must never render into the
-	// §9.2 inline-steps region — enrichment in particular must not leak.
+	// asdt-init is non-routable, so its inline steps must never render into
+	// the `Tailored Workflow Generation` inline-steps region — enrichment in
+	// particular must not leak.
 	region := renderInlineStepsRegion(regs)
 	if strings.Contains(region, "enrichment") {
-		t.Errorf("§9.2 inline-steps region leaked non-routable asdt-init step %q:\n%s", "enrichment", region)
+		t.Errorf("Tailored Workflow Generation inline-steps region leaked non-routable asdt-init step %q:\n%s", "enrichment", region)
 	}
 }
 

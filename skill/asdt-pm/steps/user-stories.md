@@ -5,11 +5,14 @@ Define user stories from the structured problem statement.
 Each story captures WHO wants something, WHAT they want, and WHY they want it.
 
 ## Inputs
-- `pm/feature-intake`
+- `pm/feature-intake` — the structured problem statement. Extract: `problem_statement`, `goal`, `stakeholders`, `ambiguities`.
+
+This declared input arrives ALREADY INJECTED as an `### INPUT {topic_key}` block — consume it
+directly and do NOT self-fetch it. If it arrives UNRESOLVED, work from the raw request, record
+the gap in `open_items`, and never fail the step.
 
 ## Context budget
-Extract: problem_statement, goal, stakeholders from intake.
-Max 300 tokens.
+Injected feature-intake fields: max 300 tokens.
 
 ## Processing
 1. For each stakeholder in the intake, write user stories from their perspective.
@@ -22,9 +25,8 @@ Max 300 tokens.
 ## Output
 Produces: `pm/user-stories`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   user_stories:

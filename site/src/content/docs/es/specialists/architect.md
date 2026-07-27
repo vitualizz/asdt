@@ -26,16 +26,18 @@ El especialista Arquitecto nunca escribe código de implementación, specs de UX
 
 ## Posición en el pipeline
 
-Típicamente corre **después del PM** (lee `backlog-entry`) y **antes del Developer** (Developer lee `architectural-decision` + `system-design`). En complejidad `simple` no se invoca — el Developer lo maneja directamente. En `trivial` corre una consulta única de `load-constraints`. En `moderate` y `complex` corre una evaluación completa y produce el set completo de artefactos arquitectónicos.
+Típicamente corre **después del PM** (lee `backlog-entry`) y **antes del Developer** (Developer lee `architectural-decision` + `system-design-final`). En complejidad `simple` no se invoca — el Developer lo maneja directamente. En `trivial` corre una consulta única de `load-constraints`. En `moderate` corre `load-constraints → evaluate-approaches → decision-record → technical-handoff`. Solo `complex` agrega los pasos más profundos — `system-design`, `cost-estimation` y `risk-analysis`.
 
 ## Qué produce
 
 Dos artefactos finales consumidos por especialistas posteriores:
 
 - **`architectural-decision`** — el ADR completo con contexto, decisión, alternativas, consecuencias y restricciones clave que el Developer no debe violar
-- **`system-design`** — modelo de datos, superficie de API, límites de servicios, secuencia clave y riesgos principales
+- **`system-design-final`** — modelo de datos, superficie de API, límites de servicios, secuencia clave y riesgos principales. Este es el artefacto de handoff consolidado; el intermedio `architect/system-design` del que se construye es el output de un paso exclusivo de `complex`, no lo que leen los especialistas posteriores
 
 Consumido por: **Developer** (lee ambos), **QA** (lee `architectural-decision` para entender el contexto de diseño).
+
+En `complex`, el paso `cost-estimation` también produce **`architect/cost-estimate`** — el perfil de costos operativos y de infraestructura del diseño elegido. Lee el `architect/system-design` del nivel `complex` más un `pm/nfr-targets` opcional; cuando el artefacto del PM está ausente el paso degrada con elegancia y anota el faltante en lugar de fallar.
 
 ## Patrones comunes
 

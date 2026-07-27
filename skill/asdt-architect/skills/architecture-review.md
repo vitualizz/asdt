@@ -2,7 +2,7 @@
 
 ## Purpose
 
-How to review existing architecture before making a change. Applied during Step 1 of the Architect workflow.
+How to review existing architecture before making a change. Applied during the `load-constraints` step of the Architect workflow.
 
 ## Coupling Point Identification
 
@@ -13,7 +13,7 @@ Before proposing any structural change, map what is currently coupled to the aff
 3. **Configuration dependents**: which config keys, environment variables, or feature flags does the current implementation consume?
 4. **Test dependents**: which test files will break if the interface changes?
 
-Document each coupling point in the `key_constraints` array in `system-design.yaml`.
+Record each coupling point as an entry in the `hard_constraints[]` array of the `architect/constraints-analysis` payload — the coupling itself in `what`, the reason it cannot move in `why_immutable`, and how it narrows the solution space in `solution_impact`.
 
 ## Blast Radius Analysis
 
@@ -49,4 +49,4 @@ Before writing the ADR, verify:
 - [ ] Blast radius classified
 - [ ] Backward-compat implications documented
 - [ ] Migration path defined if breaking changes are present
-- [ ] Key constraints captured in `system-design.yaml`
+- [ ] Key constraints captured in `architect/constraints-analysis`

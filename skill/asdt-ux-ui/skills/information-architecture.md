@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines how content is structured and navigated within a feature. Applied during Step 3 of the UX/UI workflow.
+Defines how content is structured and navigated within a feature. Applied during the `information-architecture` step of the UX/UI workflow.
 
 ## Content Hierarchy Principles
 
@@ -45,7 +45,7 @@ Always document the full navigation path from the app entry point to the feature
 
 ## Data Relationships
 
-When documenting data relationships in `ux-brief.yaml`:
+When documenting data relationships for the `{project}/{change}/ux-ui/ux-brief` artifact:
 - List entities the user will see or modify (e.g., `User`, `Order`, `Tag`).
 - Note cardinality: one-to-one, one-to-many, many-to-many.
 - Flag any entity that requires a separate loading state (async fetch).

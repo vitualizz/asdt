@@ -15,7 +15,7 @@ El especialista Developer transforma requisitos existentes, specs de UX y decisi
 
 Dos modos de operación controlan las escrituras reales de archivos. En **modo plan-only** (por defecto), produce código como snippets en la base de conocimiento — sin cambios en el repositorio. En **modo escritura**, los targets de archivos declarados se resuelven y validan antes de cualquier escritura — si un path necesario está fuera de los targets declarados, se detiene y reporta el problema en lugar de escribir de forma no declarada.
 
-`explore` y `spec` son irrenunciables — siempre corren sin importar la complejidad. El paso `test` es condicional: solo corre cuando `strict_tdd: true` está configurado en `.asdt/config.yaml` — cuando es `false` o está ausente, el paso se omite. Cuando sí corre, genera código de tests, no planes de prueba.
+`explore` y `spec` son irrenunciables — siempre corren sin importar la complejidad. El paso `test` es condicional: solo corre cuando `strict_tdd: true` está configurado en `.asdt/config.yaml` — cuando es `false` o está ausente, el paso se omite. Cuando sí corre, genera código de tests, no planes de prueba — y no ejecuta ese código. Correr la suite queda de tu lado.
 
 ## Cuándo invocarlo
 
@@ -26,7 +26,7 @@ Dos modos de operación controlan las escrituras reales de archivos. En **modo p
 
 ## Posición en el pipeline
 
-Típicamente corre **después del Arquitecto** (lee `architectural-decision` + `system-design`) y produce el `dev-implementation` final consumido por QA. Puede correr standalone con solo una descripción de la petición — explorará y especificará el problema él mismo sin artefactos previos. En complejidad `simple`, bypassa el Arquitecto por completo.
+Típicamente corre **después del Arquitecto** (lee `architectural-decision` + `system-design-final`) y produce el `dev-implementation` final consumido por QA. Puede correr standalone con solo una descripción de la petición — explorará y especificará el problema él mismo sin artefactos previos. En complejidad `simple`, bypassa el Arquitecto por completo.
 
 ## Qué produce
 
@@ -57,4 +57,5 @@ Consumido por: **QA** (lee la implementación para validar contra criterios de a
 - No escribe specs de UX, wireframes ni specs de componentes
 - No produce planes de prueba ni informes de calidad (el paso test solo genera código de tests, no planes)
 - Nunca escribe archivos fuera de los targets declarados en modo escritura — se detiene y reporta
+- **Nunca corre build, lint ni tests.** Emite los comandos sugeridos para que los corras vos y nunca reporta un resultado de pass/fail — la verificación queda en manos del humano
 - `explore` y `spec` no pueden omitirse sin importar la complejidad

@@ -7,6 +7,9 @@ Include the happy path and the most critical edge cases.
 ## Inputs
 - `ux-ui/ia`: sections, navigation, data relationships
 
+`ux-ui/ia` arrives ALREADY INJECTED per the parallel-retrieval contract — consume it directly, never
+self-fetch it.
+
 Extract: navigation.entry_point, navigation.primary_actions, sections[].
 
 ## Context budget
@@ -25,9 +28,8 @@ Do NOT describe visual layout. Describe sequence of events.
 ## Output
 Produces: `ux-ui/flows`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   flows:

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Identify bottlenecks, caching opportunities, and scaling options. Applied during Step 5 of the Architect workflow.
+Identify bottlenecks, caching opportunities, and scaling options. Applied during the `system-design` step of the Architect workflow.
 
 ## Bottleneck Identification
 
@@ -42,7 +42,7 @@ Flag chains longer than 3 hops with p95 latency > 500ms as High risk.
 | **Sharding** | Partition data across multiple DB instances | Very large datasets; complex operationally |
 | **Event-driven** | Decouple producers/consumers via queue | Bursty workloads; tolerate eventual consistency |
 
-Document the chosen strategy in `system-design.yaml` under `service_boundaries`.
+Name the chosen strategy in the `architect/system-design` payload — state it on the `service_boundaries` entries it affects (which modules scale, which new interfaces the strategy requires).
 
 ## Caching Strategies
 
@@ -74,15 +74,15 @@ For any new endpoint or background job, estimate:
 - Data volume per operation (read bytes, write bytes).
 - Growth curve: 30-day and 1-year projections.
 
-If estimates are unavailable, flag as `open_items[]` and default to designing for 10x current load.
+If estimates are unavailable, flag the gap in `open_items` and default to designing for 10x current load.
 
 ## Scalability Checklist
 
-Before finalizing `system-design.yaml`:
+Before persisting `architect/system-design`:
 - [ ] N+1 patterns identified and mitigated
-- [ ] Index strategy documented for all queries
+- [ ] Index strategy documented for all queries — note each index on the owning field's `constraints` in `data_model[]`
 - [ ] Synchronous chain latency estimated
-- [ ] Scaling strategy stated (vertical / horizontal / event-driven)
-- [ ] Cache strategy defined if applicable
-- [ ] Async pattern chosen if any operations exceed 200ms on critical path
-- [ ] Load estimates present or flagged as open_items
+- [ ] Scaling strategy stated (vertical / horizontal / event-driven) against the affected `service_boundaries`
+- [ ] Cache strategy defined if applicable — state the layer, the TTL, and the invalidation approach in the `key_sequence` step that reads through the cache
+- [ ] Async pattern chosen if any operations exceed 200ms on critical path — reflect it in the affected `api_surface[]` operation's `success_response` (e.g. a 202 + job id)
+- [ ] Load estimates present or flagged in `open_items`

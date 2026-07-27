@@ -30,9 +30,8 @@ Do NOT design the solution. Do NOT write code. Only explore and understand.
 ## Output
 Produces: `developer/dev-exploration`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   files_to_understand: []     # existing files/modules relevant to this change

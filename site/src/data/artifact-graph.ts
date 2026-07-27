@@ -29,11 +29,11 @@ export const artifactGraph: Record<SpecialistId, SpecialistArtifacts> = {
     reads:  [{ key: 'pm/backlog-entry' }],
     writes: [
       { key: 'architectural-decision', consumedBy: ['developer', 'qa'] },
-      { key: 'system-design',          consumedBy: ['developer', 'qa', 'ux-ui'] },
+      { key: 'system-design-final',    consumedBy: ['developer', 'qa', 'ux-ui'] },
     ],
   },
   developer: {
-    reads:  [{ key: 'architectural-decision' }, { key: 'system-design' }],
+    reads:  [{ key: 'architectural-decision' }, { key: 'system-design-final' }],
     writes: [{ key: 'dev-implementation', consumedBy: ['qa'] }],
   },
   qa: {
@@ -41,14 +41,14 @@ export const artifactGraph: Record<SpecialistId, SpecialistArtifacts> = {
     writes: [{ key: 'test-plan', consumedBy: ['developer'] }],
   },
   security: {
-    reads:  [{ key: 'system-design', optional: true }, { key: 'dev-implementation', optional: true }],
+    reads:  [{ key: 'system-design-final', optional: true }, { key: 'dev-implementation', optional: true }],
     writes: [
       { key: 'security-findings',   consumedBy: ['developer', 'architect'] },
       { key: 'hardening-checklist', consumedBy: ['developer', 'architect'] },
     ],
   },
   'ux-ui': {
-    reads:  [{ key: 'pm/backlog-entry' }, { key: 'system-design', optional: true }],
+    reads:  [{ key: 'pm/backlog-entry' }, { key: 'system-design-final', optional: true }],
     writes: [
       { key: 'ux-brief',       consumedBy: ['developer'] },
       { key: 'component-spec', consumedBy: ['developer'] },

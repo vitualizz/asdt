@@ -19,14 +19,14 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     color: '--c-res',
     tierType: 'complexity',
     tiers: {
-      trivial:  ['context-recall', 'divergent-ideation', 'decision-preservation'],
-      simple:   ['context-recall', 'divergent-ideation', 'feasibility-scan', 'discovery-brief', 'decision-preservation'],
-      moderate: ['context-recall', 'divergent-ideation', 'feasibility-scan', 'discovery-brief', 'decision-preservation'],
-      complex:  ['context-recall', 'divergent-ideation', 'feasibility-scan', 'discovery-brief', 'decision-preservation'],
+      trivial:  ['knowledge-recall', 'divergent-ideation', 'decision-preservation'],
+      simple:   ['knowledge-recall', 'divergent-ideation', 'feasibility-scan', 'discovery-brief', 'decision-preservation'],
+      moderate: ['knowledge-recall', 'divergent-ideation', 'feasibility-scan', 'discovery-brief', 'decision-preservation'],
+      complex:  ['knowledge-recall', 'divergent-ideation', 'feasibility-scan', 'discovery-brief', 'decision-preservation'],
     },
     steps: {
-      'context-recall': {
-        id: 'context-recall',
+      'knowledge-recall': {
+        id: 'knowledge-recall',
       },
       'divergent-ideation': {
         id: 'divergent-ideation',
@@ -47,17 +47,23 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     color: '--c-pm',
     tierType: 'complexity',
     tiers: {
-      trivial:  ['feature-intake'],
-      simple:   ['feature-intake', 'user-stories', 'backlog-entry'],
-      moderate: ['feature-intake', 'user-stories', 'scope-analysis', 'backlog-entry'],
-      complex:  ['feature-intake', 'user-stories', 'scope-analysis', 'prioritization', 'backlog-entry'],
+      trivial:  ['knowledge-recall', 'feature-intake', 'decision-preservation'],
+      simple:   ['knowledge-recall', 'feature-intake', 'user-stories', 'backlog-entry', 'decision-preservation'],
+      moderate: ['knowledge-recall', 'feature-intake', 'user-stories', 'success-metrics', 'scope-analysis', 'backlog-entry', 'decision-preservation'],
+      complex:  ['knowledge-recall', 'feature-intake', 'user-stories', 'success-metrics', 'scope-analysis', 'prioritization', 'backlog-entry', 'decision-preservation'],
     },
     steps: {
+      'knowledge-recall': {
+        id: 'knowledge-recall',
+      },
       'feature-intake': {
         id: 'feature-intake',
       },
       'user-stories': {
         id: 'user-stories',
+      },
+      'success-metrics': {
+        id: 'success-metrics',
       },
       'scope-analysis': {
         id: 'scope-analysis',
@@ -68,6 +74,9 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'backlog-entry': {
         id: 'backlog-entry',
       },
+      'decision-preservation': {
+        id: 'decision-preservation',
+      },
     },
   },
 
@@ -75,15 +84,21 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     color: '--c-arch',
     tierType: 'complexity',
     tiers: {
-      trivial:  ['load-constraints'],
+      trivial:  ['knowledge-recall', 'platform-analysis', 'load-constraints', 'decision-preservation'],
       simple:   [],
-      moderate: ['load-constraints', 'evaluate-approaches', 'decision-record'],
-      complex:  ['load-constraints', 'evaluate-approaches', 'decision-record', 'system-design', 'risk-analysis', 'technical-handoff'],
+      moderate: ['knowledge-recall', 'platform-analysis', 'load-constraints', 'evaluate-approaches', 'decision-record', 'technical-handoff', 'decision-preservation'],
+      complex:  ['knowledge-recall', 'platform-analysis', 'load-constraints', 'evaluate-approaches', 'decision-record', 'system-design', 'cost-estimation', 'risk-analysis', 'technical-handoff', 'decision-preservation'],
     },
     special: {
       simple: 'not-called',
     },
     steps: {
+      'knowledge-recall': {
+        id: 'knowledge-recall',
+      },
+      'platform-analysis': {
+        id: 'platform-analysis',
+      },
       'load-constraints': {
         id: 'load-constraints',
       },
@@ -96,11 +111,17 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'system-design': {
         id: 'system-design',
       },
+      'cost-estimation': {
+        id: 'cost-estimation',
+      },
       'risk-analysis': {
         id: 'risk-analysis',
       },
       'technical-handoff': {
         id: 'technical-handoff',
+      },
+      'decision-preservation': {
+        id: 'decision-preservation',
       },
     },
   },
@@ -109,12 +130,15 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     color: '--c-dev',
     tierType: 'complexity',
     tiers: {
-      trivial:  ['explore'],
-      simple:   ['explore', 'spec', 'implement'],
-      moderate: ['explore', 'spec', 'design', 'implement'],
-      complex:  ['explore', 'spec', 'design', 'tasks', 'implement'],
+      trivial:  ['knowledge-recall', 'explore', 'decision-preservation'],
+      simple:   ['knowledge-recall', 'explore', 'spec', 'implement', 'decision-preservation'],
+      moderate: ['knowledge-recall', 'explore', 'spec', 'design', 'implement', 'test', 'decision-preservation'],
+      complex:  ['knowledge-recall', 'explore', 'spec', 'design', 'tasks', 'implement', 'test', 'decision-preservation'],
     },
     steps: {
+      'knowledge-recall': {
+        id: 'knowledge-recall',
+      },
       'explore': {
         id: 'explore',
       },
@@ -130,6 +154,12 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'implement': {
         id: 'implement',
       },
+      'test': {
+        id: 'test',
+      },
+      'decision-preservation': {
+        id: 'decision-preservation',
+      },
     },
   },
 
@@ -138,14 +168,17 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tierType: 'complexity',
     tiers: {
       trivial:  [],
-      simple:   ['load-requirements', 'ac-validation', 'test-case-generation', 'quality-report'],
-      moderate: ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'review'],
-      complex:  ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'review'],
+      simple:   ['knowledge-recall', 'load-requirements', 'ac-validation', 'test-case-generation', 'quality-report', 'performance-validation', 'review', 'decision-preservation'],
+      moderate: ['knowledge-recall', 'load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'performance-validation', 'review', 'decision-preservation'],
+      complex:  ['knowledge-recall', 'load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'performance-validation', 'review', 'decision-preservation'],
     },
     special: {
       trivial: 'not-eligible',
     },
     steps: {
+      'knowledge-recall': {
+        id: 'knowledge-recall',
+      },
       'load-requirements': {
         id: 'load-requirements',
       },
@@ -164,8 +197,14 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'quality-report': {
         id: 'quality-report',
       },
+      'performance-validation': {
+        id: 'performance-validation',
+      },
       'review': {
         id: 'review',
+      },
+      'decision-preservation': {
+        id: 'decision-preservation',
       },
     },
   },
@@ -175,13 +214,19 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tierType: 'risk-surface',
     tiers: {
       none:     [],
-      moderate: ['threat-modeling', 'hardening-checklist'],
-      high:     ['threat-modeling', 'attack-surface', 'owasp-analysis', 'hardening-checklist'],
+      moderate: ['knowledge-recall', 'platform-analysis', 'threat-modeling', 'hardening-checklist', 'decision-preservation'],
+      high:     ['knowledge-recall', 'platform-analysis', 'threat-modeling', 'attack-surface', 'owasp-analysis', 'hardening-checklist', 'decision-preservation'],
     },
     special: {
       none: 'not-auto-invoked',
     },
     steps: {
+      'knowledge-recall': {
+        id: 'knowledge-recall',
+      },
+      'platform-analysis': {
+        id: 'platform-analysis',
+      },
       'threat-modeling': {
         id: 'threat-modeling',
       },
@@ -194,6 +239,9 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'hardening-checklist': {
         id: 'hardening-checklist',
       },
+      'decision-preservation': {
+        id: 'decision-preservation',
+      },
     },
   },
 
@@ -201,14 +249,23 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     color: '--c-ux',
     tierType: 'complexity',
     tiers: {
-      trivial:  ['feature-brief'],
-      simple:   ['feature-brief', 'information-architecture', 'user-flows', 'component-mapping', 'ux-handoff'],
-      moderate: ['feature-brief', 'information-architecture', 'user-flows', 'component-mapping', 'ux-handoff'],
-      complex:  ['feature-brief', 'information-architecture', 'user-flows', 'component-mapping', 'responsive-strategy', 'ux-handoff'],
+      trivial:  ['knowledge-recall', 'platform-analysis', 'feature-brief', 'decision-preservation'],
+      simple:   ['knowledge-recall', 'platform-analysis', 'feature-brief', 'design-tokens', 'information-architecture', 'user-flows', 'component-mapping', 'ux-handoff', 'decision-preservation'],
+      moderate: ['knowledge-recall', 'platform-analysis', 'feature-brief', 'design-tokens', 'information-architecture', 'user-flows', 'content-design', 'component-mapping', 'ux-handoff', 'decision-preservation'],
+      complex:  ['knowledge-recall', 'platform-analysis', 'feature-brief', 'design-tokens', 'information-architecture', 'user-flows', 'content-design', 'component-mapping', 'design-critique', 'ux-handoff', 'decision-preservation'],
     },
     steps: {
+      'knowledge-recall': {
+        id: 'knowledge-recall',
+      },
+      'platform-analysis': {
+        id: 'platform-analysis',
+      },
       'feature-brief': {
         id: 'feature-brief',
+      },
+      'design-tokens': {
+        id: 'design-tokens',
       },
       'information-architecture': {
         id: 'information-architecture',
@@ -216,14 +273,20 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'user-flows': {
         id: 'user-flows',
       },
+      'content-design': {
+        id: 'content-design',
+      },
       'component-mapping': {
         id: 'component-mapping',
       },
-      'responsive-strategy': {
-        id: 'responsive-strategy',
+      'design-critique': {
+        id: 'design-critique',
       },
       'ux-handoff': {
         id: 'ux-handoff',
+      },
+      'decision-preservation': {
+        id: 'decision-preservation',
       },
     },
   },

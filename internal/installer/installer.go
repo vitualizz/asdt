@@ -249,16 +249,31 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 		}
 	}
 
-	// The root SKILL.md (and only the root — per-specialist asdt-*/SKILL.md
-	// carry no markers) has its §9.2 inline-steps region regenerated from the
-	// specialist workflow.yaml files. Fail loud if the markers are missing: the
-	// root file MUST carry them, so an absent-marker error is a real defect.
+	// Two distinct generated regions live in SKILL.md files. The root SKILL.md
+	// owns the `Tailored Workflow Generation` inline-steps region, regenerated
+	// here from the specialist workflow.yaml files; each per-specialist
+	// asdt-*/SKILL.md owns a specialist-header region, spliced below. Fail
+	// loud if the markers are missing from the root: that file MUST carry
+	// them, so an absent-marker error there is a real defect.
 	if srcPath == "SKILL.md" {
 		generated, genErr := GenerateInlineSteps(skillsFS, data)
 		if genErr != nil {
 			return fmt.Errorf("generate inline steps in %s: %w", srcPath, genErr)
 		}
 		data = generated
+	}
+
+	// Every per-specialist asdt-*/SKILL.md — filepath.Base matches SKILL.md,
+	// and the second clause excludes the bare root file already handled above.
+	// asdt-init/SKILL.md matches this predicate but deliberately carries no
+	// marker region, so replaceMarkerRegion returns it unchanged; that silent
+	// pass-through is intended, not a bug to "fix".
+	if filepath.Base(srcPath) == "SKILL.md" && srcPath != "SKILL.md" {
+		headed, hdrErr := GenerateSpecialistHeader(skillsFS, data)
+		if hdrErr != nil {
+			return fmt.Errorf("splice specialist header into %s: %w", srcPath, hdrErr)
+		}
+		data = headed
 	}
 
 	content := provider.CustomizeSkill(string(data))

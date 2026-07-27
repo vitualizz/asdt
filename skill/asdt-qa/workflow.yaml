@@ -62,8 +62,9 @@ steps:
     model: sonnet
     agent: analyst
     inputs:
-      - "{project}/{change}/qa/test-strategy"
-      - "{project}/{change}/qa/edge-cases"
+      - "{project}/{change}/qa/ac-list"
+      - "{project}/{change}/qa/test-strategy"  # optional (tier-gated: test-strategy runs at moderate+)
+      - "{project}/{change}/qa/edge-cases"  # optional (tier-gated: edge-case-analysis runs at moderate+)
     output_topic_key: "{project}/{change}/qa/test-cases"
     reference_skills:
       - ../asdt-shared/skills/platform-context.md
@@ -89,12 +90,14 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/qa/test-plan"
-      - "{project}/{change}/pm/nfr-targets"
+      - "{project}/{change}/pm/nfr-targets"  # optional (tier-gated: PM success-metrics runs at moderate+)
     output_topic_key: "{project}/{change}/qa/perf-validation"
     reference_skills:
       - ../asdt-shared/skills/nfr-budget.md
 
-  # ADR-018 Q1/A2: go/no-go shipping verdict before knowledge is preserved
+  # Placed last among the subagent steps: the go/no-go shipping verdict is
+  # produced before knowledge is preserved, so decision-preservation records a
+  # decided outcome rather than an open question.
   - name: review
     skill: steps/review.md
     description: Evaluate the test-plan holistically and produce a final go/no-go shipping verdict
@@ -104,6 +107,7 @@ steps:
     inputs:
       - "{project}/{change}/qa/test-plan"
       - "{project}/{change}/qa/ac-gaps"
+      - "{project}/{change}/qa/perf-validation"  # optional (tier-gated)
     output_topic_key: "{project}/{change}/qa/qa-review"
     reference_skills: []
 

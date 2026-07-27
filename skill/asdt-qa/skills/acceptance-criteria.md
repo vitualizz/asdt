@@ -2,7 +2,7 @@
 
 ## Purpose
 
-How to write and validate acceptance criteria. Applied during Step 2 of the QA workflow.
+How to write and validate acceptance criteria. Applied during the `ac-validation` step of the QA workflow.
 
 ## Given/When/Then Format
 
@@ -67,7 +67,7 @@ For each acceptance criterion, verify:
 
 ## AC Gap Classification
 
-When flagging an AC gap in `test-plan.yaml`, classify it:
+When flagging an AC gap — recorded in `qa/ac-gaps` and carried into `qa/test-plan` — classify it:
 
 | Gap type | Description | Blocking? |
 |----------|-------------|-----------|
@@ -76,3 +76,9 @@ When flagging an AC gap in `test-plan.yaml`, classify it:
 | `incomplete` | Missing precondition, action, or outcome | Yes — must be completed |
 | `missing-negative` | No failure path specified | No — add negative AC |
 | `missing-nonfunc` | Performance/security threshold not stated | Depends on criticality |
+
+Map the classification onto the `status` field of `qa/ac-gaps.validated_criteria[]`: a
+blocking gap type is `invalid`, a non-blocking one is `needs-revision`, and an AC with no
+gap is `valid`. Downstream, `review` treats `invalid` as a hard blocker and
+`needs-revision` as a shipping condition — so the choice between the two is a release
+decision, not a label.

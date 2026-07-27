@@ -6,9 +6,7 @@ An ADR is permanent — it explains why a decision was made so future engineers
 understand the context, not just the outcome.
 
 ## Inputs
-- `architect/approaches`: chosen approach, alternatives, rationale
-
-Extract: central_question, chosen, chosen_rationale, rejected[].
+- `architect/approaches` — arrives as an `### INPUT {topic_key}` block; produced by the `evaluate-approaches` step. Extract: `central_question`, `chosen`, `chosen_rationale`, `rejected[]`.
 
 ## Context budget
 architect/approaches: max 1,000 tokens.
@@ -27,9 +25,8 @@ Every architectural decision has tradeoffs. Name the negative consequences expli
 ## Output
 Produces: `architect/adr`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   title: ""

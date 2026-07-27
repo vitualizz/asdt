@@ -6,8 +6,6 @@ feature, grounded in the feature brief's `design_intent` and the platform's exis
 system. Prefer reusing established system values; never invent tokens that conflict with the
 existing design system.
 
-Model note: `sonnet`; tier `simple+`.
-
 ## Inputs
 - `ux-ui/feature-brief`: `design_intent` (tone, principles, north_star), design_constraints
 - `platform-summary`: design system fingerprint (existing tokens, css_approach, component_library)
@@ -39,9 +37,8 @@ feature-brief `design_intent` + platform-summary fingerprint: max 900 tokens.
 ## Output
 Produces: `ux-ui/design-tokens`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   tokens:

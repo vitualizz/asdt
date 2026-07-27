@@ -2,7 +2,7 @@
 
 ## Purpose
 
-RESTful design principles and contract-first approach. Applied during Step 5 of the Architect workflow when the change touches an API surface.
+RESTful design principles and contract-first approach. Applied during the `system-design` step of the Architect workflow when the change touches an API surface.
 
 ## Resource Naming
 
@@ -96,4 +96,4 @@ Response envelope for paginated collections:
 3. Validate requests against the spec at the handler boundary — never trust unvalidated input.
 4. Document all endpoints, including error responses, in the spec.
 
-In `system-design.yaml`, list each endpoint with: resource path, HTTP method, request shape summary, response shape summary, and auth requirement.
+In the `architect/system-design` payload, list every endpoint as an `api_surface[]` entry: the resource path in `operation`, the HTTP verb in `method`, the request shape in `input`, the response shape in `success_response`, and each failure mode in `error_cases`. The schema has no dedicated auth field — state the auth requirement in the `operation` text (e.g. `GET /users/{id} — requires authenticated caller with users:read`) and add the matching `401` / `403` entries to `error_cases`.

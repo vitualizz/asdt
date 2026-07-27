@@ -3,12 +3,6 @@ name: asdt-developer
 description: "Turns specs and designs into working code — implementation plans, production code, and test suites — the specialist to bring in once the shape of the solution is settled and it's time to build it."
 user-invocable: true
 specialist-id: developer
-shared-skills:
-  - specialist-header
-  - platform-context
-  - artifact-envelope
-  - scope-definition
-  - artifact-loading
 trigger_phrases:
   - implement this
   - write the code
@@ -20,9 +14,14 @@ metadata:
   version: "1.0"
 ---
 
-> **FIRST ACTION — self-load the header**: Read `../asdt-shared/skills/specialist-header.md`
-> and `./workflow.yaml` NOW, before acting on anything below. Re-read them whenever you can
-> no longer recall their content (e.g. after a context compaction).
+> **FIRST ACTION — self-load the header**: The specialist header is spliced into this file
+> immediately below — read it there. Then read `./workflow.yaml` NOW, before acting on
+> anything below. Re-read both whenever you can no longer recall their content (e.g. after
+> a context compaction).
+
+<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-shared/skills/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
+<!-- ASDT:GENERATED:specialist-header -->
+<!-- /ASDT:GENERATED:specialist-header -->
 
 > **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
 > calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
@@ -39,7 +38,7 @@ produce architecture decisions, UX specs, or test plans.
 
 ## Orchestration Plan
 
-**Complexity-based step filtering**: Developer is invoked whenever the request involves writing or changing code; complexity gates step depth. This section is the authoritative tier→step mapping for this specialist — the meta-orchestrator's `skill/SKILL.md` §9.2 holds a compact cache row derived from it; update both when steps change.
+**Complexity-based step filtering**: Developer is invoked whenever the request involves writing or changing code; complexity gates step depth.
 
 | Level | Steps |
 |-------|-------|
@@ -67,7 +66,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 
 ¹ Only included when `strict_tdd: true` in `.asdt/config.yaml`. Excluded when `strict_tdd` is `false` or absent.
 
-**Model assignment rationale** (see inline `#` comments per `model:` field in `workflow.yaml`): steps that enumerate, transform, or analyze with lower ambiguity run on `sonnet` for throughput (`explore`, `spec`, `tasks`, `test`); steps that synthesize a design or write real files under high ambiguity run on `opus` for its strongest reasoning (`design`, `implement`).
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
 
 ## Final Output
 `developer/dev-implementation` — the consolidated implementation artifact produced by the `implement` step. Consumed by QA and other specialists.
@@ -79,7 +78,7 @@ All artifacts produced by this specialist MUST be saved to the memory provider v
 > **Scope of this rule**: this governs ASDT ARTIFACT persistence (specs/designs/plans →
 > Engram only, never `.asdt/artifacts/` files). It does NOT govern host-source code writes
 > performed by `implement`/`test` in writing mode — those are governed by the Write scope
-> invariant above and are scoped to declared edit roots.
+> invariant in `## Invariants` and are scoped to declared edit roots.
 
 For each artifact, call `mem_save` with:
 - `title`: `"{change-name}/developer/{artifact-type}"` (e.g. `"add-auth/developer/dev-implementation"`)
@@ -87,13 +86,10 @@ For each artifact, call `mem_save` with:
 - `type`: `"architecture"` for design artifacts, `"decision"` for implementation choices
 - `content`: structured content with `What`, `Why`, `Where`, and optionally `Learned`
 
-> **Breaking convention change**: this replaces the prior coarse
-> `"{project}/{change}/developer"` key (one key shared by every artifact this
-> specialist produces) with one `topic_key` per artifact type. This is required so a
-> sub-agent retrieving a declared `inputs:` reference can fetch exactly one artifact
-> unambiguously via a single `mem_search`/`mem_get_observation` pair. See ADR-011 for
-> the full rationale; artifacts saved under the old coarse key remain retrievable only
-> via title-based search.
+There is exactly ONE `topic_key` per artifact type — never one key shared across several
+artifact types. That is what lets a sub-agent resolve a declared `inputs:` reference to exactly
+one artifact through a single `mem_search` / `mem_get_observation` pair. Artifacts are addressed
+only by topic_key and are never written to local files.
 
 The final generative step (typically `implement`) MUST include a `summary` field in its output payload (≤ 150 tokens). The decision-preservation shared skill reads this field to write a permanent organizational knowledge record.
 
@@ -101,18 +97,17 @@ The final generative step (typically `implement`) MUST include a `summary` field
 - **Write scope (MODE-gated, sdd-apply model)**: This specialist's `implement`/`test`
   steps run in one of two modes, gated by whether declared edit roots are resolved:
   - **plan-only mode** (default): if NO `files_to_create`/`files_to_modify` targets are declared
-    in `dev-tasks`/`dev-design`, write NOTHING to the host repo. Produce plan-only artifacts
-    (code as `code_snippets[]`/`test_snippets[]` strings in Engram), exactly as before.
+    in `dev-tasks`/`dev-design`, write NOTHING to the host repo. Produce plan-only artifacts —
+    code as `code_snippets[]` and `test_cases[].code_snippet` strings persisted to Engram.
   - **writing mode**: if declared file targets ARE present, the orchestrator resolves them into
     `allowedEditRoots` (the union of declared `files_to_create` + `files_to_modify` paths) and
     validates them against the host repo BEFORE the `implement` step runs. The specialist may then
     write REAL files to the host source tree, but ONLY to paths under those declared targets.
   - **STOP-on-out-of-scope**: if any needed edit falls outside the declared targets, STOP, do not
     write it, and report the unsafe path back to the orchestrator. Never freelance a write.
-  This replaces the blanket `.asdt/`-only ban, which governs ASDT's own bookkeeping (ADR-002),
-  NOT the host-source writes of a code-producing specialist. ASDT's OWN state (config, knowledge,
-  prompt overrides) still lives only under `.asdt/`; this carve-out covers ONLY the declared
-  host-source targets of an approved `dev-tasks` entry.
+  ASDT's OWN state — config, knowledge, prompt overrides — lives only under `.asdt/` and is never
+  written anywhere else. The writing-mode carve-out above covers ONLY the declared host-source
+  targets of an approved `dev-tasks` entry; it grants no access to ASDT's own bookkeeping.
 - All intermediate artifacts are scoped under `developer/` prefix
 - Each step reads ONLY its declared inputs
 - If an input artifact is missing: note in `open_items`, proceed with available context

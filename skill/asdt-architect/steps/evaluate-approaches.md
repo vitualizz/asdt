@@ -5,12 +5,10 @@ Compare 2-3 viable technical approaches for the key architectural decision.
 Choose one with explicit reasoning. Document why alternatives were rejected.
 
 ## Inputs
-- `architect/constraints-analysis`: hard constraints, soft constraints, opportunities (produced by load-constraints)
-
-Extract: hard_constraints (limits approach space), opportunities (could favor one approach).
+- `architect/constraints-analysis` — arrives as an `### INPUT {topic_key}` block; produced by the `load-constraints` step. Extract: `hard_constraints` (limits the approach space), `soft_constraints`, `opportunities` (could favor one approach).
 
 ## Context budget
-architect/constraints: max 1,200 tokens.
+architect/constraints-analysis: max 1,200 tokens.
 
 ## Processing
 1. IDENTIFY the central architectural question (the one decision that constrains everything else).
@@ -23,14 +21,13 @@ architect/constraints: max 1,200 tokens.
    - Familiarity: does the team already use this pattern?
 4. SCORE each dimension as Low/Medium/High impact.
 5. CHOOSE the approach with the best overall tradeoff — not necessarily the "best" in one dimension.
-6. STATE the rejected alternatives with one-line reasons (these become ADR alternatives).
+6. STATE the rejected alternatives with one-line reasons (these become the alternatives recorded by the `decision-record` step).
 
 ## Output
 Produces: `architect/approaches`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   central_question: ""

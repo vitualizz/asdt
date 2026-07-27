@@ -70,8 +70,9 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/pm/user-stories"
-      - "{project}/{change}/pm/scope-analysis"
-      - "{project}/{change}/pm/prioritization"
+      - "{project}/{change}/pm/scope-analysis" # optional (tier-gated)
+      - "{project}/{change}/pm/prioritization" # optional (tier-gated)
+      - "{project}/{change}/pm/nfr-targets" # optional (tier-gated)
     output_topic_key: "{project}/{change}/pm/backlog-entry"
     reference_skills:
       - ../asdt-shared/skills/report.md

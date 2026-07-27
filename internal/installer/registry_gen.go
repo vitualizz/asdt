@@ -12,19 +12,33 @@ import (
 )
 
 // Inline-steps generated-region markers. These literal HTML comments bound the
-// machine-generated §9.2 inline-steps list in the root SKILL.md. They are the
-// single source both the install-time generator and any test reference, so the
-// region can be located and replaced idempotently.
+// machine-generated `Tailored Workflow Generation` inline-steps list in the
+// root SKILL.md. They are the single source both the install-time generator
+// and any test reference, so the region can be located and replaced
+// idempotently.
 const (
 	inlineStepsBeginMarker = "<!-- ASDT:GENERATED:9.2-inline-steps -->"
 	inlineStepsEndMarker   = "<!-- /ASDT:GENERATED:9.2-inline-steps -->"
 )
 
-// registryRenderOrder is the display order of specialists in the §9.2
-// inline-steps list. It is intentionally NOT the alphabetical directory walk
-// order: the hand-authored list reads PM → Architect → QA → Security → UX/UI →
-// Developer → Researcher, and the generator must reproduce that exact sequence
-// so its first run against the existing SKILL.md is a byte-identical no-op.
+// Specialist-header generated-region markers. These literal HTML comments bound
+// the machine-spliced shared specialist header in each routed specialist's
+// SKILL.md. Same contract as the inline-steps pair: one literal source for the
+// install-time generator and for any test, so the region is located and
+// replaced idempotently. skill/embedded_test.go keeps a hand-copy of these two
+// literals (package skill cannot import internal/installer) — change both
+// copies together.
+const (
+	specialistHeaderBeginMarker = "<!-- ASDT:GENERATED:specialist-header -->"
+	specialistHeaderEndMarker   = "<!-- /ASDT:GENERATED:specialist-header -->"
+)
+
+// registryRenderOrder is the display order of specialists in the `Tailored
+// Workflow Generation` inline-steps list. It is intentionally NOT the
+// alphabetical directory walk order: the hand-authored list reads
+// PM → Architect → QA → Security → UX/UI → Developer → Researcher, and the
+// generator must reproduce that exact sequence so its first run against the
+// existing SKILL.md is a byte-identical no-op.
 var registryRenderOrder = []string{
 	"asdt-pm",
 	"asdt-architect",
@@ -35,8 +49,27 @@ var registryRenderOrder = []string{
 	"asdt-researcher",
 }
 
-// inlineStepsDisplayNames maps a specialist directory to the display label used
-// in the §9.2 inline-steps list (e.g. "asdt-pm" → "PM").
+// specialistHeaderFragments lists the shared fragments folded, in this exact
+// sequence, into every routed specialist's specialist-header region.
+//
+// ORDER IS LOAD-BEARING — it is the order a specialist reads the file top-down:
+//   - specialist-header.md first: the Prerequisites gate and the ORCHESTRATOR
+//     GATE must be the very first thing a specialist reads, before it can act
+//     on anything else in the document.
+//   - parallel-retrieval.md second: the Cache Ledger Rule and the Injection
+//     Format are needed at launch time — the orchestrator must already hold
+//     them before it runs the first inline step.
+//   - knowledge-recall.md last: it is the content of that first inline step, so
+//     it only has to be in context once the launch contract above is settled.
+var specialistHeaderFragments = []string{
+	"asdt-shared/skills/specialist-header.md",
+	"asdt-shared/skills/parallel-retrieval.md",
+	"asdt-shared/skills/knowledge-recall.md",
+}
+
+// inlineStepsDisplayNames maps a specialist directory to the display label
+// used in the `Tailored Workflow Generation` inline-steps list
+// (e.g. "asdt-pm" → "PM").
 var inlineStepsDisplayNames = map[string]string{
 	"asdt-pm":         "PM",
 	"asdt-architect":  "Architect",
@@ -124,11 +157,12 @@ func parseRegistry(skillsFS fs.FS) ([]specialistRegistry, error) {
 	return regs, nil
 }
 
-// renderInlineStepsRegion emits the §9.2 inline-steps bullet block body — the
-// bytes that sit strictly between the markers — from the registry. It produces
-// one "- {Display}: `step`, `step`" line per specialist that has inline steps,
-// in registryRenderOrder. The output is leading-newline / trailing-newline
-// padded so it slots cleanly between markers that each occupy their own line.
+// renderInlineStepsRegion emits the `Tailored Workflow Generation`
+// inline-steps bullet block body — the bytes that sit strictly between the
+// markers — from the registry. It produces one "- {Display}: `step`, `step`"
+// line per specialist that has inline steps, in registryRenderOrder. The
+// output is leading-newline / trailing-newline padded so it slots cleanly
+// between markers that each occupy their own line.
 // Pure function; no I/O.
 func renderInlineStepsRegion(regs []specialistRegistry) string {
 	byDir := make(map[string]specialistRegistry, len(regs))
@@ -204,11 +238,11 @@ func replaceMarkerRegion(content []byte, beginMarker, endMarker, newBody string)
 	return buf.Bytes(), nil
 }
 
-// GenerateInlineSteps returns skillMD with its §9.2 inline-steps marker region
-// regenerated from the specialist workflow.yaml files in skillsFS. It is the
-// install-time entry point: parseRegistry → renderInlineStepsRegion →
-// replaceMarkerRegion. The returned bytes are unchanged when the region already
-// matches the derived list.
+// GenerateInlineSteps returns skillMD with its `Tailored Workflow Generation`
+// inline-steps marker region regenerated from the specialist workflow.yaml
+// files in skillsFS. It is the install-time entry point: parseRegistry →
+// renderInlineStepsRegion → replaceMarkerRegion. The returned bytes are
+// unchanged when the region already matches the derived list.
 func GenerateInlineSteps(skillsFS fs.FS, skillMD []byte) ([]byte, error) {
 	regs, err := parseRegistry(skillsFS)
 	if err != nil {
@@ -219,6 +253,51 @@ func GenerateInlineSteps(skillsFS fs.FS, skillMD []byte) ([]byte, error) {
 	updated, err := replaceMarkerRegion(skillMD, inlineStepsBeginMarker, inlineStepsEndMarker, body)
 	if err != nil {
 		return nil, fmt.Errorf("regenerate inline-steps region: %w", err)
+	}
+	return updated, nil
+}
+
+// GenerateSpecialistHeader returns skillMD with its specialist-header marker
+// region replaced by the shared header fragments from skillsFS, folded together
+// in specialistHeaderFragments order. It exists so the header is already
+// spliced into each routed specialist's installed SKILL.md: the orchestrator
+// then has the header in context the moment it reads the specialist, instead of
+// depending on separate reads of the asdt-shared/skills/*.md fragments that may
+// never happen. Files without the markers pass through unchanged
+// (replaceMarkerRegion's no-region skip), so this is safe to run over every
+// SKILL.md the installer writes.
+//
+// The marker presence check runs BEFORE the fragment reads on purpose: a
+// document with no markers declares no region, so requiring the shared
+// fragments for it would turn a marker-free tree (a minimal test fixture FS,
+// asdt-init) into an install failure — that early return is why marker-free
+// trees pass through. A file carrying even one marker needs the fragments, so
+// ANY read failure fails the whole call: a partial header is worse than a loud
+// install failure. A partial/duplicated marker state still fails in
+// replaceMarkerRegion.
+func GenerateSpecialistHeader(skillsFS fs.FS, skillMD []byte) ([]byte, error) {
+	if !bytes.Contains(skillMD, []byte(specialistHeaderBeginMarker)) &&
+		!bytes.Contains(skillMD, []byte(specialistHeaderEndMarker)) {
+		return skillMD, nil
+	}
+
+	parts := make([]string, 0, len(specialistHeaderFragments))
+	for _, p := range specialistHeaderFragments {
+		fragment, err := fs.ReadFile(skillsFS, p)
+		if err != nil {
+			return nil, fmt.Errorf("read specialist header fragment %s: %w", p, err)
+		}
+		parts = append(parts, strings.TrimRight(string(fragment), "\n"))
+	}
+
+	// Same padding convention as renderInlineStepsRegion: leading and trailing
+	// newlines so the begin marker, the header, and the end marker each occupy
+	// their own line after splicing. Fragments are joined by a blank line so
+	// each boundary lands on its own line too.
+	body := "\n" + strings.Join(parts, "\n\n") + "\n"
+	updated, err := replaceMarkerRegion(skillMD, specialistHeaderBeginMarker, specialistHeaderEndMarker, body)
+	if err != nil {
+		return nil, fmt.Errorf("regenerate specialist-header region: %w", err)
 	}
 	return updated, nil
 }

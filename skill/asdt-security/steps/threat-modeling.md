@@ -5,48 +5,37 @@ Identify threats using the STRIDE methodology. STRIDE is systematic —
 it catches threats that intuition misses.
 
 ## Inputs
-- `platform-summary`: tech stack, component library (to know attack surface shape)
-- Any available upstream artifacts (artifact-loading — all optional):
-  - `system-design`: API surface, service boundaries
-  - `architectural-decision`: chosen approach and consequences
-  - `dev-implementation`: what code is being written
+This step declares no artifact inputs (`inputs: []` in workflow.yaml) — it runs on whatever
+context the orchestrator injects. Whatever DOES arrive comes ALREADY INJECTED as an
+`### INPUT {topic_key}` block; never self-fetch.
 
-Extract only: API surface entries, service boundaries, data model entities.
-If no upstream artifacts: derive from platform-summary and the request.
+- `platform-summary`: tech stack, component library (to know attack surface shape). Extract: stack entries, framework names, storage engines.
+- Any upstream artifact the orchestrator happened to inject (`architect/system-design`, `architect/architectural-decision`, `developer/dev-implementation`). Extract only: API surface entries, service boundaries, data model entities.
+
+If no upstream artifact arrives: derive the model from the platform summary and the request,
+and append "upstream design artifacts absent — threat model derived from platform summary and
+request text" to open_items.
 
 ## Context budget
 platform-summary + upstream summaries: max 1,500 tokens.
 
 ## Processing
-Apply STRIDE to the feature/system under analysis:
+The STRIDE catalogue — the six categories with their detection patterns, key questions,
+trust-boundary list, and the text notations for threat trees and data flows — lives in
+`skills/threat-modeling.md`, this step's reference skill. Work from it; it is not restated here.
 
-**S — Spoofing Identity**: Can an attacker pretend to be someone they're not?
-- Check: authentication mechanisms, session handling, token validation
+Walk all six categories (S, T, R, I, D, E) against the feature under analysis. For each one:
 
-**T — Tampering with Data**: Can an attacker modify data in transit or at rest?
-- Check: input validation, CSRF protection, data integrity checks, database constraints
-
-**R — Repudiation**: Can a user deny having performed an action?
-- Check: audit logging, non-repudiation controls, immutable logs
-
-**I — Information Disclosure**: Can an attacker access data they shouldn't?
-- Check: authorization checks, error messages (do they leak internals?), data exposure in APIs
-
-**D — Denial of Service**: Can an attacker make the system unavailable?
-- Check: rate limiting, resource exhaustion, input size limits, expensive operations
-
-**E — Elevation of Privilege**: Can a low-privilege user gain higher privileges?
-- Check: authorization bypass, insecure direct object references, privilege escalation paths
-
-For each STRIDE category, identify threats specific to THIS feature.
-If a category has no relevant threats, state "No applicable threats identified" — do not skip.
+1. Identify the threats specific to THIS feature — not generic category descriptions — and name the concrete components each threat lands on in `affected_components`.
+2. Rate each threat with a CVSS-lite severity: Critical, High, Medium, or Low.
+3. In `description`, state the attack path in one or two sentences, using the reference skill's threat-tree or data-flow notation when the path has several hops.
+4. When a category yields nothing, emit one entry for it with `title: "No applicable threats identified"` and a one-sentence description of why — a category is never silently skipped.
 
 ## Output
 Produces: `security/stride-threats`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   scope: ""    # what was analyzed (feature name + available context)

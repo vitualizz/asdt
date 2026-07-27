@@ -6,15 +6,18 @@ dependencies and managing risk. This is not just a re-sort of MoSCoW — it prod
 a concrete ordered list with rationale.
 
 ## Inputs
-- `pm/user-stories`
-- `pm/scope-analysis`
+- `pm/user-stories` — Extract: `user_stories` (`id`, `priority`, `size`, `depends_on`).
+- `pm/scope-analysis` — Extract: `risk_flags`.
+
+Both declared inputs arrive ALREADY INJECTED as `### INPUT {topic_key}` blocks — consume them
+directly and do NOT self-fetch either one. If one arrives UNRESOLVED, record the gap in
+`open_items` and proceed on the other.
 
 ## Context budget
-Extract: user_stories (id, priority, size, depends_on), risk_flags from scope-analysis.
-Max 400 tokens.
+Injected user-stories + scope-analysis fields: max 400 tokens combined.
 
 ## Processing
-1. Start from MoSCoW priority assigned in user-stories.
+1. Start from MoSCoW priority assigned in the user-stories step.
 2. Apply dependency ordering: a story with `depends_on` entries must come after all its dependencies.
 3. Apply risk adjustment: stories touching `risk_flags` may need earlier scheduling (de-risk first) or deferral (low confidence). State the reasoning explicitly.
 4. Produce a final ordered list. Each entry must include a one-line rationale.
@@ -23,9 +26,8 @@ Max 400 tokens.
 ## Output
 Produces: `pm/prioritization`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   priority_order:

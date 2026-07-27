@@ -11,7 +11,7 @@ system that accumulates domain expertise over time.
 
 Any step that produces a **final decision artifact**:
 
-- Architect: `decision-record` → `architectural-decision`
+- Architect: `technical-handoff` → `architectural-decision` (the earlier `decision-record` step produces the intermediate ADR, not this final artifact)
 - Developer: `implement` → `dev-implementation`
 - Security: `hardening-checklist` → `hardening-checklist`
 - QA: `quality-report` → `quality-report`

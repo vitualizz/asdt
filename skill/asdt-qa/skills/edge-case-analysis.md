@@ -2,7 +2,11 @@
 
 ## Purpose
 
-Systematic discovery of edge cases before test cases are written. Applied during Step 3 of the QA workflow.
+Systematic discovery of edge cases before test cases are written. Applied during the `edge-case-analysis` step of the QA workflow.
+
+This file is the full technique catalogue. The step file names which techniques to apply to
+a given acceptance criterion and how to shape the output — the techniques themselves are
+documented here once, and only here.
 
 ## Boundary Values
 
@@ -30,6 +34,27 @@ For every input field, explicitly test:
 - Missing key in a JSON/YAML payload — does the parser use the default or error?
 
 Document the expected behavior for each case in the test case `then` field — never assume.
+
+## Equivalence Partitioning
+
+Group inputs into classes whose behavior is identical, then test one representative from
+each class instead of every value:
+- One valid class per accepted shape (a well-formed email, a supported currency, an allowed file type).
+- One invalid class per distinct rejection reason — "malformed" and "unsupported" are different classes even when both return `400`.
+- A class the domain forgot: values that are syntactically valid but semantically impossible (a birth date in the future, a negative refund).
+
+The partition is only useful if every member of a class truly shares behavior. If two
+values in the same class produce different outcomes, the class was wrong — split it.
+
+## State Transitions
+
+When the feature has named states (draft/published, active/suspended, pending/settled):
+- Test each valid transition, and assert the state actually changed.
+- Test each invalid transition — especially going backward (published → draft) and skipping a step (pending → settled without approval).
+- Test a transition attempted twice (is the second a no-op or an error?).
+- Test a transition on a terminal state (can a cancelled order be paid?).
+
+Draw the state table before writing the cases; the empty cells in it are the edge cases.
 
 ## Concurrent Access Scenarios
 
@@ -78,7 +103,7 @@ Document expected behavior: fail-open, fail-closed, or retry with backoff.
 
 ## Edge Case Documentation Format
 
-For each edge case in `test-plan.yaml`:
+Each edge case is recorded in `qa/edge-cases` and becomes a test case in `qa/test-plan` of this shape:
 ```yaml
 - id: "TC-0XX"
   title: "Empty cart checkout attempt"

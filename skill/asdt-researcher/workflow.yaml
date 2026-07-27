@@ -1,7 +1,7 @@
 specialist: researcher
 routable: true
 steps:
-  - name: context-recall
+  - name: knowledge-recall
     skill: ../asdt-shared/skills/knowledge-recall.md
     description: Query organizational memory for prior discovery, similar problem framings, and decisions relevant to this exploration
     execution: inline
@@ -18,7 +18,7 @@ steps:
 
   - name: feasibility-scan
     skill: steps/feasibility-scan.md
-    description: Assess each idea for feasibility with a green/yellow/red verdict, supporting evidence, and an effort estimate
+    description: Assess each idea for feasibility with a green/yellow/red verdict, sourced supporting evidence, and an effort estimate
     execution: subagent
     model: sonnet
     agent: analyst

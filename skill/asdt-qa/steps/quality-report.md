@@ -5,11 +5,11 @@ Produce the final test-plan artifact. Apply the report shared skill to consolida
 test cases and AC validation into a coherent quality document.
 
 ## Inputs
-- `qa/test-cases`: all test cases
-- `qa/ac-gaps`: AC validation results
+- `qa/test-cases` — arrives as an `### INPUT {topic_key}` block. Extract: `total_count`, `critical_count`, and the critical test cases only.
+- `qa/ac-gaps` — arrives as an `### INPUT {topic_key}` block. Extract: `gap_count`, `validated_criteria[]` entries whose `status` is not `valid`, and `open_items[]`.
 
 Apply the extraction rules in the report shared skill: from test-cases keep counts + critical cases only.
-From ac-gaps keep gap_count + open_items only.
+From ac-gaps keep gap_count, the non-valid criteria, and open_items only.
 
 ## Context budget
 qa/test-cases summary + qa/ac-gaps summary: max 1,000 tokens.
@@ -24,13 +24,10 @@ Apply the `report` shared skill:
 6. Write a quality verdict: READY / READY WITH CAVEATS / BLOCKED.
 
 ## Output
-Produces: `test-plan` (final cross-specialist artifact — single artifact, unlike
-architect's dual-output `technical-handoff`; persist it once under this step's
-`output_topic_key`)
+Produces: `qa/test-plan`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   test_summary:

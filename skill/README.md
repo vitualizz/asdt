@@ -28,6 +28,7 @@ flowchart TD
 ```
 skill/
 ├── SKILL.md                    ← meta-orchestrator (/asdt)
+├── TEMPLATE.md                 ← authoring contract for specialists (repo-only, not installed)
 ├── embedded.go                 ← go:embed — bundles this dir into the binary
 ├── asdt-{name}/                ← one directory per specialist
 │   ├── SKILL.md                ← orchestration plan (ORCHESTRATOR GATE + step table)
@@ -37,7 +38,7 @@ skill/
 │   └── skills/                 ← reference docs loaded into specific steps (optional)
 │       └── {reference}.md
 ├── asdt-shared/
-│   └── skills/                 ← cross-specialist utilities (see asdt-shared/skills/README.md)
+│   └── skills/                 ← cross-specialist utilities (see asdt-shared/skills/_README.md)
 └── asdt-init/                  ← project initializer (/asdt-init)
 ```
 
@@ -74,8 +75,10 @@ This naming lets the next specialist retrieve a specific artifact unambiguously 
 
 ## Adding a New Specialist
 
+`TEMPLATE.md` in this directory is the normative contract for the steps below — required frontmatter, the fixed `SKILL.md` body order, the step-file layout, the artifact contract, and the registration mirrors. Read it before adding or normalizing a specialist. It is repo-only authoring guidance: `embedded.go` bundles `SKILL.md` and `asdt-*`, so nothing else at this level ships to user projects.
+
 1. Create `skill/asdt-{name}/` with `SKILL.md`, `workflow.yaml`, and `steps/`
 2. Add the ORCHESTRATOR GATE block to `SKILL.md` — copy from any existing specialist
 3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, `output_topic_key:`
-4. Write one `steps/{step-name}.md` per `subagent` step — it must start with the executor-header from `asdt-shared/skills/executor-header.md`
-5. Register the specialist in `skill/SKILL.md` §5 (Specialist Registry)
+4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-shared/skills/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-shared/skills/parallel-retrieval.md` for which of the two applies
+5. Register the specialist in the `Specialist Registry` section of `skill/SKILL.md`

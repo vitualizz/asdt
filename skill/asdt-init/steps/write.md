@@ -126,7 +126,7 @@ deliberate recalibration, never per-change.
    ```
 
    **`human_nuance` — typed entries, routed from clarify answers.** The
-   enrichment step (SKILL.md §2.4) surfaces typed `nuance.*` ambiguities; the
+   enrichment step (SKILL.md, § enrichment) surfaces typed `nuance.*` ambiguities; the
    human's answers arrive in the `### CLARIFY ANSWERS` block's `answers{}`. For
    each answer key matching
    `^nuance\.(architectural|repo_practice|inconsistency_to_review)\.(.+)$`, the
@@ -229,12 +229,35 @@ HALT with an error and ZERO writes if any condition holds:
 
 On halt, write nothing and return the error in the envelope.
 
+## Post-write self-check
+
+The Halt contract gates everything BEFORE the writes; this gates what actually
+landed. After the three files are written — and before reporting them as
+written — re-read each one from disk and verify:
+
+1. **It parses.** Each file is valid YAML.
+2. **Key order matches.** `knowledge.yaml`'s top-level keys appear in the
+   canonical order declared in Processing step 2; `provenance.yaml`'s in the
+   order declared in Processing step 3.
+3. **The tail marker region is intact and balanced.** In `knowledge.yaml`, the
+   fenced region described in Processing step 2 has exactly one begin marker and
+   exactly one end marker, with the begin preceding the end. A file with no
+   region at all is fine — that is the region-absent path, not a defect.
+
+Re-reading files this step just wrote is a READ, not a build or a test run — it
+is permitted here and it is required.
+
+On any mismatch, record it in `open_items` (e.g.
+`"knowledge.yaml key order drifted from canonical — verify before the next recalibration"`)
+and report the files as written anyway. Do NOT halt and do NOT roll back: the
+bytes on disk are authoritative, and a self-check finding is an audit signal,
+not a reason to leave the project half-configured.
+
 ## Output
 Produces: `init/write-summary`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   files_written: []           # absolute or repo-relative paths of the .asdt files written

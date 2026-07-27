@@ -16,7 +16,7 @@ architectural_style: { value: "hexagonal", source: detected, confidence: high }
 human_nuance:
   - topic: "installTransformPipeline"
     type: architectural
-    note: "Source skills are never copied verbatim — the installer (writeSkillFile) transforms them at install time based on what the user configures in the TUI: workflow.yaml files get per-step model injection, and only the root SKILL.md regenerates its §9.2 region from the workflow.yaml files (per-specialist asdt-*/SKILL.md carry no markers, by design)."
+    note: "Source skills are never copied verbatim — the installer (writeSkillFile) transforms them at install time based on what the user configures in the TUI: workflow.yaml files get per-step model injection, and only the root SKILL.md regenerates its `Tailored Workflow Generation` region from the workflow.yaml files (per-specialist asdt-*/SKILL.md carry no markers, by design)."
     source: manual
     origin: user
   - topic: "evaluatorPurity"
@@ -26,7 +26,7 @@ human_nuance:
     origin: user
   - topic: "workflowYamlSourceOfTruth"
     type: architectural
-    note: "Each specialist's workflow.yaml is the source of truth walked by parallel generators — WorkflowModelSteps (model-selection map) and parseRegistry (the SKILL.md §9.2 registry + drift test). Renaming or reordering a step is not local: it propagates to model selection, the generated §9.2 region, and the drift test at once."
+    note: "Each specialist's workflow.yaml is the source of truth walked by parallel generators — WorkflowModelSteps (model-selection map) and parseRegistry (the `skill/SKILL.md` `Tailored Workflow Generation` registry + drift test). Renaming or reordering a step is not local: it propagates to model selection, the generated `Tailored Workflow Generation` region, and the drift test at once."
     source: manual
     origin: user
 # ASDT:NUANCE:END

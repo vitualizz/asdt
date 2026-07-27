@@ -7,6 +7,9 @@ Decide how information is organized before deciding how it looks.
 ## Inputs
 - `ux-ui/feature-brief`: actor, problem, success criteria, constraints
 
+`ux-ui/feature-brief` arrives ALREADY INJECTED per the parallel-retrieval contract — consume it
+directly, never self-fetch it.
+
 Extract: success_criteria (determines what content is needed), design_constraints.
 
 ## Context budget
@@ -27,9 +30,8 @@ ux-ui/feature-brief: max 1,000 tokens.
 ## Output
 Produces: `ux-ui/ia`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   sections:

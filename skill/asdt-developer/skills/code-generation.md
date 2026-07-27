@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Guidelines for generating idiomatic, production-quality code at Step 5 (Code Generation) of the Developer workflow. The `platform-context` shared skill is the first authority on conventions; these guidelines are language-neutral defaults that apply only where platform-context is silent.
+Guidelines for generating idiomatic, production-quality code in the `implement` step of the Developer workflow. The `platform-context` shared skill is the first authority on conventions; these guidelines are language-neutral defaults that apply only where platform-context is silent.
 
 ---
 
@@ -14,7 +14,7 @@ When platform-context conventions or existing project conventions conflict with 
 
 ## Match Existing Conventions
 
-Read the platform context loaded at Step 2 before writing any code. Then:
+Read the injected platform context before writing any code. Then:
 
 - Casing: use the identifier casing already dominant in the project. Never introduce a new casing style without justification.
 - File structure: place new files in directories consistent with the existing layout. A feature belongs beside its peers, not in a generic utilities folder.
@@ -78,9 +78,9 @@ Validate preconditions at the top of the function and return early on failure. E
 
 ---
 
-## Explicit Interfaces
+## Explicit Boundaries
 
-Define each injected interface at the consumer site, not at the implementor. Keep the interface surface small — only the methods the consumer actually calls. Small, consumer-defined interfaces are easier to satisfy and to substitute. Every injected interface declared here is a testing seam consumed by the `test-generation` skill — keeping the surface minimal keeps tests focused.
+Declare each injected dependency's expected surface at the consumer site, not at the implementor, and keep that surface small — only the operations the consumer actually calls. A narrow, consumer-owned boundary is easier to satisfy and to substitute. Express it with whatever construct the language provides — an interface, a protocol, an abstract type, or, where the language has none, a documented set of methods the collaborator must answer to. Every such boundary is a testing seam consumed by the `test-generation` skill; keeping it minimal keeps tests focused.
 
 ---
 
@@ -107,10 +107,10 @@ Errors must carry enough context to locate the failure without a debugger. Choos
 
 ## Code Snippet Format
 
-When producing code snippets in an `implementation-plan.yaml`:
+When producing code snippets in the `implement` step's payload (`code_snippets[]`):
 
 - Show the complete, relevant code unit (function, type, method) — not a fragment that forces the reader to guess the surrounding context.
-- Include package or module declarations when introducing a new file.
+- Include whatever module, namespace, or package declaration the language requires when introducing a new file.
 - If the snippet is an excerpt from a larger file, add markers to show where it fits within the existing code.
 - Set `file` to the relative path from the project root.
 - Set `language` to the file's language identifier.

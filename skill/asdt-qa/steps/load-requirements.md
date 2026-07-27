@@ -6,10 +6,10 @@ QA starts from the deliverables of other specialists — not from the raw reques
 
 ## Inputs
 - Any available upstream artifacts (use artifact-loading shared skill):
-  - `requirements-spec` (if Requirements specialist ran)
-  - `ux-brief` (if UX/UI specialist ran)
-  - `architectural-decision` (if Architect specialist ran)
-  - `dev-implementation` (if Developer specialist ran)
+  - `pm/backlog-entry` (if PM specialist ran)
+  - `ux-ui/ux-brief` (if UX/UI specialist ran)
+  - `architect/architectural-decision` (if Architect specialist ran)
+  - `developer/dev-implementation` (if Developer specialist ran)
   - Raw request (fallback if no upstream artifacts)
 
 Note: this step's `inputs:` list in `workflow.yaml` is empty by design — it has
@@ -17,10 +17,9 @@ no prior `subagent`-produced QA artifact to retrieve; it is QA's first generativ
 step and reads directly from upstream specialists' artifacts (or the raw request
 as fallback).
 
-Note: PM also produces `pm/nfr-targets` (from its `success-metrics` step) — a new
-upstream `pm/*` artifact the QA chain consumes DOWNSTREAM in `performance-validation`
-(the gate), NOT here. `load-requirements` does not gain it as an InputRef; its
-`inputs:` stays empty.
+Note: PM also produces `pm/nfr-targets` (from its `success-metrics` step) — an upstream
+`pm/*` artifact the QA chain consumes DOWNSTREAM in `performance-validation` (the gate),
+NOT here. `load-requirements` does not declare it; its `inputs:` stays empty.
 
 ## Context budget
 Extract only: user_stories/acceptance_criteria/scope from each artifact.
@@ -40,9 +39,8 @@ what "done" would look like for a typical user. Mark all as "inferred".
 ## Output
 Produces: `qa/ac-list`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   acceptance_criteria:

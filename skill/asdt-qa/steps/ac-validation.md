@@ -5,9 +5,7 @@ Critically review each acceptance criterion for quality. Surface problems BEFORE
 Bad ACs produce bad tests — fix the AC first.
 
 ## Inputs
-- `qa/ac-list`: normalized acceptance criteria
-
-Extract: acceptance_criteria[].
+- `qa/ac-list` — arrives as an `### INPUT {topic_key}` block. Extract: `acceptance_criteria[]` (id, given/when/then, testable, testability_issue).
 
 ## Context budget
 qa/ac-list: max 1,500 tokens.
@@ -28,9 +26,8 @@ For failing ACs:
 ## Output
 Produces: `qa/ac-gaps`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   validated_criteria:

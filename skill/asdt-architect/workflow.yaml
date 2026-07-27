@@ -68,7 +68,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/architect/system-design"
-      - "{project}/{change}/pm/nfr-targets"
+      - "{project}/{change}/pm/nfr-targets"  # optional (tier-gated: PM success-metrics runs at moderate+)
     output_topic_key: "{project}/{change}/architect/cost-estimate"
     reference_skills:
       - ../asdt-shared/skills/nfr-budget.md
@@ -92,16 +92,12 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/architect/adr"
-      - "{project}/{change}/architect/system-design"
-      - "{project}/{change}/architect/risks"
+      - "{project}/{change}/architect/system-design"  # optional (tier-gated: system-design runs at complex)
+      - "{project}/{change}/architect/risks"  # optional (tier-gated: risk-analysis runs at complex)
     output_topic_key: "{project}/{change}/architect/architectural-decision"
-    # NOTE: this step produces TWO final artifacts (architectural-decision AND
-    # system-design, per its `## Output` section and this specialist's "Final
-    # Output" line). `output_topic_key` declares only the primary one per the
-    # single-string field contract; persist the second under
-    # "{project}/{change}/architect/system-design-final" (or an equally
-    # unambiguous per-type key distinct from the intermediate
-    # `architect/system-design` produced earlier by the system-design step).
+    # NOTE: dual-artifact step — the second final artifact persists under
+    # "{project}/{change}/architect/system-design-final". Full contract in the
+    # step file's `## Output`.
     reference_skills:
       - ../asdt-shared/skills/report.md
 
