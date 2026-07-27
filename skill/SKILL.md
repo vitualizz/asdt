@@ -283,7 +283,7 @@ Authority: each specialist's workflow.yaml owns step identity, execution mode, a
 - Security: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - UX/UI: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - Developer: `knowledge-recall`, `decision-preservation`
-- Researcher: `context-recall`, `decision-preservation`
+- Researcher: `knowledge-recall`, `decision-preservation`
 <!-- /ASDT:GENERATED:9.2-inline-steps -->
 
 **Trivial eligibility**: The `trivial` tier applies ONLY when the orchestrator independently classifies complexity as `trivial` (§9.1). It is not user-selectable. A `trivial` list is exactly the specialist's single `inputs: []` subagent step — by construction it always passes Pass 2 (no declared inputs to satisfy). If a specialist has no useful single-step output (QA), `trivial` is not eligible for that specialist — fall back to `simple` and label the block `complexity: simple`.

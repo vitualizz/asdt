@@ -186,7 +186,7 @@ export const es: UIStrings = {
   },
   data: {
     specialistSteps: {
-      'researcher:context-recall': {
+      'researcher:knowledge-recall': {
         purpose: 'Busca en la memoria organizacional descubrimientos previos, decisiones relacionadas y restricciones conocidas antes de idear',
         produces: 'contexto (en línea)',
       },
@@ -205,6 +205,10 @@ export const es: UIStrings = {
       'researcher:decision-preservation': {
         purpose: 'Preserva la dirección elegida como conocimiento organizacional permanente mediante el campo summary del brief',
         produces: 'resumen (en línea)',
+      },
+      'pm:knowledge-recall': {
+        purpose: 'Busca en la memoria organizacional decisiones de alcance previas y requisitos relacionados antes de formalizar el pedido',
+        produces: 'contexto (en línea)',
       },
       'pm:feature-intake': {
         purpose: 'Convierte el pedido en bruto en un enunciado de problema estructurado — extrae problema, objetivo, stakeholders y marca ambigüedades',
@@ -229,6 +233,18 @@ export const es: UIStrings = {
       'pm:backlog-entry': {
         purpose: 'Consolida todos los artefactos del PM en el backlog entry final con resumen ejecutivo y lista ordenada de historias',
         produces: 'pm/backlog-entry',
+      },
+      'pm:decision-preservation': {
+        purpose: 'Preserva las decisiones de alcance y prioridad como conocimiento organizacional permanente mediante el campo summary del backlog entry',
+        produces: 'resumen (en línea)',
+      },
+      'architect:knowledge-recall': {
+        purpose: 'Busca en la memoria organizacional decisiones de arquitectura previas y restricciones conocidas antes de evaluar enfoques',
+        produces: 'contexto (en línea)',
+      },
+      'architect:platform-analysis': {
+        purpose: 'Lee el conocimiento detectado de la plataforma e inyecta stack, convenciones y límites en el contexto de arquitectura',
+        produces: 'contexto de plataforma (en línea)',
       },
       'architect:load-constraints': {
         purpose: 'Lee el contexto de la plataforma y clasifica las restricciones como HARD (no negociables), SOFT (preferencias) u OPPORTUNITIES',
@@ -258,6 +274,14 @@ export const es: UIStrings = {
         purpose: 'Consolida todo el trabajo de arquitectura en dos artefactos finales para Developer y QA',
         produces: 'architect/architectural-decision + architect/system-design-final',
       },
+      'architect:decision-preservation': {
+        purpose: 'Preserva la decisión de arquitectura como conocimiento organizacional permanente mediante el campo summary del handoff',
+        produces: 'resumen (en línea)',
+      },
+      'developer:knowledge-recall': {
+        purpose: 'Busca en la memoria organizacional decisiones de implementación previas y convenciones de esta zona del código antes de explorar',
+        produces: 'contexto (en línea)',
+      },
       'developer:explore': {
         purpose: 'Lee los archivos y módulos afectados; mapea los patrones de nombres y las restricciones antes de diseñar nada',
         produces: 'developer/dev-exploration',
@@ -281,6 +305,14 @@ export const es: UIStrings = {
       'developer:test': {
         purpose: 'Escribe los tests que cubren las tareas de implementación y los edge cases; emite comandos de verificación sugeridos — nunca los ejecuta',
         produces: 'developer/dev-tests',
+      },
+      'developer:decision-preservation': {
+        purpose: 'Preserva la decisión de implementación como conocimiento organizacional permanente mediante el campo summary de la implementación',
+        produces: 'resumen (en línea)',
+      },
+      'qa:knowledge-recall': {
+        purpose: 'Busca en la memoria organizacional decisiones de calidad previas, regresiones conocidas y huecos de cobertura pasados antes de validar',
+        produces: 'contexto (en línea)',
       },
       'qa:load-requirements': {
         purpose: 'Extrae y normaliza los criterios de aceptación de los artefactos previos al formato Given/When/Then',
@@ -314,6 +346,18 @@ export const es: UIStrings = {
         purpose: 'Veredicto go/no-go de despliegue — decisión holística de preparación para release que integra todos los hallazgos de QA antes de preservar el conocimiento',
         produces: 'qa/qa-review',
       },
+      'qa:decision-preservation': {
+        purpose: 'Preserva el veredicto de preparación para release como conocimiento organizacional permanente mediante el campo summary del review',
+        produces: 'resumen (en línea)',
+      },
+      'security:knowledge-recall': {
+        purpose: 'Busca en la memoria organizacional hallazgos de amenazas previos y riesgos aceptados antes de modelar nuevas amenazas',
+        produces: 'contexto (en línea)',
+      },
+      'security:platform-analysis': {
+        purpose: 'Lee el conocimiento detectado de la plataforma e inyecta stack, superficie de autenticación y manejo de datos en el contexto de seguridad',
+        produces: 'contexto de plataforma (en línea)',
+      },
       'security:threat-modeling': {
         purpose: 'Aplica STRIDE: Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation of Privilege',
         produces: 'security/stride-threats',
@@ -329,6 +373,18 @@ export const es: UIStrings = {
       'security:hardening-checklist': {
         purpose: 'Deduplica los hallazgos, prioriza por severidad y agrupa por esfuerzo: quick wins / medio / significativo',
         produces: 'security/security-findings + security/hardening-checklist',
+      },
+      'security:decision-preservation': {
+        purpose: 'Preserva las decisiones de hardening como conocimiento organizacional permanente mediante el campo summary del checklist',
+        produces: 'resumen (en línea)',
+      },
+      'ux-ui:knowledge-recall': {
+        purpose: 'Busca en la memoria organizacional decisiones de UX previas, patrones existentes y restricciones de usabilidad conocidas antes de diseñar',
+        produces: 'contexto (en línea)',
+      },
+      'ux-ui:platform-analysis': {
+        purpose: 'Lee el conocimiento detectado de la plataforma e inyecta la huella del design system y las convenciones de componentes en el contexto de UX',
+        produces: 'contexto de plataforma (en línea)',
       },
       'ux-ui:feature-brief': {
         purpose: 'Identifica al actor principal, define el problema central (no la solución) y establece de 3 a 5 criterios de éxito observables',
@@ -361,6 +417,10 @@ export const es: UIStrings = {
       'ux-ui:ux-handoff': {
         purpose: 'Consolida todo el trabajo de UX en ux-brief (flows + IA) y component-spec (inventario + props + events)',
         produces: 'ux-ui/ux-brief + ux-ui/component-spec',
+      },
+      'ux-ui:decision-preservation': {
+        purpose: 'Preserva las decisiones de UX como conocimiento organizacional permanente mediante el campo summary del handoff',
+        produces: 'resumen (en línea)',
       },
     },
     pipelineFlows: {

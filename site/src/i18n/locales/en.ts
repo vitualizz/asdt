@@ -186,7 +186,7 @@ export const en: UIStrings = {
   },
   data: {
     specialistSteps: {
-      'researcher:context-recall': {
+      'researcher:knowledge-recall': {
         purpose: 'Search organizational memory for prior discovery, related decisions, and known constraints before ideating',
         produces: 'context (inline)',
       },
@@ -205,6 +205,10 @@ export const en: UIStrings = {
       'researcher:decision-preservation': {
         purpose: "Preserve the chosen direction as permanent organizational knowledge via the brief's summary field",
         produces: 'summary (inline)',
+      },
+      'pm:knowledge-recall': {
+        purpose: 'Search organizational memory for prior scope decisions and related requirements before formalizing the request',
+        produces: 'context (inline)',
       },
       'pm:feature-intake': {
         purpose: 'Parse raw request into structured problem statement — extracts problem, goal, stakeholders, flags ambiguities',
@@ -229,6 +233,18 @@ export const en: UIStrings = {
       'pm:backlog-entry': {
         purpose: 'Consolidate all PM artifacts into the final backlog entry with executive summary and ordered story list',
         produces: 'pm/backlog-entry',
+      },
+      'pm:decision-preservation': {
+        purpose: "Preserve the scope and priority decisions as permanent organizational knowledge via the backlog entry's summary field",
+        produces: 'summary (inline)',
+      },
+      'architect:knowledge-recall': {
+        purpose: 'Search organizational memory for prior architectural decisions and known constraints before evaluating approaches',
+        produces: 'context (inline)',
+      },
+      'architect:platform-analysis': {
+        purpose: 'Read the detected platform knowledge and inject stack, conventions, and boundaries into the architectural context',
+        produces: 'platform context (inline)',
       },
       'architect:load-constraints': {
         purpose: 'Read platform context and classify constraints as HARD (non-negotiable), SOFT (preferences), or OPPORTUNITIES',
@@ -258,6 +274,14 @@ export const en: UIStrings = {
         purpose: 'Consolidate all architectural work into two final artifacts for Developer and QA',
         produces: 'architect/architectural-decision + architect/system-design-final',
       },
+      'architect:decision-preservation': {
+        purpose: "Preserve the architectural decision as permanent organizational knowledge via the handoff's summary field",
+        produces: 'summary (inline)',
+      },
+      'developer:knowledge-recall': {
+        purpose: 'Search organizational memory for prior implementation decisions and conventions in this code area before exploring',
+        produces: 'context (inline)',
+      },
       'developer:explore': {
         purpose: 'Read affected files and modules; map naming patterns and constraints before designing anything',
         produces: 'developer/dev-exploration',
@@ -281,6 +305,14 @@ export const en: UIStrings = {
       'developer:test': {
         purpose: 'Write tests covering the implementation tasks and edge cases; emits suggested verification commands — never runs them',
         produces: 'developer/dev-tests',
+      },
+      'developer:decision-preservation': {
+        purpose: "Preserve the implementation decision as permanent organizational knowledge via the implementation's summary field",
+        produces: 'summary (inline)',
+      },
+      'qa:knowledge-recall': {
+        purpose: 'Search organizational memory for prior quality decisions, known regressions, and past coverage gaps before validating',
+        produces: 'context (inline)',
       },
       'qa:load-requirements': {
         purpose: 'Extract and normalize acceptance criteria from upstream artifacts into Given/When/Then format',
@@ -314,6 +346,18 @@ export const en: UIStrings = {
         purpose: 'Go/no-go shipping verdict — holistic release-readiness decision integrating all QA findings before knowledge preservation',
         produces: 'qa/qa-review',
       },
+      'qa:decision-preservation': {
+        purpose: "Preserve the release-readiness verdict as permanent organizational knowledge via the review's summary field",
+        produces: 'summary (inline)',
+      },
+      'security:knowledge-recall': {
+        purpose: 'Search organizational memory for prior threat findings and accepted risks before modeling new threats',
+        produces: 'context (inline)',
+      },
+      'security:platform-analysis': {
+        purpose: 'Read the detected platform knowledge and inject stack, auth surface, and data handling into the security context',
+        produces: 'platform context (inline)',
+      },
       'security:threat-modeling': {
         purpose: 'Apply STRIDE: Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation of Privilege',
         produces: 'security/stride-threats',
@@ -329,6 +373,18 @@ export const en: UIStrings = {
       'security:hardening-checklist': {
         purpose: 'Deduplicate findings, prioritize by severity, group by effort: quick wins / medium / significant',
         produces: 'security/security-findings + security/hardening-checklist',
+      },
+      'security:decision-preservation': {
+        purpose: "Preserve the hardening decisions as permanent organizational knowledge via the checklist's summary field",
+        produces: 'summary (inline)',
+      },
+      'ux-ui:knowledge-recall': {
+        purpose: 'Search organizational memory for prior UX decisions, existing patterns, and known usability constraints before designing',
+        produces: 'context (inline)',
+      },
+      'ux-ui:platform-analysis': {
+        purpose: 'Read the detected platform knowledge and inject the design system fingerprint and component conventions into the UX context',
+        produces: 'platform context (inline)',
       },
       'ux-ui:feature-brief': {
         purpose: 'Identify primary actor, define core problem (not solution), establish 3–5 observable success criteria',
@@ -361,6 +417,10 @@ export const en: UIStrings = {
       'ux-ui:ux-handoff': {
         purpose: 'Consolidate all UX work into ux-brief (flows + IA) and component-spec (inventory + props + events)',
         produces: 'ux-ui/ux-brief + ux-ui/component-spec',
+      },
+      'ux-ui:decision-preservation': {
+        purpose: "Preserve the UX decisions as permanent organizational knowledge via the handoff's summary field",
+        produces: 'summary (inline)',
       },
     },
     pipelineFlows: {

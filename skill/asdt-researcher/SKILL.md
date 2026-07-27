@@ -60,15 +60,15 @@ list cannot shrink because `discovery-brief.feasibility_notes` is MANDATORY and
 consumes `feasibility`, so the brief never runs without the scan. Only `trivial`
 collapses to pure ideation.
 
-**Trivial eligible**: Yes — `divergent-ideation` has `inputs: []`; inline prelude `context-recall` always runs.
-**Inline steps** (context injection only — never required as explicit list entries): `context-recall`, `decision-preservation`
+**Trivial eligible**: Yes — `divergent-ideation` has `inputs: []`; inline prelude `knowledge-recall` always runs.
+**Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `decision-preservation`
 **Conditional**: none — no step is tier-conditional above `trivial`. `divergent-ideation` is irrenunciable at every level; `feasibility-scan` and `discovery-brief` are irrenunciable at `simple` and above.
 
 When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence over the complexity-based defaults above.
 
 | Step | File | Execution | Reads | Writes |
 |------|------|-----------|-------|--------|
-| context-recall | ../asdt-shared/skills/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
+| knowledge-recall | ../asdt-shared/skills/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
 | divergent-ideation | steps/divergent-ideation.md | subagent | raw problem statement | `researcher/ideation` |
 | feasibility-scan | steps/feasibility-scan.md | subagent | `researcher/ideation` | `researcher/feasibility` |
 | discovery-brief | steps/discovery-brief.md | subagent | `researcher/ideation`, `researcher/feasibility` | `researcher/discovery-brief` |

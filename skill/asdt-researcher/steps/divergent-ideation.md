@@ -11,7 +11,7 @@ generative, never selective.
   the prompt is the only source. Declared inputs, when a step has them, arrive
   ALREADY INJECTED as `### INPUT {topic_key}` blocks per `parallel-retrieval.md`;
   this step self-fetches nothing.
-- Memory context from `context-recall` (injected inline — prior discovery,
+- Memory context from `knowledge-recall` (injected inline — prior discovery,
   similar problem framings, and decisions enrich the framing but never constrain
   it).
 
