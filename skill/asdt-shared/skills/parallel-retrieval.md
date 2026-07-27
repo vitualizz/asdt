@@ -5,6 +5,13 @@ specialist `SKILL.md` launch section and every step file's EXECUTOR header
 points here rather than restating this content. Do not duplicate this
 explanation inline anywhere else — edit it here and every pointer stays correct.
 
+**One deliberate exception**: `executor-header.md` restates the few lines a
+sub-agent needs (inputs arrive as `### INPUT` blocks, do not re-fetch them,
+`UNRESOLVED` means record and proceed). That header is baked verbatim into
+generated agent definitions, which live under a different root than this skills
+tree, so it cannot reference this file by path and must carry those lines itself.
+Keep the two in sync; do NOT "fix" it by replacing them with a pointer.
+
 ## Who this applies to
 
 - **Orchestrator** (you, when launching `subagent` steps): you own the fetch-once
@@ -52,6 +59,10 @@ Maintain a per-run map `topic_key -> resolved content`:
    matter how many steps declare it as an input. `platform-summary` rides this
    same ledger — compute or retrieve it once, then serve every step that declares
    it from the cache.
+5. Skill-file reads ride this same ledger, keyed `skill:{path}` so a file entry can
+   never collide with a `topic_key` entry: read each `reference_skills:` or `skill:`
+   file at most once per run and reuse the stored content for every later step that
+   declares it.
 
 ## Injection Format (orchestrator builds, sub-agent consumes)
 

@@ -1,13 +1,14 @@
 # ASDT Shared Skills
 
-Cross-specialist utility files. They reach specialist contexts via two mechanisms:
+Cross-specialist utility files. They reach specialist contexts via three mechanisms:
 
-- The **FIRST ACTION Read** at the top of every specialist `SKILL.md` body — the specialist explicitly reads `specialist-header.md` (and its `workflow.yaml`) before doing anything else
-- `reference_skills:` in a specific step entry in `workflow.yaml` — injected by the orchestrator into that step's sub-agent prompt only
-
-The `shared-skills:` frontmatter key in each specialist `SKILL.md` is **metadata/documentation only** — it records which shared skills a specialist relates to, but no loader (Claude Code, OpenCode, or the installer) resolves it into context.
+- **Install-time splicing** — the installer writes the body of `specialist-header.md` directly into each routed specialist `SKILL.md`, so an installed specialist already carries it. The **FIRST ACTION Read** at the top of every specialist `SKILL.md` body is the fallback that loads it (and its `workflow.yaml`) when the body was not spliced
+- `reference_skills:` in a `subagent` step entry in `workflow.yaml` — the orchestrator reads each listed file and injects it into that step's sub-agent prompt only. The sub-agent never fetches it itself
+- `skill:` on an `inline` step entry in `workflow.yaml` — the orchestrator reads that file and follows it in its own context; nothing is injected anywhere
 
 These are **reference text injected into the active context**, not independently executable units. They have no `## Inputs` / `## Output` structure of their own.
+
+The artifact contract itself — the `payload:` root, the trailing `open_items: []`, the retired wrapper fields, and the per-artifact-type topic_key rule — lives in `../../TEMPLATE.md`, the repo-only authoring contract for specialists. It is not a shared skill and is never injected into a step.
 
 ## Index
 
@@ -22,7 +23,6 @@ These are **reference text injected into the active context**, not independently
 
 | File | Purpose |
 |---|---|
-| `artifact-envelope.md` | Defines the required YAML envelope every artifact must conform to (`schema_version`, `agent`, `change_id`, `input_refs` as Engram topic_keys per ADR-011, `payload`, `open_items`). |
 | `artifact-loading.md` | How a specialist's first artifact-consuming step (declared `inputs: []`) retrieves upstream artifacts from Engram (`mem_search` → `mem_get_observation`), extracts relevant fields, and records missing artifacts in `open_items[]`. |
 | `parallel-retrieval.md` | The canonical orchestrator fetch-once cache pattern — prevents duplicate Engram lookups when multiple steps need the same artifact. |
 
@@ -49,8 +49,12 @@ In `workflow.yaml` (step-specific):
     - ../asdt-shared/skills/scope-definition.md
 ```
 
-In a specialist's `SKILL.md` frontmatter (metadata/documentation only — NOT a loading mechanism):
+On an `inline` step, `skill:` names the single file the orchestrator reads and follows in its own context:
 
 ```yaml
-shared-skills: specialist-header, platform-context, artifact-envelope
+- name: knowledge-recall
+  execution: inline
+  skill: ../asdt-shared/skills/knowledge-recall.md
 ```
+
+There is no frontmatter key that loads shared skills. `specialist-header.md` reaches a specialist through install-time splicing, with the FIRST ACTION Read as fallback; `reference_skills:` is the only declarative way to pull one of these files into a `subagent` step, resolved and injected by the orchestrator; `skill:` on an `inline` step is read by the orchestrator directly.

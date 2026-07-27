@@ -1,6 +1,6 @@
 ---
 name: asdt-init
-description: "Sets up the ground ASDT stands on — initializes .asdt/config.yaml and wires the memory provider so every other specialist has somewhere to read from and write to."
+description: "Explicit-invocation-only project setup — invoke it by name to detect the stack, collect the configuration decisions, and WRITE .asdt/config.yaml plus the knowledge files; never fire it from a vague 'set this project up', because it changes files on disk."
 user-invocable: true
 specialist-id: asdt-init
 metadata:
@@ -8,21 +8,14 @@ metadata:
   version: "1.0"
 ---
 
-# ASDT Init
+# ASDT Init Specialist
 
 ## Role
-Initialize ASDT for the current project. Detect the project stack, collect configuration, and write `.asdt/config.yaml`.
-
-## Prerequisites
-None — this is the setup step. Run this before any other ASDT specialist.
+Initialize ASDT for the current project: detect the stack, collect the configuration decisions with the human, and write `.asdt/config.yaml` and the `.asdt/knowledge/` files every other specialist reads. It does NOT plan, design, or implement anything — it runs once before the other specialists, and again only on a deliberate recalibration.
 
 ## Orchestration Plan
 
-**asdt-init is STANDALONE.** It is a user-invocable setup command, deliberately
-NOT registered in `skill/SKILL.md` §9.2 routing — no feature request ever routes
-to setup, so the meta-orchestrator has nothing to route here (per ADR-016). Do
-not "fix" this omission. init has NO complexity tiers and a fixed 4-step flow;
-there is no tier→step table.
+**Setup-class flow — no tiers, no routing.** A user invokes init by name to scaffold a project; no feature request ever routes to setup, so init is deliberately absent from the routing tables in `skill/SKILL.md` and that absence is intentional, not a gap. There are no complexity tiers and no tier→step table: the same five steps always run in order. The gates stay inline with the orchestrator because they need its own tool list and can pause for the human; the `write` sub-agent owns every file write.
 
 | Step | File | Execution | Reads | Writes |
 |------|------|-----------|-------|--------|
@@ -32,128 +25,37 @@ there is no tier→step table.
 | clarify | *(inline — no step file)* | inline | `init/stack-detection.ambiguities[]` + enrichment's `nuance.*` | *(no artifact — injects `answers{}` into write's prompt)* |
 | write | steps/write.md | subagent | `init/stack-detection` + `### CLARIFY ANSWERS` | `init/write-summary` |
 
-Step names byte-match `workflow.yaml`; when they differ, `workflow.yaml` is
-authoritative.
+Step names byte-match `workflow.yaml`; when they differ, `workflow.yaml` is authoritative. The three inline steps have no step file — the sections below are their contracts. The detection and file-writing mechanics belong to `steps/explore.md` and `steps/write.md` and are not restated here.
 
-## Orchestration
+## knowledge-gate — Engram presence (inline)
 
-This is a light flow — but it has one gate only the orchestrator can pass correctly, and everything downstream depends on it.
+Resolve Engram presence yourself, first, before delegating anything. "Does THIS session have Engram's memory tools" is a question about your own tool list — the one every other specialist will depend on. A sub-agent carries a different tool list, so asking it risks a false "absent"; checking yourself costs nothing, since you are inspecting your own tools, not running commands. Look for `mem_save`, `mem_search`, `mem_context` (Claude Code exposes them as `mcp__plugin_engram_engram__mem_*`; other hosts may use a different prefix or none).
 
-**Resolve Engram presence yourself, first, before delegating anything** (the `knowledge-gate` step / Step 2's detection). "Does THIS session have Engram's memory tools" is a question about the orchestrator's own tool list — the one the user is actually relying on for every other specialist. A sub-agent has its own tool list (narrower for specialized agent types, full for `general-purpose`); asking it risks a false "absent" when Engram is actually present in the session that matters. It costs nothing to check yourself — you're inspecting your own tools, not running commands or reading files. This gate is undelegatable; it stays inline with you.
+- **Present** → say so and continue, passing "Engram confirmed present" into explore's prompt as an established fact.
+- **Absent** → tell the user Engram is required for ASDT's cross-session memory and is not reachable in this session, explain how to connect it, and STOP. NEVER write `.asdt/config.yaml` with `provider: engram` when the provider is not actually there — that silently points every future specialist at a memory backend that does not exist.
 
-- **Absent** → stop right here and tell the user, exactly as Step 2 describes. Nothing downstream can run without it — don't launch a sub-agent only to have it discover the same dead end.
-- **Present** → run the 4-step flow:
-  - **explore** (subagent, `agent: analyst`) — launch `steps/explore.md` via your native delegation primitive, passing "Engram confirmed present" into its prompt as an established fact. It detects the stack and context, flags `ambiguities[]`, and returns `init/stack-detection`. It writes NO files.
-  - **enrichment** (inline — your own context) — run the codegraph-backed survey that surfaces ≤3 structurally central yet non-obvious symbols as skippable `nuance.*` ambiguities (see Step 2.4 below). Positive-evidence-only, degrades gracefully, and NEVER fails.
-  - **clarify** (inline — your own context) — resolve `stack-detection.ambiguities[]` plus enrichment's `nuance.*` ambiguities with the human, ONE question at a time, then compose the `### CLARIFY ANSWERS` block (see the clarify contract in the Workflow below).
-  - **write** (subagent, `agent: builder`) — launch `steps/write.md`, injecting both `init/stack-detection` and the `### CLARIFY ANSWERS` block. It writes the three `.asdt` files and returns `init/write-summary`.
+**Recalibration gate, in the same breath.** Before launching explore, check for an existing `.asdt/config.yaml`. If it exists, this project was already initialized: settle recalibrate-vs-leave with the user before any detection runs. "Leave as-is" → stop without launching explore. Only a chosen recalibration, or a fresh project with no config, proceeds.
 
-**PRE-EXPLORE recalibration gate.** Before launching explore, check for an
-existing `.asdt/config.yaml`. If it exists, this project was already
-initialized — resolve recalibrate-vs-leave WITH THE USER first. Fail fast: never
-run detection only to discard it. If the user chooses "leave as-is", stop without
-launching explore. Only proceed to explore once the user has chosen to
-recalibrate (a fresh setup with no existing config proceeds directly).
+## enrichment — surface the non-obvious (inline)
 
-Routing work through sub-agents keeps the bash output, file reads, and intermediate reasoning out of your main context — which is the whole point of the specialist model.
+Enrichment surfaces the handful of symbols a newcomer would misread — structurally central to the codebase yet non-obvious from the name alone — and turns each into one skippable `nuance.*` question. It runs inline because codegraph is an MCP tool on your own tool list, and its questions join clarify's. It is positive-evidence-only: nothing structurally interesting surfaces, no questions. It never fails and never blocks.
 
-## Workflow
+Resolve the capability ladder against your OWN tool list, top rung first:
 
-### Step 1 — Detect project stack *(in `explore`)*
+1. **codegraph present** (any `mcp__codegraph__*` tool). Call `codegraph_explore` with a survey question — "which symbols are the most central to this codebase yet the least self-explanatory from their name?" — and pick ≤ 3 chunks by highest combined caller+callee degree, skipping trivially-named getters, setters, and plain DTOs. Tie-break by file path, then symbol name. A candidate qualifies only at **architecture altitude**: its non-obviousness spans ≥ 2 files, a module boundary, or a cross-cutting invariant. Reject single-function gotchas — a single-function detail is deliberately not asked. Classify each survivor as exactly one of `architectural`, `repo_practice`, or `inconsistency_to_review`.
+2. **codegraph absent, `tree-sitter --version` answers.** Syntax is not centrality — a parse tree cannot tell you which symbol matters most. Surface nothing from this rung and note it in `open_items`, e.g. `enrichment: codegraph absent, tree-sitter only — centrality unavailable, skipped surfacing`.
+3. **Neither present.** Skip enrichment, note `enrichment: no code-intelligence tooling — skipped`, and proceed.
 
-The marker-scan mechanics — the bounded `fd`/`find` pipeline, its exclusions and
-deterministic ordering, the result cap, the marker→language mapping table, and
-the `detected_stack` / primary-language / `{lang_root}` derivation — live in
-**`steps/explore.md`**. The explore sub-agent runs them and returns
-`init/stack-detection`. Do not duplicate the pipeline here.
+Each chosen chunk becomes one `Ambiguity`: `field` is `nuance.<type>.<slug>` (e.g. `nuance.architectural.replaceMarkerRegion`), `question` asks the human what makes the symbol non-obvious — its role, an invariant, a gotcha a newcomer would miss — with `options: []`, `default: ""`, and `skippable: true` ALWAYS. A `nuance.*` ambiguity is NEVER a blocking open item. Three is the ceiling here; across the whole clarify pass — explore's ambiguities plus these — the ceiling is seven.
 
-### Step 2 — Detect the memory provider
+## clarify — collect the decisions (inline)
 
-**Detect Engram yourself — do not ask the user to confirm something you can observe directly.** Check your own current tool list for Engram's memory tools (`mem_save`, `mem_search`, `mem_context`, etc. — Claude Code exposes them prefixed as `mcp__plugin_engram_engram__mem_*`; other host assistants may expose the same tools under a different prefix or none).
+explore returns `init/stack-detection` carrying `ambiguities[]`, one per low/medium-confidence or genuinely ambiguous field; enrichment adds its `nuance.*` entries. Clarify resolves them with the human and hands the answers to write. It runs inline because only an inline step can pause for a question — the `write` sub-agent cannot ask anything, and it, not you, performs every file write.
 
-- If they're present → Engram is installed and reachable. Tell the user so and continue.
-- If they're absent → tell the user Engram is required for ASDT's cross-session memory and is not reachable in this session, explain how to install/connect it, and STOP. Do not write `.asdt/config.yaml` with `provider: engram` when the provider isn't actually present — that would silently point every future specialist at a memory backend that doesn't exist.
-
-### Step 2.4 — Enrichment *(inline — your own context, between explore and clarify)*
-
-Enrichment surfaces the handful of symbols a newcomer would misread — structurally
-central to the codebase yet non-obvious from their name alone — and turns each into
-one skippable `nuance.*` question for the human. It runs inline because, like
-clarify, it depends on the orchestrator's own tool list (codegraph is an MCP tool)
-and feeds its output into the same `### CLARIFY ANSWERS` block clarify composes.
-It is **positive-evidence-only**: if nothing structurally interesting surfaces, it
-emits no questions. It NEVER fails and NEVER blocks — every ambiguity it emits is
-skippable.
-
-Resolve the capability LADDER against your OWN tool list, top rung first:
-
-1. **Rung 1 — codegraph present** (any `mcp__codegraph__*` tool is in your tool
-   list). Call `mcp__codegraph__codegraph_explore` with a natural-language survey —
-   "which symbols are the most central to this codebase yet the least
-   self-explanatory from their name?" From the grouped results, pick **≤3 chunks**
-   that are structurally central yet non-obvious. Heuristic: prefer the highest
-   combined caller+callee degree; skip trivially-named getters, setters, and plain
-   DTOs (their name already tells the whole story). Deterministic tie-break: order
-   by file path, then by symbol name.
-
-   **Architecture-altitude rubric (typed nuance).** A candidate QUALIFIES only
-   when its non-obviousness spans ≥ 2 files, a module boundary, or a
-   cross-cutting invariant — architecture altitude. REJECT single-function
-   gotchas: a single-function detail is below architecture altitude and is
-   deliberately not asked. Classify each qualifying
-   candidate as exactly one type: `architectural` (a structural invariant or
-   design decision), `repo_practice` (a convention this repo enforces), or
-   `inconsistency_to_review` (something that contradicts the repo's own
-   patterns).
-2. **Rung 2 — codegraph absent, tree-sitter CLI present** (probe
-   `tree-sitter --version`). Syntax is not centrality — a parse tree cannot tell you
-   which symbol matters most — so DO NOT surface anything from this rung. Emit
-   **zero** ambiguities and note the degraded rung in `open_items` (e.g.
-   `enrichment: codegraph absent, tree-sitter only — centrality unavailable, skipped surfacing`).
-3. **Rung 3 — neither present.** Skip enrichment entirely, note it in `open_items`
-   (e.g. `enrichment: no code-intelligence tooling — skipped`), and proceed. NEVER
-   fail.
-
-**Emission.** For each chunk chosen at Rung 1, emit exactly one `Ambiguity`:
-
-- `field`: `nuance.<type>.<slug>` — `<type>` is the classified type
-  (`architectural` | `repo_practice` | `inconsistency_to_review`) and `<slug>`
-  is a short, stable slug derived from the symbol
-  name (e.g. `nuance.architectural.replaceMarkerRegion`).
-- `question`: prose asking the human to note what makes this symbol non-obvious —
-  its role, an invariant, a gotcha a newcomer would miss.
-- `options`: `[]` (free-form note, never a menu).
-- `default`: `""`.
-- `skippable`: `true` — ALWAYS. A `nuance.*` ambiguity is NEVER a
-  `blocking_open_item`.
-
-Emit no more than three. Nothing structurally interesting → no question at all.
-Across the whole clarify pass — explore's convention-ambiguity questions plus
-these — the total ceiling is ≤ 7 questions, and the skip-all shortcut is always
-available.
-
-### Step 2.5 — Clarify *(inline — your own context, between explore and write)*
-
-explore returns `init/stack-detection` carrying `ambiguities[]` — one entry per
-low/medium-confidence or genuinely ambiguous field. clarify is where you, the
-orchestrator, resolve them WITH the human. clarify ALSO consumes the `nuance.*`
-ambiguities that Step 2.4 (enrichment) surfaced — they are ordinary skippable
-`Ambiguity` entries and flow through this same contract. This step runs inline
-because only an inline step can pause for a question; the `write` sub-agent cannot.
-
-The inline contract:
-
-1. Ask explore's `stack-detection.ambiguities[]` FIRST — one question at a time,
-   the same one-question-per-field discipline §4.3 uses for recalibration. Offer
-   `options` when present; otherwise take a free-form value. THEN ask the ≤3
-   `nuance.*` ambiguities from enrichment (all skippable, free-form). Offer a
-   skip-all shortcut for the `nuance.*` block — the human may decline the whole set
-   in one answer.
-2. Collect the answers into `answers{}` (field → value). `nuance.*` answers land in
-   `answers{}` like any other field; the `write` step routes them to
-   `human_nuance` in `knowledge.yaml` (see `steps/write.md`).
-3. Compose the `### CLARIFY ANSWERS` block and inject it into write's prompt —
-   it is REQUIRED even when there was nothing to ask:
+1. Ask explore's ambiguities first, one question at a time, offering `options` when present and taking a free-form value otherwise. Then ask the ≤ 3 `nuance.*` questions (free-form, all skippable), with a skip-all shortcut so the human can decline the whole block in one answer.
+2. On a recalibration, frame the questions as a review of what would change. Present a delta table (field, old value, new value, changed?) covering the four decision fields — `is_monorepo`, `test_runner`, `naming_style`, `architectural_style` — plus every fired `design_fingerprint.<concern>` and `code_intelligence` when that key is present on either side; old fingerprint values come from the `provenance.yaml` sidecar. Ask one question: "accept all changes, or review field by field?" On field-by-field, ask accept / reject / set manually, one field at a time. **Human answers always win** — a field whose existing `source` is `manual` is never silently overwritten, so it always appears in the table and requires explicit acceptance. A field the human sets here carries `source: manual` into write.
+3. Collect the answers into `answers{}` (field → value). `nuance.*` answers ride along like any other field; write routes them into `knowledge.yaml`'s `human_nuance` region.
+4. Compose the `### CLARIFY ANSWERS` block for write's prompt. It is required even when there was nothing to ask:
 
    ```
    ### CLARIFY ANSWERS
@@ -162,122 +64,39 @@ The inline contract:
    blocking_open_items: []
    ```
 
-4. **Non-interactive harness** (no way to ask the human): SKIP the questions. For
-   each ambiguity, if `skippable: true` apply its `default` (recorded later as
-   `origin: default`); if `skippable: false` add it to `blocking_open_items[]`.
-   Set `skipped: true`.
-5. **User abort**: if the user cancels, do NOT launch write — no files are
-   written.
+5. **Non-interactive harness** (no way to reach the human): skip the questions. Apply each skippable ambiguity's `default` — write records those as `origin: default` and never halts on one — and add every non-skippable ambiguity to `blocking_open_items[]`. Set `skipped: true`.
+6. **User abort**: if the user cancels, do not launch write. No files are written.
 
-The `### CLARIFY ANSWERS` block is the only thing the inline clarify step
-produces; it carries no artifact of its own.
+Clarify produces no artifact of its own; the block is its entire output.
 
-### Step 3 — Write configuration files *(in `write`)*
+## Pending writes — preview, then launch write
 
-The file-writing mechanics — the `.asdt/config.yaml` write
-(`memory.provider: engram` plus the positive-evidence-only `code_intelligence`
-key), the `knowledge.yaml` build from `stack-detection.fields` + applied
-answers (flat `stack`/`file_structure`/`design_fingerprint` values, the four
-inline FieldValue fields, and the fenced `human_nuance` tail region), and the
-write-only `provenance.yaml` sidecar (fingerprint provenance FieldValues) —
-live in **`steps/write.md`**, along with the idempotency check, the
-`source: manual` preservation rule, and the halt
-contract. The write sub-agent owns all three file writes. Do not duplicate the
-write mechanics here.
+Before launching write, show the user what is about to land. This is the last moment anything can pause, and only an inline step can pause:
 
-### Step 4 — Detect project context
+- `.asdt/config.yaml` — the memory provider, plus `code_intelligence` when it was detected.
+- `.asdt/knowledge/knowledge.yaml` — the stack, file structure, design fingerprint, the four decision fields, and any human nuance notes.
+- `.asdt/knowledge/provenance.yaml` — the write-only fingerprint provenance sidecar.
 
-Populate the decision fields of `.asdt/knowledge/knowledge.yaml` — the four inline FieldValue fields that record _how_ the project is structured and coded (monorepo shape, test runner, naming style, architectural pattern). They live in the same `knowledge.yaml` that carries the flat stack and fingerprint values recording _what_ is installed.
+List the key deltas alongside them — the fresh values, or the changes the human accepted in the recalibration review — and confirm. On confirmation, launch `steps/write.md` (`agent: builder`) via your delegation primitive with `init/stack-detection` and the `### CLARIFY ANSWERS` block injected. On a decline, nothing is written.
 
-#### 4.1 Check for existing knowledge.yaml
+When write returns, tell the user which files landed, surface anything it reported in `settings_preserved[]` or `open_items[]`, and point them at `/asdt-architect`, `/asdt-developer`, and the rest.
 
-Look for `{root}/knowledge/knowledge.yaml`:
+## Final Output
+`init/write-summary` — the write step's record of which files landed, which `source: manual` settings were carried forward, and which answers were applied. It closes the run; no downstream specialist consumes it.
 
-- **Absent** → fresh detection path (§4.2).
-- **Present** → recalibration path (§4.3).
+## Artifact Persistence
 
-#### 4.2 Fresh detection *(in `explore`)*
+Both artifacts are saved via `mem_save`, never as files under `.asdt/artifacts/` or any local path:
 
-The four probes — `is_monorepo`, `test_runner`, `naming_style`,
-`architectural_style` — each with its bounded command and exact mapping table,
-plus the "one bounded command, first matching row wins, no model judgment" rule
-and the per-field `FieldValue` shape, live in **`steps/explore.md`** (§4 probes).
-explore detects every field, attaches `source`/`confidence`, and emits an
-`Ambiguity` for any low/medium-confidence field. The `write` sub-agent applies
-the clarify answers on top and writes `knowledge.yaml`; explore itself
-writes nothing. Per ADR-013, all probes run as bounded shell commands with no
-dependency on this repo's Go code.
+- `title`: `"{change-name}/init/{artifact-type}"`
+- `topic_key`: `"{project}/{change}/init/{artifact-type}"` — one key per artifact type (`stack-detection`, `write-summary`)
+- `type`: `"decision"`
+- `content`: structured `What` / `Why` / `Where`
 
-Alongside them, seven **design-fingerprint packs** — `i18n`, `css_approach`,
-`orm`, `state_management`, `ci_cd`, `lint`, `code_intelligence` — fire
-conditionally on `detected_stack` (the fire gate and the per-pack command +
-mapping tables also live in **`steps/explore.md`**, §5). Their values land in
-`knowledge.yaml`'s `design_fingerprint` as flat scalars, with their full
-`FieldValue` provenance in the write-only `provenance.yaml` sidecar. A pack
-that does not fire emits no key; `code_intelligence` is positive-evidence-only
-(absent → omitted, never an `Ambiguity`) and its detected value is written to
-`.asdt/config.yaml`, never to `knowledge.yaml`.
+The `.asdt` files themselves are project state, not artifacts — that carve-out belongs to init alone and covers only the three paths listed under Pending writes.
 
-#### 4.3 Recalibration (knowledge.yaml already exists)
-
-When `knowledge.yaml` already exists:
-
-1. Run fresh detection → produce `NewContext` (same rules as §4.2).
-2. Compute a delta table:
-
-   | Field | Old value | New value | Changed? |
-   |---|---|---|---|
-   | is_monorepo | … | … | yes/no |
-   | test_runner | … | … | yes/no |
-   | naming_style | … | … | yes/no |
-   | architectural_style | … | … | yes/no |
-   | design_fingerprint.i18n | … | … | yes/no |
-   | design_fingerprint.css_approach | … | … | yes/no |
-   | design_fingerprint.orm | … | … | yes/no |
-   | design_fingerprint.state_management | … | … | yes/no |
-   | design_fingerprint.ci_cd | … | … | yes/no |
-   | design_fingerprint.lint | … | … | yes/no |
-   | code_intelligence | … | … | yes/no |
-
-   The `design_fingerprint.*` rows track `knowledge.yaml`'s flat values (only
-   for packs that fired), with old-value provenance read from the
-   `provenance.yaml` sidecar; include a row only for a concern that is present
-   in either the old or the new fingerprint. The `code_intelligence` row tracks
-   the `.asdt/config.yaml` key (positive-evidence-only) — include it only when
-   the key is present on either side.
-
-3. Present the delta table to the user.
-4. Ask ONE question: "Accept all changes, or review field by field?"
-5. If "accept all" → overwrite `knowledge.yaml` with `NewContext`.
-6. If "field by field" → for each changed field, ask the user to accept / reject / set manually. One question per field.
-7. **Human answers always win.** Fields where the existing `source=manual` are NEVER silently overwritten — they must appear in the delta table and require explicit user acceptance. This holds for `design_fingerprint.<concern>` entries whose `provenance.yaml` sidecar `source` is `manual` too; if the sidecar is absent or unparseable, the write step re-detects the fingerprint fresh and records an open_item.
-
-#### 4.4 Confidence and source rules
-
-| Source | When to assign |
-|---|---|
-| `detected` | Value determined by a bounded command with direct file evidence |
-| `inferred` | Pattern matched without direct file evidence (fallback / best-effort) |
-| `manual` | User explicitly set this value during a recalibration review |
-
-| Confidence | Meaning |
-|---|---|
-| `high` | Strong signal — treat as authoritative convention |
-| `medium` | Likely match — confirm before diverging |
-| `low` | Weak signal — best-effort guess |
-
-Confidence thresholds are assigned by each probe's algorithm (see §4.2 rules). Do not reassign confidence based on judgment — use the exact rules above.
-
-**Negative-evidence rule**: a value concluded from the *absence* of evidence (e.g. `is_monorepo: "false"` because no workspace marker was found) caps at `confidence=medium`, never `high`. Absence proves the probe found nothing — not that nothing exists. `high` is reserved for direct positive file evidence.
-
-#### 4.5 Output
-
-- `{root}/knowledge/knowledge.yaml` written (fresh) or confirmed/updated (recalibration), with its `provenance.yaml` sidecar regenerated alongside.
-- Orchestrator receives a `DetectionSummary` for display to the user.
-- Proceed to Step 6.
-
-### Step 6 — Confirm
-Tell the user:
-- Configuration written to `.asdt/config.yaml`
-- Project knowledge written to `.asdt/knowledge/knowledge.yaml` (write-only provenance sidecar: `.asdt/knowledge/provenance.yaml`)
-- They can now use `/asdt-architect`, `/asdt-developer`, etc.
+## Invariants
+- **Write scope**: `.asdt/config.yaml`, `.asdt/knowledge/knowledge.yaml`, and `.asdt/knowledge/provenance.yaml` only, written only by the `write` sub-agent. The inline steps and explore write nothing.
+- **explore NEVER guesses**: no markers matched means an empty stack, never one inferred from incidental files. Every probe is a bounded shell command with no dependency on any particular language or on this repo's own tooling, so the same project yields the same detection in any session.
+- Each step reads only its declared inputs; a missing input is recorded in `open_items` and the step proceeds best-effort.
+- Artifacts are scoped under the `init/` prefix.

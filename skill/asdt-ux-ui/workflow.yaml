@@ -76,9 +76,10 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/ux-ui/flows"
-      - "{project}/{change}/ux-ui/content-inventory"   # optional (R-006): UNRESOLVED → proceed on flows
+      - "{project}/{change}/ux-ui/content-inventory"   # optional (tier-gated)
     output_topic_key: "{project}/{change}/ux-ui/components"
-    reference_skills: []
+    reference_skills:
+      - skills/accessibility.md
 
   - name: design-critique
     skill: steps/design-critique.md
@@ -105,8 +106,8 @@ steps:
       - "{project}/{change}/ux-ui/flows"
       - "{project}/{change}/ux-ui/components"
       - "{project}/{change}/ux-ui/design-tokens"
-      - "{project}/{change}/ux-ui/design-critique"
-      - "{project}/{change}/ux-ui/content-inventory"
+      - "{project}/{change}/ux-ui/design-critique"     # optional (tier-gated)
+      - "{project}/{change}/ux-ui/content-inventory"   # optional (tier-gated)
     # NOTE: this step produces TWO final artifacts (`ux-brief` + `component-spec`)
     # but `output_topic_key` is contractually a single string. output_topic_key
     # below names the PRIMARY artifact; persist the SECOND under its own distinct

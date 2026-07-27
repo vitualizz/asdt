@@ -32,9 +32,8 @@ Do NOT write implementation code. Only define the technical structure.
 ## Output
 Produces: `developer/dev-design`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   approach: ""

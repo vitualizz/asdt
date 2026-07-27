@@ -48,10 +48,16 @@ func TestEmbeddedSkillTree(t *testing.T) {
 }
 
 // TestRoutedSpecialistInvariants asserts that every routed specialist's
-// embedded SKILL.md body carries the two load-bearing header invariants:
-// the SOLE orchestrator gate and the FIRST ACTION self-load instruction.
-// These phrases drive orchestration behavior, so dropping them silently
-// would break the launch contract — this guards against that.
+// embedded SKILL.md body carries the load-bearing header invariants: the SOLE
+// orchestrator gate, the FIRST ACTION self-load instruction, and both
+// specialist-header generated-region markers. These phrases drive orchestration
+// behavior, so dropping them silently would break the launch contract — this
+// guards against that.
+//
+// The marker assertions are the ONLY guard against a real silent failure:
+// replaceMarkerRegion returns content unchanged when BOTH markers are absent,
+// so a specialist whose region was dropped would install with no header at all
+// and no error at install time.
 func TestRoutedSpecialistInvariants(t *testing.T) {
 	routed := []string{
 		"asdt-pm",
@@ -66,6 +72,13 @@ func TestRoutedSpecialistInvariants(t *testing.T) {
 	const (
 		soleOrchestrator = "SOLE orchestrator"
 		firstAction      = "FIRST ACTION — self-load the header"
+
+		// Package skill cannot import internal/installer (the installer imports
+		// this package), so these two literals are a hand-copy of
+		// specialistHeaderBeginMarker / specialistHeaderEndMarker in
+		// internal/installer/registry_gen.go. Change both copies together.
+		headerBeginMarker = "<!-- ASDT:GENERATED:specialist-header -->"
+		headerEndMarker   = "<!-- /ASDT:GENERATED:specialist-header -->"
 	)
 
 	for _, dir := range routed {
@@ -80,6 +93,12 @@ func TestRoutedSpecialistInvariants(t *testing.T) {
 		}
 		if !strings.Contains(body, firstAction) {
 			t.Errorf("%s/SKILL.md missing required phrase %q", dir, firstAction)
+		}
+		if !strings.Contains(body, headerBeginMarker) {
+			t.Errorf("%s/SKILL.md missing required phrase %q", dir, headerBeginMarker)
+		}
+		if !strings.Contains(body, headerEndMarker) {
+			t.Errorf("%s/SKILL.md missing required phrase %q", dir, headerEndMarker)
 		}
 	}
 }

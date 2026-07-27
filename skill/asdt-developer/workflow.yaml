@@ -26,7 +26,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/developer/dev-exploration"
-      - "{project}/{change}/pm/backlog-entry"  # SOFT/optional — AC authority (ADR-019); degrade gracefully if absent
+      - "{project}/{change}/pm/backlog-entry"  # optional — acceptance-criteria authority; degrade gracefully if absent
     output_topic_key: "{project}/{change}/developer/dev-spec"
     reference_skills:
       - ../asdt-shared/skills/scope-definition.md

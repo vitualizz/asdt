@@ -5,65 +5,43 @@ Check the attack surface against the OWASP Top 10 (2021).
 Systematic coverage prevents the "I forgot to check X" failure mode.
 
 ## Inputs
-- `security/attack-surface`: entry points, trust boundaries, data flows
-
-Extract: entry_points[], data_flows[].vulnerabilities_noted.
+- `security/attack-surface` — arrives ALREADY INJECTED as an `### INPUT security/attack-surface` block; never self-fetch it. Extract: `entry_points[]`, `data_flows[].vulnerabilities_noted`.
 
 ## Context budget
 security/attack-surface (entry points + data flows): max 1,200 tokens.
 
 ## Processing
-Check each OWASP Top 10 category against the attack surface. For each, state:
-APPLICABLE / NOT APPLICABLE (with brief reason), and if applicable: MITIGATED / AT RISK.
+The A01–A10 catalogue for 2021 — every category with its detection patterns, stack-specific
+concerns, and remediation guidance — lives in `skills/owasp-review.md`, this step's reference
+skill. Work from it; it is not restated here.
 
-A01 — Broken Access Control
-- Check: authorization on every entry point, IDOR potential, path traversal
+Walk all ten categories in order against the attack surface and emit at least one `findings[]`
+entry per category. Never skip a category and never fold two categories into one entry; when a
+single category holds several distinct problems, emit one entry per problem with the same
+`owasp_category` and different ids. For every entry produce:
 
-A02 — Cryptographic Failures
-- Check: sensitive data in transit (TLS?), at rest (encryption?), in logs (redacted?)
-
-A03 — Injection
-- Check: SQL injection (parameterized queries?), XSS (output encoding?),
-  command injection (shell calls?), template injection
-
-A04 — Insecure Design
-- Check: security not bolted on — was threat modeling done early?
-
-A05 — Security Misconfiguration
-- Check: default credentials, exposed debug endpoints, unnecessary features enabled,
-  error messages exposing stack traces
-
-A06 — Vulnerable Components
-- Check: known CVEs in dependencies (from platform-summary stack)
-
-A07 — Authentication Failures
-- Check: session management, password policies, multi-factor, account lockout
-
-A08 — Software Integrity Failures
-- Check: unsigned updates, insecure deserialization, CI/CD pipeline integrity
-
-A09 — Logging Failures
-- Check: are security events logged? Are logs tamper-resistant?
-
-A10 — SSRF
-- Check: any user-controlled URLs fetched server-side?
+1. `status` — `not_applicable` when nothing in the attack surface can trigger the category at all; otherwise `mitigated` when an existing control already covers it, or `at_risk` when no control does or the control is insufficient.
+2. `reason` — REQUIRED when `status: not_applicable` (why the category cannot apply here, so the skip is a conscious one that survives into the final artifact); recommended when `status: at_risk` (why the existing controls fall short).
+3. `evidence` — the concrete observation the verdict rests on: a file and symbol when you inspected the repository (`internal/auth/session.go:validateToken`), otherwise the assumption you are reasoning from, stated plainly as an assumption. You reason and inspect; you never run scanners, dependency audits, or any other command, so evidence is never tool output.
+4. `severity`, `cwe` where one applies, and a concrete `recommendation` — REQUIRED when `status: at_risk`, since the hardening step turns each one into an action item.
 
 ## Output
 Produces: `security/owasp-findings`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   findings:
     - id: "OF-001"
       owasp_category: "A01|A02|...|A10"
+      status: "mitigated|at_risk|not_applicable"
       title: ""
       description: ""
-      severity: "Critical|High|Medium|Low"
+      reason: ""       # required when status is not_applicable; recommended when at_risk
+      evidence: ""     # file + symbol inspected, or the stated assumption — never scanner output
+      severity: "Critical|High|Medium|Low"   # required when status is at_risk
       cwe: ""          # CWE reference number if applicable
-      recommendation: ""
-  not_applicable: []   # OWASP categories not relevant with brief reason
+      recommendation: ""                     # required when status is at_risk
   open_items: []
 ```

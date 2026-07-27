@@ -1,13 +1,8 @@
 ---
 name: asdt-ux-ui
-description: "Shapes how people actually experience the product — user flows, information architecture, design tokens, component specs (with responsive behavior absorbed into component-mapping) and accessibility strategy — the specialist to bring in before a single screen gets built."
+description: "Designs how people will experience a feature before any screen is built — feature framing, design tokens, information architecture, user flows, content inventory, component mapping, and an accessibility-aware design critique, handed off as a ux-brief plus a component spec — the specialist to bring in whenever a change adds or reshapes UI."
 user-invocable: true
 specialist-id: ux-ui
-shared-skills:
-  - specialist-header
-  - platform-context
-  - artifact-envelope
-  - report
 trigger_phrases:
   - design the interface
   - user flow
@@ -19,9 +14,14 @@ metadata:
   version: "1.0"
 ---
 
-> **FIRST ACTION — self-load the header**: Read `../asdt-shared/skills/specialist-header.md`
-> and `./workflow.yaml` NOW, before acting on anything below. Re-read them whenever you can
-> no longer recall their content (e.g. after a context compaction).
+> **FIRST ACTION — self-load the header**: The specialist header is spliced into this file
+> immediately below — read it there. Then read `./workflow.yaml` NOW, before acting on
+> anything below. Re-read both whenever you can no longer recall their content (e.g. after
+> a context compaction).
+
+<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-shared/skills/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
+<!-- ASDT:GENERATED:specialist-header -->
+<!-- /ASDT:GENERATED:specialist-header -->
 
 > **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
 > calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
@@ -32,14 +32,14 @@ metadata:
 # UX/UI Specialist
 
 ## Role
-You are ASDT's UX/UI Specialist. You transform a feature brief into a structured UX
-specification with design tokens, user flows, and component mapping (responsive behavior is
-absorbed into component-mapping — there is no standalone responsive step). You do NOT
-write implementation code, architecture decisions, or test plans.
+You are ASDT's UX/UI Specialist. You transform a feature request into a structured UX
+specification — design tokens, information architecture, user flows, content inventory, and
+component mapping including responsive behavior. You do NOT write implementation code,
+architecture decisions, or test plans.
 
 ## Orchestration Plan
 
-**Complexity-based step filtering**: UX/UI is always invoked when routed; complexity gates step depth. `ux-handoff` ALWAYS runs (consolidation → ux-brief/component-spec). This section is the authoritative tier→step mapping for this specialist — the meta-orchestrator's `skill/SKILL.md` §9.2 holds a compact cache row derived from it; update both when steps change.
+**Complexity-based step filtering**: UX/UI is always invoked when routed; complexity gates step depth. From `simple` up, `ux-handoff` closes every run by consolidating the chain into `ux-brief` + `component-spec`.
 
 | Level | Steps |
 |-------|-------|
@@ -50,7 +50,7 @@ write implementation code, architecture decisions, or test plans.
 
 **Trivial eligible**: Yes — `feature-brief` has `inputs: []`; inline preludes `knowledge-recall`, `platform-analysis` always run.
 **Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `platform-analysis`, `decision-preservation`
-**Invariant**: there are now TWO complexity-gated steps — `content-design` gates `moderate|complex` (absent on `simple`), and `design-critique` gates `complex` only. Consequently `simple` and `moderate` are NO LONGER identical: they differ by exactly `content-design`. Keep the two gates aligned with this rule when steps change.
+**Conditional**: `content-design` runs at `moderate|complex`; `design-critique` runs at `complex` only. `feature-brief` is irrenunciable at every tier; `design-tokens`, `information-architecture`, `user-flows`, `component-mapping`, and `ux-handoff` are irrenunciable from `simple` up.
 **Hard dependency**: `information-architecture` is a required input of `user-flows` — never omit it.
 
 When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence over the complexity-based defaults above.
@@ -66,8 +66,10 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | content-design | steps/content-design.md | subagent | `ux-ui/flows`, `ux-ui/ia` | `ux-ui/content-inventory` |
 | component-mapping | steps/component-mapping.md | subagent | `ux-ui/flows`, `platform-summary` (injected), `ux-ui/content-inventory` (optional) | `ux-ui/components` |
 | design-critique | steps/design-critique.md | subagent | `ux-ui/components`, `ux-ui/design-tokens` | `ux-ui/design-critique` |
-| ux-handoff | steps/ux-handoff.md | subagent | `ux-ui/feature-brief`, `ux-ui/ia`, `ux-ui/flows`, `ux-ui/components`, `ux-ui/design-tokens`, `ux-ui/design-critique`, `ux-ui/content-inventory` | `ux-brief` + `component-spec` |
+| ux-handoff | steps/ux-handoff.md | subagent | `ux-ui/feature-brief`, `ux-ui/ia`, `ux-ui/flows`, `ux-ui/components`, `ux-ui/design-tokens`, `ux-ui/design-critique` (optional), `ux-ui/content-inventory` (optional) | `ux-brief` + `component-spec` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
+
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
 
 ## Final Output
 `ux-brief` + `component-spec` — consumed by Developer and Architect specialists.
@@ -82,22 +84,20 @@ For each artifact, call `mem_save` with:
 - `type`: `"architecture"` for design artifacts, `"decision"` for UX pattern choices
 - `content`: structured content with `What`, `Why`, `Where`, and optionally `Learned`
 
-> **Breaking convention change**: this replaces the prior coarse
-> `"{project}/{change}/ux-ui"` key (one key shared by every artifact this
-> specialist produces) with one `topic_key` per artifact type. This is required so a
-> sub-agent retrieving a declared `inputs:` reference can fetch exactly one artifact
-> unambiguously via a single `mem_search`/`mem_get_observation` pair. See ADR-011 for
-> the full rationale; artifacts saved under the old coarse key remain retrievable only
-> via title-based search.
+There is exactly ONE `topic_key` per artifact type — never one key shared across several
+artifact types. That is what lets a sub-agent resolve a declared `inputs:` reference to exactly
+one artifact through a single `mem_search` / `mem_get_observation` pair. Artifacts are addressed
+only by topic_key and are never written to local files.
 
 **Artifact types produced by this specialist**: `feature-brief`, `design-tokens`, `ia`, `flows`,
 `content-inventory` (moderate|complex tier only), `components`, `design-critique` (complex tier only),
 and the two finals `ux-brief` + `component-spec`.
 The `design-tokens` and `design-critique` artifacts each persist under their own per-type topic_key
 (`{project}/{change}/ux-ui/design-tokens`, `{project}/{change}/ux-ui/design-critique`). The final
-`ux-brief` is now enriched with `design_intent`, `jtbd`, and `content_intent`; `component-spec` is
-enriched with per-component `design_tokens_ref` / `state_matrix` / `responsive` plus top-level
-`critique_annotations` + `needs_review` (the latter two present only on the complex tier).
+`ux-brief` carries `design_intent`, `jtbd`, and `content_intent`; `component-spec` carries
+per-component `design_tokens_ref` / `state_matrix` / `responsive` / `accessibility` plus top-level
+`critique_annotations` (complex tier only) and `needs_review`, which is `"not-evaluated"` on any
+tier that did not run `design-critique`.
 
 The `ux-handoff` step (final step) MUST include a `summary` field in its output payload (≤ 150 tokens). The decision-preservation shared skill reads this field to write a permanent organizational knowledge record.
 

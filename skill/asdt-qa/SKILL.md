@@ -3,12 +3,6 @@ name: asdt-qa
 description: "Builds the safety net before code ships — test plans, acceptance criteria validation, edge case analysis, and quality reports — the specialist to bring in when 'it works on my machine' isn't good enough."
 user-invocable: true
 specialist-id: qa
-shared-skills:
-  - specialist-header
-  - platform-context
-  - artifact-envelope
-  - artifact-loading
-  - report
 trigger_phrases:
   - test plan
   - acceptance criteria
@@ -20,9 +14,14 @@ metadata:
   version: "1.1"
 ---
 
-> **FIRST ACTION — self-load the header**: Read `../asdt-shared/skills/specialist-header.md`
-> and `./workflow.yaml` NOW, before acting on anything below. Re-read them whenever you can
-> no longer recall their content (e.g. after a context compaction).
+> **FIRST ACTION — self-load the header**: The specialist header is spliced into this file
+> immediately below — read it there. Then read `./workflow.yaml` NOW, before acting on
+> anything below. Re-read both whenever you can no longer recall their content (e.g. after
+> a context compaction).
+
+<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-shared/skills/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
+<!-- ASDT:GENERATED:specialist-header -->
+<!-- /ASDT:GENERATED:specialist-header -->
 
 > **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
 > calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
@@ -39,7 +38,7 @@ or UX specs.
 
 ## Orchestration Plan
 
-**Complexity-based step filtering**: QA is always invoked when routed to; complexity gates step depth, not invocation. `ac-validation` ALWAYS runs (invariant: AC gaps must be surfaced). This section is the authoritative tier→step mapping for this specialist — the meta-orchestrator's `skill/SKILL.md` §9.2 holds a compact cache row derived from it; update both when steps change.
+**Complexity-based step filtering**: QA gates step depth by complexity — QA is always invoked when routed to, so complexity filters how deep the chain runs, never whether it runs. `ac-validation` ALWAYS runs (invariant: AC gaps must be surfaced).
 
 | Level | Steps |
 |-------|-------|
@@ -50,7 +49,7 @@ or UX specs.
 
 **Trivial eligible**: No — falls back to `simple`.
 **Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `decision-preservation`
-**Hard dependency**: `test-strategy` is a required input of `test-case-generation` — never omit it from `moderate` or `complex`.
+**Conditional**: `edge-case-analysis` and `test-strategy` run at `moderate` and above only. `load-requirements`, `ac-validation`, `test-case-generation`, `quality-report`, `performance-validation`, and `review` are irrenunciable. Because `edge-case-analysis` and `test-strategy` are absent from `simple`, the artifacts they produce (`qa/edge-cases`, `qa/test-strategy`) are declared OPTIONAL inputs of `test-case-generation` — their absence degrades that step, it never grows the tier.
 
 When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence over the complexity-based defaults above.
 
@@ -61,11 +60,13 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | ac-validation | steps/ac-validation.md | subagent | `qa/ac-list` | `qa/ac-gaps` |
 | edge-case-analysis | steps/edge-case-analysis.md | subagent | `qa/ac-list` | `qa/edge-cases` |
 | test-strategy | steps/test-strategy.md | subagent | `qa/edge-cases` | `qa/test-strategy` |
-| test-case-generation | steps/test-case-generation.md | subagent | `qa/test-strategy`, `qa/edge-cases` | `qa/test-cases` |
+| test-case-generation | steps/test-case-generation.md | subagent | `qa/ac-list`, `qa/test-strategy` *(optional)*, `qa/edge-cases` *(optional)* | `qa/test-cases` |
 | quality-report | steps/quality-report.md | subagent | `qa/test-cases`, `qa/ac-gaps` | `qa/test-plan` |
 | performance-validation | steps/performance-validation.md | subagent | `qa/test-plan`, `pm/nfr-targets` | `qa/perf-validation` |
-| review | steps/review.md | subagent | `qa/test-plan`, `qa/ac-gaps` | `qa/qa-review` |
+| review | steps/review.md | subagent | `qa/test-plan`, `qa/ac-gaps`, `qa/perf-validation` *(optional)* | `qa/qa-review` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
+
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
 
 ## Final Output
 `qa/qa-review` — the go/no-go shipping verdict. When `review` runs, its `summary` feeds `decision-preservation`. The intermediate `qa/test-plan` (from `quality-report`) remains available as the full test plan artifact.
@@ -76,21 +77,17 @@ All artifacts produced by this specialist MUST be saved to the memory provider v
 
 For each artifact, call `mem_save` with:
 - `title`: `"{change-name}/qa/{artifact-type}"` (e.g. `"add-auth/qa/test-plan"`)
-- `topic_key`: `"{project}/{change}/qa/{artifact-type}"` (e.g. `"add-auth/qa/test-plan"`)
+- `topic_key`: `"{project}/{change}/qa/{artifact-type}"` (e.g. `"add-auth/qa/test-plan"`) — ONE topic_key per artifact type, so a declared input resolves to exactly one artifact through a single `mem_search`/`mem_get_observation` pair
 - `type`: `"architecture"` for test strategy artifacts, `"decision"` for QA approach choices
 - `content`: structured content with `What`, `Why`, `Where`, and optionally `Learned`
-
-> **Breaking convention change**: this replaces the prior coarse
-> `"{project}/{change}/qa"` key (one key shared by every artifact this
-> specialist produces) with one `topic_key` per artifact type. This is required so a
-> sub-agent retrieving a declared `inputs:` reference can fetch exactly one artifact
-> unambiguously via a single `mem_search`/`mem_get_observation` pair. See ADR-011 for
-> the full rationale; artifacts saved under the old coarse key remain retrievable only
-> via title-based search.
 
 The `review` step (final generative step) MUST include a `summary` field in its output payload (≤ 150 tokens). The decision-preservation shared skill reads this field to write a permanent organizational knowledge record.
 
 ## Invariants
+- Write scope: this specialist writes artifacts only — never host source files, never test files on disk
+- Artifact prefix: every topic_key written here starts with `{project}/{change}/qa/` — never write under another specialist's prefix
+- Declared inputs only: a step reads exactly the inputs on its `workflow.yaml` entry, and they arrive ALREADY INJECTED as `### INPUT {topic_key}` blocks — a step never self-fetches them
+- Missing input: when a declared input arrives as `### INPUT {topic_key}: UNRESOLVED`, proceed best-effort and record the gap in `open_items` — never fail the step
 - Every acceptance criterion MUST have at least one test case
 - Edge cases are not optional — they catch what happy-path tests miss
 - AC gaps must be surfaced, not silently ignored

@@ -3,12 +3,6 @@ name: asdt-architect
 description: "Makes architecture decisions and produces ADRs, system design, and API design artifacts — the specialist to bring in when a choice will shape service boundaries, data models, or scalability for the long haul."
 user-invocable: true
 specialist-id: architect
-shared-skills:
-  - specialist-header
-  - platform-context
-  - artifact-envelope
-  - scope-definition
-  - report
 trigger_phrases:
   - architecture decision
   - system design
@@ -20,9 +14,14 @@ metadata:
   version: "1.0"
 ---
 
-> **FIRST ACTION — self-load the header**: Read `../asdt-shared/skills/specialist-header.md`
-> and `./workflow.yaml` NOW, before acting on anything below. Re-read them whenever you can
-> no longer recall their content (e.g. after a context compaction).
+> **FIRST ACTION — self-load the header**: The specialist header is spliced into this file
+> immediately below — read it there. Then read `./workflow.yaml` NOW, before acting on
+> anything below. Re-read both whenever you can no longer recall their content (e.g. after
+> a context compaction).
+
+<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-shared/skills/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
+<!-- ASDT:GENERATED:specialist-header -->
+<!-- /ASDT:GENERATED:specialist-header -->
 
 > **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
 > calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
@@ -39,17 +38,18 @@ UX specs, or test plans.
 
 ## Orchestration Plan
 
-**Complexity-based step filtering**: The Architect specialist is invoked for moderate and complex changes, plus single-step `trivial` consults; at `simple`, it is not called at all. This section is the authoritative tier→step mapping for this specialist — the meta-orchestrator's `skill/SKILL.md` §9.2 holds a compact cache row derived from it; update both when steps change.
+**Complexity-based step filtering**: Architect gates step depth by complexity. It is invoked for moderate and complex changes, plus single-step `trivial` consults; at `simple`, it is not called at all.
 
 | Level | Steps |
 |-------|-------|
 | **trivial** | `load-constraints` |
 | **simple** | Not called — Architect is not needed at this complexity level |
-| **moderate** | `knowledge-recall → load-constraints → evaluate-approaches → decision-record` |
+| **moderate** | `load-constraints → evaluate-approaches → decision-record → technical-handoff` |
 | **complex** | Full workflow (all steps) |
 
 **Trivial eligible**: Yes — `load-constraints` has `inputs: []`; inline preludes `knowledge-recall`, `platform-analysis` always run.
 **Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `platform-analysis`, `decision-preservation`
+**Conditional**: `system-design`, `cost-estimation`, and `risk-analysis` run at `complex` only. `load-constraints`, `evaluate-approaches`, `decision-record`, and `technical-handoff` are irrenunciable at `moderate` and above — `technical-handoff` always runs so every non-trivial run ends on this specialist's declared final output. Because `system-design` and `risk-analysis` are absent from `moderate`, the artifacts they produce (`architect/system-design`, `architect/risks`) are declared OPTIONAL inputs of `technical-handoff` — their absence degrades that step, it never grows the tier.
 
 When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence over the complexity-based defaults above.
 
@@ -61,13 +61,15 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | evaluate-approaches | steps/evaluate-approaches.md | subagent | `architect/constraints-analysis` | `architect/approaches` |
 | decision-record | steps/decision-record.md | subagent | `architect/approaches` | `architect/adr` |
 | system-design | steps/system-design.md | subagent | `architect/adr` | `architect/system-design` |
-| cost-estimation | steps/cost-estimation.md | subagent | `architect/system-design`, `pm/nfr-targets` | `architect/cost-estimate` |
+| cost-estimation | steps/cost-estimation.md | subagent | `architect/system-design`, `pm/nfr-targets` *(optional)* | `architect/cost-estimate` |
 | risk-analysis | steps/risk-analysis.md | subagent | `architect/system-design` | `architect/risks` |
-| technical-handoff | steps/technical-handoff.md | subagent | `architect/adr`, `architect/system-design`, `architect/risks` | `architectural-decision` + `system-design` |
+| technical-handoff | steps/technical-handoff.md | subagent | `architect/adr`, `architect/system-design` *(optional)*, `architect/risks` *(optional)* | `architect/architectural-decision` + `architect/system-design-final` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
+
 ## Final Output
-`architectural-decision` + `system-design` — consumed by Developer and QA specialists.
+`architect/architectural-decision` + `architect/system-design-final` — the two final artifacts of `technical-handoff`, consumed by Developer and QA specialists. `architect/system-design-final` is the consolidated, handoff-ready design and is a DISTINCT key from the intermediate `architect/system-design` written earlier by the `system-design` step.
 
 ## Artifact Persistence
 
@@ -75,21 +77,19 @@ All artifacts produced by this specialist MUST be saved to the memory provider v
 
 For each artifact, call `mem_save` with:
 - `title`: `"{change-name}/architect/{artifact-type}"` (e.g. `"add-auth/architect/architectural-decision"`)
-- `topic_key`: `"{project}/{change}/architect/{artifact-type}"` (e.g. `"add-auth/architect/architectural-decision"`)
+- `topic_key`: `"{project}/{change}/architect/{artifact-type}"` (e.g. `"add-auth/architect/architectural-decision"`) — ONE topic_key per artifact type, so a declared input resolves to exactly one artifact through a single `mem_search`/`mem_get_observation` pair
 - `type`: `"architecture"` for design decisions, `"decision"` for policy/approach choices
 - `content`: structured content with `What`, `Why`, `Where`, and optionally `Learned`
 
-> **Breaking convention change**: this replaces the prior coarse
-> `"{project}/{change}/architect"` key (one key shared by every artifact this
-> specialist produces) with one `topic_key` per artifact type. This is required so a
-> sub-agent retrieving a declared `inputs:` reference can fetch exactly one artifact
-> unambiguously via a single `mem_search`/`mem_get_observation` pair. See ADR-011 for
-> the full rationale; artifacts saved under the old coarse key remain retrievable only
-> via title-based search.
+Never share one key across several artifact types, and never write an artifact to a local file — topic_key is the only address an artifact has.
 
 The `technical-handoff` step (final step) MUST include a `summary` field in its output payload (≤ 150 tokens). The decision-preservation shared skill reads this field to write a permanent organizational knowledge record.
 
 ## Invariants
+- Write scope: this specialist writes artifacts only — never host source files, never design files on disk
+- Artifact prefix: every topic_key written here starts with `{project}/{change}/architect/` — never write under another specialist's prefix
+- Declared inputs only: a step reads exactly the inputs on its `workflow.yaml` entry, and they arrive ALREADY INJECTED as `### INPUT {topic_key}` blocks — a step never self-fetches them
+- Missing input: when a declared input arrives as `### INPUT {topic_key}: UNRESOLVED`, proceed best-effort and record the gap in `open_items` — never fail the step
 - Every decision MUST have alternatives considered
 - Never design in isolation — always account for existing platform constraints
 - System design MUST include data model AND API surface

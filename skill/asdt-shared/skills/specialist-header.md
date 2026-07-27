@@ -1,4 +1,4 @@
-<!-- specialist-header.md — loaded by the explicit FIRST ACTION Read instruction at the top of every specialist SKILL.md body. The shared-skills frontmatter key is metadata only; no loader resolves it. -->
+<!-- specialist-header.md — reaches a specialist context by two mechanisms only, never by a frontmatter key: (1) the installer splices this body directly into each routed SKILL.md at install time, so an installed specialist already carries it; (2) the explicit FIRST ACTION Read instruction at the top of every specialist SKILL.md body, which loads it when the body was not spliced. -->
 
 ## Prerequisites
 
@@ -44,13 +44,53 @@ produces no artifact of its own and only injects context for the next step
 
 ### How to launch a `subagent` step
 
-> Canonical protocol: `asdt-shared/skills/parallel-retrieval.md` — Cache Ledger Rule, Injection Format, UNRESOLVED degradation. Do not restate it here.
+> Canonical protocol: `../asdt-shared/skills/parallel-retrieval.md` — Cache Ledger Rule, Injection Format, UNRESOLVED degradation. Do not restate it here.
 
 > **Agent type**: launch each `subagent` step with the agent type its
 > `workflow.yaml` entry declares — `agent: analyst` maps to the installed
 > `asdt-analyst` agent, `agent: builder` to `asdt-builder`. Fallback is
 > MANDATORY: when the named type is not available in your harness, launch with
 > the harness default (general-purpose) agent AND prepend the injected
-> executor header per `parallel-retrieval.md`.
+> executor header per `../asdt-shared/skills/parallel-retrieval.md`.
 
 `inline` steps fold into your own orchestrator context — no launch.
+
+### How to resolve declared skill files
+
+`workflow.yaml` declares skill files in two places. YOU, the orchestrator, resolve
+both — a declaration nobody reads is a declaration that does nothing.
+
+**`reference_skills:` on a `subagent` step.** Before launching that step, read each
+listed file yourself and inject its content into the sub-agent's prompt. The
+sub-agent NEVER fetches these itself: sub-agents run from a different working
+directory and cannot resolve these paths.
+
+Inject one block per file, resolved:
+
+```
+### REFERENCE SKILL {path}
+{file content}
+```
+
+Or, when the read fails:
+
+```
+### REFERENCE SKILL {path}: UNRESOLVED
+(orchestrator could not read this skill file — record it in open_items and proceed)
+```
+
+**`skill:` on an `inline` step.** Read that file and follow it in your own context.
+Nothing is injected anywhere, because inline steps run in the orchestrator. (On a
+`subagent` step, `skill:` names the step file that becomes the sub-agent's prompt —
+not something you follow yourself.)
+
+Rules for both:
+
+- Paths resolve from the SPECIALIST's own directory. Both
+  `../asdt-shared/skills/x.md` and `skills/x.md` are valid and resolve correctly.
+- Reads go through the same fetch-once ledger described in
+  `../asdt-shared/skills/parallel-retrieval.md`, keyed `skill:{path}` so a file entry
+  can never collide with a `topic_key` entry. Follow the rule there; do not restate it.
+- An inline step with NO `skill:` key at all (`knowledge-gate`, `enrichment`, and
+  `clarify` in `asdt-init`) has nothing to read. That is normal — it degrades
+  silently and is NOT an UNRESOLVED case.

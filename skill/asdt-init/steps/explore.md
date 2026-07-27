@@ -30,7 +30,7 @@ that errors is non-fatal: record `value="unknown"`, `source=inferred`,
 `confidence=low` for that field and continue. Never infer a stack from
 incidental files.
 
-### Step 1 — Detect project stack
+### Detect project stack
 
 Run ONE bounded command scanning for stack marker files down to depth 3 — do not
 eyeball a directory listing or infer from visible files. The result must be
@@ -68,11 +68,11 @@ From the ordered marker list, derive — mechanically, first occurrence wins:
 
 - **`detected_stack`** — the language ids in scan order, deduplicated. A project can match more than one stack (e.g. a Python `backend/` with a Node `frontend/`).
 - **Primary language** — the first entry of `detected_stack`.
-- **Language root `{lang_root}`** — for each language, the directory containing its first marker. The §4 probes run against these roots, not blindly against the repo root — a marker in `backend/` means that language's evidence lives in `backend/`.
+- **Language root `{lang_root}`** — for each language, the directory containing its first marker. The context probes below run against these roots, not blindly against the repo root — a marker in `backend/` means that language's evidence lives in `backend/`.
 
 If nothing matches, record an empty stack — do not guess a stack from other files.
 
-### Step 4 — Detect project context
+### Detect project context
 
 Every probe has the same shape: **one bounded command, one exact mapping table,
 first matching row wins, no model judgment**. The tables are uniform across
@@ -81,7 +81,7 @@ no row matches, the field is `value="unknown"`, `source=inferred`,
 `confidence=low`. A probe error is non-fatal — record the fallback for that
 field and continue.
 
-Inputs from Step 1: `detected_stack`, the primary language, and each language's `{lang_root}`. Probes that inspect language evidence run against the primary language's `{lang_root}` — not blindly against the repo root.
+Inputs from the stack scan: `detected_stack`, the primary language, and each language's `{lang_root}`. Probes that inspect language evidence run against the primary language's `{lang_root}` — not blindly against the repo root.
 
 **Probe: `is_monorepo`**
 
@@ -94,7 +94,7 @@ ls go.work pnpm-workspace.yaml 2>/dev/null; grep -l '^\[workspace\]' Cargo.toml 
 | Evidence (first match wins) | Value | Source | Confidence |
 |---|---|---|---|
 | Any workspace marker found (`go.work`, `pnpm-workspace.yaml`, `[workspace]` in root `Cargo.toml`) | `true` | detected | high |
-| Step 1 found markers for ≥ 2 distinct languages in ≥ 2 distinct directories at depth ≤ 2 (reuse Step 1's output — never rescan) | `true` | detected | medium |
+| The stack scan found markers for ≥ 2 distinct languages in ≥ 2 distinct directories at depth ≤ 2 (reuse its output — never rescan) | `true` | detected | medium |
 | Neither | `false` | detected | medium *(negative evidence — see Confidence rules)* |
 
 **Probe: `test_runner`** — each check is one `test -f` or one `grep -q` against the primary language's `{lang_root}`; for `scripts.test`, read `{lang_root}/package.json` and take the value of `.scripts.test`:
@@ -147,19 +147,19 @@ No source files sampled → `unknown`/inferred/low.
 
 When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting architectural styles). Here "rows" are the five layout predicates in table order — count how many DISTINCT predicates the same directory listing satisfies; the count is a mechanical row-id count over the one command's output, never a judgment call.
 
-### Step 5 — Detect design fingerprint
+### Detect design fingerprint
 
 The `design_fingerprint` records _how_ the codebase is built — its i18n, CSS,
 ORM, state-management, CI/CD, lint, and code-intelligence tooling. Each concern
-is a **pack** with the same discipline as the §4 probes: one bounded command,
+is a **pack** with the same discipline as the context probes above: one bounded command,
 one exact mapping table, first matching row wins, no model judgment. Each fired
 pack emits a `FieldValue` recorded in `provenance.yaml` (the write-only sidecar);
 its flat value surfaces in `knowledge.yaml`'s `design_fingerprint`.
 
-**Fire gate.** Decide which packs run from Step 1's `detected_stack` alone — a
-pure lookup, no file reads. A pack that does not fire emits **NO key and NO
-ambiguity** (it is silent, never `none`). `{node_root}`, `{go_root}`, and
-`{py_root}` are the `{lang_root}`s from Step 1 for `node`, `go`, and `python`.
+**Fire gate.** Decide which packs run from the stack scan's `detected_stack`
+alone — a pure lookup, no file reads. A pack that does not fire emits **NO key
+and NO ambiguity** (it is silent, never `none`). `{node_root}`, `{go_root}`, and
+`{py_root}` are the stack scan's `{lang_root}`s for `node`, `go`, and `python`.
 
 | Pack | Fires when | Scope |
 |---|---|---|
@@ -352,9 +352,8 @@ ambiguities are never `blocking_open_items`.
 ## Output
 Produces: `init/stack-detection`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   detected_stack: []          # language ids in scan order, deduplicated; [] when no markers matched

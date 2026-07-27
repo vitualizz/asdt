@@ -4,34 +4,36 @@
 Write structured test cases for the happy path, validated ACs, and critical edge cases.
 
 ## Inputs
-- `qa/test-strategy`: which level each behavior is tested at
-- `qa/edge-cases`: edge case inventory (critical + high priority only)
+- `qa/ac-list` — arrives as an `### INPUT {topic_key}` block. Extract: `acceptance_criteria[]` (id, given/when/then, testable).
+- `qa/test-strategy` — arrives as an `### INPUT {topic_key}` block. Extract: `unit.what`, `integration.what`, `e2e.what`.
+- `qa/edge-cases` — arrives as an `### INPUT {topic_key}` block. Extract: `edge_cases[]` where `priority` is `critical` or `high`.
 
-Extract from test-strategy: unit.what, integration.what, e2e.what.
-Extract from edge-cases: edge_cases where priority="critical" or "high".
+**DEGRADATION — `qa/test-strategy` is optional (produced only at `moderate` and above)**: when it arrives as `### INPUT {project}/{change}/qa/test-strategy: UNRESOLVED`, assign each test case a level directly from the AC it covers — unit for pure logic and validation rules, integration for anything crossing a process, persistence, or service boundary, e2e for a full user-visible flow; append "qa/test-strategy absent — test levels inferred per acceptance criterion" to open_items. Never block on this input.
+
+**DEGRADATION — `qa/edge-cases` is optional (produced only at `moderate` and above)**: when it arrives as `### INPUT {project}/{change}/qa/edge-cases: UNRESOLVED`, cover only the happy path and the explicit negative path of each acceptance criterion in `qa/ac-list`, and do not invent an edge-case inventory; append "qa/edge-cases absent — coverage limited to AC happy and negative paths" to open_items. Never block on this input.
 
 ## Context budget
-test-strategy summary + critical/high edge cases: max 2,000 tokens.
+ac-list + test-strategy summary + critical/high edge cases: max 2,000 tokens.
 
 ## Processing
-For each item in test-strategy (unit.what, integration.what, e2e.what):
-1. Write one test case in Given/When/Then format.
-2. Specify the test level (unit/integration/e2e).
-3. Include the test data setup needed.
-4. Note any mocks or fixtures required.
-
-For each critical/high edge case:
-1. Write one test case covering the edge scenario.
-2. Specify what "expected behavior" means precisely (status code, error message, data state).
+1. For each acceptance criterion in `qa/ac-list` marked `testable`, write at least one
+   test case in Given/When/Then format — this is the floor, and it holds whether or not
+   the optional inputs arrived.
+2. For each item in test-strategy (`unit.what`, `integration.what`, `e2e.what`), write a
+   test case and record its level (unit/integration/e2e). When test-strategy is absent,
+   derive the level per the degradation rule above.
+3. For each critical/high edge case, write a test case covering the edge scenario and
+   state precisely what "expected behavior" means (status code, error message, data state).
+4. Include the test data setup needed and note any mocks or fixtures required.
+5. Cross-reference every test case to the AC it covers via `ac_ref`.
 
 Do NOT write code — write structured test specifications that a developer can implement.
 
 ## Output
 Produces: `qa/test-cases`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   test_cases:

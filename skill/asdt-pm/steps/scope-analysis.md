@@ -6,11 +6,18 @@ A backlog entry without explicit out-of-scope items is incomplete — scope ambi
 is the root cause of most scope creep.
 
 ## Inputs
-- `pm/user-stories`
+- `pm/user-stories` — Extract: `user_stories` (`id`, `role`, `action`, `priority`, `depends_on`) and the carried `open_items`.
+
+Extract ONLY those fields. Stakeholders are NOT available here — that field lives in
+`pm/feature-intake`, which is not a declared input of this step; use each story's `role` as the
+actor signal instead, and never invent a stakeholder list.
+
+This declared input arrives ALREADY INJECTED as an `### INPUT {topic_key}` block — consume it
+directly and do NOT self-fetch it. If it arrives UNRESOLVED, record the gap in `open_items` and
+proceed best-effort.
 
 ## Context budget
-Extract: user_stories list (ids, actions, depends_on), stakeholders from prior artifact.
-Max 300 tokens.
+Injected user-stories fields: max 300 tokens.
 
 ## Processing
 1. List what IS being built, mapped to user story IDs or capabilities.
@@ -21,9 +28,8 @@ Max 300 tokens.
 ## Output
 Produces: `pm/scope-analysis`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   in_scope:

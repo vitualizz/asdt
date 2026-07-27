@@ -8,6 +8,15 @@ that downstream steps can process.
 ## Inputs
 - Raw feature request from the user (always available — this step has `inputs: []`)
 - Memory context from `knowledge-recall` (injected inline — check for prior similar features)
+- Platform summary, when the orchestrator injects one — stack and domain vocabulary that help name the feature consistently
+
+This step has no prior step artifacts. Everything above arrives ALREADY INJECTED in this
+prompt — do NOT self-fetch any of it, and never call `mem_search` for it. If the platform
+summary or the recall context is marked UNRESOLVED, record it in `open_items` and proceed on
+the raw request alone.
+
+## Context budget
+Raw request + platform summary + injected recall context: max 1,000 tokens combined.
 
 ## Processing
 1. Extract the core problem: what pain or gap is the user describing?
@@ -21,9 +30,8 @@ If a prior similar feature exists in memory (from knowledge-recall): note it and
 ## Output
 Produces: `pm/feature-intake`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   feature_name: ""
@@ -33,4 +41,5 @@ payload:
   trigger: ""              # why now?
   ambiguities: []          # open questions that need clarification before user stories
   prior_feature_ref: ""    # mem observation ID if a similar prior feature was found
+  open_items: []           # inputs that arrived UNRESOLVED and what was assumed instead
 ```

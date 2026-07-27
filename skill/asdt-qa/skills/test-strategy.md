@@ -2,7 +2,11 @@
 
 ## Purpose
 
-Test pyramid principles and when to use each test type. Applied during Step 4 of the QA workflow.
+Test pyramid principles and when to use each test type. Applied during the `test-strategy` step of the QA workflow.
+
+This file exists to settle three decisions and nothing else: the unit / integration / e2e
+split, the fixture and test-data strategy, and the environment each level needs. Anything
+that does not change one of those decisions does not belong here.
 
 ## Test Pyramid
 
@@ -55,17 +59,6 @@ Write an E2E test when:
 
 Limit E2E tests to the minimum set of critical paths. Each E2E test should take less than 30 seconds to run.
 
-## Test Naming Conventions
-
-Pattern: `{Unit/Context}_{Scenario}_{ExpectedOutcome}`
-
-Examples:
-- `UserService_CreateUser_ReturnsIDOnSuccess`
-- `UserService_CreateUser_ErrorsOnDuplicateEmail`
-- `LoginFlow_ValidCredentials_RedirectsToDashboard`
-
-For table-driven tests (Go, Jest parameterized): name the case description in the table row, not the test function.
-
 ## Fixture Design
 
 - Fixtures must be the minimum valid state for the test — no extra data.
@@ -73,27 +66,24 @@ For table-driven tests (Go, Jest parameterized): name the case description in th
 - Never share mutable state between tests.
 - Name fixtures descriptively: `validUser`, `expiredToken`, `emptyCart` — not `user1`, `data`, `obj`.
 
-## Test Isolation
+## Environment and Isolation
 
-- Each test sets up its own state and tears it down after.
-- Tests must not depend on execution order.
-- Tests must not depend on external services (use fakes/stubs for integration boundaries in unit tests).
-- Database tests: use transactions rolled back after each test, or a per-test schema/database.
+This is the `environment` decision for each level — state it explicitly per level:
 
-## Flaky Test Prevention
+- Unit: no external process. Fakes and stubs at every boundary; a unit test that opens a socket is misclassified.
+- Integration: the real dependency it exists to exercise (a real DB, a real broker) and nothing else. Everything past that boundary stays stubbed.
+- E2E: the full stack against a disposable environment, seeded from fixtures, never a shared one.
 
-Common flaky test causes and mitigations:
+Isolation rules that hold at every level: each test builds and tears down its own state,
+no test depends on execution order, and database tests run inside a transaction rolled
+back afterwards or against a per-test schema.
 
-| Cause | Mitigation |
-|-------|------------|
-| Time-dependent assertions | Use fixed clocks / mock time |
-| Network calls in unit tests | Use stubs/mocks; never call real network |
-| Race conditions | Use proper synchronization primitives; avoid sleep() |
-| Order-dependent state | Reset state in teardown; use per-test isolation |
-| Non-deterministic data | Use fixed seeds for random generators |
-| Polling without timeout | Always set a deadline; fail if deadline exceeded |
+## Flakiness Tolerance
 
-A flaky test is worse than no test — it erodes trust in the entire suite. Fix or delete flaky tests immediately.
+Set the tolerance per level (unit: 0, integration: < 1%, e2e: 0) and name the sources the
+strategy must design out — wall-clock time (use a fixed clock), real network in unit tests,
+`sleep()` as synchronization, unseeded random data, and polling without a deadline. A flaky
+test is worse than no test; budget for fixing it, not for tolerating it.
 
 ## Coverage Targets
 

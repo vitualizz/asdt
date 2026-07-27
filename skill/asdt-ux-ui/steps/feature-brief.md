@@ -8,7 +8,9 @@ Establish what "done" looks like from the user's perspective before designing an
 - Request: the feature description from the user
 - `platform-summary`: existing design system, component library, CSS approach
 
-Note: The request and inline-injected `platform-summary` are provided directly by the orchestrator; this is the first generative step and reads no upstream specialist artifact.
+The request and the `platform-summary` arrive ALREADY INJECTED by the orchestrator (the latter from
+its inline `platform-analysis` step) — consume them directly, never self-fetch them. This is the
+first generative step and reads no upstream specialist artifact.
 
 Extract from platform-summary: component_library, css_approach.
 
@@ -32,9 +34,8 @@ extraction — keep it concise.
 ## Output
 Produces: `ux-ui/feature-brief`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   primary_actor: ""

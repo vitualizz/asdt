@@ -6,14 +6,12 @@ Define exactly what needs to be built: in-scope, out-of-scope, and acceptance cr
 ## Inputs
 - Request: the original feature description
 - `developer/dev-exploration`: files to understand, patterns, open questions
-- `pm/backlog-entry` (SOFT — ADR-019 AC authority): the canonical acceptance criteria for this change
+- `pm/backlog-entry` (optional — acceptance-criteria authority): the canonical acceptance criteria for this change
 
 Extract from dev-exploration: `open_questions` (answer them here), `patterns_to_follow`.
 Extract from pm/backlog-entry: ONLY `acceptance_criteria[]` (not the full artifact — bounds context cost).
 
-**Soft input (no `pm/backlog-entry`)**: if pm/backlog-entry is ABSENT from Engram, do NOT
-hard-fail. Note the absence in `open_items`, author ACs from dev-exploration context as before,
-and proceed. When pm/backlog-entry IS read, add its topic_key to the dev-spec envelope `input_refs`.
+**DEGRADATION — `pm/backlog-entry` is optional (only produced when a PM backlog entry exists for this change)**: when it arrives as `### INPUT {project}/{change}/pm/backlog-entry: UNRESOLVED`, author the acceptance criteria from dev-exploration context instead; append "pm/backlog-entry absent — acceptance criteria authored from dev-exploration context" to open_items. Never block on this input.
 
 ## Context budget
 Request + dev-exploration summary: max 1,500 tokens.
@@ -32,9 +30,8 @@ Do NOT design the technical approach. Do NOT write code. Only define what to bui
 ## Output
 Produces: `developer/dev-spec`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   scope:

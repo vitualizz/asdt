@@ -5,8 +5,6 @@ Single-pass annotation of the component inventory against the derived design tok
 consistency and accessibility. Derive a deterministic `needs_review` signal. This is a
 soft-gate ANNOTATE step — it never hard-blocks the workflow.
 
-Model note: `sonnet`; tier `complex-only`.
-
 ## Inputs
 - `ux-ui/components`: component inventory (reused, extended, new) + carried `reuse_ratio`
 - `ux-ui/design-tokens`: the derived token set
@@ -17,10 +15,12 @@ either yourself.
 Extract from components: the full inventory and the `reuse_ratio` object (carry it verbatim).
 Extract from design-tokens: token names/roles to reference in annotations.
 
-reference_skills: `skills/accessibility.md`.
-
 ## Context budget
-components + design-tokens: max 1,000 tokens.
+Max 2,400 tokens of input material: up to 400 tokens for the token set, plus up to 8 components at
+250 tokens each — a component's `state_matrix`, `responsive`, and `accessibility` blocks dominate its
+cost, so 250 tokens is the realistic per-component floor. When the inventory exceeds 8 components,
+critique `new` first, then `extended`, then `reused`, and record the uncritiqued remainder in
+`open_items`.
 
 ## Processing
 SINGLE PASS ONLY — never iterate, never re-critique, never hard-block.
@@ -37,9 +37,8 @@ SINGLE PASS ONLY — never iterate, never re-critique, never hard-block.
 ## Output
 Produces: `ux-ui/design-critique`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   critique_annotations: []   # [{target, issue, severity: low|medium|high, token_ref}]

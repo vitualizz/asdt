@@ -2,7 +2,7 @@
 
 ## Purpose
 
-WCAG 2.1 AA baseline requirements and implementation patterns. Applied during Step 6 of the UX/UI workflow.
+WCAG 2.1 AA baseline requirements and implementation patterns. Applied during the `design-critique` and `ux-handoff` steps of the UX/UI workflow.
 
 ## Baseline Standard
 
@@ -46,7 +46,7 @@ Target: **WCAG 2.1 Level AA**. Every new component must meet this baseline befor
 
 Tools: [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/), [Colour Contrast Analyser](https://www.tpgi.com/color-contrast-checker/).
 
-Flag any color pair in `component-spec.yaml` that you cannot verify against `knowledge.yaml` tokens.
+Flag any color pair in the `{project}/{change}/ux-ui/component-spec` artifact that you cannot verify against `knowledge.yaml` tokens.
 
 ## Focus Management
 
@@ -65,7 +65,7 @@ Flag any color pair in `component-spec.yaml` that you cannot verify against `kno
 
 ## Component Checklist (per new component)
 
-Before marking a component as complete in `component-spec.yaml`, verify:
+Before marking a component complete in the `{project}/{change}/ux-ui/component-spec` artifact, verify:
 
 - [ ] Operates with keyboard alone
 - [ ] Color contrast passes for all text/UI pairs
@@ -74,3 +74,10 @@ Before marking a component as complete in `component-spec.yaml`, verify:
 - [ ] Form inputs have associated labels
 - [ ] Interactive state changes are communicated to screen readers
 - [ ] No content depends solely on color to convey meaning
+
+Record the outcome of this checklist in that component's `accessibility` block inside
+`new_components[]` — `aria_role`, `keyboard_interaction`, `focus_management`, and
+`contrast_token_ref`. The block originates in the `ux-ui/components` artifact (written by the
+`component-mapping` step) and is carried verbatim into `component-spec`, so a check performed here
+has a recorded home on both artifacts. Anything you cannot verify from text alone goes to
+`open_items` as advisory, never into a field as an assertion.

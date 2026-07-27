@@ -54,7 +54,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/security/stride-threats"
-      - "{project}/{change}/security/owasp-findings"
+      - "{project}/{change}/security/owasp-findings"   # optional (tier-gated): produced only at risk_surface: high
     output_topic_key: "{project}/{change}/security/security-findings"
     # NOTE: this step produces TWO final artifacts (security-findings AND
     # hardening-checklist, per its `## Output` section and this specialist's

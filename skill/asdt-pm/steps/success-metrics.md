@@ -7,12 +7,14 @@ for. It does NOT judge whether any design or implementation meets them; that is 
 Architect's and QA's job downstream.
 
 ## Inputs
-- `pm/user-stories`
+- `pm/user-stories` — Extract: `user_stories` (`action`, `benefit`, `priority`). Focus on stories whose benefit implies a non-functional need (speed, cost, capacity, footprint, accessibility budget).
+
+This declared input arrives ALREADY INJECTED as an `### INPUT {topic_key}` block — consume it
+directly and do NOT self-fetch it. If it arrives UNRESOLVED, record the gap in `open_items` and
+emit an empty target list rather than inventing budgets.
 
 ## Context budget
-Extract: user_stories (action + benefit), priority — focus on stories whose benefit
-implies a non-functional need (speed, cost, capacity, footprint, accessibility budget).
-Max 400 tokens.
+Injected user-stories fields: max 400 tokens.
 
 ## Processing
 Apply the `nfr-budget` shared skill (`../asdt-shared/skills/nfr-budget.md`).
@@ -26,12 +28,13 @@ Apply the `nfr-budget` shared skill (`../asdt-shared/skills/nfr-budget.md`).
    record it in `open_items` rather than inventing a budget.
 
 ## Output
-Produces: `{project}/{change}/pm/nfr-targets`
+Produces: `pm/nfr-targets`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema (NFR-target value-object per `../asdt-shared/skills/nfr-budget.md`, `verdict`
-narrowed to the PM owner subset):
+NFR-target value-object per `../asdt-shared/skills/nfr-budget.md`, `verdict` narrowed to the PM
+owner subset:
+
 ```yaml
 payload:
   nfr_targets:
@@ -39,7 +42,7 @@ payload:
       budget: ""               # the ceiling/allowance, e.g. "200ms", "$50/mo", "512MB"
       target: ""               # the desired value, at or below budget, e.g. "120ms"
       measurement_method: ""   # HOW it is measured, e.g. "p95 over 1k synthetic requests"
-      verdict: "n/a"          # PM only SETS targets — always n/a here
+      verdict: "n/a"           # PM only SETS targets — always n/a here
   total_count: 0
   open_items: []               # stories with a non-functional need but no defensible budget yet
 ```

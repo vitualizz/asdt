@@ -5,45 +5,37 @@ Systematically discover edge cases using structured techniques.
 Edge cases are not random — they can be derived methodically.
 
 ## Inputs
-- `qa/ac-list`: normalized acceptance criteria
-
-Extract: acceptance_criteria[].given/when/then (to derive boundaries).
+- `qa/ac-list` — arrives as an `### INPUT {topic_key}` block. Extract: `acceptance_criteria[].given/when/then` (to derive boundaries).
 
 ## Context budget
 qa/ac-list (AC text only, no metadata): max 1,200 tokens.
 
+## Output budget
+Max 1,500 tokens. Exceeding the budget is a defect: trim, do not spill.
+
 ## Processing
-Apply these edge case discovery techniques to each AC:
+The technique catalogue lives in `skills/edge-case-analysis.md` — load it and apply the
+techniques from there. This step decides WHICH techniques apply and how the result is shaped.
 
-1. BOUNDARY VALUE ANALYSIS: for any numeric/length input, test:
-   - Minimum valid value
-   - Maximum valid value
-   - Just below minimum (invalid)
-   - Just above maximum (invalid)
-   - Zero / empty / null
-
-2. EQUIVALENCE PARTITIONING: group inputs into classes where behavior is identical.
-   Test one case from each class (valid and invalid classes).
-
-3. STATE TRANSITIONS: if the feature has states (draft/published, active/inactive):
-   - Test each valid transition
-   - Test each invalid transition (what happens when user tries to go backward?)
-
-4. CONCURRENT ACCESS: if multiple users can touch the same data:
-   - Two users editing simultaneously
-   - Delete while another user is viewing
-   - Race condition scenarios
-
-5. PERMISSION BOUNDARIES: what happens when a user without permission tries each action?
-
-6. NETWORK/SYSTEM FAILURES: what happens if the database is slow? If an external call fails?
+1. Walk each AC and select only the techniques its Given/When/Then actually triggers:
+   - `boundary` — the AC names a numeric, length, or date range
+   - `equivalence` — the AC accepts a class of inputs rather than a single value
+   - `state` — the AC moves the system between named states
+   - `concurrent` — the AC touches data more than one actor can write
+   - `permission` — the AC is gated by a role, ownership, or authentication check
+   - `failure` — the AC depends on persistence, an external call, or the network
+2. Do NOT emit techniques the AC does not trigger — an empty technique is noise, not coverage.
+3. Write one entry per edge case: the technique that produced it, the AC it tests the
+   edges of, the scenario, and the precise expected behavior (status code, error message,
+   resulting data state) — never "should fail".
+4. Assign a priority. Reserve `critical` for edge cases that corrupt data, leak access,
+   or lose money; those are the ones `test-case-generation` is guaranteed to cover.
 
 ## Output
 Produces: `qa/edge-cases`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   edge_cases:

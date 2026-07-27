@@ -2,64 +2,59 @@
 
 ## Purpose
 
-Guide a specialist through retrieving existing upstream artifacts from Engram, extracting relevant fields from each artifact type, and recording absent artifacts in `open_items[]`.
+Guide a specialist through retrieving existing upstream artifacts from Engram by topic_key, extracting the relevant fields from each artifact type, and recording absent artifacts in `open_items[]`.
 
-This skill is invoked at the first artifact-consuming step of a specialist workflow (Developer, QA, Architect, and Security all use it there). It applies ONLY to steps declared with `inputs: []` in `workflow.yaml` — steps with declared inputs receive them ALREADY INJECTED as `### INPUT {topic_key}` blocks per `parallel-retrieval.md`, and must never self-fetch those.
+This skill applies ONLY to steps declared with `inputs: []` in `workflow.yaml` — the first artifact-consuming step of a specialist workflow (Developer, QA, Architect, and Security all use it there). A step with declared inputs receives them ALREADY INJECTED as `### INPUT {topic_key}` blocks per `parallel-retrieval.md`, and must never self-fetch them.
 
 ---
 
 ## Retrieving Artifacts
 
-1. Retrieve the upstream artifacts for this change from Engram:
-   - Call `mem_search(query: "{project}/{change}", project: "{project}")` to list all available artifacts for the change.
-   - For each result that matches an expected artifact type (requirements-spec, system-design, ux-brief), call `mem_get_observation(id: {id})` to retrieve the full content.
-2. Apply the extraction rules by artifact type (see below).
-3. If no results are returned by `mem_search`, record in `open_items[]`:
+Artifacts live in Engram, addressed by topic_key in the form `{project}/{change}/{specialist}/{artifact-type}`. One key holds exactly one artifact type, so every lookup resolves unambiguously.
+
+1. List what exists for this change: `mem_search(query: "{project}/{change}", project: "{project}")`.
+2. For each result whose topic_key matches an artifact type you need (see the extraction rules below), call `mem_get_observation(id: {id})` to retrieve the full content. When you already know the exact key you want, search for it directly: `mem_search(query: "{project}/{change}/pm/backlog-entry", project: "{project}")`.
+3. Apply the extraction rules by artifact type — pull only the listed fields, never the whole payload.
+4. If `mem_search` returns nothing, record in `open_items[]`:
    ```
    "No artifacts found in Engram for change '{change}' — proceeding with feature description only"
    ```
-4. **Filesystem fallback (Engram outage only)**: If the Engram MCP server is unreachable, fall back to scanning `.asdt/artifacts/{change}/` for `.yaml` files. Treat any file found there as a best-effort substitute. Record in `open_items[]`:
-   ```
-   "Engram unavailable — loaded artifacts from filesystem fallback at .asdt/artifacts/{change}/; data may be stale"
-   ```
-   Do NOT use the filesystem path as a primary lookup strategy — Engram is authoritative.
+
+**Memory-provider outage fallback**: only if the Engram MCP server is unreachable, scan `.asdt/artifacts/{change}/` for `.yaml` files and treat anything found there as a stale best-effort substitute, recording `"Engram unavailable — loaded artifacts from filesystem fallback at .asdt/artifacts/{change}/; data may be stale"` in `open_items[]`. This is never a primary lookup path: Engram is authoritative, and specialists do not write these files.
 
 ---
 
 ## Extraction Rules by Artifact Type
 
-### requirements-spec.yaml
+### `pm/backlog-entry` (from the PM specialist)
 
-Fields to extract:
+The canonical requirements artifact for a change.
 
 | Field | Where to find it | What to do with it |
 |---|---|---|
-| `user_stories` | `payload.user_stories[]` | List each story ID and summary; use as `story_ref` in implementation steps |
-| `scope.in` | `payload.scope.in[]` | Constrain the implementation plan to this list |
+| `acceptance_criteria` | `payload.acceptance_criteria[]` | Authoritative ACs — refine them, never re-derive an independent set |
+| `user_stories` | `payload.user_stories[]` | List each story ID and summary; use as `story_ref` in downstream steps |
+| `scope.in` | `payload.scope.in[]` | Constrain the plan to this list |
 | `scope.out` | `payload.scope.out[]` | Record any overlap as an `open_items[]` entry |
 | `nfrs` | `payload.nfrs[]` | Surface relevant NFRs (performance, security) in the plan |
-| `open_questions` | `payload.open_questions[]` | Carry unresolved questions forward to the plan's `open_items[]` |
+| `open_questions` | `payload.open_questions[]` | Carry unresolved questions forward into your own `open_items[]` |
 
-### system-design.yaml (from Architect specialist)
-
-Fields to extract:
+### `architect/system-design` (from the Architect specialist)
 
 | Field | Where to find it | What to do with it |
 |---|---|---|
-| `decisions` | `payload.decisions[]` | Use as architectural constraints; do not contradict them |
-| `components` | `payload.components[]` | Map implementation steps to declared components |
-| `api_contracts` | `payload.api_contracts[]` | Generate implementation steps that satisfy the declared API surface |
-| `risk_items` | `payload.risk_items[]` | Surface as `open_items[]` entries when they affect implementation |
+| `decisions` | `payload.decisions[]` | Treat as architectural constraints; do not contradict them |
+| `components` | `payload.components[]` | Map plan entries to declared components |
+| `api_contracts` | `payload.api_contracts[]` | Produce work that satisfies the declared API surface |
+| `risk_items` | `payload.risk_items[]` | Surface as `open_items[]` entries when they affect the plan |
 
-### ux-brief.yaml (from UX/UI specialist)
-
-Fields to extract:
+### `ux-ui/ux-brief` (from the UX/UI specialist)
 
 | Field | Where to find it | What to do with it |
 |---|---|---|
-| `user_flows` | `payload.user_flows[]` | Map each flow step to an implementation step |
-| `component_specs` | `payload.component_specs[]` | Generate implementation steps for each declared component |
-| `interaction_notes` | `payload.interaction_notes[]` | Use as implementation constraints for UI code |
+| `user_flows` | `payload.user_flows[]` | Map each flow step to a plan entry |
+| `component_specs` | `payload.component_specs[]` | Produce one plan entry per declared component |
+| `interaction_notes` | `payload.interaction_notes[]` | Use as constraints for UI work |
 
 ---
 
@@ -70,35 +65,35 @@ When an expected artifact is not found, do NOT stop or error. Follow this protoc
 1. Add a note to `open_items[]` describing what was absent and what was assumed:
    ```yaml
    open_items:
-     - "requirements-spec.yaml absent — proceeding with inferred scope from feature description"
-     - "system-design.yaml absent — no architectural constraints applied; flag complex decisions as open_items"
+     - "pm/backlog-entry absent — proceeding with inferred scope from feature description"
+     - "architect/system-design absent — no architectural constraints applied; flag complex decisions as open_items"
    ```
 
-2. Continue with whatever context is available (knowledge.yaml, visible code, the feature description provided at invocation).
+2. Continue with whatever context is available (`.asdt/knowledge/knowledge.yaml`, visible code, the feature description provided at invocation).
 
-3. Mark implementation steps that depend on absent artifacts with a note in their `rationale`:
+3. Mark any plan entry that depends on an absent artifact with a note in its `rationale`:
    ```
-   rationale: "Inferred from feature description — no requirements-spec present to confirm story coverage"
+   rationale: "Inferred from feature description — no pm/backlog-entry present to confirm story coverage"
    ```
 
 ---
 
 ## Summary Guideline
 
-After loading all found artifacts, produce an internal summary (not written to the artifact) before proceeding to the next step:
+After loading everything you found, produce an internal summary (not written to the artifact) before proceeding:
 
 ```
 Loaded:
-  - requirements-spec.yaml: {N} user stories, scope {in/out counts}
+  - pm/backlog-entry: {N} user stories, scope {in/out counts}
   - knowledge.yaml: stack={stack}, conventions={summary}
 
 Missing:
-  - system-design.yaml
-  - ux-brief.yaml
+  - architect/system-design
+  - ux-ui/ux-brief
 
 open_items to carry forward:
-  - "system-design.yaml absent — ..."
-  - "ux-brief.yaml absent — ..."
+  - "architect/system-design absent — ..."
+  - "ux-ui/ux-brief absent — ..."
 ```
 
 This summary becomes the grounding context for subsequent steps.

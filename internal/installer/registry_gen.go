@@ -20,6 +20,18 @@ const (
 	inlineStepsEndMarker   = "<!-- /ASDT:GENERATED:9.2-inline-steps -->"
 )
 
+// Specialist-header generated-region markers. These literal HTML comments bound
+// the machine-spliced shared specialist header in each routed specialist's
+// SKILL.md. Same contract as the inline-steps pair: one literal source for the
+// install-time generator and for any test, so the region is located and
+// replaced idempotently. skill/embedded_test.go keeps a hand-copy of these two
+// literals (package skill cannot import internal/installer) — change both
+// copies together.
+const (
+	specialistHeaderBeginMarker = "<!-- ASDT:GENERATED:specialist-header -->"
+	specialistHeaderEndMarker   = "<!-- /ASDT:GENERATED:specialist-header -->"
+)
+
 // registryRenderOrder is the display order of specialists in the §9.2
 // inline-steps list. It is intentionally NOT the alphabetical directory walk
 // order: the hand-authored list reads PM → Architect → QA → Security → UX/UI →
@@ -219,6 +231,43 @@ func GenerateInlineSteps(skillsFS fs.FS, skillMD []byte) ([]byte, error) {
 	updated, err := replaceMarkerRegion(skillMD, inlineStepsBeginMarker, inlineStepsEndMarker, body)
 	if err != nil {
 		return nil, fmt.Errorf("regenerate inline-steps region: %w", err)
+	}
+	return updated, nil
+}
+
+// GenerateSpecialistHeader returns skillMD with its specialist-header marker
+// region replaced by the shared header fragment from skillsFS. It exists so the
+// header is already spliced into each routed specialist's installed SKILL.md:
+// the orchestrator then has the header in context the moment it reads the
+// specialist, instead of depending on a separate read of
+// asdt-shared/skills/specialist-header.md that may never happen. Files without
+// the markers pass through unchanged (replaceMarkerRegion's no-region skip), so
+// this is safe to run over every SKILL.md the installer writes.
+//
+// The marker presence check runs BEFORE the fragment read on purpose: a
+// document with no markers declares no region, so requiring the shared fragment
+// for it would turn a marker-free tree (a minimal test fixture FS, asdt-init)
+// into an install failure. A file carrying even one marker needs the fragment — the
+// read failure is loud, and a partial/duplicated marker state still fails in
+// replaceMarkerRegion.
+func GenerateSpecialistHeader(skillsFS fs.FS, skillMD []byte) ([]byte, error) {
+	if !bytes.Contains(skillMD, []byte(specialistHeaderBeginMarker)) &&
+		!bytes.Contains(skillMD, []byte(specialistHeaderEndMarker)) {
+		return skillMD, nil
+	}
+
+	fragment, err := fs.ReadFile(skillsFS, "asdt-shared/skills/specialist-header.md")
+	if err != nil {
+		return nil, fmt.Errorf("read specialist header: %w", err)
+	}
+
+	// Same padding convention as renderInlineStepsRegion: leading and trailing
+	// newlines so the begin marker, the header, and the end marker each occupy
+	// their own line after splicing.
+	body := "\n" + strings.TrimRight(string(fragment), "\n") + "\n"
+	updated, err := replaceMarkerRegion(skillMD, specialistHeaderBeginMarker, specialistHeaderEndMarker, body)
+	if err != nil {
+		return nil, fmt.Errorf("regenerate specialist-header region: %w", err)
 	}
 	return updated, nil
 }

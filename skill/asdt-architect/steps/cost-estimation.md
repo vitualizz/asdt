@@ -6,8 +6,10 @@ each estimate against the PM's budget. The Architect MEASURES (estimates) and em
 `within-budget` | `over-budget` verdict — it does not redefine the targets.
 
 ## Inputs
-- `architect/system-design`: extract service_boundaries, data_model, api_surface, scalability notes.
-- `pm/nfr-targets`: the NFR targets to estimate against (HARD cross-specialist InputRef — produced by PM `success-metrics`).
+- `architect/system-design` — arrives as an `### INPUT {topic_key}` block; produced by the `system-design` step. Extract: `service_boundaries`, `data_model`, `api_surface`, and any scalability notes.
+- `pm/nfr-targets` — arrives as an `### INPUT {topic_key}` block; produced by PM `success-metrics`. Extract: each target's dimension and `budget`.
+
+**DEGRADATION — `pm/nfr-targets` is optional (PM `success-metrics` runs at `moderate` and above, so no budget exists below that tier)**: when it arrives as `### INPUT {project}/{change}/pm/nfr-targets: UNRESOLVED`, estimate every cost profile anyway WITHOUT a budget — leave `budget` empty and record the note "no budget to compare against" in place of a verdict, never inventing a budget and never silently claiming within-budget; append "pm/nfr-targets absent — cost profiles estimated with no budget to compare against" to open_items. Never block on this input.
 
 ## Context budget
 system-design boundaries + API surface + the nfr-targets list: max 1,200 tokens.
@@ -19,20 +21,17 @@ Apply the `nfr-budget` shared skill (`../asdt-shared/skills/nfr-budget.md`).
 2. Estimate the cost/value for each relevant dimension, naming the basis of the
    estimate (`measurement_method`).
 3. Compare each estimate to that target's `budget`; emit verdict `within-budget`
-   when the estimate is at or under budget, `over-budget` when it exceeds it.
-4. **DEGRADATION** — if `pm/nfr-targets` arrived as an `### INPUT
-   {project}/{change}/pm/nfr-targets: UNRESOLVED` block (PM `success-metrics` did not
-   run): estimate the cost profile anyway WITHOUT a budget. Do NOT assume a verdict —
-   record each estimate with the note "no budget to compare against", record the gap in
-   `open_items`, and PROCEED. Never invent a budget and never silently claim within-budget.
+   when the estimate is at or under budget, `over-budget` when it exceeds it. When the
+   budget is absent, apply the DEGRADATION rule above instead of assuming a verdict.
 
 ## Output
-Produces: `{project}/{change}/architect/cost-estimate`
+Produces: `architect/cost-estimate`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Each profile re-states the NFR-target value-object per `../asdt-shared/skills/nfr-budget.md`,
+with `verdict` narrowed to the Architect owner subset.
 
-Schema (each profile re-states the NFR-target value-object per
-`../asdt-shared/skills/nfr-budget.md`, `verdict` narrowed to the Architect owner subset):
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
+
 ```yaml
 payload:
   cost_profiles:

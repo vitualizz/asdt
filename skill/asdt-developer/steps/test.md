@@ -23,25 +23,10 @@ dev-tasks AC list + dev-implementation function signatures: max 2,500 tokens.
 3. If `dev-implementation.payload.mode` is `writing` → WRITING MODE: write real test files
    to disk, but ONLY to paths within the SAME `allowedEditRoots` `implement` used. Before
    each write, confirm the target path is under a declared root; if not, STOP and report the
-   unsafe path in `open_items` — do not write. Run the written tests against the real
-   implementation files `implement` produced.
-4. Strict-TDD note: when `strict_tdd: true` in `.asdt/config.yaml`, this step still applies
-   the RED→GREEN cycle gating described in `skills/test-generation.md` — mode resolution only
-   determines WHERE the resulting test artifact lives (Engram snippet vs. real file), not
-   whether TDD discipline applies.
-
-### strict_tdd: false behavior (test-lite floor — ADR-020, TARGET / not yet wired)
-> **Status: not active.** ADR-020 defines a test-lite floor for `strict_tdd: false`, but the
-> tier mapping in `SKILL.md` still EXCLUDES this step when `strict_tdd` is `false` or absent —
-> so the floor below is the intended TARGET behavior, pending the SKILL.md/§9.2 wiring that
-> makes the step run in that branch. It does not take effect until that wiring lands.
-
-When activated, the target is: instead of zero output, this step runs PLAN-ONLY and emits
-`test_snippets[]` covering the critical paths. Each snippet MUST carry a label
-`plan-only / not executed` (inline comment or explicit text) — they are design intent, NOT
-passing tests, so consumers (QA) treat them as such and gain no false confidence. Persist these
-snippets to Engram ONLY — never write test files to disk in this branch. Not a depth override;
-no new config key, no schema change.
+   unsafe path in `open_items` — do not write.
+4. Mode resolution decides only WHERE the resulting test artifact lives — an Engram snippet
+   or a real file. It never decides whether the tests execute: in BOTH modes this step writes
+   tests and never runs them.
 
 ## Processing
 
@@ -61,15 +46,20 @@ For each task in dev-tasks:
    test for the most likely failure mode, as real test files on disk.
 3. Follow the existing test framework convention from platform-summary; use table-driven
    tests where appropriate.
-4. Run the written tests against the real implementation files within `allowedEditRoots` and
-   record the result.
+4. Compose — never execute — the single command the USER can run to execute these tests, and
+   record it in `suggested_run_command`. For each test case, record in `expected_when_run` what
+   the user should observe when they run it.
+
+This step WRITES tests; it NEVER runs them. Running build, lint, or a test suite is always the
+user's call, so `suggested_run_command` is an offer to the user, not a step this specialist
+performs.
 
 Do NOT test implementation internals — test behavior.
 
 ## Output
 Produces: `developer/dev-tests`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
 The output schema is mode-dependent — set `mode` to the inherited value and emit the matching shape.
 
@@ -98,6 +88,7 @@ payload:
 payload:
   mode: "writing"
   allowedEditRoots: []        # inherited verbatim from dev-implementation
+  suggested_run_command: ""   # the single command the USER can run to execute these tests
   test_suites:
     - task_id: "T-001"
       test_cases:
@@ -108,7 +99,7 @@ payload:
           when: ""
           then: ""
           file: ""            # real path written, within allowedEditRoots
-          result: "pass|fail" # from running the written test against the real implementation
+          expected_when_run: "" # what the user should observe when they run it
   unsafe_skipped: []          # paths STOPPED on, with the triggering task_id
   open_items: []
 ```

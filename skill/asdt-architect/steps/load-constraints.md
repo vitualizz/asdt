@@ -6,15 +6,15 @@ Constraints come from: the existing platform, upstream specialist artifacts, and
 
 ## Inputs
 - Platform context (tech stack, existing patterns, service boundaries) — injected inline by the `platform-analysis` step that runs immediately before this one in the orchestrator's context
-- Any upstream artifacts (ux-brief, requirements-spec) if present — use artifact-loading to check
+- Any upstream artifacts (`ux-brief`, `pm/backlog-entry`) if present — read them from the injected content
 
-Note: this step's `inputs:` list in `workflow.yaml` is empty by design — it has no prior `subagent`-produced artifact to retrieve; it consumes the inline-injected platform context plus any upstream artifacts. If upstream artifacts are present (ux-brief, requirements-spec), the orchestrator will have injected them as `### INPUT` blocks — read them from the injected content, do NOT call mem_search yourself.
+Note: this step's `inputs:` list in `workflow.yaml` is empty by design — it has no prior `subagent`-produced artifact to retrieve; it consumes the inline-injected platform context plus any upstream artifacts. If upstream artifacts are present (`ux-brief`, `pm/backlog-entry`), the orchestrator will have injected them as `### INPUT` blocks — read them from the injected content, do NOT call mem_search yourself.
 
 Extract from the injected platform context: stack, key_patterns, naming_conventions.
 Extract from upstream artifacts (if present): scope.in, scope.out, key technical requirements.
 
 ## Context budget
-architect/constraints + upstream artifact summaries: max 1,500 tokens.
+Injected platform context + upstream artifact summaries: max 1,500 tokens.
 
 ## Processing
 Classify constraints into three buckets:
@@ -28,11 +28,10 @@ Classify constraints into three buckets:
 For each hard constraint, note: what it is, why it cannot change, and how it limits the solution space.
 
 ## Output
-Produces: `architect/constraints-analysis` (constraint analysis — feeds into evaluate-approaches)
+Produces: `architect/constraints-analysis` (constraint analysis — feeds into `evaluate-approaches`)
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
-Schema:
 ```yaml
 payload:
   hard_constraints:

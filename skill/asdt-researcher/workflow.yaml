@@ -18,7 +18,7 @@ steps:
 
   - name: feasibility-scan
     skill: steps/feasibility-scan.md
-    description: Assess each idea for feasibility with a green/yellow/red verdict, supporting evidence, and an effort estimate
+    description: Assess each idea for feasibility with a green/yellow/red verdict, sourced supporting evidence, and an effort estimate
     execution: subagent
     model: sonnet
     agent: analyst

@@ -6,7 +6,7 @@ Generate implementation code for each task, respecting existing conventions.
 ## Inputs
 - `developer/dev-tasks`: ordered task list with files and dependencies
 - `developer/dev-design`: technical approach, key constraints
-- `developer/dev-spec` (SOFT — ADR-019 spec→code traceability): acceptance criteria for this change
+- `developer/dev-spec` (optional — spec→code traceability): acceptance criteria for this change
 
 Extract from dev-tasks: `tasks` list.
 Extract from dev-design: `key_constraints`, `data_model` field shapes.
@@ -57,9 +57,14 @@ For each task in dev-tasks:
 4. Write the real file to disk via the filesystem write tool, within the validated root.
 5. Record the written path, action (`created`|`modified`), and rationale in the `files_changed[]`
    manifest entry for that task.
+6. Compose — never execute — the verification the USER may run: put the build/lint/test commands
+   in `suggested_verification.commands` and what a healthy run looks like in
+   `suggested_verification.expected`. This step writes code and NEVER runs build, lint, or tests;
+   deciding when to verify is always the user's call.
 
-### Traceability (both modes — ADR-019 US-002)
-After generating code, build a top-level `traceability_report[]`:
+### Traceability (both modes)
+Every acceptance criterion must be answerable with "which code addresses this". After generating
+code, build a top-level `traceability_report[]`:
 1. Read `dev-spec.acceptance_criteria[]`. If dev-spec was absent, emit `traceability_report: []`.
 2. For each AC, identify the task(s) / file(s) that address it. Set `coverage_status: covered`
    and list the addressing `task_id`(s) in `addressed_by`.
@@ -68,7 +73,7 @@ After generating code, build a top-level `traceability_report[]`:
 
 ## Dual mem_save semantics
 This step persists TWICE, and the two saves are DISTINCT — never merge them:
-- **PRIMARY (canonical)**: the envelope save under the `output_topic_key` from `workflow.yaml`
+- **PRIMARY (canonical)**: the artifact save under the `output_topic_key` from `workflow.yaml`
   (`developer/dev-implementation`). This is the artifact sub-agents retrieve via their declared `inputs:`.
 - **SECONDARY (knowledge record)**: the `decision-preservation` save under its own title pattern
   (`"{specialist-role}: {change-name}"`). This is the permanent organizational memory entry.
@@ -78,7 +83,7 @@ See `../asdt-shared/skills/decision-preservation.md` for the shared definition.
 ## Output
 Produces: `developer/dev-implementation`
 
-Persist via mem_save under the output_topic_key in workflow.yaml; return envelope.
+Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
 
 The output schema is mode-dependent — set `mode` to the resolved value and emit the matching shape.
 
@@ -101,6 +106,7 @@ payload:
       ac_text: ""
       addressed_by: []        # [task_id]
       coverage_status: "covered|unaddressed"
+  summary: ""                 # ≤ 150 tokens — consumed by decision-preservation
   open_items: []
 ```
 
@@ -120,5 +126,9 @@ payload:
       ac_text: ""
       addressed_by: []        # [task_id]
       coverage_status: "covered|unaddressed"
+  suggested_verification:     # commands the USER may run; this step never runs them
+    commands: []              # e.g. the project's build, lint, and test commands
+    expected: ""              # what a healthy run looks like
+  summary: ""                 # ≤ 150 tokens — consumed by decision-preservation
   open_items: []
 ```
