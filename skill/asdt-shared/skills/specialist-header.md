@@ -44,14 +44,16 @@ produces no artifact of its own and only injects context for the next step
 
 ### How to launch a `subagent` step
 
-> Canonical protocol: `../asdt-shared/skills/parallel-retrieval.md` — Cache Ledger Rule, Injection Format, UNRESOLVED degradation. Do not restate it here.
+> Canonical protocol: the **Orchestrator Fetch-Once Cache & Injected-Input Contract** sections
+> of this same document — **Cache Ledger Rule**, **Injection Format**, and the UNRESOLVED case in
+> **Partial-Context Degradation**. Follow them as written there; they are not restated here.
 
 > **Agent type**: launch each `subagent` step with the agent type its
 > `workflow.yaml` entry declares — `agent: analyst` maps to the installed
 > `asdt-analyst` agent, `agent: builder` to `asdt-builder`. Fallback is
 > MANDATORY: when the named type is not available in your harness, launch with
 > the harness default (general-purpose) agent AND prepend the injected
-> executor header per `../asdt-shared/skills/parallel-retrieval.md`.
+> executor header per **Executor Header Injection** in this same document.
 
 `inline` steps fold into your own orchestrator context — no launch.
 
@@ -88,9 +90,12 @@ Rules for both:
 
 - Paths resolve from the SPECIALIST's own directory. Both
   `../asdt-shared/skills/x.md` and `skills/x.md` are valid and resolve correctly.
-- Reads go through the same fetch-once ledger described in
-  `../asdt-shared/skills/parallel-retrieval.md`, keyed `skill:{path}` so a file entry
-  can never collide with a `topic_key` entry. Follow the rule there; do not restate it.
+- Reads go through the same fetch-once ledger described under **Cache Ledger Rule** in
+  this same document, keyed `skill:{path}` so a file entry can never collide with a
+  `topic_key` entry. Follow the rule as written there; it is not restated here.
+- A declared skill path whose content is already spliced into this header — the sections
+  that follow below — is ALREADY resolved: mark its `skill:{path}` ledger entry satisfied
+  and do NOT read the file again.
 - An inline step with NO `skill:` key at all (`knowledge-gate`, `enrichment`, and
   `clarify` in `asdt-init`) has nothing to read. That is normal — it degrades
   silently and is NOT an UNRESOLVED case.

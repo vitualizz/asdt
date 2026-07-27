@@ -4,8 +4,8 @@
 Generate implementation code for each task, respecting existing conventions.
 
 ## Inputs
-- `developer/dev-tasks`: ordered task list with files and dependencies
-- `developer/dev-design`: technical approach, key constraints
+- `developer/dev-tasks` (optional — tier-gated: the `tasks` step runs at complex): ordered task list with files and dependencies
+- `developer/dev-design` (optional — tier-gated: the `design` step runs at moderate and above): technical approach, key constraints
 - `developer/dev-spec` (optional — spec→code traceability): acceptance criteria for this change
 
 Extract from dev-tasks: `tasks` list.
@@ -20,6 +20,16 @@ Extract from dev-spec: `acceptance_criteria[]` (for the traceability_report — 
 fall back to `developer/dev-spec` + `developer/dev-design` as primary inputs and derive the
 task list inline from those two artifacts, then proceed. The Mode resolution below (PLAN-ONLY
 vs WRITING, gated on declared edit roots) applies unchanged to the inline-derived tasks.
+
+**DEGRADATION — `dev-design` is optional (the `design` step runs at `moderate` and above, so it is
+absent at `simple`)**: when it arrives as `### INPUT {project}/{change}/developer/dev-design: UNRESOLVED`,
+fall back to `developer/dev-spec` as the design authority — take `key_constraints` from the spec's
+stated constraints and non-functional requirements, derive data-model field shapes from the
+acceptance criteria, and mark every shape the spec does not settle as unresolved rather than
+inventing it; append "developer/dev-design absent — implementation derived from dev-spec at spec
+granularity" to open_items. Never block on this input. At `simple` BOTH `dev-tasks` and `dev-design`
+are absent, so `developer/dev-spec` is the sole primary input and the inline-derived task list comes
+from it alone.
 
 ## Context budget
 dev-tasks + dev-design summary: max 3,000 tokens. Generate code for tasks in batches

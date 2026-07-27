@@ -47,6 +47,41 @@ func TestEmbeddedSkillTree(t *testing.T) {
 	}
 }
 
+// TestEmbeddedSharedSkillsMatchDisk asserts that the embedded FS view of
+// skill/asdt-shared/skills/ matches disk in BOTH directions: every regular
+// fragment on disk ships, and every underscore- or dot-prefixed entry does not.
+//
+// This is the only guard against a genuinely silent failure mode: an embed glob
+// that is wrong produces no error at all — a fragment simply stops shipping (so
+// the installer's header fold fails at install time, or worse, ships short), or
+// an excluded draft file suddenly starts shipping. Neither shows up as a build
+// or install error, only as a missing/extra file inside the embedded tree.
+func TestEmbeddedSharedSkillsMatchDisk(t *testing.T) {
+	const sharedSkillsDir = "asdt-shared/skills"
+
+	diskEntries, err := os.ReadDir(sharedSkillsDir)
+	if err != nil {
+		t.Fatalf("reading %s on disk: %v", sharedSkillsDir, err)
+	}
+
+	for _, entry := range diskEntries {
+		name := entry.Name()
+		embeddedPath := sharedSkillsDir + "/" + name
+		excluded := strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".")
+
+		_, statErr := fs.Stat(FS(), embeddedPath)
+		if excluded {
+			if statErr == nil {
+				t.Errorf("%s starts with %q or %q and must NOT be embedded, but it is present in the embedded FS", embeddedPath, "_", ".")
+			}
+			continue
+		}
+		if statErr != nil {
+			t.Errorf("%s exists on disk but is missing from embedded FS: %v", embeddedPath, statErr)
+		}
+	}
+}
+
 // TestRoutedSpecialistInvariants asserts that every routed specialist's
 // embedded SKILL.md body carries the load-bearing header invariants: the SOLE
 // orchestrator gate, the FIRST ACTION self-load instruction, and both

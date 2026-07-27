@@ -38,7 +38,7 @@ skill/
 │   └── skills/                 ← reference docs loaded into specific steps (optional)
 │       └── {reference}.md
 ├── asdt-shared/
-│   └── skills/                 ← cross-specialist utilities (see asdt-shared/skills/README.md)
+│   └── skills/                 ← cross-specialist utilities (see asdt-shared/skills/_README.md)
 └── asdt-init/                  ← project initializer (/asdt-init)
 ```
 
