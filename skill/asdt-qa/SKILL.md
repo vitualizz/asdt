@@ -42,7 +42,7 @@ or UX specs.
 
 | Level | Steps |
 |-------|-------|
-| **trivial** | Not eligible — falls back to `simple`; no dependency-complete step set exists below `simple` |
+| **trivial** | Not eligible — falls back to `simple`; QA has no useful single-step output |
 | **simple** | `load-requirements → ac-validation → test-case-generation → quality-report → performance-validation → review` |
 | **moderate** | `load-requirements → ac-validation → edge-case-analysis → test-strategy → test-case-generation → quality-report → performance-validation → review` |
 | **complex** | Full workflow (same steps as moderate) |
@@ -66,7 +66,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | review | steps/review.md | subagent | `qa/test-plan`, `qa/ac-gaps`, `qa/perf-validation` *(optional)* | `qa/qa-review` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
 
 ## Final Output
 `qa/qa-review` — the go/no-go shipping verdict. When `review` runs, its `summary` feeds `decision-preservation`. The intermediate `qa/test-plan` (from `quality-report`) remains available as the full test plan artifact.

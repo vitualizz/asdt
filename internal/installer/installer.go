@@ -250,11 +250,11 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 	}
 
 	// Two distinct generated regions live in SKILL.md files. The root SKILL.md
-	// owns the §9.2 inline-steps region, regenerated here from the specialist
-	// workflow.yaml files; each per-specialist asdt-*/SKILL.md owns a
-	// specialist-header region, spliced below. Fail loud if the markers are
-	// missing from the root: that file MUST carry them, so an absent-marker
-	// error there is a real defect.
+	// owns the `Tailored Workflow Generation` inline-steps region, regenerated
+	// here from the specialist workflow.yaml files; each per-specialist
+	// asdt-*/SKILL.md owns a specialist-header region, spliced below. Fail
+	// loud if the markers are missing from the root: that file MUST carry
+	// them, so an absent-marker error there is a real defect.
 	if srcPath == "SKILL.md" {
 		generated, genErr := GenerateInlineSteps(skillsFS, data)
 		if genErr != nil {

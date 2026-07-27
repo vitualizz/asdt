@@ -64,7 +64,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | backlog-entry | steps/backlog-entry.md | subagent | `pm/user-stories`, `pm/scope-analysis` *(optional)*, `pm/prioritization` *(optional)*, `pm/nfr-targets` *(optional)* | `pm/backlog-entry` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
 
 ## Final Output
 This specialist exports TWO artifacts, at different tiers.

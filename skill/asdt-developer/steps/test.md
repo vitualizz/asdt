@@ -4,11 +4,19 @@
 Generate tests for the implementation, covering happy paths and key edge cases.
 
 ## Inputs
-- `developer/dev-tasks`: task list with acceptance criteria references
+- `developer/dev-tasks` (optional — tier-gated: the `tasks` step runs at complex): task list with acceptance criteria references
 - `developer/dev-implementation`: code snippets per task
 
 Extract from dev-tasks: `tasks[].ac_ref`, `tasks[].id`.
 Extract from dev-implementation: `steps[].code_snippets[].content` (signatures only, not full bodies).
+
+**DEGRADATION — `dev-tasks` is optional (the `tasks` step runs at `complex` only, so it is absent at
+`simple` and `moderate`)**: when it arrives as `### INPUT {project}/{change}/developer/dev-tasks: UNRESOLVED`,
+derive coverage from `developer/dev-implementation` instead of from a task list — treat each entry of its
+`files_changed[]` (writing mode) or `steps[]` (plan-only mode) as one unit under test, key each suite by that
+entry's `task_id`, and take the behavior to assert from that artifact's `traceability_report[]` acceptance
+criteria in place of `tasks[].ac_ref`; append "developer/dev-tasks absent — test coverage derived from
+dev-implementation units instead of the task list" to open_items. Never block on this input.
 
 ## Context budget
 dev-tasks AC list + dev-implementation function signatures: max 2,500 tokens.
@@ -31,15 +39,16 @@ dev-tasks AC list + dev-implementation function signatures: max 2,500 tokens.
 ## Processing
 
 ### Plan-only mode
-For each task in dev-tasks:
+For each task in dev-tasks — or, when dev-tasks is UNRESOLVED, each unit derived per DEGRADATION above:
 1. Write one happy-path test covering the acceptance criterion (ac_ref) as a `code_snippet`.
 2. Write one edge-case test for the most likely failure mode as a `code_snippet`.
 3. Follow the existing test framework convention from platform-summary.
 4. Use table-driven tests where appropriate.
 
 ### Writing mode
-For each task in dev-tasks:
-1. Confirm the test file path (from `dev-tasks` test entries / declared paths) is within the
+For each task in dev-tasks — or, when dev-tasks is UNRESOLVED, each unit derived per DEGRADATION above:
+1. Confirm the test file path (from `dev-tasks` test entries / declared paths, or from the
+   `dev-implementation` entry the unit was derived from) is within the
    inherited `allowedEditRoots`; if it falls outside, STOP before writing it, do not expand
    scope, and record the unsafe path plus the triggering task in `open_items`.
 2. Write one happy-path test covering the acceptance criterion (ac_ref) and one edge-case

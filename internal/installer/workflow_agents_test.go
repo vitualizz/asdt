@@ -9,8 +9,10 @@ import (
 )
 
 // workflowSpecialistDirs lists the specialist directories whose workflow.yaml
-// declares per-step agent types. asdt-init has no workflow.yaml; asdt-shared
-// is the fragment library.
+// declares per-step agent types. asdt-init has its own workflow.yaml with
+// `agent:` fields, but it is a non-routable setup-class command and is
+// deliberately excluded from this per-specialist agent-type audit; asdt-shared
+// is the fragment library and has no workflow.yaml at all.
 var workflowSpecialistDirs = []string{
 	"asdt-architect",
 	"asdt-developer",

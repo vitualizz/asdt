@@ -90,7 +90,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/qa/test-plan"
-      - "{project}/{change}/pm/nfr-targets"
+      - "{project}/{change}/pm/nfr-targets"  # optional (tier-gated: PM success-metrics runs at moderate+)
     output_topic_key: "{project}/{change}/qa/perf-validation"
     reference_skills:
       - ../asdt-shared/skills/nfr-budget.md

@@ -2,7 +2,7 @@
 
 This file is repo-only authoring guidance. It is NOT installed into user projects — `skill/embedded.go` embeds `SKILL.md` and `asdt-*` only, so nothing at this level ships. It is the single normative source for the shape of an ASDT specialist: every routed specialist directory (`skill/asdt-<x>/`) MUST conform to it, whether newly added or being normalized.
 
-Authority: each specialist's workflow.yaml owns step identity, execution mode, agent type, and model; each specialist's ## Orchestration Plan in its SKILL.md owns the tier→step lists; the root skill/SKILL.md §9.2 per-specialist table is a derived cache of both and never overrides them.
+Authority: each specialist's workflow.yaml owns step identity, execution mode, agent type, and model; each specialist's ## Orchestration Plan in its SKILL.md owns the tier→step lists; the root skill/SKILL.md `Tailored Workflow Generation` per-specialist table is a derived cache of both and never overrides them.
 
 ## Frontmatter
 
@@ -81,7 +81,7 @@ The SKILL.md body follows this fixed order.
 - a **Conditional** line (which steps are conditional, which are irrenunciable)
 - the Tailored-Workflow-precedence sentence: "When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence over the complexity-based defaults above."
 - the step table: `| Step | File | Execution | Reads | Writes |`
-- the per-specialist authority sentence: "This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change."
+- the per-specialist authority sentence: "This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change."
 
 ## Gating axis
 
@@ -151,12 +151,21 @@ Current cases: architect `technical-handoff`, security `hardening-checklist`, ux
 - The `write` sub-agent owns every file write, and a post-write self-check is required.
 - It follows the universal core of this template and is exempt only from the routed-mandatory blocks (the FIRST ACTION / ORCHESTRATOR GATE literals, the specialist-header generated region, and the routable registration mirrors). Its `SKILL.md` matches the installer's per-specialist predicate but carries no markers, so the header splice is an intended no-op there.
 
+## Cross-references
+
+Reference a section by its backticked NAME, never by its number. A stale number keeps resolving — silently, to the wrong section — while a stale name fails visibly and gets fixed.
+
+- Same file: the name alone — `Gating axis`, `Step file layout`.
+- Across files: the file path AND the name — `skill/SKILL.md` `Tailored Workflow Generation`. Never the path alone, never the name alone.
+- Use the FULL section name. `Tailored Workflow Generation` is not `Tailored Workflow`, which collides with the literal `## Tailored Workflow` block headings.
+- The numbered headings in `skill/SKILL.md` STAY numbered: the numbers are navigation aids, and a drift test matches `## 5. Specialist Registry` as a literal string. Names replace pointers, never targets — renumber nothing.
+
 ## Registration ritual
 
 Adding a routable specialist means three manual mirrors:
 
-1. `skill/SKILL.md` — the §5 Specialist Registry row.
-2. `skill/SKILL.md` — the §9.2 per-specialist table row. Never hand-edit inside the generated inline-steps markers; that sub-region is regenerated at install.
+1. `skill/SKILL.md` — the `Specialist Registry` row.
+2. `skill/SKILL.md` — the `Tailored Workflow Generation` per-specialist table row. Never hand-edit inside the generated inline-steps markers; that sub-region is regenerated at install.
 3. `internal/installer/assets/agents-template.md` — the ASDT Specialists row.
 
 workflow.yaml `name:` fields stay authoritative for step identity. The repo's routed-invariant test (`skill/embedded_test.go`) also keeps a hardcoded specialist list that a maintainer must update.
@@ -203,7 +212,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | discover | steps/discover.md | subagent | *(request + platform-summary)* | `researcher/discovery` |
 | brief | steps/brief.md | subagent | `researcher/discovery` | `researcher/feasibility-brief` |
 
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
 ```
 
 Step-file skeleton (`steps/brief.md`), following § Step file layout:

@@ -66,7 +66,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 
 ¹ Only included when `strict_tdd: true` in `.asdt/config.yaml`. Excluded when `strict_tdd` is `false` or absent.
 
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
 
 ## Final Output
 `developer/dev-implementation` — the consolidated implementation artifact produced by the `implement` step. Consumed by QA and other specialists.

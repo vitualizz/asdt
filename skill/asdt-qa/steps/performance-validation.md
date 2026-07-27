@@ -10,6 +10,8 @@ shipping verdict and may read this perf verdict.
 - `qa/test-plan` — arrives as an `### INPUT {topic_key}` block. Extract: `ac_coverage`, `quality_verdict`, and any performance-relevant test cases (produced by `quality-report`).
 - `pm/nfr-targets` — arrives as an `### INPUT {topic_key}` block. Extract: each target's `dimension`, `target`, and `measurement_method` (cross-specialist input, produced by PM `success-metrics`).
 
+**DEGRADATION — `pm/nfr-targets` is optional (the PM `success-metrics` step runs at `moderate` and above, so no target exists below that tier)**: when it arrives as `### INPUT {project}/{change}/pm/nfr-targets: UNRESOLVED`, set `gate_verdict` to `no-target` with the explicit note "no target to validate against" and emit no per-dimension `pass` — NEVER emit a silent `go` when there is no target to validate against; append "pm/nfr-targets absent — performance gate returned no-target, nothing to validate against" to open_items. Never block on this input.
+
 ## Context budget
 test-plan summary + the nfr-targets list: max 1,200 tokens.
 
@@ -19,11 +21,8 @@ Apply the `nfr-budget` shared skill (`../asdt-shared/skills/nfr-budget.md`).
    to that target's `target` value, using its `measurement_method`.
 2. Emit verdict `pass` when the value meets the target, `fail` when it misses.
 3. Roll up the gate: `gate_verdict` is `go` ONLY if every target passes; otherwise `no-go`.
-4. **DEGRADATION** — if `pm/nfr-targets` arrived as an `### INPUT
-   {project}/{change}/pm/nfr-targets: UNRESOLVED` block (PM `success-metrics` did not
-   run): set `gate_verdict` to `no-target` with the explicit note "no target to
-   validate against", and record the gap in `open_items`. NEVER emit a silent `go`
-   when there is no target to validate against.
+   When `pm/nfr-targets` is UNRESOLVED the roll-up is `no-target`, never `go` — see the
+   DEGRADATION paragraph in Inputs.
 
 ## Output
 Produces: `qa/perf-validation`

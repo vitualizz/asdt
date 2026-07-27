@@ -71,8 +71,8 @@ Create one `.md` per step in `skill/{name}/steps/{step-id}.md`. Each file contai
 
 The embed needs nothing from you — `//go:embed SKILL.md asdt-*` already ships your directory. What is **not** automatic is registration: a routable specialist has to be mirrored by hand in three places, plus one test fixture.
 
-1. `skill/SKILL.md` — add the §5 Specialist Registry row (command, discipline, when to involve).
-2. `skill/SKILL.md` — add the §9.2 per-specialist table row. Never hand-edit inside the generated inline-steps markers in that table; that sub-region is regenerated at install time and your edits are overwritten.
+1. `skill/SKILL.md` — add the `Specialist Registry` row (command, discipline, when to involve).
+2. `skill/SKILL.md` — add the `Tailored Workflow Generation` per-specialist table row. Never hand-edit inside the generated inline-steps markers in that table; that sub-region is regenerated at install time and your edits are overwritten.
 3. `internal/installer/assets/agents-template.md` — add the ASDT Specialists row.
 4. `skill/embedded_test.go` — the routed-invariant test keeps a hardcoded specialist list that a maintainer must update.
 

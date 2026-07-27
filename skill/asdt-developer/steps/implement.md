@@ -15,11 +15,13 @@ Extract from dev-spec: `acceptance_criteria[]` (for the traceability_report — 
 **Soft input (no `dev-spec`)**: if dev-spec is ABSENT, do NOT fail — note the absence in
 `open_items`, emit an empty `traceability_report[]`, and proceed with available context.
 
-**Fallback (no `dev-tasks`)**: in simple/moderate tier the `tasks` step does not run, so
-`developer/dev-tasks` is ABSENT. Do NOT fail and do NOT STOP on the missing artifact alone —
-fall back to `developer/dev-spec` + `developer/dev-design` as primary inputs and derive the
-task list inline from those two artifacts, then proceed. The Mode resolution below (PLAN-ONLY
-vs WRITING, gated on declared edit roots) applies unchanged to the inline-derived tasks.
+**DEGRADATION — `dev-tasks` is optional (the `tasks` step runs at `complex` only, so it is absent at
+`simple` and `moderate`)**: when it arrives as `### INPUT {project}/{change}/developer/dev-tasks: UNRESOLVED`,
+do NOT fail and do NOT STOP on the missing artifact alone — fall back to `developer/dev-spec` +
+`developer/dev-design` as primary inputs and derive the task list inline from those two artifacts, then
+proceed; append "developer/dev-tasks absent — task list derived inline from dev-spec and dev-design" to
+open_items. Never block on this input. The Mode resolution below (PLAN-ONLY vs WRITING, gated on declared
+edit roots) applies unchanged to the inline-derived tasks.
 
 **DEGRADATION — `dev-design` is optional (the `design` step runs at `moderate` and above, so it is
 absent at `simple`)**: when it arrives as `### INPUT {project}/{change}/developer/dev-design: UNRESOLVED`,

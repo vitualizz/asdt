@@ -12,9 +12,10 @@ import (
 )
 
 // Inline-steps generated-region markers. These literal HTML comments bound the
-// machine-generated §9.2 inline-steps list in the root SKILL.md. They are the
-// single source both the install-time generator and any test reference, so the
-// region can be located and replaced idempotently.
+// machine-generated `Tailored Workflow Generation` inline-steps list in the
+// root SKILL.md. They are the single source both the install-time generator
+// and any test reference, so the region can be located and replaced
+// idempotently.
 const (
 	inlineStepsBeginMarker = "<!-- ASDT:GENERATED:9.2-inline-steps -->"
 	inlineStepsEndMarker   = "<!-- /ASDT:GENERATED:9.2-inline-steps -->"
@@ -32,11 +33,12 @@ const (
 	specialistHeaderEndMarker   = "<!-- /ASDT:GENERATED:specialist-header -->"
 )
 
-// registryRenderOrder is the display order of specialists in the §9.2
-// inline-steps list. It is intentionally NOT the alphabetical directory walk
-// order: the hand-authored list reads PM → Architect → QA → Security → UX/UI →
-// Developer → Researcher, and the generator must reproduce that exact sequence
-// so its first run against the existing SKILL.md is a byte-identical no-op.
+// registryRenderOrder is the display order of specialists in the `Tailored
+// Workflow Generation` inline-steps list. It is intentionally NOT the
+// alphabetical directory walk order: the hand-authored list reads
+// PM → Architect → QA → Security → UX/UI → Developer → Researcher, and the
+// generator must reproduce that exact sequence so its first run against the
+// existing SKILL.md is a byte-identical no-op.
 var registryRenderOrder = []string{
 	"asdt-pm",
 	"asdt-architect",
@@ -65,8 +67,9 @@ var specialistHeaderFragments = []string{
 	"asdt-shared/skills/knowledge-recall.md",
 }
 
-// inlineStepsDisplayNames maps a specialist directory to the display label used
-// in the §9.2 inline-steps list (e.g. "asdt-pm" → "PM").
+// inlineStepsDisplayNames maps a specialist directory to the display label
+// used in the `Tailored Workflow Generation` inline-steps list
+// (e.g. "asdt-pm" → "PM").
 var inlineStepsDisplayNames = map[string]string{
 	"asdt-pm":         "PM",
 	"asdt-architect":  "Architect",
@@ -154,11 +157,12 @@ func parseRegistry(skillsFS fs.FS) ([]specialistRegistry, error) {
 	return regs, nil
 }
 
-// renderInlineStepsRegion emits the §9.2 inline-steps bullet block body — the
-// bytes that sit strictly between the markers — from the registry. It produces
-// one "- {Display}: `step`, `step`" line per specialist that has inline steps,
-// in registryRenderOrder. The output is leading-newline / trailing-newline
-// padded so it slots cleanly between markers that each occupy their own line.
+// renderInlineStepsRegion emits the `Tailored Workflow Generation`
+// inline-steps bullet block body — the bytes that sit strictly between the
+// markers — from the registry. It produces one "- {Display}: `step`, `step`"
+// line per specialist that has inline steps, in registryRenderOrder. The
+// output is leading-newline / trailing-newline padded so it slots cleanly
+// between markers that each occupy their own line.
 // Pure function; no I/O.
 func renderInlineStepsRegion(regs []specialistRegistry) string {
 	byDir := make(map[string]specialistRegistry, len(regs))
@@ -234,11 +238,11 @@ func replaceMarkerRegion(content []byte, beginMarker, endMarker, newBody string)
 	return buf.Bytes(), nil
 }
 
-// GenerateInlineSteps returns skillMD with its §9.2 inline-steps marker region
-// regenerated from the specialist workflow.yaml files in skillsFS. It is the
-// install-time entry point: parseRegistry → renderInlineStepsRegion →
-// replaceMarkerRegion. The returned bytes are unchanged when the region already
-// matches the derived list.
+// GenerateInlineSteps returns skillMD with its `Tailored Workflow Generation`
+// inline-steps marker region regenerated from the specialist workflow.yaml
+// files in skillsFS. It is the install-time entry point: parseRegistry →
+// renderInlineStepsRegion → replaceMarkerRegion. The returned bytes are
+// unchanged when the region already matches the derived list.
 func GenerateInlineSteps(skillsFS fs.FS, skillMD []byte) ([]byte, error) {
 	regs, err := parseRegistry(skillsFS)
 	if err != nil {

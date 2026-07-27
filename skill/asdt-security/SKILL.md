@@ -46,7 +46,7 @@ NOT write implementation code, architecture decisions, or test plans.
 | **moderate** | `threat-modeling → hardening-checklist` |
 | **high** | `threat-modeling → attack-surface → owasp-analysis → hardening-checklist` |
 
-**Trivial eligible**: N/A — Security is risk-surface gated, not complexity gated, and `skill/SKILL.md` §9.2 records the same N/A. Its first step `threat-modeling` has `inputs: []`, so no upstream artifact is ever required to start.
+**Trivial eligible**: N/A — Security is risk-surface gated, not complexity gated, and `skill/SKILL.md` `Tailored Workflow Generation` records the same N/A. Its first step `threat-modeling` has `inputs: []`, so no upstream artifact is ever required to start.
 **Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `platform-analysis`, `decision-preservation`
 **Conditional**: `attack-surface` and `owasp-analysis` run only at `risk_surface: high`. `threat-modeling` and `hardening-checklist` are irrenunciable whenever Security runs — the `moderate` tier drops inputs, never steps, so `hardening-checklist` treats `security/owasp-findings` as optional and degrades per its own step file.
 
@@ -62,7 +62,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | hardening-checklist | steps/hardening-checklist.md | subagent | `security/stride-threats`, `security/owasp-findings` (optional) | `security/security-findings` + `security/hardening-checklist` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md §9.2 holds a derived cache row — update it when steps change.
+This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
 
 ## Final Output
 `security/security-findings` + `security/hardening-checklist` — the two final artifacts of the `hardening-checklist` step, consumed by the Developer and Architect specialists.

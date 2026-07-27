@@ -81,4 +81,4 @@ This naming lets the next specialist retrieve a specific artifact unambiguously 
 2. Add the ORCHESTRATOR GATE block to `SKILL.md` — copy from any existing specialist
 3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, `output_topic_key:`
 4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-shared/skills/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-shared/skills/parallel-retrieval.md` for which of the two applies
-5. Register the specialist in `skill/SKILL.md` §5 (Specialist Registry)
+5. Register the specialist in the `Specialist Registry` section of `skill/SKILL.md`

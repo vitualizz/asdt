@@ -71,8 +71,8 @@ Creá un `.md` por step en `skill/{name}/steps/{step-id}.md`. Cada archivo conti
 
 El embed no necesita nada de vos — `//go:embed SKILL.md asdt-*` ya shippea tu directorio. Lo que **no** es automático es el registro: un specialist routable tiene que espejarse a mano en tres lugares, más un fixture de test.
 
-1. `skill/SKILL.md` — agregá la fila del §5 Specialist Registry (comando, disciplina, cuándo involucrarlo).
-2. `skill/SKILL.md` — agregá la fila de la tabla por specialist en §9.2. Nunca edites a mano dentro de los marcadores generados de inline steps de esa tabla; esa subregión se regenera al instalar y tus ediciones quedan sobrescritas.
+1. `skill/SKILL.md` — agregá la fila de `Specialist Registry` (comando, disciplina, cuándo involucrarlo).
+2. `skill/SKILL.md` — agregá la fila de la tabla por specialist en `Tailored Workflow Generation`. Nunca edites a mano dentro de los marcadores generados de inline steps de esa tabla; esa subregión se regenera al instalar y tus ediciones quedan sobrescritas.
 3. `internal/installer/assets/agents-template.md` — agregá la fila de ASDT Specialists.
 4. `skill/embedded_test.go` — el test de invariantes routed mantiene una lista de specialists hardcodeada que un mantenedor debe actualizar.
 

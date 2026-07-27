@@ -71,7 +71,7 @@ Los detalles completos de autoría están en [Contribuir](/asdt/docs/contributin
 var skillFS embed.FS
 ```
 
-Cualquier directorio llamado `asdt-{name}` se shippea automáticamente en el próximo build — no hay lista a la cual agregarlo ni forma de olvidarse. Lo que sí hay que hacer a mano es el registro: las filas de §5 y §9.2 en `skill/SKILL.md`, la fila de ASDT Specialists en `internal/installer/assets/agents-template.md`, y la lista de specialists hardcodeada en `skill/embedded_test.go`. Si te salteás eso, la skill igual se shippea, solo que nunca se enruta.
+Cualquier directorio llamado `asdt-{name}` se shippea automáticamente en el próximo build — no hay lista a la cual agregarlo ni forma de olvidarse. Lo que sí hay que hacer a mano es el registro: las filas de `Specialist Registry` y `Tailored Workflow Generation` en `skill/SKILL.md`, la fila de ASDT Specialists en `internal/installer/assets/agents-template.md`, y la lista de specialists hardcodeada en `skill/embedded_test.go`. Si te salteás eso, la skill igual se shippea, solo que nunca se enruta.
 
 Después de agregar el directorio:
 

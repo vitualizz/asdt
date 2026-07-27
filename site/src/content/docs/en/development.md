@@ -71,7 +71,7 @@ Full authoring details are in [Contributing](/asdt/docs/contributing). The thing
 var skillFS embed.FS
 ```
 
-Any directory named `asdt-{name}` ships automatically on the next build — there is no list to append to and no way to forget it. What *does* need doing by hand is registration: the §5 and §9.2 rows in `skill/SKILL.md`, the ASDT Specialists row in `internal/installer/assets/agents-template.md`, and the hardcoded specialist list in `skill/embedded_test.go`. Miss those and the skill still ships, it just never gets routed.
+Any directory named `asdt-{name}` ships automatically on the next build — there is no list to append to and no way to forget it. What *does* need doing by hand is registration: the `Specialist Registry` and `Tailored Workflow Generation` rows in `skill/SKILL.md`, the ASDT Specialists row in `internal/installer/assets/agents-template.md`, and the hardcoded specialist list in `skill/embedded_test.go`. Miss those and the skill still ships, it just never gets routed.
 
 After adding the directory:
 
