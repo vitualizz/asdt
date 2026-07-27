@@ -1,6 +1,6 @@
 ---
 title: Desarrollo
-description: Cómo compilar, testear y correr ASDT localmente — incluyendo la trampa del cableado de embed y el flujo de testing en sandbox.
+description: Cómo compilar, testear y correr ASDT localmente — incluyendo el checklist de registro de especialistas y el flujo de testing en sandbox.
 order: 9
 locale: es
 ---
@@ -60,30 +60,30 @@ Volvé a correrlo contra el mismo `$HOME` para probar el camino de detección de
 rm -rf /tmp/asdt-sandbox
 ```
 
-## Agregar un nuevo especialista — checklist de cableado
+## Agregar un nuevo especialista — checklist de registro
 
-Los detalles completos de autoría están en [Contribuir](/asdt/docs/contributing). El paso que la guía de contribución no destaca:
+Los detalles completos de autoría están en [Contribuir](/asdt/docs/contributing). Lo que conviene saber de entrada:
 
-**Cablealo en el embed.** Abrí `skill/embedded.go`:
+**El embed no necesita cableado.** `skill/embedded.go` usa un glob:
 
 ```go
-//go:embed SKILL.md asdt-shared asdt-developer asdt-ux-ui asdt-architect asdt-qa asdt-security asdt-init
+//go:embed SKILL.md asdt-*
 var skillFS embed.FS
 ```
 
-Agregá el nombre de tu directorio a esta lista. Un directorio de skill que existe en el disco pero **no** está listado acá queda excluido silenciosamente del binario — `go build` funciona bien, el TUI corre sin problemas, y la skill nunca aparece en el resultado instalado. No hay ninguna advertencia en tiempo de compilación ni en tiempo de ejecución.
+Cualquier directorio llamado `asdt-{name}` se shippea automáticamente en el próximo build — no hay lista a la cual agregarlo ni forma de olvidarse. Lo que sí hay que hacer a mano es el registro: las filas de §5 y §9.2 en `skill/SKILL.md`, la fila de ASDT Specialists en `internal/installer/assets/agents-template.md`, y la lista de specialists hardcodeada en `skill/embedded_test.go`. Si te salteás eso, la skill igual se shippea, solo que nunca se enruta.
 
-Después de cablearlo:
+Después de agregar el directorio:
 
 1. Corré el flujo de sandbox para confirmar que la skill aparece en `/tmp/asdt-sandbox/.claude/skills/{name}/`
 2. Corré `go test ./skill/...` — el test del registro embebido verifica que la skill esté presente
 
 ## Verificar ediciones de prompts
 
-Editar el `SKILL.md` o los `steps/*.md` de un especialista existente no requiere cambios en la lista de embed. Simplemente:
+Editar el `SKILL.md` o los `steps/*.md` de un especialista existente no requiere ningún cambio de cableado. Simplemente:
 
 ```sh
-go test ./internal/prompt/...
+go test ./skill/...
 ```
 
 `go:embed` vuelve a leer los archivos en tiempo de compilación, así que `go test` y `go run` siempre reflejan tus últimas ediciones — sin caché de la cual preocuparse.
@@ -93,19 +93,25 @@ go test ./internal/prompt/...
 ```
 cmd/asdt-tui/       # punto de entrada del TUI del instalador
 internal/
+  grader/           # califica payloads de artefactos contra probe sets
+  i18n/             # catálogo de strings del TUI (en + es)
   installer/        # detección de skills, instalación, lógica de actualización
   setup/            # vistas del TUI y máquina de estados
-  prompt/           # ensamblado y embebido de prompts
-  i18n/             # catálogo de strings del TUI (en + es)
+  tui/panels/       # primitivas puras de render del TUI (badge, hero, spinner)
 skill/
+  SKILL.md          # orquestador raíz + registro de especialistas
+  TEMPLATE.md       # contrato de autoría de especialistas (solo repo)
+  README.md         # panorama de la capa de skills
   embedded.go       # registro go:embed
+  embedded_test.go  # tests de invariantes routed + embed
   asdt-shared/      # fragmentos de skill compartidos
   asdt-architect/   # especialista Architect
   asdt-developer/   # especialista Developer
+  asdt-pm/          # especialista Product Manager
   asdt-qa/          # especialista QA
+  asdt-researcher/  # especialista Researcher
   asdt-security/    # especialista Security
   asdt-ux-ui/       # especialista UX/UI
-  asdt-init/        # especialista de inicialización de proyecto
+  asdt-init/        # especialista de inicialización de proyecto (clase setup)
 site/               # Este sitio de documentación (Astro)
-docs/               # ADRs y guías para contribuidores
 ```

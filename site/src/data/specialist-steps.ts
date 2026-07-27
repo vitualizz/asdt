@@ -49,8 +49,8 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tiers: {
       trivial:  ['feature-intake'],
       simple:   ['feature-intake', 'user-stories', 'backlog-entry'],
-      moderate: ['feature-intake', 'user-stories', 'scope-analysis', 'backlog-entry'],
-      complex:  ['feature-intake', 'user-stories', 'scope-analysis', 'prioritization', 'backlog-entry'],
+      moderate: ['feature-intake', 'user-stories', 'success-metrics', 'scope-analysis', 'backlog-entry'],
+      complex:  ['feature-intake', 'user-stories', 'success-metrics', 'scope-analysis', 'prioritization', 'backlog-entry'],
     },
     steps: {
       'feature-intake': {
@@ -58,6 +58,9 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       },
       'user-stories': {
         id: 'user-stories',
+      },
+      'success-metrics': {
+        id: 'success-metrics',
       },
       'scope-analysis': {
         id: 'scope-analysis',
@@ -77,8 +80,8 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tiers: {
       trivial:  ['load-constraints'],
       simple:   [],
-      moderate: ['load-constraints', 'evaluate-approaches', 'decision-record'],
-      complex:  ['load-constraints', 'evaluate-approaches', 'decision-record', 'system-design', 'risk-analysis', 'technical-handoff'],
+      moderate: ['load-constraints', 'evaluate-approaches', 'decision-record', 'technical-handoff'],
+      complex:  ['load-constraints', 'evaluate-approaches', 'decision-record', 'system-design', 'cost-estimation', 'risk-analysis', 'technical-handoff'],
     },
     special: {
       simple: 'not-called',
@@ -96,6 +99,9 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'system-design': {
         id: 'system-design',
       },
+      'cost-estimation': {
+        id: 'cost-estimation',
+      },
       'risk-analysis': {
         id: 'risk-analysis',
       },
@@ -111,8 +117,8 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tiers: {
       trivial:  ['explore'],
       simple:   ['explore', 'spec', 'implement'],
-      moderate: ['explore', 'spec', 'design', 'implement'],
-      complex:  ['explore', 'spec', 'design', 'tasks', 'implement'],
+      moderate: ['explore', 'spec', 'design', 'implement', 'test'],
+      complex:  ['explore', 'spec', 'design', 'tasks', 'implement', 'test'],
     },
     steps: {
       'explore': {
@@ -130,6 +136,9 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'implement': {
         id: 'implement',
       },
+      'test': {
+        id: 'test',
+      },
     },
   },
 
@@ -138,9 +147,9 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tierType: 'complexity',
     tiers: {
       trivial:  [],
-      simple:   ['load-requirements', 'ac-validation', 'test-case-generation', 'quality-report'],
-      moderate: ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'review'],
-      complex:  ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'review'],
+      simple:   ['load-requirements', 'ac-validation', 'test-case-generation', 'quality-report', 'performance-validation', 'review'],
+      moderate: ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'performance-validation', 'review'],
+      complex:  ['load-requirements', 'ac-validation', 'edge-case-analysis', 'test-strategy', 'test-case-generation', 'quality-report', 'performance-validation', 'review'],
     },
     special: {
       trivial: 'not-eligible',
@@ -163,6 +172,9 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       },
       'quality-report': {
         id: 'quality-report',
+      },
+      'performance-validation': {
+        id: 'performance-validation',
       },
       'review': {
         id: 'review',
@@ -202,13 +214,16 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     tierType: 'complexity',
     tiers: {
       trivial:  ['feature-brief'],
-      simple:   ['feature-brief', 'information-architecture', 'user-flows', 'component-mapping', 'ux-handoff'],
-      moderate: ['feature-brief', 'information-architecture', 'user-flows', 'component-mapping', 'ux-handoff'],
-      complex:  ['feature-brief', 'information-architecture', 'user-flows', 'component-mapping', 'responsive-strategy', 'ux-handoff'],
+      simple:   ['feature-brief', 'design-tokens', 'information-architecture', 'user-flows', 'component-mapping', 'ux-handoff'],
+      moderate: ['feature-brief', 'design-tokens', 'information-architecture', 'user-flows', 'content-design', 'component-mapping', 'ux-handoff'],
+      complex:  ['feature-brief', 'design-tokens', 'information-architecture', 'user-flows', 'content-design', 'component-mapping', 'design-critique', 'ux-handoff'],
     },
     steps: {
       'feature-brief': {
         id: 'feature-brief',
+      },
+      'design-tokens': {
+        id: 'design-tokens',
       },
       'information-architecture': {
         id: 'information-architecture',
@@ -216,11 +231,14 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       'user-flows': {
         id: 'user-flows',
       },
+      'content-design': {
+        id: 'content-design',
+      },
       'component-mapping': {
         id: 'component-mapping',
       },
-      'responsive-strategy': {
-        id: 'responsive-strategy',
+      'design-critique': {
+        id: 'design-critique',
       },
       'ux-handoff': {
         id: 'ux-handoff',

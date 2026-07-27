@@ -41,7 +41,7 @@ test_runner: vitest
 lint: eslint
 ```
 
-Fields are free-form — specialists read what's present and skip what's missing. You can add custom fields like `deployment: vercel` or `database: postgres` and reference them in specialist prompts via the `platform-context` shared skill (an instruction fragment every specialist step loads automatically).
+Fields are free-form — specialists read what's present and skip what's missing. You can add custom fields like `deployment: vercel` or `database: postgres` and reference them in specialist prompts via the `platform-context` shared skill. That fragment is not ambient — it loads only where a specialist declares it, either as an inline `platform-analysis` step in `workflow.yaml` or in a step's `reference_skills:` list.
 
 ## Environment variables
 

@@ -13,7 +13,7 @@ La primera versión de ASDT modelaba la entrega de software como una FSM (finite
 
 Ese es el modelo equivocado. La entrega real de software la hace un equipo de especialistas, cada uno dueño de una disciplina independiente. Un ingeniero de seguridad no espera a que el desarrollador termine antes de revisar el código de auth. Un diseñador UX no sigue un flujo requirements → plan — sigue su propio proceso creativo.
 
-Un Architecture Decision Record (ADR-006) — la nota de diseño interna que garantiza que cualquier especialista pueda correr de forma independiente, en cualquier orden — formalizó el cambio: un Especialista es una unidad composable e independiente definida por su identidad, sus propios pasos de workflow, su contrato de artefactos y una garantía de independencia — cualquier especialista puede correr primero.
+Por eso ASDT reemplazó la FSM por una unidad distinta: un Especialista es una unidad composable e independiente definida por su identidad, sus propios pasos de workflow, su contrato de artefactos y una garantía de independencia — cualquier especialista puede correr primero, sin ningún predecesor requerido.
 
 ## Qué define a un especialista
 
@@ -21,9 +21,9 @@ Un especialista tiene cuatro partes:
 
 **Identidad** — un `id` estable (p. ej. `developer`), un nombre humano y una descripción que el advisor de pipeline usa para enrutar los pedidos.
 
-**Workflow** — una lista ordenada de pasos específicos de esa disciplina. El Developer corre `explore → spec → design → implement`. El especialista UX/UI corre `feature-brief → information-architecture → user-flows → component-mapping → ux-handoff`. No es el mismo pipeline aplicado a nombres distintos — el workflow de cada especialista refleja cómo funciona realmente esa disciplina.
+**Workflow** — una lista ordenada de pasos específicos de esa disciplina, restringida por complejidad para que la profundidad coincida con el cambio. En `complex`, el Developer corre `explore → spec → design → tasks → implement → test (if TDD)`; en `simple` corre solo `explore → spec → implement`. El especialista UX/UI en `complex` corre `feature-brief → design-tokens → information-architecture → user-flows → content-design → component-mapping → design-critique → ux-handoff`. No es el mismo pipeline aplicado a nombres distintos — el workflow de cada especialista refleja cómo funciona realmente esa disciplina.
 
-**Composición de skills** — skills compartidas que se cargan en cada paso (contexto de plataforma, envelope de artefactos, definición de alcance), más skills propias del especialista que se cargan por paso (threat modeling para Security, generación de código para Developer). Las capacidades se mezclan (mixed in) en lugar de heredarse.
+**Composición de skills** — skills compartidas (contexto de plataforma, knowledge recall, definición de alcance) más skills propias del especialista (threat modeling para Security, generación de código para Developer). Nada se carga de forma ambiental: una skill compartida se lee únicamente donde está declarada, ya sea como un paso `inline` en `workflow.yaml` o en la lista `reference_skills:` de un paso. Las capacidades se mezclan (mixed in) en lugar de heredarse.
 
 **Contrato de artefactos** — qué lee el especialista (`inputs`) y qué escribe (`outputs`). Los inputs son blandos: un input faltante degrada a una nota en `open_items[]`, nunca a un error. Los outputs tienen valores `topic_key` estables para que otros especialistas puedan recuperarlos por clave.
 

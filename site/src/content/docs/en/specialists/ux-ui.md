@@ -11,9 +11,9 @@ locale: en
 
 ## What it does
 
-The UX/UI Specialist transforms a feature brief into a structured UX specification that the Developer can implement without ambiguity. It identifies the primary actor and core problem first, then organizes content into an information architecture, maps the full interaction sequences (happy path + error paths + edge cases), catalogs which components to reuse, extend, or create from scratch, and — at complex tier — defines how each component behaves across breakpoints.
+The UX/UI Specialist transforms a feature brief into a structured UX specification that the Developer can implement without ambiguity. It identifies the primary actor and core problem first, then organizes content into an information architecture, maps the full interaction sequences (happy path + error paths + edge cases), and catalogs which components to reuse, extend, or create from scratch. Responsive behavior is not a separate step — it's a per-component field inside `component-spec`, recorded alongside each component's props and events.
 
-`ux-handoff` always runs regardless of complexity. That's the consolidation step that produces the two final artifacts consumed by Developer and Architect. `simple` and `moderate` tiers are intentionally identical — `responsive-strategy` is the only step that's gated to `complex`, because simple features rarely need explicit multi-breakpoint specs.
+`ux-handoff` closes every run from `simple` up. That's the consolidation step that produces the two final artifacts consumed by Developer and Architect. The tiers differ by depth: `simple` runs `feature-brief → design-tokens → information-architecture → user-flows → component-mapping → ux-handoff`; `moderate` adds `content-design` before component mapping; `complex` adds `design-critique` after it. At `trivial`, only `feature-brief` runs.
 
 One hard dependency: `information-architecture` must run before `user-flows`. You cannot map interaction sequences before you know the content hierarchy and navigation path.
 
@@ -52,7 +52,7 @@ Consumed by: **Developer** (reads both to implement the UI), **Architect** (read
 
 ```
 /asdt-ux-ui Spec the mobile layout for the dashboard
-# → Complex tier with responsive-strategy for explicit breakpoint behavior
+# → Complex tier — component-mapping records breakpoint behavior per component
 ```
 
 ## Limits — what it does NOT do

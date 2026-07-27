@@ -11,9 +11,9 @@ locale: es
 
 ## Qué hace
 
-El especialista UX/UI transforma un brief de feature en una especificación UX estructurada que el Developer puede implementar sin ambigüedad. Identifica primero al actor principal y el problema central, luego organiza el contenido en una arquitectura de información, mapea las secuencias de interacción completas (happy path + rutas de error + casos borde), cataloga qué componentes reutilizar, extender o crear desde cero y — en el nivel complex — define cómo se comporta cada componente en distintos breakpoints.
+El especialista UX/UI transforma un brief de feature en una especificación UX estructurada que el Developer puede implementar sin ambigüedad. Identifica primero al actor principal y el problema central, luego organiza el contenido en una arquitectura de información, mapea las secuencias de interacción completas (happy path + rutas de error + casos borde), y cataloga qué componentes reutilizar, extender o crear desde cero. El comportamiento responsive no es un paso aparte — es un campo por componente dentro de `component-spec`, registrado junto a los props y eventos de cada componente.
 
-`ux-handoff` siempre corre sin importar la complejidad. Ese es el paso de consolidación que produce los dos artefactos finales consumidos por Developer y Arquitecto. Los niveles `simple` y `moderate` son intencionalmente idénticos — `responsive-strategy` es el único paso que está restringido a `complex`, porque los features simples raramente necesitan specs explícitas de múltiples breakpoints.
+`ux-handoff` cierra cada corrida desde `simple` en adelante. Ese es el paso de consolidación que produce los dos artefactos finales consumidos por Developer y Arquitecto. Los niveles se diferencian por profundidad: `simple` corre `feature-brief → design-tokens → information-architecture → user-flows → component-mapping → ux-handoff`; `moderate` agrega `content-design` antes del mapeo de componentes; `complex` agrega `design-critique` después. En `trivial` solo corre `feature-brief`.
 
 Una dependencia fuerte: `information-architecture` debe correr antes que `user-flows`. No se pueden mapear secuencias de interacción antes de conocer la jerarquía de contenido y la ruta de navegación.
 
@@ -52,7 +52,7 @@ Consumido por: **Developer** (lee ambos para implementar la UI), **Arquitecto** 
 
 ```
 /asdt-ux-ui Especificar el layout móvil del dashboard
-# → Nivel complex con responsive-strategy para comportamiento explícito de breakpoints
+# → Nivel complex — component-mapping registra el comportamiento de breakpoints por componente
 ```
 
 ## Límites — qué NO hace

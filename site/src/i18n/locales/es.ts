@@ -214,6 +214,10 @@ export const es: UIStrings = {
         purpose: 'Escribe historias de usuario con prioridades MoSCoW y de 1 a 3 criterios de aceptación de alto nivel por historia',
         produces: 'pm/user-stories',
       },
+      'pm:success-metrics': {
+        purpose: 'Deriva objetivos de NFR medibles — presupuesto, valor objetivo y método de medición — a partir de las historias de usuario',
+        produces: 'pm/nfr-targets',
+      },
       'pm:scope-analysis': {
         purpose: 'Define límites explícitos de dentro/fuera de alcance, puntos de integración y señales de riesgo de alcance',
         produces: 'pm/scope-analysis',
@@ -242,13 +246,17 @@ export const es: UIStrings = {
         purpose: 'Define el modelo de datos, la superficie de API (método/entradas/errores), los límites de servicios y la secuencia del happy path',
         produces: 'architect/system-design',
       },
+      'architect:cost-estimation': {
+        purpose: 'Estima el perfil de costo del system design por cada dimensión de NFR y evalúa cada una contra el presupuesto del PM',
+        produces: 'architect/cost-estimate',
+      },
       'architect:risk-analysis': {
         purpose: 'Identifica los 3 a 5 riesgos principales (rendimiento, seguridad, fiabilidad, acoplamiento, migración) con mitigaciones concretas',
         produces: 'architect/risks',
       },
       'architect:technical-handoff': {
         purpose: 'Consolida todo el trabajo de arquitectura en dos artefactos finales para Developer y QA',
-        produces: 'architectural-decision + system-design',
+        produces: 'architect/architectural-decision + architect/system-design-final',
       },
       'developer:explore': {
         purpose: 'Lee los archivos y módulos afectados; mapea los patrones de nombres y las restricciones antes de diseñar nada',
@@ -269,6 +277,10 @@ export const es: UIStrings = {
       'developer:implement': {
         purpose: 'Escribe el código de cada tarea — modo solo-plan (snippets) o modo escritura (archivos reales en los destinos declarados)',
         produces: 'developer/dev-implementation',
+      },
+      'developer:test': {
+        purpose: 'Escribe los tests que cubren las tareas de implementación y los edge cases; emite comandos de verificación sugeridos — nunca los ejecuta',
+        produces: 'developer/dev-tests',
       },
       'qa:load-requirements': {
         purpose: 'Extrae y normaliza los criterios de aceptación de los artefactos previos al formato Given/When/Then',
@@ -292,7 +304,11 @@ export const es: UIStrings = {
       },
       'qa:quality-report': {
         purpose: 'Verifica la cobertura de ACs, calcula el porcentaje y emite el veredicto READY / READY WITH CAVEATS / BLOCKED',
-        produces: 'test-plan',
+        produces: 'qa/test-plan',
+      },
+      'qa:performance-validation': {
+        purpose: 'Valida el rendimiento planificado o medido contra los objetivos de NFR del PM y emite un veredicto de compuerta go/no-go',
+        produces: 'qa/perf-validation',
       },
       'qa:review': {
         purpose: 'Veredicto go/no-go de despliegue — decisión holística de preparación para release que integra todos los hallazgos de QA antes de preservar el conocimiento',
@@ -312,11 +328,15 @@ export const es: UIStrings = {
       },
       'security:hardening-checklist': {
         purpose: 'Deduplica los hallazgos, prioriza por severidad y agrupa por esfuerzo: quick wins / medio / significativo',
-        produces: 'security-findings + hardening-checklist',
+        produces: 'security/security-findings + security/hardening-checklist',
       },
       'ux-ui:feature-brief': {
         purpose: 'Identifica al actor principal, define el problema central (no la solución) y establece de 3 a 5 criterios de éxito observables',
         produces: 'ux-ui/feature-brief',
+      },
+      'ux-ui:design-tokens': {
+        purpose: 'Deriva el conjunto de design tokens a partir de la intención de diseño del feature brief y la huella del design system de la plataforma',
+        produces: 'ux-ui/design-tokens',
       },
       'ux-ui:information-architecture': {
         purpose: 'Organiza el contenido en secciones, prioriza la divulgación inmediata frente a la progresiva y define la ruta de navegación',
@@ -326,17 +346,21 @@ export const es: UIStrings = {
         purpose: 'Mapea el happy path, el flujo de error y de 2 a 3 flujos de edge cases como pasos numerados desde la perspectiva del actor',
         produces: 'ux-ui/flows',
       },
+      'ux-ui:content-design': {
+        purpose: 'Cataloga los puntos de contacto de texto que surgen de los flows, ampliando el content intent de la IA en un inventario de contenido ilustrativo',
+        produces: 'ux-ui/content-inventory',
+      },
       'ux-ui:component-mapping': {
         purpose: 'Clasifica cada estado de UI como reuse / extend / new — quality gate: se requiere una relación de reutilización >2:1',
         produces: 'ux-ui/components',
       },
-      'ux-ui:responsive-strategy': {
-        purpose: 'Specs de breakpoints mobile-first para componentes nuevos/extendidos; confirma áreas táctiles mínimas de 44×44px',
-        produces: 'ux-ui/responsive',
+      'ux-ui:design-critique': {
+        purpose: 'Anotación en una sola pasada del inventario de componentes contra los design tokens en consistencia y accesibilidad; deriva needs_review',
+        produces: 'ux-ui/design-critique',
       },
       'ux-ui:ux-handoff': {
         purpose: 'Consolida todo el trabajo de UX en ux-brief (flows + IA) y component-spec (inventario + props + events)',
-        produces: 'ux-brief + component-spec',
+        produces: 'ux-ui/ux-brief + ux-ui/component-spec',
       },
     },
     pipelineFlows: {
@@ -350,7 +374,7 @@ export const es: UIStrings = {
             description: 'PM define el alcance, escribe historias de usuario con criterios de aceptación y guarda pm/backlog-entry en la base de conocimientos.',
           },
           architect: {
-            description: 'Architect lee el backlog entry, diseña el flujo de tokens y los contratos de API, guarda architectural-decision + system-design.',
+            description: 'Architect lee el backlog entry, diseña el flujo de tokens y los contratos de API, guarda architectural-decision + system-design-final.',
           },
           developer: {
             description: 'Developer lee el ADR y el system design, implementa el magic link handler y guarda dev-implementation.',
@@ -427,7 +451,7 @@ export const es: UIStrings = {
       'add-security-review-inflight': {
         title: 'Agregar una revisión de seguridad a un pipeline en curso',
         note: 'Corré Security en cualquier momento sin reiniciar el pipeline.',
-        kbNote: 'Security lee system-design y dev-implementation de la base de conocimiento.',
+        kbNote: 'Security lee system-design-final y dev-implementation de la base de conocimiento.',
       },
       'qa-completed-feature-no-pipeline': {
         title: 'Hacer QA de una feature terminada sin pipeline completo',
@@ -493,7 +517,7 @@ export const es: UIStrings = {
       architect: {
         teaser: 'Decide cómo encajan las piezas antes de escribir código.',
         invokeWhen: 'La solución toca límites de servicios, modelos de datos o contratos de API, o tiene dos enfoques técnicos viables que vale la pena documentar',
-        produces: 'architectural-decision (ADR) + system-design — modelo de datos, superficie de API, límites de servicios',
+        produces: 'architectural-decision (ADR) + system-design-final — modelo de datos, superficie de API, límites de servicios',
         doNotUseWhen: 'Necesitás código de implementación, planes de pruebas o specs de UX — Architect produce decisiones, no código',
       },
       developer: {

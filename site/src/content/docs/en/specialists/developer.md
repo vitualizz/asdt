@@ -15,7 +15,7 @@ The Developer Specialist transforms existing requirements, UX specs, and archite
 
 Two operating modes gate actual file writes. In **plan-only mode** (default), the specialist produces code as snippets in the knowledge base — no host repo changes. In **writing mode**, declared file targets are resolved and validated before any write happens — if a needed path is outside the declared targets, it stops and reports the issue rather than freelancing a write.
 
-`explore` and `spec` are irrenunciable — they always run regardless of complexity. The `test` step is conditional: it only runs when `strict_tdd: true` is set in `.asdt/config.yaml` — when it's `false` or absent, the step is skipped. When it does run, it generates test code, not test plans.
+`explore` and `spec` are irrenunciable — they always run regardless of complexity. The `test` step is conditional: it only runs when `strict_tdd: true` is set in `.asdt/config.yaml` — when it's `false` or absent, the step is skipped. When it does run, it generates test code, not test plans — and it does not execute that code. Running the suite stays with you.
 
 ## When to invoke it
 
@@ -26,7 +26,7 @@ Two operating modes gate actual file writes. In **plan-only mode** (default), th
 
 ## Pipeline position
 
-Typically runs **after Architect** (reads `architectural-decision` + `system-design`) and produces the final `dev-implementation` consumed by QA. Can run standalone with just a request description — it will explore and spec the problem itself without upstream artifacts. At `simple` complexity, it bypasses the Architect entirely.
+Typically runs **after Architect** (reads `architectural-decision` + `system-design-final`) and produces the final `dev-implementation` consumed by QA. Can run standalone with just a request description — it will explore and spec the problem itself without upstream artifacts. At `simple` complexity, it bypasses the Architect entirely.
 
 ## What it produces
 
@@ -57,4 +57,5 @@ Consumed by: **QA** (reads the implementation to validate against acceptance cri
 - Does not write UX specs, wireframes, or component specs
 - Does not produce test plans or quality reports (test step only generates test code, not plans)
 - Never writes files outside declared targets in writing mode — stops and reports instead
+- **Never runs build, lint, or tests.** It emits the suggested commands for you to run and never reports a pass/fail result — verification stays with the human
 - `explore` and `spec` cannot be skipped regardless of complexity

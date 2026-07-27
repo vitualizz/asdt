@@ -13,7 +13,7 @@ The first version of ASDT modeled software delivery as a fixed four-phase FSM (a
 
 This is the wrong model. Real software delivery is performed by a team of specialists, each owning an independent discipline. A security engineer doesn't wait for a developer to finish before reviewing auth code. A UX designer doesn't follow a requirements → plan workflow — they follow their own creative process.
 
-An Architecture Decision Record (ADR-006) — the internal design note that guarantees any specialist can run independently, in any order — formalized the switch: a Specialist is a composable, independent unit defined by its identity, its own workflow steps, its artifact contract, and an independence guarantee — any specialist may run first.
+So ASDT replaced the FSM with a different unit: a Specialist is a composable, independent unit defined by its identity, its own workflow steps, its artifact contract, and an independence guarantee — any specialist may run first, with no required predecessor.
 
 ## What defines a specialist
 
@@ -21,9 +21,9 @@ A specialist has four parts:
 
 **Identity** — a stable `id` (e.g. `developer`), a human name, and a description that the pipeline advisor uses to route requests.
 
-**Workflow** — an ordered list of steps specific to that discipline. The Developer runs `explore → spec → design → implement`. The UX/UI specialist runs `feature-brief → information-architecture → user-flows → component-mapping → ux-handoff`. These are not the same pipeline applied to different names — each specialist's workflow reflects how that discipline actually works.
+**Workflow** — an ordered list of steps specific to that discipline, gated by complexity so the depth matches the change. At `complex`, the Developer runs `explore → spec → design → tasks → implement → test (if TDD)`; at `simple` it runs just `explore → spec → implement`. The UX/UI specialist at `complex` runs `feature-brief → design-tokens → information-architecture → user-flows → content-design → component-mapping → design-critique → ux-handoff`. These are not the same pipeline applied to different names — each specialist's workflow reflects how that discipline actually works.
 
-**Skill composition** — shared skills loaded for every step (platform context, artifact envelope, scope definition), plus specialist-scoped skills loaded per step (threat modeling for Security, code generation for Developer). Capabilities are mixed in rather than inherited.
+**Skill composition** — shared skills (platform context, knowledge recall, scope definition) plus specialist-scoped skills (threat modeling for Security, code generation for Developer). Nothing loads ambiently: a shared skill is read only where it is declared, either as an `inline` step in `workflow.yaml` or in a step's `reference_skills:` list. Capabilities are mixed in rather than inherited.
 
 **Artifact contract** — what the specialist reads (`inputs`) and writes (`outputs`). Inputs are soft: a missing input degrades to an `open_items[]` note, never an error. Outputs have stable `topic_key` values so other specialists can retrieve them by key.
 

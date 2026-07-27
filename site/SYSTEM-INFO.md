@@ -4,9 +4,9 @@ Reference document for any AI agent or developer working on the ASDT marketing a
 
 ## What ASDT is
 
-ASDT (AI Software Delivery Team) installs a team of AI specialists into Claude Code or OpenCode. The six specialists — PM, Architect, Developer, QA, Security, UX/UI — each own a distinct discipline and pass structured artifacts to the next step through Engram (persistent memory).
+ASDT (AI Software Delivery Team) installs a team of AI specialists into Claude Code or OpenCode. The seven routable specialists — PM, Researcher, Architect, Developer, QA, Security, UX/UI — each own a distinct discipline and pass structured artifacts to the next step through Engram (persistent memory). `asdt-init` is an eighth, setup-class specialist: invoked directly by name to scaffold a project, deliberately outside `/asdt` routing.
 
-`/asdt` is a **pipeline advisor** — it analyzes a feature request and recommends which specialists to involve and in what order. It does NOT execute specialists automatically. The user confirms the routing plan and runs each specialist command. Each specialist is its own orchestrator: it runs through defined steps (explore → spec → design → implement) internally.
+`/asdt` is a **pipeline advisor** — it analyzes a feature request and recommends which specialists to involve and in what order. It does NOT execute specialists automatically. The user confirms the routing plan and runs each specialist command. Each specialist is its own orchestrator, running a tier-gated sequence of its own steps: the Developer, for example, runs `explore → spec → implement` at `simple` and `explore → spec → design → tasks → implement → test (if TDD)` at `complex`. Sequences are per-specialist and per-tier — never assume one universal flow.
 
 **Supported AI coding assistants:** Claude Code, OpenCode  
 **Memory provider:** Engram MCP server (required; more providers planned)  
@@ -82,7 +82,7 @@ Tailwind v4 syntax: `font-mono` → `font-(--font-mono)` style is NOT needed; `f
 | DocsLayout         | Layout    | No  | Sidebar nav + article area                 |
 | Hero               | Section   | No  | Landing hero with install command + CTAs   |
 | WhyAsdt            | Section   | No  | Value prop — 3-item benefit grid           |
-| SpecialistsGrid    | Section   | No  | Orchestrator card + 6 specialist cards     |
+| SpecialistsGrid    | Section   | No  | Orchestrator card + 7 specialist cards     |
 | SpecialistCard     | Card      | No  | Individual specialist card                 |
 | PipelineDiagram    | Section   | No  | Animated SVG pipeline (CSS @keyframes)     |
 | Footer             | Footer    | No  | Links + tagline                            |

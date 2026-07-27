@@ -214,6 +214,10 @@ export const en: UIStrings = {
         purpose: 'Write user stories with MoSCoW priorities and 1–3 high-level acceptance criteria per story',
         produces: 'pm/user-stories',
       },
+      'pm:success-metrics': {
+        purpose: 'Derive measurable NFR targets — budget, target value, and measurement method — from the user stories',
+        produces: 'pm/nfr-targets',
+      },
       'pm:scope-analysis': {
         purpose: 'Define explicit in/out of scope boundaries, integration points, and scope risk flags',
         produces: 'pm/scope-analysis',
@@ -242,13 +246,17 @@ export const en: UIStrings = {
         purpose: 'Define data model, API surface (method/inputs/errors), service boundaries, and the happy-path sequence',
         produces: 'architect/system-design',
       },
+      'architect:cost-estimation': {
+        purpose: 'Estimate the cost profile of the system design per NFR dimension and judge each against the PM budget',
+        produces: 'architect/cost-estimate',
+      },
       'architect:risk-analysis': {
         purpose: 'Identify top 3–5 risks (performance, security, reliability, coupling, migration) with concrete mitigations',
         produces: 'architect/risks',
       },
       'architect:technical-handoff': {
         purpose: 'Consolidate all architectural work into two final artifacts for Developer and QA',
-        produces: 'architectural-decision + system-design',
+        produces: 'architect/architectural-decision + architect/system-design-final',
       },
       'developer:explore': {
         purpose: 'Read affected files and modules; map naming patterns and constraints before designing anything',
@@ -269,6 +277,10 @@ export const en: UIStrings = {
       'developer:implement': {
         purpose: 'Write code for each task — plan-only mode (snippets) or writing mode (real files to declared targets)',
         produces: 'developer/dev-implementation',
+      },
+      'developer:test': {
+        purpose: 'Write tests covering the implementation tasks and edge cases; emits suggested verification commands — never runs them',
+        produces: 'developer/dev-tests',
       },
       'qa:load-requirements': {
         purpose: 'Extract and normalize acceptance criteria from upstream artifacts into Given/When/Then format',
@@ -292,7 +304,11 @@ export const en: UIStrings = {
       },
       'qa:quality-report': {
         purpose: 'Verify AC coverage, compute percentage, render READY / READY WITH CAVEATS / BLOCKED verdict',
-        produces: 'test-plan',
+        produces: 'qa/test-plan',
+      },
+      'qa:performance-validation': {
+        purpose: 'Validate planned or measured performance against the PM NFR targets and emit a go/no-go gate verdict',
+        produces: 'qa/perf-validation',
       },
       'qa:review': {
         purpose: 'Go/no-go shipping verdict — holistic release-readiness decision integrating all QA findings before knowledge preservation',
@@ -312,11 +328,15 @@ export const en: UIStrings = {
       },
       'security:hardening-checklist': {
         purpose: 'Deduplicate findings, prioritize by severity, group by effort: quick wins / medium / significant',
-        produces: 'security-findings + hardening-checklist',
+        produces: 'security/security-findings + security/hardening-checklist',
       },
       'ux-ui:feature-brief': {
         purpose: 'Identify primary actor, define core problem (not solution), establish 3–5 observable success criteria',
         produces: 'ux-ui/feature-brief',
+      },
+      'ux-ui:design-tokens': {
+        purpose: 'Derive the design token set from the feature brief design intent and the platform design system fingerprint',
+        produces: 'ux-ui/design-tokens',
       },
       'ux-ui:information-architecture': {
         purpose: 'Organize content into sections, prioritize immediate vs. progressive disclosure, define navigation path',
@@ -326,17 +346,21 @@ export const en: UIStrings = {
         purpose: 'Map happy path, error path, and 2–3 edge case flows as numbered steps from the actor\'s perspective',
         produces: 'ux-ui/flows',
       },
+      'ux-ui:content-design': {
+        purpose: 'Catalog the text touchpoints surfaced by the flows, elaborating the IA content intent into an illustrative content inventory',
+        produces: 'ux-ui/content-inventory',
+      },
       'ux-ui:component-mapping': {
         purpose: 'Classify each UI state as reuse / extend / new — quality gate: >2:1 reuse ratio required',
         produces: 'ux-ui/components',
       },
-      'ux-ui:responsive-strategy': {
-        purpose: 'Mobile-first breakpoint specs for new/extended components; confirm 44×44px minimum touch targets',
-        produces: 'ux-ui/responsive',
+      'ux-ui:design-critique': {
+        purpose: 'Single-pass annotation of the component inventory against the design tokens for consistency and accessibility; derives needs_review',
+        produces: 'ux-ui/design-critique',
       },
       'ux-ui:ux-handoff': {
         purpose: 'Consolidate all UX work into ux-brief (flows + IA) and component-spec (inventory + props + events)',
-        produces: 'ux-brief + component-spec',
+        produces: 'ux-ui/ux-brief + ux-ui/component-spec',
       },
     },
     pipelineFlows: {
@@ -350,7 +374,7 @@ export const en: UIStrings = {
             description: 'PM defines scope, writes user stories with acceptance criteria, saves pm/backlog-entry to the knowledge base.',
           },
           architect: {
-            description: 'Architect reads the backlog entry, designs the token flow and API contracts, saves architectural-decision + system-design.',
+            description: 'Architect reads the backlog entry, designs the token flow and API contracts, saves architectural-decision + system-design-final.',
           },
           developer: {
             description: 'Developer reads the ADR and system design, implements the magic link handler, saves dev-implementation.',
@@ -427,7 +451,7 @@ export const en: UIStrings = {
       'add-security-review-inflight': {
         title: 'Add a security review to an in-flight pipeline',
         note: 'Run Security at any point without restarting the pipeline.',
-        kbNote: 'Security reads system-design and dev-implementation from the knowledge base.',
+        kbNote: 'Security reads system-design-final and dev-implementation from the knowledge base.',
       },
       'qa-completed-feature-no-pipeline': {
         title: 'QA a completed feature without a full pipeline',
@@ -493,7 +517,7 @@ export const en: UIStrings = {
       architect: {
         teaser: 'Decides how the pieces fit together before anyone writes code.',
         invokeWhen: 'The solution touches service boundaries, data models, or API contracts, or has two viable technical approaches worth documenting',
-        produces: 'architectural-decision (ADR) + system-design — data model, API surface, service boundaries',
+        produces: 'architectural-decision (ADR) + system-design-final — data model, API surface, service boundaries',
         doNotUseWhen: 'You need implementation code, test plans, or UX specs — Architect produces decisions, not code',
       },
       developer: {

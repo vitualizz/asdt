@@ -31,9 +31,6 @@ name: asdt-{name}
 description: "Una oración: qué produce este specialist."
 user-invocable: true
 specialist-id: {name}
-shared-skills: # solo metadata — documenta skills relacionadas; no es un loader
-  - platform-context
-  - artifact-envelope
 metadata:
   author: "Your Name"
   version: "1.0"
@@ -51,7 +48,9 @@ metadata:
 ...
 ```
 
-`metadata` (`author` + `version`) es obligatorio en todos los `SKILL.md`.
+`metadata` (`author` + `version`) es obligatorio en todos los `SKILL.md`. `trigger_phrases` es la única key opcional — una lista de descubribilidad que consume el host.
+
+`shared-skills` está **prohibida**. La key está retirada: ningún loader la resolvió nunca, así que declararla no documenta nada ni carga nada. Ver [Cómo se cargan realmente las shared skills](#cómo-se-cargan-realmente-las-shared-skills) para los tres mecanismos reales.
 
 ### 3. Escribí workflow.yaml
 
@@ -68,16 +67,18 @@ steps:
 
 Creá un `.md` por step en `skill/{name}/steps/{step-id}.md`. Cada archivo contiene las instrucciones para el LLM en ese step — qué leer, qué producir, qué formato debe tener el artifact.
 
-### 5. Conectalo al embed
+### 5. Registrá el specialist
 
-Abrí `skill/embedded.go` y agregá el nombre de tu directorio a la directiva `//go:embed`:
+El embed no necesita nada de vos — `//go:embed SKILL.md asdt-*` ya shippea tu directorio. Lo que **no** es automático es el registro: un specialist routable tiene que espejarse a mano en tres lugares, más un fixture de test.
 
-```go
-//go:embed SKILL.md asdt-shared asdt-developer asdt-ux-ui asdt-architect asdt-qa asdt-security asdt-init asdt-{name}
-var skillFS embed.FS
-```
+1. `skill/SKILL.md` — agregá la fila del §5 Specialist Registry (comando, disciplina, cuándo involucrarlo).
+2. `skill/SKILL.md` — agregá la fila de la tabla por specialist en §9.2. Nunca edites a mano dentro de los marcadores generados de inline steps de esa tabla; esa subregión se regenera al instalar y tus ediciones quedan sobrescritas.
+3. `internal/installer/assets/agents-template.md` — agregá la fila de ASDT Specialists.
+4. `skill/embedded_test.go` — el test de invariantes routed mantiene una lista de specialists hardcodeada que un mantenedor debe actualizar.
 
-**No te saltees este paso.** Un directorio que existe en disco pero no está nombrado en la directiva queda excluido del binario en silencio — sin error de compilación, sin error en runtime. La skill simplemente no aparece cuando los usuarios instalan.
+**No te saltees estos pasos.** El directorio se shippea igual, así que nada falla en tiempo de build — el specialist simplemente nunca aparece en el routing, ni en el archivo de agents instalado, ni en la cobertura del test de invariantes.
+
+`/asdt-init` es la excepción: es un specialist de clase setup, deliberadamente no routable y deliberadamente ausente de las tablas de routing. No "arregles" esa omisión.
 
 ### 6. Verificá con el sandbox
 
@@ -96,10 +97,6 @@ go test ./skill/...
 
 `skill/embedded_test.go` verifica que todo directorio `asdt-*` en disco esté presente en el embedded FS y tenga un `SKILL.md`. Falla ruidosamente si tu specialist falta.
 
-### 8. Actualizá este README
-
-Agregá una fila a la tabla de specialists en el README del proyecto con el comando, el rol y qué produce.
-
 ## Mejorar el prompt de un specialist
 
 1. Editá `skill/{specialist}/SKILL.md` o cualquier archivo bajo `skill/{specialist}/steps/` o `skill/{specialist}/skills/`.
@@ -108,11 +105,21 @@ Agregá una fila a la tabla de specialists en el README del proyecto con el coma
 
 ## Agregar una shared skill
 
-Las shared skills son fragmentos de capacidad reutilizados entre múltiples specialists — detección de platform context, formato de artifact envelope, definición de scope.
+Las shared skills son fragmentos de capacidad reutilizados entre múltiples specialists — detección de platform context, knowledge recall, definición de scope.
 
 1. Creá `skill/asdt-shared/skills/{name}.md` con las instrucciones de la capacidad.
-2. Documentala en el frontmatter `shared-skills` de cualquier specialist que se relacione con ella — esa key es solo metadata; la carga real ocurre vía el FIRST ACTION Read en el body del `SKILL.md` (`specialist-header`) y los `reference_skills` por step en `workflow.yaml`.
+2. Conectala a través de uno de los tres mecanismos de carga de abajo. Una shared skill que nadie declara nunca se lee — no hay carga implícita ni ambiental.
 3. Abrí un PR.
+
+### Cómo se cargan realmente las shared skills
+
+Tres mecanismos, y solo tres. Los paths siempre se resuelven desde el directorio propio del specialist.
+
+**1. Splice en tiempo de instalación.** El instalador injerta `asdt-shared/skills/specialist-header.md` en una región generada de cada `SKILL.md` routado, así el orquestador lee el header inline en lugar de ir a buscar un archivo aparte. Esto aplica solo a ese archivo. El blockquote de FIRST ACTION ya no indica leer `specialist-header.md` — el único archivo al que te manda es `./workflow.yaml`. Nunca edites a mano entre los marcadores de la región; el splice sobrescribe lo que haya ahí.
+
+**2. Inline step.** Un step de `workflow.yaml` con `execution: inline` cuyo `skill:` nombra un archivo compartido — `knowledge-recall.md`, `platform-context.md` (declarado como el step `platform-analysis`), `decision-preservation.md`. El orquestador lee ese archivo y lo sigue en su propio contexto. No se inyecta nada en ningún lado y no se lanza ningún sub-agente.
+
+**3. `reference_skills:` en un step `subagent`.** Antes de lanzar el step, el orquestador lee cada archivo listado e inyecta su contenido en el prompt del sub-agente como un bloque `### REFERENCE SKILL {path}`. El sub-agente nunca los busca por su cuenta — los sub-agentes corren desde un directorio de trabajo distinto y no pueden resolver esos paths. Cuando una lectura falla, el bloque llega como `### REFERENCE SKILL {path}: UNRESOLVED` y el step sigue en modo best-effort.
 
 ## Estándares de código
 
