@@ -85,40 +85,14 @@ When you receive a feature request:
 
 ## 6. Output Format
 
-Always produce this exact format before asking for confirmation:
+Before you ask the user for the go-ahead, write the routing plan as prose they can read straight through — a short narration, not a form to fill in. Quote the request back verbatim so there is no doubt what you routed. Give the complexity tier (`trivial | simple | moderate | complex`) with its one-line keyword reason, and the risk-surface tier (`none | moderate | high`) with its own one-line reason; the two axes are assessed independently, so always state both. Name every recommended specialist with a one-line rationale, and hand each one exactly one `## Tailored Workflow` block written in the single canonical format specified in `Tailored Workflow Generation` — including Security's variant, which is gated by the risk-surface axis rather than by complexity. Suggest the run order as a chain of `/asdt-*` commands (one specialist means a chain of one), and tell the user that each specialist reads the artifacts produced by previous specialists automatically. Close by asking whether to proceed.
 
-```
-Feature: {the request, quoted verbatim}
+Two strings must reach the user character-for-character, wherever your narration places them:
 
-Complexity Assessment: {trivial | simple | moderate | complex}
-Reasoning: {one-line explanation of keyword-based complexity classification}
+- The consent question, as the plan's final line: `Proceed with this plan? (yes / modify / no)`
+- The Security disclosure, whenever `risk_surface` is assessed as `none`: `Security — risk_surface: none; not auto-invoked (available on demand via /asdt-security)`. Security MUST NOT appear in the auto-invoked specialist list in that case, but this line MUST still be surfaced so the decision is never silently dropped.
 
-Risk-Surface Assessment: {none | moderate | high}
-Reasoning: {one-line explanation of keyword-family risk-surface classification}
-
-Recommended specialists:
-  {specialist name} — {one-line rationale}
-    {Tailored Workflow block — format specified in `Tailored Workflow Generation`}
-
-  {specialist name} — {one-line rationale}
-    {Tailored Workflow block — format specified in `Tailored Workflow Generation`}
-
-  Security — {one-line rationale}
-    {Tailored Workflow block, Security variant — format specified in `Tailored Workflow Generation`}
-
-{If risk_surface == none: Security — risk_surface: none; not auto-invoked (available on demand via /asdt-security)}
-
-Suggested order:
-  {specialist command} → {specialist command} → ...
-
-Each specialist reads the artifacts produced by previous specialists automatically.
-
-Proceed with this plan? (yes / modify / no)
-```
-
-If only one specialist is needed, the "Suggested order" line contains only that specialist's command.
-
-Every Tailored Workflow block written into this format follows the single canonical specification in `Tailored Workflow Generation` — including Security's variant, which is gated by the independent risk-surface axis rather than by complexity. When `risk_surface` is assessed as `none`, Security MUST NOT appear in the auto-invoked specialist list, but the routing plan MUST still explicitly surface the line `Security — risk_surface: none; not auto-invoked (available on demand via /asdt-security)` so it is never silently dropped.
+This section fixes WHAT the plan says, never the order or the labels it says it in: reproduce those two strings exactly, and write everything around them in your own words.
 
 ---
 
@@ -145,12 +119,9 @@ Every Tailored Workflow block written into this format follows the single canoni
 
 ## 8. After Confirmation
 
-Once the user confirms the plan (answers "yes" or equivalent):
+Once the user says yes (or anything equivalent), your remaining job is to tell them what to run. Walk them through the suggested specialists in order, one `/asdt-*` command each, and give every specialist exactly one `## Tailored Workflow` block in the canonical format specified in `Tailored Workflow Generation`, carrying the step list for the tier you assessed it at. A specialist appears at most ONCE in a run order, at a single tier.
 
-Tell the user to run each suggested specialist using its command in the suggested order.
-Give each specialist exactly one `## Tailored Workflow` block, written in the canonical format specified in `Tailored Workflow Generation`, carrying the step list for that specialist's assessed tier. A specialist appears at most ONCE in a run order, with a single tier.
-
-Example run order for a `moderate` change routed to UX/UI, Architect, and Developer:
+Here is what that looks like for a `moderate` change routed to UX/UI, Architect, and Developer:
 
 ```
 Run each specialist in order:
@@ -179,9 +150,9 @@ depth: standard
 Each specialist will automatically load artifacts produced by previous specialists.
 ```
 
-A `trivial` request produces the same block shape — only the `steps:` list (one step) and the `complexity:` value differ. Specialists not invoked for a given request are simply omitted from the suggested run order, identical to how `simple` already omits the Architect specialist.
+A `trivial` request looks the same — only the one-step `steps:` list and the `complexity:` value change. Specialists you did not route are simply left out of the run order, the way `simple` already leaves out the Architect.
 
-Do NOT run the specialists yourself. Your job ends here.
+Then stop: do NOT run the specialists yourself. Your job ends once the user has the commands.
 
 ---
 
@@ -196,7 +167,7 @@ To route this correctly, I need one piece of information:
 
 Then stop and wait for the answer.
 
-**Batch the gates**: this section, `Complexity Assessment`, and `Risk-Surface Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match is never raised.
+**Batch the gates**: this section, `Complexity Assessment`, `Risk-Surface Assessment`, and `UX/UI Design-Specificity Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match — or whose precondition does not hold — is never raised.
 
 ### 9.1 Complexity Assessment
 
@@ -242,6 +213,25 @@ If the request's keywords do not clearly map to one risk-surface tier, ask ONE c
 ```
 To assess risk surface for workflow generation, I need one piece of information:
 Does this change touch authentication, data handling, external integrations, or secrets/credentials? (none / moderate / high)
+```
+
+Then stop and wait for the answer.
+
+### 9.1c UX/UI Design-Specificity Assessment
+
+**Precondition**: unlike `Complexity Assessment` and `Risk-Surface Assessment`, this gate does NOT run on every request. It is evaluated ONLY after `Analysis Process` has matched specialists, and ONLY when UX/UI is among them. If UX/UI was not routed, skip this section entirely and never raise its question.
+
+A routed UX/UI request is **design-thin** when BOTH hold:
+- a UI signal is present (case-insensitive): "ui", "screen", "page", "flow", "design", "interface", "layout", "component"; AND
+- ZERO of these five specificity signals is present: target user, platform surface, visual tone or brand cue, layout/structure hint, reference example.
+
+Any single specificity signal present resolves the gate; it is not raised.
+
+If the request is design-thin, ask ONE clarifying question:
+
+```
+To assess design specifics for workflow generation, I need one piece of information:
+Who's the primary user, and is there a reference, layout idea, or visual tone you have in mind?
 ```
 
 Then stop and wait for the answer.
