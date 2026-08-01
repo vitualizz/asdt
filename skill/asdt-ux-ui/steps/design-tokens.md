@@ -31,8 +31,17 @@ feature-brief `design_intent` + platform-summary fingerprint: max 900 tokens.
    roles.
 4. NEVER invent tokens that conflict with the existing design system (e.g. a new primary color when
    one already exists). Conflicts go in `open_items`, not into the token set.
-5. Compute the `token_reuse_advisory` counts (reused / extended / new) and ratio. This is ADVISORY
-   ONLY — it is never a hard gate and never blocks the workflow. Record a short `note` if reuse is low.
+5. COMPARE the assembled token set against the generic-default archetypes — one archetype per token
+   category. For every category you filled, either name the differentiation `design_intent`
+   justifies, or admit the default was kept and say why keeping it is right for this platform.
+   Record the outcome as exactly one verdict line, in this form:
+   `design-heuristics: <differentiated|default-kept> — <one-line reason naming an archetype>`
+6. Compute the `token_reuse_advisory` counts (reused / extended / new) and ratio. This is ADVISORY
+   ONLY — it is never a hard gate and never blocks the workflow. Compose `note` from up to two
+   parts: a short reuse-low sentence FIRST, only when reuse is low; then the verdict line from
+   step 5, ALWAYS present and ALWAYS last. Join the two with ` | ` only when both are present —
+   when the reuse-low sentence is absent, `note` starts at `design-heuristics:`, never with a bare,
+   leading or trailing ` | `.
 
 ## Output
 Produces: `ux-ui/design-tokens`
@@ -49,5 +58,7 @@ payload:
     elevation: []    # [{name, value, source}]
     motion: []       # [{name, duration, easing, source}]
   token_reuse_advisory: {reused: 0, extended: 0, new: 0, ratio: "", note: ""}  # ADVISORY only
+  # note format: "<reuse-low sentence — only when reuse is low> | design-heuristics: <differentiated|default-kept> — <one-line reason>"
+  # the heuristics verdict is ALWAYS present and ALWAYS last; with no reuse-low sentence the note starts at "design-heuristics:" — never a bare " | "
   open_items: []
 ```

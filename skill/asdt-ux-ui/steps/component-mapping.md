@@ -68,6 +68,14 @@ extended + new components. `verdict` is `pass` iff `reused / net_new >= 2`, othe
 The ratio of reused to new components should be > 2:1 for features on existing platforms. If you're
 creating more than 30% new components, revisit whether existing ones can be extended instead.
 
+### Design heuristics
+Read the finished mapping as ONE screen rather than a list of components, and compare that screen
+against the generic-default archetypes. Ask what a user actually sees when these components sit
+together: whether anything distinguishes one surface from another, whether hierarchy survives, and
+whether the set reads as a deliberate whole. Then append EXACTLY ONE entry to `open_items` — no
+more, no fewer — carrying the verdict:
+`design-heuristics: <differentiated|default-kept> — <one-line reason naming an archetype>`
+
 ## Output
 Produces: `ux-ui/components`
 

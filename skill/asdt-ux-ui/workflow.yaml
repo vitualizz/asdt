@@ -30,7 +30,8 @@ steps:
     inputs:
       - "{project}/{change}/ux-ui/feature-brief"
     output_topic_key: "{project}/{change}/ux-ui/design-tokens"
-    reference_skills: []
+    reference_skills:
+      - skills/design-heuristics.md
 
   - name: information-architecture
     skill: steps/information-architecture.md
@@ -80,6 +81,7 @@ steps:
     output_topic_key: "{project}/{change}/ux-ui/components"
     reference_skills:
       - skills/accessibility.md
+      - skills/design-heuristics.md
 
   - name: design-critique
     skill: steps/design-critique.md
