@@ -4,7 +4,7 @@
 
 Cross-specialist utility files. They reach specialist contexts via three mechanisms:
 
-- **Install-time splicing** — the installer writes the bodies of `specialist-header.md`, `parallel-retrieval.md`, and `knowledge-recall.md`, in that order, directly into each routed specialist `SKILL.md`, so an installed specialist already carries all three as one continuous document. Every fragment stays its own file on disk; the join happens only in the generator. The **FIRST ACTION Read** at the top of every specialist `SKILL.md` body is the fallback that loads the header (and its `workflow.yaml`) when the body was not spliced
+- **Install-time splicing** — the installer writes the bodies of `specialist-header.md`, `parallel-retrieval.md`, `intake-contract.md`, and `knowledge-recall.md`, in that order, directly into each routed specialist `SKILL.md`, so an installed specialist already carries all four as one continuous document. Every fragment stays its own file on disk; the join happens only in the generator. The **FIRST ACTION Read** at the top of every specialist `SKILL.md` body is the fallback that loads the header (and its `workflow.yaml`) when the body was not spliced
 - `reference_skills:` in a `subagent` step entry in `workflow.yaml` — the orchestrator reads each listed file and injects it into that step's sub-agent prompt only. The sub-agent never fetches it itself
 - `skill:` on an `inline` step entry in `workflow.yaml` — the orchestrator reads that file and follows it in its own context; nothing is injected anywhere
 
@@ -28,13 +28,14 @@ The artifact contract itself — the `payload:` root, the trailing `open_items: 
 | File | Routing | Purpose |
 |---|---|---|
 | `parallel-retrieval.md` | **Folded** (2nd) | The canonical orchestrator fetch-once cache pattern — Cache Ledger Rule, Injection Format, executor-header injection, UNRESOLVED degradation. Folded because the header depends on it from its very first launch instruction. |
+| `intake-contract.md` | **Folded** (3rd) | How every step treats its inputs: the declared-vs-present input check, the single batched clarification turn (fully suppressed under a `## Tailored Workflow` block), and the harden-always `ASSUMED:` degradation into `open_items`. Folded because these rules must be settled before any step content arrives. |
 | `artifact-loading.md` | Runtime | How a specialist's first artifact-consuming step (declared `inputs: []`) retrieves upstream artifacts from Engram (`mem_search` → `mem_get_observation`), extracts relevant fields, and records missing artifacts in `open_items[]`. |
 
 ### Workflow utilities
 
 | File | Routing | Purpose |
 |---|---|---|
-| `knowledge-recall.md` | **Folded** (3rd) | Queries organizational memory for prior decisions relevant to the current change. It is the first inline step of nearly every specialist and runs at every tier, so folding it costs nothing and saves a read. |
+| `knowledge-recall.md` | **Folded** (4th) | Queries organizational memory for prior decisions relevant to the current change. It is the first inline step of nearly every specialist and runs at every tier, so folding it costs nothing and saves a read. |
 | `platform-context.md` | Runtime — deliberately not folded | Injects the project's detected platform knowledge (stack, conventions, design fingerprint) into a specialist's context. Includes the project-level reuse guard (reads `.asdt/knowledge/knowledge.yaml`); also backs the inline `platform-analysis` workflow step. |
 | `decision-preservation.md` | Runtime — deliberately not folded | Saves a permanent organizational knowledge record after a significant decision is produced. Used as the final inline step in most specialists. |
 | `scope-definition.md` | Runtime | Guidelines for defining explicit, unambiguous project scope. Used by Architect and Developer. |
@@ -68,4 +69,4 @@ On an `inline` step, `skill:` names the single file the orchestrator reads and f
   skill: ../asdt-shared/skills/knowledge-recall.md
 ```
 
-There is no frontmatter key that loads shared skills. The three **folded** fragments reach a specialist through install-time splicing, with the FIRST ACTION Read as fallback; `reference_skills:` is the only declarative way to pull one of these files into a `subagent` step, resolved and injected by the orchestrator; `skill:` on an `inline` step is read by the orchestrator directly. A `skill:` path naming a folded fragment stays declared — `workflow.yaml` remains the machine-readable truth — but the orchestrator treats it as already resolved instead of reading it again.
+There is no frontmatter key that loads shared skills. The four **folded** fragments reach a specialist through install-time splicing, with the FIRST ACTION Read as fallback; `reference_skills:` is the only declarative way to pull one of these files into a `subagent` step, resolved and injected by the orchestrator; `skill:` on an `inline` step is read by the orchestrator directly. A `skill:` path naming a folded fragment stays declared — `workflow.yaml` remains the machine-readable truth — but the orchestrator treats it as already resolved instead of reading it again.

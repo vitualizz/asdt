@@ -33,6 +33,7 @@ If either condition is not met, output this exact message and STOP:
 > - If PRESENT: parse the `steps:` list. Execute ONLY those steps in the order specified.
 > - Steps NOT in the tailored list → skip entirely (log annotation that the step was skipped by workflow tailoring).
 > - The tailored list overrides the default ordering.
+> - A PRESENT block also means the router's clarifying gates already ran — never re-ask a question the routing plan already settled; record any remaining gap in `open_items` instead.
 > - The block MAY carry a `depth: quick|standard|deep` field controlling per-step OUTPUT VERBOSITY
 >   (orthogonal to WHICH steps run — it never adds or removes steps):
 >   - `depth` omitted ⇒ treat as `standard` (no behavior change).

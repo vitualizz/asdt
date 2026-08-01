@@ -167,7 +167,7 @@ To route this correctly, I need one piece of information:
 
 Then stop and wait for the answer.
 
-**Batch the gates**: this section, `Complexity Assessment`, `Risk-Surface Assessment`, and `UX/UI Design-Specificity Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match — or whose precondition does not hold — is never raised.
+**Batch the gates**: this section, `Complexity Assessment`, `Risk-Surface Assessment`, `UX/UI Design-Specificity Assessment`, and `Request-Specificity Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match — or whose precondition does not hold — is never raised.
 
 ### 9.1 Complexity Assessment
 
@@ -232,6 +232,25 @@ If the request is design-thin, ask ONE clarifying question:
 ```
 To assess design specifics for workflow generation, I need one piece of information:
 Who's the primary user, and is there a reference, layout idea, or visual tone you have in mind?
+```
+
+Then stop and wait for the answer.
+
+### 9.1d Request-Specificity Assessment
+
+**Precondition**: this gate does NOT run on every request. It is evaluated ONLY after `Analysis Process` has matched specialists, and ONLY when `UX/UI Design-Specificity Assessment` was NOT evaluated this run — if that gate was evaluated, whether or not it raised its question, skip this section entirely and never raise its question. NEVER key this skip on the presence or absence of a UI signal; the only thing that matters is whether the design-specificity gate was evaluated.
+
+A routed request is **intent-thin** when BOTH hold:
+- a domain signal is present (case-insensitive): "improve", "optimize", "enhance", "streamline", "simplify", "modernize", "clean up", "speed up", "make better", "revamp"; AND
+- ZERO of these five specificity signals is present: named target artifact (file, module, endpoint, screen, or command), measurable outcome (number, metric, or threshold), named actor or user segment, concrete trigger or scenario, acceptance condition or reference example.
+
+Any single specificity signal present resolves the gate; it is not raised.
+
+If the request is intent-thin, ask ONE clarifying question:
+
+```
+To assess request specifics for workflow generation, I need one piece of information:
+What exactly should change, and how will we know it worked?
 ```
 
 Then stop and wait for the answer.

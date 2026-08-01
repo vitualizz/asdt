@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -9,6 +10,8 @@ import (
 	"testing/fstest"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/vitualizz/asdt/skill"
 )
 
 const testExecutorHeader = `# Executor Header — injected by the orchestrator into every sub-agent prompt
@@ -413,6 +416,25 @@ func TestGenerateAgentFiles_MissingExecutorHeaderIsNoOp(t *testing.T) {
 		t.Errorf("expected no written files, got %v", written)
 	}
 	checkFileAbsent(t, agentRoot)
+}
+
+// TestExecutorHeaderCarriesFalsifiabilityCondition reads the REAL embedded
+// executor header — not the trimmed agentFixtureFS copy — because the
+// falsifiability clause's condition sentence is a one-way-door contract: it is
+// what exempts steps without an `output_topic_key` from the falsifiable-output
+// requirement. The sentence is asserted verbatim so any reword that widens or
+// narrows the exemption fails loudly here instead of shipping silently baked
+// into both agent definitions.
+func TestExecutorHeaderCarriesFalsifiabilityCondition(t *testing.T) {
+	data, err := fs.ReadFile(skill.FS(), "asdt-shared/skills/executor-header.md")
+	if err != nil {
+		t.Fatalf("read embedded executor-header.md: %v", err)
+	}
+
+	const condition = "applies only when this step declares an `output_topic_key` in `workflow.yaml`; steps without one are exempt."
+	if !strings.Contains(string(data), condition) {
+		t.Errorf("embedded executor-header.md is missing the verbatim falsifiability condition sentence %q", condition)
+	}
 }
 
 func TestAgentAdapters_BothAssistantsRegistered(t *testing.T) {
