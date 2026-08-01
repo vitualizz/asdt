@@ -44,13 +44,13 @@ architecture decisions, or test plans.
 | Level | Steps |
 |-------|-------|
 | **trivial** | `feature-brief` |
-| **simple** | `feature-brief → design-tokens → information-architecture → user-flows → component-mapping → ux-handoff` |
-| **moderate** | `feature-brief → design-tokens → information-architecture → user-flows → content-design → component-mapping → ux-handoff` |
+| **simple** | `feature-brief → design-tokens → information-architecture → user-flows → component-mapping → design-critique → ux-handoff` |
+| **moderate** | `feature-brief → design-tokens → information-architecture → user-flows → content-design → component-mapping → design-critique → ux-handoff` |
 | **complex** | Full workflow (`feature-brief → design-tokens → information-architecture → user-flows → content-design → component-mapping → design-critique → ux-handoff`) |
 
 **Trivial eligible**: Yes — `feature-brief` has `inputs: []`; inline preludes `knowledge-recall`, `platform-analysis` always run.
 **Inline steps** (context injection only — never required as explicit list entries): `knowledge-recall`, `platform-analysis`, `decision-preservation`
-**Conditional**: `content-design` runs at `moderate|complex`; `design-critique` runs at `complex` only. `feature-brief` is irrenunciable at every tier; `design-tokens`, `information-architecture`, `user-flows`, `component-mapping`, and `ux-handoff` are irrenunciable from `simple` up.
+**Conditional**: `content-design` is the single tier-gated step — it runs at `moderate|complex`. `feature-brief` is irrenunciable at every tier; `design-tokens`, `information-architecture`, `user-flows`, `component-mapping`, `design-critique`, and `ux-handoff` are irrenunciable from `simple` up.
 **Hard dependency**: `information-architecture` is a required input of `user-flows` — never omit it.
 
 When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence over the complexity-based defaults above.
@@ -90,14 +90,15 @@ one artifact through a single `mem_search` / `mem_get_observation` pair. Artifac
 only by topic_key and are never written to local files.
 
 **Artifact types produced by this specialist**: `feature-brief`, `design-tokens`, `ia`, `flows`,
-`content-inventory` (moderate|complex tier only), `components`, `design-critique` (complex tier only),
+`content-inventory` (moderate|complex tier only), `components`, `design-critique` (simple tier and up),
 and the two finals `ux-brief` + `component-spec`.
 The `design-tokens` and `design-critique` artifacts each persist under their own per-type topic_key
 (`{project}/{change}/ux-ui/design-tokens`, `{project}/{change}/ux-ui/design-critique`). The final
 `ux-brief` carries `design_intent`, `jtbd`, and `content_intent`; `component-spec` carries
 per-component `design_tokens_ref` / `state_matrix` / `responsive` / `accessibility` plus top-level
-`critique_annotations` (complex tier only) and `needs_review`, which is `"not-evaluated"` on any
-tier that did not run `design-critique`.
+`critique_annotations` (present from the `simple` tier up) and `needs_review`, which is
+`"not-evaluated"` only when a Tailored Workflow override omitted `design-critique`. When
+`needs_review` is `"true"` or `"not-evaluated"`, `open_items` also carries the `NEEDS-REVIEW:` entry.
 
 The `ux-handoff` step (final step) MUST include a `summary` field in its output payload (≤ 150 tokens). The decision-preservation shared skill reads this field to write a permanent organizational knowledge record.
 

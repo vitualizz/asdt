@@ -18,10 +18,13 @@ parallel-retrieval contract — consume them directly, never self-fetch them.
 
 Apply the extraction rules in the report shared skill to each: keep only fields relevant to implementation handoff.
 
-**DEGRADATION — `ux-ui/design-critique` is optional (produced only at the complex tier)**: when it
-arrives as `### INPUT ux-ui/design-critique: UNRESOLVED`, omit `critique_annotations` and emit
-`needs_review: "not-evaluated"`; append "design critique absent — component spec assembled without
-critique annotations and never evaluated for review" to open_items. Never block on this input.
+**DEGRADATION — `ux-ui/design-critique` is optional, but NO preset tier omits it**: every preset
+tier from `simple` up runs `design-critique` immediately before this step, so the UNRESOLVED
+branch is reachable ONLY through a hand-authored Tailored Workflow override whose `steps:` list
+drops `design-critique` — legal because this input is marked `# optional` in workflow.yaml. When
+it does arrive as `### INPUT ux-ui/design-critique: UNRESOLVED`, omit `critique_annotations`, emit
+`needs_review: "not-evaluated"`, and append the `not-evaluated` checkpoint entry defined in
+Processing step 6 — that branch is UNREVIEWED, not clean. Never block on this input.
 
 **DEGRADATION — `ux-ui/content-inventory` is optional (produced only at the moderate and complex
 tiers)**: when it arrives as `### INPUT ux-ui/content-inventory: UNRESOLVED`, assemble
@@ -58,9 +61,26 @@ Apply the `report` shared skill:
 5. From design-tokens: carry the token set into `design_tokens_ref`.
 6. From design-critique: carry `critique_annotations` verbatim, and set `needs_review` to the STRING
    form of the critique's boolean — `"true"` or `"false"`. When design-critique is UNRESOLVED, follow
-   its DEGRADATION paragraph above and emit `needs_review: "not-evaluated"`. The tri-state exists so a
-   consumer can tell "critiqued and clean" (`"false"`) from "never critiqued" (`"not-evaluated"`);
-   never collapse the two.
+   its DEGRADATION paragraph above and emit `needs_review: "not-evaluated"`. The value set is EXACTLY
+   the tri-state `"true" | "false" | "not-evaluated"` — never invent a fourth value, and never collapse
+   two of them: the tri-state is what lets a consumer tell "critiqued and clean" (`"false"`) from
+   "never critiqued" (`"not-evaluated"`).
+   Then apply the REVIEW GATE. `needs_review` is NOT a silent passthrough — two of its three values
+   MUST also append a human-review checkpoint to the consolidated open_items list built in step 7,
+   using the LITERAL prefix `NEEDS-REVIEW:` (this step is the single source of that spelling):
+   - `"true"` (critique ran and flagged) — append, substituting only the annotation count:
+     `NEEDS-REVIEW: design critique flagged this component spec (needs_review "true") — a human MUST
+     review the N carried critique_annotations before implementation.`
+   - `"not-evaluated"` (design-critique UNRESOLVED, reachable only via the Tailored Workflow override
+     described in the DEGRADATION paragraph) — append verbatim:
+     `NEEDS-REVIEW: design critique never ran (needs_review "not-evaluated") — this component spec was
+     assembled without critique annotations and was never evaluated for review.`
+     This branch is UNREVIEWED, not clean, so it trips the gate too — but it keeps its OWN entry text
+     and its OWN `needs_review` value. NEVER rewrite `"not-evaluated"` to `"true"`.
+   - `"false"` (critique ran and found nothing) — append NOTHING; the gate stays silent.
+   Add NO new payload field: the existing top-level `needs_review` IS the unreviewed-output flag, and
+   downstream Architect/Developer runs detect the checkpoint by that field plus the literal
+   `NEEDS-REVIEW:` prefix in open_items.
 7. Consolidate open_items from ALL inputs into a deduplicated list.
 
 ## Output
@@ -93,7 +113,8 @@ payload:
     sections: []
     navigation_path: ""
   summary: ""    # ≤ 150 tokens — read by the decision-preservation inline step
-  open_items: []
+  open_items: []   # the step-7 consolidated list, shared with component-spec — carries any
+                   # `NEEDS-REVIEW:`-prefixed checkpoint entry emitted by Processing step 6
 ```
 
 component-spec schema:
@@ -121,6 +142,9 @@ payload:
       issue: ""
       severity: "low" # one of: low|medium|high
       token_ref: ""
-  needs_review: "not-evaluated"   # tri-state STRING: "true" | "false" | "not-evaluated" (critique never ran)
-  open_items: []
+  needs_review: "not-evaluated"   # tri-state STRING: "true" | "false" | "not-evaluated" (critique never ran).
+                                  # THIS field is the unreviewed-output flag — no separate flag field exists.
+  open_items: []                  # when needs_review is "true" or "not-evaluated", this list carries the
+                                  # literal `NEEDS-REVIEW:`-prefixed entry from Processing step 6. Consumers
+                                  # detect the human-review checkpoint by that exact prefix + needs_review.
 ```
