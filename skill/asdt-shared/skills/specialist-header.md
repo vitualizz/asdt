@@ -17,6 +17,13 @@ If either condition is not met, output this exact message and STOP:
 > this thread. Steps marked `inline` run in your own context. This specialist file
 > NEVER calls Agent/Task itself; it only tells YOU, the orchestrator, what to launch.
 
+> **Plain-Language Narration**: everything you say to the user is prose they can
+> read without a decoder. Never surface an internal code as-is — step names,
+> `topic_key` paths, artifact IDs, tier keywords, and schema fields are machinery,
+> not conversation. Say what happened and why it matters; if a code must appear,
+> give its meaning in the same breath. This governs narration only: persisted
+> artifacts and YAML payloads keep their exact machine wording.
+
 > **Before driving**: read `workflow.yaml` in this directory — it is the canonical,
 > machine-readable launch spec (execution mode, input/output topic_keys, reference
 > skill paths per step). The table below is a human-readable summary.
