@@ -196,7 +196,7 @@ To route this correctly, I need one piece of information:
 
 Then stop and wait for the answer.
 
-**Batch the gates**: this section, `Complexity Assessment`, and `Risk-Surface Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match is never raised.
+**Batch the gates**: this section, `Complexity Assessment`, `Risk-Surface Assessment`, and `UX/UI Design-Specificity Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match — or whose precondition does not hold — is never raised.
 
 ### 9.1 Complexity Assessment
 
@@ -242,6 +242,25 @@ If the request's keywords do not clearly map to one risk-surface tier, ask ONE c
 ```
 To assess risk surface for workflow generation, I need one piece of information:
 Does this change touch authentication, data handling, external integrations, or secrets/credentials? (none / moderate / high)
+```
+
+Then stop and wait for the answer.
+
+### 9.1c UX/UI Design-Specificity Assessment
+
+**Precondition**: unlike `Complexity Assessment` and `Risk-Surface Assessment`, this gate does NOT run on every request. It is evaluated ONLY after `Analysis Process` has matched specialists, and ONLY when UX/UI is among them. If UX/UI was not routed, skip this section entirely and never raise its question.
+
+A routed UX/UI request is **design-thin** when BOTH hold:
+- a UI signal is present (case-insensitive): "ui", "screen", "page", "flow", "design", "interface", "layout", "component"; AND
+- ZERO of these five specificity signals is present: target user, platform surface, visual tone or brand cue, layout/structure hint, reference example.
+
+Any single specificity signal present resolves the gate; it is not raised.
+
+If the request is design-thin, ask ONE clarifying question:
+
+```
+To assess design specifics for workflow generation, I need one piece of information:
+Who's the primary user, and is there a reference, layout idea, or visual tone you have in mind?
 ```
 
 Then stop and wait for the answer.

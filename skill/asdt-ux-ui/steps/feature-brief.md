@@ -21,11 +21,13 @@ Request + platform-summary: max 1,100 tokens.
 1. Identify the PRIMARY ACTOR: who is the main user of this feature?
 2. Define the CORE PROBLEM: what pain does this solve? (not the solution — the problem)
 3. Establish SUCCESS CRITERIA: 3-5 observable outcomes that mean the feature worked.
-4. Note CONSTRAINTS from platform-summary: which design system rules apply?
-5. Identify ADJACENT FEATURES: what existing features does this interact with?
-6. Capture DESIGN INTENT: the experiential `tone`, guiding `principles`, and a single `north_star`
+4. Note CONSTRAINTS and ADJACENT FEATURES: which platform-summary design rules apply, and what this
+   touches. ENRICH: fill gaps the request leaves silent from platform-summary, never an empty field.
+   CHALLENGE: each fill appends one `open_items` entry with the LITERAL prefix `ASSUMED:` (spelled
+   only here): `ASSUMED: <field> — <assumption and its platform-summary signal>`.
+5. Capture DESIGN INTENT: the experiential `tone`, guiding `principles`, and a single `north_star`
    statement that anchors later design decisions.
-7. Capture JOBS-TO-BE-DONE (`jtbd`): for each, the `actor`, their `motivation`, and the desired
+6. Capture JOBS-TO-BE-DONE (`jtbd`): for each, the `actor`, their `motivation`, and the desired
    `outcome`.
 
 Do NOT jump to solutions. Do NOT sketch layouts. Understand the problem first. This is structured
@@ -47,5 +49,5 @@ payload:
     existing_adjacent_features: []
   design_intent: {tone: "", principles: [], north_star: ""}
   jtbd: []   # [{actor, motivation, outcome}]
-  open_items: []
+  open_items: []   # ENRICH fills carry the `ASSUMED:` prefix (step 4).
 ```
