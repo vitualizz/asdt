@@ -57,7 +57,14 @@ Apply the `report` shared skill:
 4. From components: full component inventory. Responsive specs are sourced from the components
    artifact's `responsive` / `breakpoint_strategy` / `hidden_on_mobile` fields (plus each
    component's `state_matrix` and `accessibility` block) — components is authoritative for
-   responsive, state, and accessibility. Carry those blocks through verbatim.
+   responsive, state, and accessibility. Carry those blocks through verbatim. ONE tolerance,
+   parameterized by `primary_design_surface` in `.asdt/config.yaml`: when that key is set to
+   `mobile`, `tablet`, or `desktop`, the `responsive` entry for the named surface stays
+   byte-verbatim and the other surfaces' entries MAY be condensed to a one-line delta from it.
+   When it is set to `none`, the project has no visual surface: components emit NO `responsive`
+   or `breakpoint_strategy` blocks at all, and their absence is CORRECT — never record it as a
+   degradation or an open item. When the key is absent entirely, every entry stays byte-verbatim,
+   exactly as before.
 5. From design-tokens: carry the token set into `design_tokens_ref`.
 6. From design-critique: carry `critique_annotations` verbatim, and set `needs_review` to the STRING
    form of the critique's boolean — `"true"` or `"false"`. When design-critique is UNRESOLVED, follow
