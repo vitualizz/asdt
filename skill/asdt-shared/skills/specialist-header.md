@@ -23,13 +23,14 @@ If either condition is not met, output this exact message and STOP:
 > not conversation. Say what happened and why it matters; if a code must appear,
 > give its meaning in the same breath. This governs narration only: persisted
 > artifacts and YAML payloads keep their exact machine wording.
+> When you route work, narrate the plan in prose only and never print the machine block on screen: it is quietly stored for you, and each specialist retrieves its own step list silently.
 
 > **Before driving**: read `workflow.yaml` in this directory — it is the canonical,
 > machine-readable launch spec (execution mode, input/output topic_keys, reference
 > skill paths per step). The table below is a human-readable summary.
 
 > **Tailored Workflow detection**: Scan the incoming prompt for a `## Tailored Workflow` header.
-> - If ABSENT: run the full default workflow defined in the step table below.
+> - If ABSENT: retrieve the persisted routing plan at topic_key `{project}/{change}/routing/tailored-workflow`; use this specialist's entry (`steps`, `complexity`, `depth`) exactly as a PRESENT block. Only when no plan is stored, run the full default workflow defined in the step table below.
 > - If PRESENT: parse the `steps:` list. Execute ONLY those steps in the order specified.
 > - Steps NOT in the tailored list → skip entirely (log annotation that the step was skipped by workflow tailoring).
 > - The tailored list overrides the default ordering.

@@ -85,7 +85,9 @@ When you receive a feature request:
 
 ## 6. Output Format
 
-Before you ask the user for the go-ahead, write the routing plan as prose they can read straight through — a short narration, not a form to fill in. Quote the request back verbatim so there is no doubt what you routed. Give the complexity tier (`trivial | simple | moderate | complex`) with its one-line keyword reason, and the risk-surface tier (`none | moderate | high`) with its own one-line reason; the two axes are assessed independently, so always state both. Name every recommended specialist with a one-line rationale, and hand each one exactly one `## Tailored Workflow` block written in the single canonical format specified in `Tailored Workflow Generation` — including Security's variant, which is gated by the risk-surface axis rather than by complexity. Suggest the run order as a chain of `/asdt-*` commands (one specialist means a chain of one), and tell the user that each specialist reads the artifacts produced by previous specialists automatically. Close by asking whether to proceed.
+Everything you put on screen is prose the reader can follow without a decoder. Machinery — step lists, tier keywords, schema fields, topic keys — belongs in what you STORE, never in what you SHOW. That is one rule, not a list of forbidden items: whenever something is addressed to a specialist rather than to a person, it is stored.
+
+Before you ask the user for the go-ahead, write the routing plan as prose they can read straight through — a short narration, not a form to fill in. Quote the request back verbatim so there is no doubt what you routed. Give the complexity tier (`trivial | simple | moderate | complex`) with its one-line keyword reason, and the risk-surface tier (`none | moderate | high`) with its own one-line reason; the two axes are assessed independently, so always state both. Name every recommended specialist with a one-line rationale and say, in prose, which stage of the work it takes and roughly how deep it goes. Security is named on the same terms, gated by the risk-surface axis rather than by complexity. Suggest the run order as a chain of `/asdt-*` commands (one specialist means a chain of one), and tell the user that each specialist reads the artifacts produced by previous specialists automatically. Close by asking whether to proceed.
 
 Two strings must reach the user character-for-character, wherever your narration places them:
 
@@ -119,9 +121,9 @@ This section fixes WHAT the plan says, never the order or the labels it says it 
 
 ## 8. After Confirmation
 
-Once the user says yes (or anything equivalent), your remaining job is to tell them what to run. Walk them through the suggested specialists in order, one `/asdt-*` command each, and give every specialist exactly one `## Tailored Workflow` block in the canonical format specified in `Tailored Workflow Generation`, carrying the step list for the tier you assessed it at. A specialist appears at most ONCE in a run order, at a single tier.
+Once the user says yes (or anything equivalent), your remaining job is to tell them what to run and to STORE the plan for the specialists. On screen, walk them through the suggested specialists in order, one `/asdt-*` command each, in prose. Persist ONE routing-plan record via `mem_save` under topic_key `{project}/{change}/routing/tailored-workflow` (title `{change}/routing/tailored-workflow`, type `decision`), carrying `request` (the request quoted verbatim), `risk_surface`, and `specialists` — one entry per routed specialist, in run order, each with `specialist` (its `/asdt-*` name without the slash), `steps` in the canonical format specified in `Tailored Workflow Generation`, `complexity`, and `depth`. Each specialist retrieves its own entry from that record when it starts. A specialist appears at most ONCE in a run order, at a single tier.
 
-Here is what that looks like for a `moderate` change routed to UX/UI, Architect, and Developer:
+The record you persist carries exactly this information for a `moderate` change routed to UX/UI, Architect, and Developer — the run order plus, per specialist, its `steps`, `complexity`, and `depth`. It is a stored record, NOT screen output: the user hears the prose narration instead.
 
 ```
 Run each specialist in order:
@@ -257,7 +259,7 @@ Then stop and wait for the answer.
 
 ### 9.2 Tailored Workflow Generation
 
-Once complexity is determined, generate a `## Tailored Workflow` block for each recommended specialist. The block defines which steps that specialist should execute.
+Once complexity is determined, work out the `## Tailored Workflow` content for each recommended specialist: its step list, its tier, and its depth. That content defines which steps the specialist executes. It travels inside the routing-plan record you persist after confirmation — the same canonical shape a human would write by hand on the rare occasion they paste one themselves.
 
 Authority: each specialist's workflow.yaml owns step identity, execution mode, agent type, and model; each specialist's ## Orchestration Plan in its SKILL.md owns the tier→step lists; the `Tailored Workflow Generation` per-specialist table is a derived cache of both and never overrides them.
 
@@ -265,9 +267,9 @@ Authority: each specialist's workflow.yaml owns step identity, execution mode, a
 
 ### Step List Validation (applies to every `steps:` list before emission)
 
-> **This algorithm runs on EVERY candidate `steps:` list — whether it is a `trivial` ad-hoc composition OR a preset tier (simple/moderate/complex). It is a structural guard against phantom-name and broken-dependency regressions. Execute it before emitting any `## Tailored Workflow` block.**
+> **This algorithm runs on EVERY candidate `steps:` list — whether it is a `trivial` ad-hoc composition OR a preset tier (simple/moderate/complex). It is a structural guard against phantom-name and broken-dependency regressions. Execute it before any `## Tailored Workflow` content is stored.**
 
-> **Derivation rule**: When emitting a preset tier (trivial/simple/moderate/complex), read the tier's step list from the target specialist's `## Orchestration Plan` and check every name in it against the `name:` fields in that specialist's `workflow.yaml`, per the authority sentence above — treat the compact tables below as a cache for quick access, never as the source. This prevents "valid-but-wrong" drift where a step name exists in `workflow.yaml` but belongs to a different tier.
+> **Derivation rule**: When producing a preset tier (trivial/simple/moderate/complex), read the tier's step list from the target specialist's `## Orchestration Plan` and check every name in it against the `name:` fields in that specialist's `workflow.yaml`, per the authority sentence above — treat the compact tables below as a cache for quick access, never as the source. This prevents "valid-but-wrong" drift where a step name exists in `workflow.yaml` but belongs to a different tier.
 
 **Two-pass algorithm (for specialist S and its `workflow.yaml`):**
 
@@ -314,7 +316,7 @@ Authority: each specialist's workflow.yaml owns step identity, execution mode, a
 
 **Per-specialist step mapping:**
 
-Before emitting any `## Tailored Workflow` block, read the target specialist's `## Orchestration Plan`, which declares that specialist's tier→step lists. The compact table below is the derived cache described in the authority sentence above: it lists the trivial step for quick access — for non-trivial tiers, always load the specialist file.
+Before producing any `## Tailored Workflow` content, read the target specialist's `## Orchestration Plan`, which declares that specialist's tier→step lists. The compact table below is the derived cache described in the authority sentence above: it lists the trivial step for quick access — for non-trivial tiers, always load the specialist file.
 
 | Specialist | File | Trivial step | Trivial eligible? |
 |---|---|---|---|
@@ -348,6 +350,6 @@ steps: [{comma-separated step names}]
 risk_surface: {none | moderate | high}
 ```
 
-The `steps` list overrides the specialist's default step order. Steps NOT in the list are skipped entirely. The specialist scans their prompt for `## Tailored Workflow` header — if absent, they run their full default workflow.
+The `steps` list overrides the specialist's default step order. Steps NOT in the list are skipped entirely. A specialist first scans its prompt for the `## Tailored Workflow` header; when none is there it retrieves the persisted routing plan, and only when no plan is stored either does it run its full default workflow.
 
 The block MAY also carry an OPTIONAL `depth: {quick | standard | deep}` field (default `standard` when omitted). `depth` is a verbosity dial that controls per-step OUTPUT volume only — it is orthogonal to `complexity` and `risk_surface` (which gate WHICH steps run) and to the `steps` list itself. `quick` collapses enumerations and skips optional fields; `standard` is the current default; `deep` maximizes alternatives, edge-cases, and rationale within each step's existing context budget. `depth` NEVER overrides hard schema-required fields — those are always emitted regardless of depth.
