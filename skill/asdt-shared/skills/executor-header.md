@@ -11,3 +11,15 @@
 > Persist your one output via `mem_save` under the `output_topic_key`
 > declared for this step in `workflow.yaml`, then return a structured summary
 > envelope (status, summary, output topic_key, open_items).
+>
+> **FALSIFIABILITY** — applies only when this step declares an `output_topic_key` in `workflow.yaml`; steps without one are exempt.
+> When it applies, the artifact you persist is a checkable contract, not
+> prose: every claim must cite evidence a later step can re-run or re-read
+> (exact file paths, symbol names, commands, observed values) — never
+> "should", "likely", or an unverifiable summary. Every assumption you could
+> not verify, every input gap, and every check you could not run goes into
+> `open_items` with the literal prefix `ASSUMED:`, stated falsifiably: what
+> you expected, and what to read or run to confirm or refute it. This holds
+> regardless of whether clarifying questions were asked upstream and
+> regardless of whether a human is present. Output that cannot be disproven
+> with the evidence it cites is a defect, not a deliverable.

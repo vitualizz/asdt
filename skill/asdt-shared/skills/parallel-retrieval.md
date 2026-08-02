@@ -64,6 +64,10 @@ Maintain a per-run map `topic_key -> resolved content`:
    file at most once per run and reuse the stored content for every later step that
    declares it.
 
+## Concurrent Launch (orchestrator)
+
+Steps whose declared inputs are all already resolved may be launched together, not one after another. In `ux-ui`, `design-tokens` and `information-architecture` both consume only `feature-brief`: launch them concurrently and wait for both before continuing.
+
 ## Injection Format (orchestrator builds, sub-agent consumes)
 
 For each declared input, the orchestrator embeds ONE of these blocks directly in

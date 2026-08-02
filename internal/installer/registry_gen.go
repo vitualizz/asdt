@@ -59,11 +59,16 @@ var registryRenderOrder = []string{
 //   - parallel-retrieval.md second: the Cache Ledger Rule and the Injection
 //     Format are needed at launch time — the orchestrator must already hold
 //     them before it runs the first inline step.
+//   - intake-contract.md third: the declared-vs-present input check, the single
+//     batched clarification turn, and the harden-always ASSUMED: degradation
+//     govern how every step treats its inputs, so they must be settled before
+//     any step content arrives.
 //   - knowledge-recall.md last: it is the content of that first inline step, so
 //     it only has to be in context once the launch contract above is settled.
 var specialistHeaderFragments = []string{
 	"asdt-shared/skills/specialist-header.md",
 	"asdt-shared/skills/parallel-retrieval.md",
+	"asdt-shared/skills/intake-contract.md",
 	"asdt-shared/skills/knowledge-recall.md",
 }
 

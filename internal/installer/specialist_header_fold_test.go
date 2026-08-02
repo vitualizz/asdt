@@ -39,7 +39,15 @@ func TestInstall_SpecialistHeaderFoldReachesInstalledSKILL(t *testing.T) {
 	}{
 		{name: "specialist-header", sentinel: "ORCHESTRATOR GATE"},
 		{name: "parallel-retrieval", sentinel: "## Cache Ledger Rule (orchestrator)"},
+		{name: "intake-contract", sentinel: "# Intake Contract — Shared Skill"},
 		{name: "knowledge-recall", sentinel: "# Knowledge Recall — Shared Skill"},
+	}
+
+	// The expected-order slice above must cover the production fragment list
+	// one-to-one: a fragment added to specialistHeaderFragments without a
+	// matching sentinel here would fold silently, unasserted.
+	if len(specialistHeaderFragments) != len(folded) {
+		t.Fatalf("specialistHeaderFragments has %d entries but this test's folded slice has %d — keep registry_gen.go's specialistHeaderFragments and the folded expectations in lockstep", len(specialistHeaderFragments), len(folded))
 	}
 
 	// decision-preservation is deliberately NOT folded — specialists load it per

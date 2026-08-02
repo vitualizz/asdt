@@ -69,11 +69,29 @@ deliberate recalibration, never per-change.
    - Nothing detected → the key is REMOVED from the file (never `none`, never
      `unknown`).
 
+   `primary_design_surface` is a top-level scalar too, written with the SAME
+   mechanics — but explicitly NOT `code_intelligence`'s detection semantics.
+   This key is ASKED, never detected:
+
+   - A `primary_design_surface` clarify answer is present → write
+     `primary_design_surface: <answer>`, one of `mobile` | `tablet` | `desktop` |
+     `none`. NO FieldValue wrapper.
+   - No such answer — the question was never asked, e.g. a non-interactive run →
+     the key is REMOVED from the file.
+
+   These two states are DIFFERENT and must never be conflated: an ABSENT key
+   means the question was never asked, and every consumer treats that as
+   `mobile`. An explicit `none` means the human answered that this project has no
+   visual surface at all, and consumers emit no responsive output. Never write
+   `none` as a stand-in for "unanswered", and never drop the key when the answer
+   was `none`.
+
    ```yaml
    memory:
      provider: engram
    strict_tdd: false            # preserved byte-wise when present
    code_intelligence: codegraph # positive evidence only; key removed when absent
+   primary_design_surface: mobile # asked, not detected; key removed when never answered
    ```
 
 2. **`.asdt/knowledge/knowledge.yaml`** — the ONLY knowledge file specialists
