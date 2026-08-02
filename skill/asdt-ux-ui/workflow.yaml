@@ -25,7 +25,7 @@ steps:
     skill: steps/design-tokens.md
     description: Derive the design token set from the feature brief design intent and the platform design system fingerprint
     execution: subagent
-    model: sonnet
+    model: haiku
     agent: analyst
     inputs:
       - "{project}/{change}/ux-ui/feature-brief"
