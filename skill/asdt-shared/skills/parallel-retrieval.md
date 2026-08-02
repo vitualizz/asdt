@@ -66,7 +66,7 @@ Maintain a per-run map `topic_key -> resolved content`:
 
 ## Concurrent Launch (orchestrator)
 
-Steps whose declared inputs are all already resolved may be launched together, not one after another. In `ux-ui`, `design-tokens` and `information-architecture` both consume only `feature-brief`: launch them concurrently and wait for both before continuing.
+Inspect each pending step's declared `inputs:`: steps with all declared inputs already resolved (optional inputs count as resolved when their producing step did not run) may be launched together — "did not run" is judged against this run's executing step list — but only when they are contiguous in that list: no step listed between them still pending, measured over the tailored executing list, never default file order. Illustrative pairs, never a closed whitelist: in `ux-ui`, `design-tokens` and `information-architecture` both consume only `feature-brief`; in `pm`, `success-metrics` and `scope-analysis`; in `qa`, `ac-validation` and `edge-case-analysis`; in `architect`, `cost-estimation` and `risk-analysis` — launch each pair concurrently and wait for all before continuing.
 
 ## Injection Format (orchestrator builds, sub-agent consumes)
 
