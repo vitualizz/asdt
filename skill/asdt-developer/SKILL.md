@@ -44,12 +44,7 @@ code. You do NOT produce architecture decisions, UX specs, or test plans.
 | **moderate** | `explore → spec → implement` |
 | **complex** | `explore → spec → implement` |
 
-| Step | File | Execution | Reads | Writes |
-|------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| explore | steps/explore.md | subagent | *(request + platform-summary)* | *(context — `dev-exploration`)* |
-| spec | steps/spec.md | subagent | `dev-exploration`, `pm/handoff` *(optional)*, `architect/handoff` *(optional)* | *(context — `dev-spec`)* |
-| implement | steps/implement.md | subagent | `dev-spec`, `architect/handoff` *(optional)* | `developer/handoff` |
+The inline `knowledge-recall` prelude runs first at every tier.
 
 **Intra-run persistence — you, the orchestrator, own this.** `explore` and `spec` declare
 `output: context`, not an `output_topic_key`. Retain each one's returned payload in YOUR
@@ -60,9 +55,7 @@ persists is `developer/handoff`.
 Tests are not a step. `implement` writes them in the same pass, under the same mode and the
 same edit roots, when `strict_tdd: true` in `.asdt/config.yaml` or the user asked for them.
 
-When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence.
-
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
+Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `developer/handoff` — the implementation hand-off, persisted at

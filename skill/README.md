@@ -11,10 +11,10 @@ flowchart TD
 
     B["/asdt-architect · /asdt-developer · …\nSpecialist as orchestrator\nskill/asdt-name/SKILL.md"]
 
-    B -->|inline| C["knowledge-recall · platform-analysis · decision-preservation\ncontext injection only · no artifact produced"]
-    B -->|subagent| D["steps/step-name.md\nexecutor-only · one artifact per step · never delegates"]
+    B -->|inline| C["knowledge-recall · platform-analysis\ncontext injection only · no artifact produced"]
+    B -->|subagent| D["steps/step-name.md\nexecutor-only · never delegates"]
 
-    D <-->|"mem_save / mem_search\ntopic_key: project/change/specialist/artifact-type"| E[(Engram)]
+    D <-->|"mem_save / mem_search\ntopic_key: project/change/role/handoff"| E[(Engram)]
 ```
 
 **Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Analyzes the request, assesses complexity, recommends which specialists to invoke and in what order. Never executes a single specialist step.
@@ -65,7 +65,7 @@ Every step in `workflow.yaml` has an `execution:` field:
 Every artifact is stored in Engram under a structured key:
 
 ```
-{project}/{change}/specialist/artifact-type
+{project}/{change}/{role}/handoff
 
 Examples:
   myapp/add-auth/architect/handoff

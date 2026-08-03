@@ -1,8 +1,8 @@
 # ASDT Refactor — Migration Notes
 
-Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. Phases 1 through 4 are complete — see §8 for status.
+Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. All five phases are complete — see §10 for status.
 
-**Anything a phase defers goes to §7, not into a partial fix.** That backlog is worked in one pass after Phase 5.
+**Anything a phase defers goes to §9, not into a partial fix.** That backlog is worked in one pass after Phase 5.
 
 ## 1. `skill/asdt-core/` is the new core (`asdt-shared/` was purged in Phase 4)
 
@@ -104,7 +104,7 @@ Two NFR consumers now read a FIELD rather than a dedicated artifact: `architect/
 
 The `Tailored Workflow Generation` per-specialist table in `skill/SKILL.md` had its PM and Researcher **step-name cells** refreshed (`feature-intake` → `backlog`, `divergent-ideation` → `discovery`) so no row names a step that no longer exists. The **trivial-eligible verdict prose** in those two rows was left conservative and still needs the Phase 5 router pass — with one step at every tier, "trivial eligible" no longer means what it meant when the tier bought a shorter chain.
 
-Everything this phase deliberately left untouched is recorded in §7, not fixed inline.
+Everything this phase deliberately left untouched is recorded in §9, not fixed inline.
 
 ## 5. Phase 3 — Architect, Developer, and Security collapsed
 
@@ -158,7 +158,7 @@ Consumers updated: `asdt-qa/steps/load-requirements.md`, `asdt-shared/skills/{ar
 
 ### Go-side status after Phase 3
 
-`TestRegistryDrift` is still GREEN — the inline-steps region was regenerated again (Architect, Developer, and Security each lost `decision-preservation`). The same four tests from Phase 2 are red, with larger deltas; the numbers in §7 D1 are updated to the Phase 3 values.
+`TestRegistryDrift` is still GREEN — the inline-steps region was regenerated again (Architect, Developer, and Security each lost `decision-preservation`). The same four tests from Phase 2 are red, with larger deltas; the numbers in §9 D1 are updated to the Phase 3 values.
 
 ## 6. Phase 4 — QA and UX/UI collapsed, and the purge
 
@@ -240,7 +240,46 @@ Eleven tests are RED. `TestRegistryDrift` is GREEN — the inline-steps region w
 
 41 sub-agent steps at the start of the refactor → **12**: pm 1, researcher 1, architect 1, developer 3, security 2, qa 1, ux-ui 1, init 2.
 
-## 7. Deferred — the post-refactor backlog
+## 7. Phase 5 — the router, the headers, and the authoring contract
+
+The last rewrite. `skill/SKILL.md` went 355 lines → 61, `specialist-header.md` 110 → 26, `executor-header.md` 25 → 20, `TEMPLATE.md` 246 → 96.
+
+**The router now uses judgment, not classifiers.** Deleted outright, with no replacement: the Complexity and Risk-Surface keyword tables, the 9.1c/9.1d gates, the dagger (✝) provenance notation, the two-pass fixpoint Step List Validation algorithm, the `Tailored Workflow Generation` per-specialist table and its generated regions, the routing-plan persistence at `{project}/{change}/routing/tailored-workflow`, and the two character-for-character output strings. What replaced them is ten lines of criteria and one instruction: judge both axes, and when a tier is arguable take the lower defensible one and say so.
+
+**Nothing about routing is persisted any more.** The tier travels as a `--tier=` argument on the command line the user copies. That removes the last write outside the seven hand-offs and the journal.
+
+**Duplication resolved.** `workflow.yaml` is the single machine-readable source of step identity, model, inputs, and outputs. Every specialist SKILL.md dropped its File/Execution/Reads/Writes table and the "This section is the authoritative…" ritual sentence; what remains is the tier→steps mapping (only where a specialist has more than one step) and a one-line pointer at `workflow.yaml`.
+
+`asdt-init` was left alone except for the two orphan `## Context budget` sections its step files still carried. Its five-row step table was deliberately NOT collapsed: three of its steps are inline with no step file, so that table is their only contract, and `TestInitPlanTableMatchesWorkflow` guards it. It also has no specialist-header marker region — `installer.go` documents that silent pass-through as intended.
+
+## 8. Checklist for the Go maintainer
+
+Everything below is Go-side and was NOT touched by any phase. Work it in one pass.
+
+**1. Repoint two constants.**
+
+```go
+// internal/installer/registry_gen.go  (~line 68)
+var specialistHeaderFragments = []string{
+    "asdt-core/specialist-header.md",
+    "asdt-core/protocol.md",
+}
+
+// internal/installer/agent_adapters.go  (line 14)
+const executorHeaderPath = "asdt-core/executor-header.md"
+```
+
+`parallel-retrieval.md` and `intake-contract.md` collapsed into `protocol.md` §2/§4. `knowledge-recall.md` is no longer a header fragment at all — it is a per-specialist inline step pointing at `asdt-core/references/knowledge-recall.md`.
+
+**2. Fix `skill/embedded_test.go`.** `TestEmbeddedSkillTree` asserts `asdt-shared/skills/executor-header.md` is embedded — the literal becomes `asdt-core/executor-header.md`. `TestEmbeddedSharedSkillsMatchDisk` does `os.ReadDir("asdt-shared/skills")` and `t.Fatalf`s on a directory that no longer exists: repoint it at `asdt-core/references/` or drop it. `TestRoutedSpecialistInvariants` still passes — the three verbatim blocks were preserved in every specialist, so `"SOLE orchestrator"`, `"FIRST ACTION — self-load the header"`, and both markers are all still present. The stale comment on `embedded.go:15` names `asdt-shared/skills/platform-context.md` as a path example.
+
+**3. Regenerate `TestRegistryDrift` against the new tree.** It currently passes, because the inline-steps region was regenerated at the end of every phase. But two of its three mirror sites no longer exist in `skill/SKILL.md`: the `Tailored Workflow Generation` trivial table (deleted this phase) and, with it, `trivialTableRows`. The `Specialist Registry` site survives — the table is still there under `## Registry` — but `section5Rows` anchors on the old `## 5. Specialist Registry` heading and now parses zero rows, which is exactly how this test currently fails. Update the anchor, and drop `trivialTableRows` and its site entry entirely.
+
+**4. Recount the shape/count assertions.** These pin the pre-refactor shape and are red; final values are in §9 D1. `analystCount` 40 → **9**; optional markers 18 → **11**; orchestration rows 27 → **4**. `TestOrchestrationPlanCellClassification` and `TestCollapseOnlyRunsAfterInsertion` need the design call recorded in D1 — only `asdt-developer` and `asdt-security` still carry a tier table, so a single-step specialist has no rows to parse.
+
+**5. Teach the parsers `output: context`.** `workflow_models.go` and `parseRegistry` walk `workflow.yaml` for `output_topic_key`. Three steps — `developer/explore`, `developer/spec`, `security/assess` — declare `output: context` instead: they persist nothing, and their payload is retained by the orchestrator and injected into the next step. Anything that assumes every subagent step has an `output_topic_key` needs to tolerate its absence.
+
+## 9. Deferred — the post-refactor backlog
 
 **Standing rule for this refactor: anything a phase leaves behind gets an entry here instead of a partial fix.** These items are settled AFTER Phase 5, in one pass, for one reason — every one of them tracks a structure that phases 3–5 are still moving. Fixing them per phase means fixing them three times and reviewing churn that says nothing about whether the refactor is correct.
 
@@ -295,13 +334,14 @@ In `skill/SKILL.md`, the `Tailored Workflow Generation` per-specialist table had
 
 The directory and every per-specialist `skills/` directory are deleted. What survived by moving, and the two installer constants that must be repointed, are recorded in §6.
 
-## 8. Phase status
+## 10. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
 - **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §4.
 - **Phase 3 — done.** Architect 7→1, Developer 6→3, Security 4→2; `output: context` introduced for intra-run payloads. See §5.
 - **Phase 4 — done.** QA 8→1, UX/UI 8→1; `asdt-shared/` and every per-specialist `skills/` directory deleted. 41 sub-agent steps → 12. See §6.
-- **Phase 5** — repoint the two installer constants (§6), rewrite the two moved headers against `protocol.md`, and do the router pass over the root `SKILL.md` and the registry mirrors.
-- **Post-refactor** — work the §7 backlog in one pass: the red tests, the `site/` docs, and the authoring contract (`TEMPLATE.md`, the READMEs).
+- **Phase 5 — done.** Router rewritten on judgment instead of keyword tables; both headers rewritten; `workflow.yaml` made the single machine-readable source; `TEMPLATE.md` rewritten for the new system. See §7.
+- **Go maintainer** — the checklist in §8.
+- **Post-refactor** — work the §9 backlog: the `site/` docs and the remaining red tests, alongside the §8 checklist.
 
-Each phase appends what it defers to §7 rather than fixing it partially.
+Each phase appends what it defers to §9 rather than fixing it partially.

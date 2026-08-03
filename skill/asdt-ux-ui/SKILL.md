@@ -38,19 +38,11 @@ code, architecture decisions, or test plans.
 
 ## Orchestration Plan
 
-| Step | File | Execution | Reads | Writes |
-|------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| platform-analysis | ../asdt-core/references/platform-context.md | inline | knowledge.yaml | *(no artifact — injects the design system)* |
-| ux-spec | steps/ux-spec.md | subagent | `pm/handoff` *(optional)* | `ux-ui/handoff` |
+One sub-agent step — `ux-spec` — at every tier, after the inline `knowledge-recall` and
+`platform-analysis` preludes. The tier dial changes how many flows are written out and how
+much branching each one carries, never which steps run.
 
-**Every tier runs `ux-spec`.** The tier does not change the step list — there is only one
-step. `--tier=quick|standard|deep` is a verbosity dial: how many flows are written out and
-how much branching each one carries. It never adds or removes a section.
-
-When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence.
-
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
+Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `ux-ui/handoff` — brief, IA, flows, component mapping, and accessibility as sections of ONE

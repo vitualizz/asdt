@@ -37,22 +37,14 @@ that follows from it. You do NOT write implementation code, UX specs, or test pl
 
 ## Orchestration Plan
 
-| Step | File | Execution | Reads | Writes |
-|------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| platform-analysis | ../asdt-core/references/platform-context.md | inline | knowledge.yaml | *(no artifact — injects platform context)* |
-| design | steps/design.md | subagent | `pm/handoff` *(optional)* | `architect/handoff` |
+**Architect is not invoked on simple changes** — the Developer handles those directly.
 
-**Architect is not invoked on simple changes** — the Developer handles those directly. When
-it does run, it runs `design`, at every tier.
+When it does run: one sub-agent step — `design` — at every tier, after the inline
+`knowledge-recall` and `platform-analysis` preludes. The tier dial changes how many
+alternatives are compared and how much design surface is covered, never which steps run and
+never which sections the output carries.
 
-**Every tier runs `design`.** The tier does not change the step list — there is only one
-step. `--tier=quick|standard|deep` is a depth dial: how many alternatives are compared and
-how much design surface is covered. It never adds or removes a section of the output.
-
-When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence.
-
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
+Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `architect/handoff` — the architectural decision plus the design that follows from it,

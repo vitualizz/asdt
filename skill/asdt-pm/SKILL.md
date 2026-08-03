@@ -38,18 +38,11 @@ decisions, implementation code, UX specs, or test plans.
 
 ## Orchestration Plan
 
-| Step | File | Execution | Reads | Writes |
-|------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| backlog | steps/backlog.md | subagent | raw request, `researcher/handoff` *(optional)* | `pm/handoff` |
+One sub-agent step — `backlog` — at every tier, after the inline `knowledge-recall` prelude.
+The tier dial changes how many stories and how much scope detail travel in the hand-off,
+never which steps run.
 
-**Every tier runs `backlog`.** The tier does not change the step list — there is only one
-step. `--tier=quick|standard|deep` is a verbosity dial: how many stories, how much scope
-detail, how much rationale travels in the hand-off. It never buys or removes a step.
-
-When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence.
-
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
+Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `pm/handoff` — the requirements hand-off, persisted at `{project}/{change}/pm/handoff`.

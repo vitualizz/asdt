@@ -38,18 +38,11 @@ requirements, architecture, code, or tests, and you never write the filesystem.
 
 ## Orchestration Plan
 
-| Step | File | Execution | Reads | Writes |
-|------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| discovery | steps/discovery.md | subagent | raw problem statement | `researcher/handoff` |
+One sub-agent step — `discovery` — at every tier, after the inline `knowledge-recall`
+prelude. The tier dial changes how many directions are explored and how much evidence each
+feasibility verdict carries, never which steps run.
 
-**Every tier runs `discovery`.** The tier does not change the step list — there is only one
-step. `--tier=quick|standard|deep` is a verbosity dial: how many directions are explored and
-how much evidence each feasibility verdict carries. It never buys or removes a step.
-
-When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence.
-
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
+Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `researcher/handoff` — the recommended direction, persisted at

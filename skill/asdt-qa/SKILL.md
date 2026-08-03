@@ -38,21 +38,14 @@ go/no-go verdict. You do NOT write implementation code, architecture decisions, 
 
 ## Orchestration Plan
 
-| Step | File | Execution | Reads | Writes |
-|------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| test-plan | steps/test-plan.md | subagent | `pm/handoff` *(optional)*, `developer/handoff` *(optional)*, `architect/handoff` *(optional)* | `qa/handoff` |
-
-**Every tier runs `test-plan`.** The tier does not change the step list — there is only one
-step. `--tier=quick|standard|deep` is a verbosity dial: how many edge-case categories are
-worked and how many test cases are written out. It never adds or removes a section.
+One sub-agent step — `test-plan` — at every tier, after the inline `knowledge-recall`
+prelude. The tier dial changes how many edge-case categories are worked and how many test
+cases are written out, never which steps run.
 
 Every input is optional. QA runs with all three hand-offs, with one, or with none — against
 the raw request and the codebase alone.
 
-When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence.
-
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
+Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `qa/handoff` — gaps, edge cases, strategy, test cases, and the verdict as sections of ONE

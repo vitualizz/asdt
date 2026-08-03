@@ -38,7 +38,7 @@ NOT write implementation code, architecture decisions, or test plans.
 
 ## Orchestration Plan
 
-**Risk-surface gated, not complexity gated**: Security fills the gating-axis slot with `risk_surface`, because the two are assessed independently — a one-line change is still `high` risk surface when it touches authentication, secrets, or data handling. A Tailored Workflow block addressed to this specialist carries `risk_surface:`, never `complexity:`.
+**Risk-surface gated, not complexity gated**: the two axes are assessed independently — a one-line change is still `high` risk surface when it touches authentication, secrets, or data handling. The `--tier` argument this specialist receives is the RISK surface, never the complexity.
 
 | Level | Behavior |
 |-------|----------|
@@ -48,20 +48,13 @@ NOT write implementation code, architecture decisions, or test plans.
 
 The risk surface is a DEPTH dial, never a step list — both steps run whenever Security runs.
 
-| Step | File | Execution | Reads | Writes |
-|------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
-| platform-analysis | ../asdt-core/references/platform-context.md | inline | knowledge.yaml | *(no artifact — injects platform context)* |
-| assess | steps/assess.md | subagent | `developer/handoff` *(optional)*, `architect/handoff` *(optional)* | *(context — `security-assessment`)* |
-| harden | steps/harden.md | subagent | `security-assessment` | `security/handoff` |
+Both sub-agent steps run after the inline `knowledge-recall` and `platform-analysis` preludes.
 
 **Intra-run persistence — you, the orchestrator, own this.** `assess` declares `output: context`,
 not an `output_topic_key`. Retain its returned payload in YOUR context and inject it into
 `harden` as `### INPUT security-assessment`. It is NEVER written to Engram.
 
-When a Tailored Workflow block is present in the prompt, its `steps:` list takes precedence.
-
-This section is the authoritative tier→step mapping for this specialist; workflow.yaml owns step identity, execution, and model; skill/SKILL.md `Tailored Workflow Generation` holds a derived cache row — update it when steps change.
+Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `security/handoff` — findings and hardening checklist as sections of ONE artifact, persisted
