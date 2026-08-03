@@ -19,7 +19,7 @@ metadata:
 > anything below. Re-read both whenever you can no longer recall their content (e.g. after
 > a context compaction).
 
-<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-shared/skills/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
+<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-core/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
@@ -46,7 +46,7 @@ code. You do NOT produce architecture decisions, UX specs, or test plans.
 
 | Step | File | Execution | Reads | Writes |
 |------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-shared/skills/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
+| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
 | explore | steps/explore.md | subagent | *(request + platform-summary)* | *(context — `dev-exploration`)* |
 | spec | steps/spec.md | subagent | `dev-exploration`, `pm/handoff` *(optional)*, `architect/handoff` *(optional)* | *(context — `dev-spec`)* |
 | implement | steps/implement.md | subagent | `dev-spec`, `architect/handoff` *(optional)* | `developer/handoff` |

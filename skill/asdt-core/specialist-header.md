@@ -98,7 +98,7 @@ not something you follow yourself.)
 Rules for both:
 
 - Paths resolve from the SPECIALIST's own directory. Both
-  `../asdt-shared/skills/x.md` and `skills/x.md` are valid and resolve correctly.
+  `../asdt-core/references/x.md` and `steps/x.md` are valid and resolve correctly.
 - Reads go through the same fetch-once ledger described under **Cache Ledger Rule** in
   this same document, keyed `skill:{path}` so a file entry can never collide with a
   `topic_key` entry. Follow the rule as written there; it is not restated here.

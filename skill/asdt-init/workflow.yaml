@@ -33,4 +33,4 @@ steps:
       - "{project}/{change}/init/stack-detection"
     output_topic_key: "{project}/{change}/init/write-summary"
     reference_skills:
-      - ../asdt-shared/skills/report.md
+      - ../asdt-core/protocol.md

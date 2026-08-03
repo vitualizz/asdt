@@ -33,12 +33,14 @@ skill/
 ├── asdt-{name}/                ← one directory per specialist
 │   ├── SKILL.md                ← orchestration plan (ORCHESTRATOR GATE + step table)
 │   ├── workflow.yaml           ← step registry: name, execution mode, inputs, outputs
-│   ├── steps/                  ← sub-agent prompt files (one per subagent step)
-│   │   └── {step-name}.md
-│   └── skills/                 ← reference docs loaded into specific steps (optional)
+│   └── steps/                  ← sub-agent prompt files (one per subagent step)
+│       └── {step-name}.md
+├── asdt-core/                  ← the protocol and its optional references
+│   ├── protocol.md             ← the one mandatory shared skill
+│   ├── specialist-header.md    ← spliced into every routed SKILL.md at install time
+│   ├── executor-header.md      ← baked into generated agent definitions
+│   └── references/             ← opt-in criteria loaded per step
 │       └── {reference}.md
-├── asdt-shared/
-│   └── skills/                 ← cross-specialist utilities (see asdt-shared/skills/_README.md)
 └── asdt-init/                  ← project initializer (/asdt-init)
 ```
 
@@ -51,11 +53,11 @@ Every step in `workflow.yaml` has an `execution:` field:
 | `inline` | Runs in the orchestrator's context — pure context injection | No |
 | `subagent` | Launched as an isolated sub-agent | Yes — one artifact per step |
 
-**Inline steps** (`knowledge-recall`, `platform-analysis`, `decision-preservation`) inject context into the orchestrator's thread. They have no `inputs:` or `output_topic_key` — they enrich context for the next step.
+**Inline steps** (`knowledge-recall`, `platform-analysis`) inject context into the orchestrator's thread. They have no `inputs:` or `output_topic_key` — they enrich context for the next step.
 
 **Subagent steps** each declare:
 - `inputs:` — topic keys to retrieve from Engram before starting
-- `output_topic_key` — where to save the produced artifact in Engram
+- `output_topic_key` — where to save the hand-off in Engram, OR `output: context` when the payload is retained by the orchestrator and injected into the next step instead of persisted
 - `reference_skills:` — which shared skill files to load as guidelines
 
 ## Artifact Topic Keys
@@ -80,5 +82,5 @@ This naming lets the next specialist retrieve a specific artifact unambiguously 
 1. Create `skill/asdt-{name}/` with `SKILL.md`, `workflow.yaml`, and `steps/`
 2. Add the ORCHESTRATOR GATE block to `SKILL.md` — copy from any existing specialist
 3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, `output_topic_key:`
-4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-shared/skills/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-shared/skills/parallel-retrieval.md` for which of the two applies
+4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-core/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-core/protocol.md` for which of the two applies
 5. Register the specialist in the `Specialist Registry` section of `skill/SKILL.md`

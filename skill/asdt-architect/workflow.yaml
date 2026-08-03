@@ -2,7 +2,7 @@ specialist: architect
 routable: true
 steps:
   - name: knowledge-recall
-    skill: ../asdt-shared/skills/knowledge-recall.md
+    skill: ../asdt-core/references/knowledge-recall.md
     description: Query organizational memory for prior architectural decisions relevant to this change before acting
     execution: inline
 

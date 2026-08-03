@@ -2,7 +2,7 @@ specialist: pm
 routable: true
 steps:
   - name: knowledge-recall
-    skill: ../asdt-shared/skills/knowledge-recall.md
+    skill: ../asdt-core/references/knowledge-recall.md
     description: Query organizational memory for prior requirements, similar features, and scope decisions relevant to this change
     execution: inline
 

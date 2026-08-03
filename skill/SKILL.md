@@ -292,9 +292,9 @@ Authority: each specialist's workflow.yaml owns step identity, execution mode, a
 <!-- ASDT:GENERATED:9.2-inline-steps -->
 - PM: `knowledge-recall`
 - Architect: `knowledge-recall`, `platform-analysis`
-- QA: `knowledge-recall`, `decision-preservation`
+- QA: `knowledge-recall`
 - Security: `knowledge-recall`, `platform-analysis`
-- UX/UI: `knowledge-recall`, `platform-analysis`, `decision-preservation`
+- UX/UI: `knowledge-recall`, `platform-analysis`
 - Developer: `knowledge-recall`
 - Researcher: `knowledge-recall`
 <!-- /ASDT:GENERATED:9.2-inline-steps -->
@@ -324,8 +324,8 @@ Before producing any `## Tailored Workflow` content, read the target specialist'
 | **PM** | `skill/asdt-pm/SKILL.md` | `backlog` | No — PM formalizes requirements; for a quick consult route Researcher or answer directly |
 | **Developer** | `skill/asdt-developer/SKILL.md` | `explore` | Yes |
 | **Architect** | `skill/asdt-architect/SKILL.md` | `design` | Yes — but at `simple`, Architect is not invoked at all |
-| **QA** | `skill/asdt-qa/SKILL.md` | — | No — falls back to `simple` |
-| **UX/UI** | `skill/asdt-ux-ui/SKILL.md` | `feature-brief` | Yes |
+| **QA** | `skill/asdt-qa/SKILL.md` | `test-plan` | Yes |
+| **UX/UI** | `skill/asdt-ux-ui/SKILL.md` | `ux-spec` | Yes |
 | **Researcher** | `skill/asdt-researcher/SKILL.md` | `discovery` | Yes |
 | **Security** | `skill/asdt-security/SKILL.md` | — | N/A — risk-surface gated, not complexity gated |
 

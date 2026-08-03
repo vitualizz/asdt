@@ -35,10 +35,10 @@ The SKILL.md body follows this fixed order.
 > a context compaction).
 ```
 
-(2) The specialist-header generated region, VERBATIM — committed with an EMPTY body (begin marker immediately followed by end marker). The installer splices `asdt-shared/skills/specialist-header.md` between the markers at install time, so the orchestrator reads the header inline instead of chasing a separate file. Never hand-edit inside the markers, and never place them at or above the closing frontmatter `---` — a marker inside the frontmatter breaks the frontmatter parser and the OpenCode command wrapper. Dropping the region is silent: with both markers absent the splice is a no-op and the specialist installs with no header, which is why `skill/embedded_test.go` greps for both literals.
+(2) The specialist-header generated region, VERBATIM — committed with an EMPTY body (begin marker immediately followed by end marker). The installer splices `asdt-core/specialist-header.md` between the markers at install time, so the orchestrator reads the header inline instead of chasing a separate file. Never hand-edit inside the markers, and never place them at or above the closing frontmatter `---` — a marker inside the frontmatter breaks the frontmatter parser and the OpenCode command wrapper. Dropping the region is silent: with both markers absent the splice is a no-op and the specialist installs with no header, which is why `skill/embedded_test.go` greps for both literals.
 
 ```markdown
-<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-shared/skills/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
+<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-core/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 ```

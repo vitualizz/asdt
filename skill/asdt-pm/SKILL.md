@@ -19,7 +19,7 @@ metadata:
 > anything below. Re-read both whenever you can no longer recall their content (e.g. after
 > a context compaction).
 
-<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-shared/skills/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
+<!-- GENERATED REGION — do not hand-edit; the shared specialist header is spliced in at install time from asdt-core/specialist-header.md by registry_gen.go. Edits here are overwritten. -->
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
@@ -40,7 +40,7 @@ decisions, implementation code, UX specs, or test plans.
 
 | Step | File | Execution | Reads | Writes |
 |------|------|-----------|-------|--------|
-| knowledge-recall | ../asdt-shared/skills/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
+| knowledge-recall | ../asdt-core/references/knowledge-recall.md | inline | *(query from change context)* | *(no artifact — enriches context)* |
 | backlog | steps/backlog.md | subagent | raw request, `researcher/handoff` *(optional)* | `pm/handoff` |
 
 **Every tier runs `backlog`.** The tier does not change the step list — there is only one

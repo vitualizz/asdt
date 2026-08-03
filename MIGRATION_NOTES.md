@@ -1,10 +1,10 @@
 # ASDT Refactor — Migration Notes
 
-Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. Phases 1, 2, and 3 are complete — see §7 for status.
+Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. Phases 1 through 4 are complete — see §8 for status.
 
-**Anything a phase defers goes to §6, not into a partial fix.** That backlog is worked in one pass after Phase 5.
+**Anything a phase defers goes to §7, not into a partial fix.** That backlog is worked in one pass after Phase 5.
 
-## 1. `skill/asdt-core/` is the new core; `skill/asdt-shared/` is deprecated but intact
+## 1. `skill/asdt-core/` is the new core (`asdt-shared/` was purged in Phase 4)
 
 `skill/asdt-core/protocol.md` is the single mandatory shared skill of the new system. It carries, in one file, what four separate fragments carry today:
 
@@ -41,7 +41,7 @@ Intermediate artifacts stop being persisted entirely; they live in the orchestra
 
 This rename lands with the specialist rewrites in Phases 2–3, not before. When it lands, every `inputs:` / `output_topic_key:` in the eight `workflow.yaml` files changes with it, and prose in each specialist `SKILL.md` that names an artifact key changes too. Old keys already in Engram are not migrated — a specialist that looks for a hand-off and finds none records `ASSUMED:` and proceeds, which is exactly the degradation path this design already requires.
 
-## 3. Go-side impacts to expect in Phases 2–5
+## 3. Go-side impacts (written in Phase 1; see §6 for the Phase 4 state)
 
 The Go code is untouched by Phase 1 and `make test` stays green. These are the places that WILL need attention as the later phases move files:
 
@@ -104,7 +104,7 @@ Two NFR consumers now read a FIELD rather than a dedicated artifact: `architect/
 
 The `Tailored Workflow Generation` per-specialist table in `skill/SKILL.md` had its PM and Researcher **step-name cells** refreshed (`feature-intake` → `backlog`, `divergent-ideation` → `discovery`) so no row names a step that no longer exists. The **trivial-eligible verdict prose** in those two rows was left conservative and still needs the Phase 5 router pass — with one step at every tier, "trivial eligible" no longer means what it meant when the tier bought a shorter chain.
 
-Everything this phase deliberately left untouched is recorded in §6, not fixed inline.
+Everything this phase deliberately left untouched is recorded in §7, not fixed inline.
 
 ## 5. Phase 3 — Architect, Developer, and Security collapsed
 
@@ -158,9 +158,89 @@ Consumers updated: `asdt-qa/steps/load-requirements.md`, `asdt-shared/skills/{ar
 
 ### Go-side status after Phase 3
 
-`TestRegistryDrift` is still GREEN — the inline-steps region was regenerated again (Architect, Developer, and Security each lost `decision-preservation`). The same four tests from Phase 2 are red, with larger deltas; the numbers in §6 D1 are updated to the Phase 3 values.
+`TestRegistryDrift` is still GREEN — the inline-steps region was regenerated again (Architect, Developer, and Security each lost `decision-preservation`). The same four tests from Phase 2 are red, with larger deltas; the numbers in §7 D1 are updated to the Phase 3 values.
 
-## 6. Deferred — the post-refactor backlog
+## 6. Phase 4 — QA and UX/UI collapsed, and the purge
+
+QA went 8 sub-agent steps → 1, UX/UI 8 → 1. Sixteen step files deleted, two written.
+
+| Specialist | Deleted steps | New step |
+|---|---|---|
+| QA | `load-requirements`, `ac-validation`, `edge-case-analysis`, `test-strategy`, `test-case-generation`, `quality-report`, `performance-validation`, `review` | `steps/test-plan.md` |
+| UX/UI | `feature-brief`, `design-tokens`, `information-architecture`, `user-flows`, `content-design`, `component-mapping`, `design-critique`, `ux-handoff` | `steps/ux-spec.md` |
+
+QA's three reference skills were merged into a new `asdt-core/references/testing.md` (acceptance-criteria discipline, the edge-case catalogue, and the test-level decision). Two UX/UI behaviors were deliberately dropped rather than migrated: `design-critique` (self-assessment with no user in front of it produces confident prose and no signal) and `content-inventory` (microcopy is now written inline on the flow step that carries it). `asdt-ux-ui/skills/design-heuristics.md` went with the critique it fed; the actionable half of `asdt-ux-ui/skills/information-architecture.md` — entry path, 5–7 top-level items, progressive disclosure, destructive-last — was folded into `ux-spec.md` step 2 rather than kept as a file.
+
+Both specialists lost their dual artifact: QA's `test-plan` + `qa-review` and UX/UI's `ux-brief` + `component-spec` are each one hand-off now.
+
+### Final key table
+
+Every specialist persists exactly ONE key, and that is the complete list of what ASDT writes to Engram:
+
+| Role | Key | Written by |
+|---|---|---|
+| Researcher | `{project}/{change}/researcher/handoff` | `discovery` |
+| PM | `{project}/{change}/pm/handoff` | `backlog` |
+| UX/UI | `{project}/{change}/ux-ui/handoff` | `ux-spec` |
+| Architect | `{project}/{change}/architect/handoff` | `design` |
+| Developer | `{project}/{change}/developer/handoff` | `implement` |
+| Security | `{project}/{change}/security/handoff` | `harden` |
+| QA | `{project}/{change}/qa/handoff` | `test-plan` |
+| *(organizational)* | `{project}/journal` | one line per run, when a non-obvious decision was made |
+
+Phase 4 renames: `qa/ac-list`, `qa/ac-gaps`, `qa/edge-cases`, `qa/test-strategy`, `qa/test-cases`, `qa/test-plan`, `qa/perf-validation`, `qa/qa-review` → `qa/handoff`. `ux-ui/feature-brief`, `design-tokens`, `ia`, `flows`, `content-inventory`, `components`, `design-critique`, `ux-brief`, `component-spec` → `ux-ui/handoff`.
+
+### What was deleted
+
+- **`asdt-shared/` — the whole directory.** `artifact-loading.md`, `decision-preservation.md`, `intake-contract.md`, `nfr-budget.md`, `parallel-retrieval.md`, `platform-context.md`, `report.md`, `scope-definition.md`, `_README.md`. Their content either lives in `asdt-core/protocol.md` (intake, injection, persistence, degradation) or in `asdt-core/references/` (platform-context, scope-definition).
+- **Every per-specialist `skills/` directory**: `asdt-architect/skills/`, `asdt-developer/skills/`, `asdt-qa/skills/`, `asdt-security/skills/`, `asdt-ux-ui/skills/`. Nine files, consolidated into `asdt-core/references/` across Phases 1 and 4.
+
+Three files survived the purge by moving rather than dying:
+
+| Was | Is now | Why it survived |
+|---|---|---|
+| `asdt-shared/skills/specialist-header.md` | `asdt-core/specialist-header.md` | the Go installer splices it into every routed SKILL.md |
+| `asdt-shared/skills/executor-header.md` | `asdt-core/executor-header.md` | baked into generated agent definitions |
+| `asdt-shared/skills/knowledge-recall.md` | `asdt-core/references/knowledge-recall.md` | **a third exception, decided here.** Reading ORGANIZATIONAL memory — prior work on other changes — is not covered by `protocol.md` §1, which only norms loading THIS change's hand-offs. Deleting it would have dropped a real capability, so it was repointed instead. Both header files move as-is; they are rewritten in Phase 5 |
+
+`asdt-init/` logic was not touched. Its one broken path — `write`'s `reference_skills` pointing at the deleted `report.md` — now points at `asdt-core/protocol.md`.
+
+### Installer paths the maintainer must repoint
+
+`internal/installer/registry_gen.go` `specialistHeaderFragments` (≈ line 68) still lists four paths under `asdt-shared/skills/`. After this phase it should be:
+
+```go
+var specialistHeaderFragments = []string{
+    "asdt-core/specialist-header.md",
+    "asdt-core/protocol.md",
+}
+```
+
+`parallel-retrieval.md` and `intake-contract.md` collapse into `protocol.md` §2/§4; `knowledge-recall.md` is no longer a header fragment — it is a per-specialist inline step pointing at `asdt-core/references/knowledge-recall.md`. `internal/installer/agent_adapters.go` `executorHeaderPath` (line 14) becomes `"asdt-core/executor-header.md"`.
+
+### Go-side status after Phase 4
+
+Eleven tests are RED. `TestRegistryDrift` is GREEN — the inline-steps region was regenerated again. The failures split cleanly in two:
+
+**Broken by the purge — pure path repointing, fixed with the two constants above:**
+
+| Test | What it reads |
+|---|---|
+| `TestExecutorHeaderCarriesFalsifiabilityCondition` | `asdt-shared/skills/executor-header.md` |
+| `TestInstall_SpecialistHeaderFoldReachesInstalledSKILL` | `specialistHeaderFragments` → install fails loud |
+| `TestInstall_DoesNotShipInstallerAssets` | same install path |
+| `TestNuanceIsolatedFromProvenance` | same install path |
+| `TestPass2InsertsWhenOptionalMarkerRemoved` | `asdt-shared/skills/platform-context.md` |
+| `TestEmbeddedSkillTree` | asserts `asdt-shared/skills/executor-header.md` is embedded |
+| `TestEmbeddedSharedSkillsMatchDisk` | `os.ReadDir("asdt-shared/skills")` — a `t.Fatalf` on a directory that no longer exists; repoint at `asdt-core/` or drop the test |
+
+**The pre-existing shape/count family (§7 D1), now at final values:** `TestWorkflowSubagentStepsDeclareKnownAgentTypes` wants `analystCount` 40, actual **9** (`builderCount` 2 unchanged); `TestOptionalMarkerReadsRawSourceLine` wants 18, actual **11**; `TestOrchestrationPlanCellClassification` wants 27 rows, actual **4** — only `asdt-developer` still carries a tier table; `TestCollapseOnlyRunsAfterInsertion` still wants a `researcher/complex` row. Three noRun rows are now missing rather than two: `asdt-security/none`, `asdt-architect/simple`, `asdt-qa/trivial`.
+
+### Final step inventory
+
+41 sub-agent steps at the start of the refactor → **12**: pm 1, researcher 1, architect 1, developer 3, security 2, qa 1, ux-ui 1, init 2.
+
+## 7. Deferred — the post-refactor backlog
 
 **Standing rule for this refactor: anything a phase leaves behind gets an entry here instead of a partial fix.** These items are settled AFTER Phase 5, in one pass, for one reason — every one of them tracks a structure that phases 3–5 are still moving. Fixing them per phase means fixing them three times and reviewing churn that says nothing about whether the refactor is correct.
 
@@ -211,17 +291,17 @@ One caveat when it is picked up: `model_test.go` pins `feature-intake` to a mode
 
 In `skill/SKILL.md`, the `Tailored Workflow Generation` per-specialist table had its PM and Researcher step-name cells refreshed in Phase 2, but the **trivial-eligible verdict prose** in those two rows was not re-reasoned. With one step at every tier, "trivial eligible" no longer means what it meant when a lower tier bought a shorter chain. Closes with the Phase 5 router pass, which owns that column's semantics.
 
-### D6 — `asdt-shared/` still live
+### D6 — `asdt-shared/` still live — **CLOSED in Phase 4**
 
-After Phase 3, only `qa` and `ux-ui` still declare the inline `decision-preservation` step, and the shared fragments remain wired into the installer. Phase 4 removes those two declarations, purges the directory, and repoints the Go references listed in §3 — this entry exists so the dependency is visible from the backlog, not to schedule work outside those phases.
+The directory and every per-specialist `skills/` directory are deleted. What survived by moving, and the two installer constants that must be repointed, are recorded in §6.
 
-## 7. Phase status
+## 8. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
 - **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §4.
 - **Phase 3 — done.** Architect 7→1, Developer 6→3, Security 4→2; `output: context` introduced for intra-run payloads. See §5.
-- **Phase 4** — the same collapse for QA and UX/UI; purge `asdt-shared/` and the superseded specialist `skills/` directories; repoint the Go references listed in §3.
-- **Phase 5** — router pass over the root `SKILL.md` and the registry mirrors.
-- **Post-refactor** — work the §6 backlog in one pass: the red tests, the `site/` docs, and the authoring contract (`TEMPLATE.md`, the READMEs).
+- **Phase 4 — done.** QA 8→1, UX/UI 8→1; `asdt-shared/` and every per-specialist `skills/` directory deleted. 41 sub-agent steps → 12. See §6.
+- **Phase 5** — repoint the two installer constants (§6), rewrite the two moved headers against `protocol.md`, and do the router pass over the root `SKILL.md` and the registry mirrors.
+- **Post-refactor** — work the §7 backlog in one pass: the red tests, the `site/` docs, and the authoring contract (`TEMPLATE.md`, the READMEs).
 
-Each phase appends what it defers to §6 rather than fixing it partially.
+Each phase appends what it defers to §7 rather than fixing it partially.
