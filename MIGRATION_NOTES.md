@@ -394,13 +394,15 @@ One pass over `internal/` and `cmd/`, executing the §8 checklist. `go build`, `
 
 **Dead-tree references swept.** `grep -rn "asdt-shared" internal/ cmd/ skill/*.go` → 0. That included synthetic fixture directory names in `adapters_test.go`, `prune_test.go`, and `installer_test.go`, which used `asdt-shared` as a stand-in for "a directory with no SKILL.md" — now `asdt-core`, which is that same shape for real.
 
-### One real defect found, NOT fixed — needs your call
+### One real defect found — FIXED
 
-`TestNuanceIsolatedFromProvenance` is red, and it is right. `skill/asdt-core/references/platform-context.md` mentions `human_nuance` at line 41, **inside the `## Injection Format` section**. The invariant that test guards is that `human_nuance` must never appear in the automatic injection path: those entries are user-authored, carry no confidence rating, and were deliberately excluded from the ≤500-token auto-injected block.
+`TestNuanceIsolatedFromProvenance` was red, and it was right. The Phase 1 trim of `platform-context.md` dropped the original's explicit clarifier — "it is intentionally NOT auto-injected" — and left the `human_nuance` sentence sitting inside `## Injection Format`, the section that defines what goes into the automatic ≤500-token block. Those entries are user-authored and carry no confidence rating, so folding them in among detected values makes a person's note look like something the scan found.
 
-The Phase 1 trim dropped the original's explicit clarifier — "it is intentionally NOT auto-injected" — and left the sentence sitting in the section that defines what gets injected. A specialist reading it today could reasonably fold user notes into the compact block.
+Fixed by giving it its own `## Human nuance` section at the tail of the file, with the clarifier restored. The separation is now structural rather than a matter of wording: the slice the test inspects (`## Injection Format` → `## Degradation`) cannot contain it by construction.
 
-The fix is one line in `skill/`, which this pass was not allowed to touch: either move that sentence into `## Degradation`, or restore the "NOT auto-injected" clarifier in place. The test's section anchors were updated to the post-refactor headings, so it now fails on the substance rather than on a missing heading.
+Deleting the sentence instead was considered and rejected. It is the ONLY consumer of `human_nuance` in the tree, and the producer side is fully built in `asdt-init`: the `enrichment` inline step surveys codegraph for structurally central but non-obvious symbols, `clarify` turns them into up to three skippable questions, and `steps/write.md` routes the answers into a marked region of `knowledge.yaml` (including malformed-marker handling). Removing the reader would have left init interviewing the user for notes nothing ever reads — a worse defect than the misplacement, and a silent one.
+
+**`go test ./...` is now green across every package.**
 
 ### Optional follow-up, not done
 
