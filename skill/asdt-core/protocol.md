@@ -6,7 +6,7 @@ The one shared skill every run loads. It defines what gets persisted, how inputs
 
 **Persist hand-offs only.** One key per role per change: `{project}/{change}/{role}/handoff`. Written with `mem_save`, title `"{change}/{role}/handoff"`, type `"decision"`. Everything a run produces on the way there — exploration, drafts, intermediate analysis — lives in the orchestrator's context and dies with the run. If it does not cross a specialist boundary, it is not saved.
 
-A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING: its payload stays in the orchestrator's context and is injected into the next step as an `### INPUT {step-name}` block.
+A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING: its payload stays in the orchestrator's context and is injected into the next step as an `### INPUT {step-name}` block. A step may declare `context_inputs:` — payloads of earlier `output: context` steps that the orchestrator injects as `### INPUT {name}` blocks.
 
 **Load at start.** ONE `mem_search("{project}/{change}")` to list what exists, then `mem_get_observation(id)` for the `*/handoff` records this specialist declares it consumes — nothing else. Budget: 2–3 MCP calls per run.
 
@@ -24,7 +24,7 @@ One line, one append, no envelope, no second save. Nothing else goes to the jour
 
 Declared inputs arrive ALREADY INJECTED in the sub-agent prompt as `### INPUT {topic_key}` blocks, or as `### INPUT {topic_key}: UNRESOLVED`. Every declared input either arrived as a block or it did not — there is no third state, and a sub-agent NEVER fetches its own declared inputs. That work already happened, against a store the sub-agent may not even be able to see.
 
-**One batched clarification turn.** A run gets AT MOST ONE. If gaps are genuinely blocking — no defensible hand-off is possible without an answer — collect every such question across the whole run, ask them TOGETHER as one numbered list, and stop once. Never one round trip per question, never a second turn. This turn is FULLY SUPPRESSED when the run arrived through the router with a `--tier` argument: the router already asked, and its answers are settled.
+**One batched clarification turn.** A run gets AT MOST ONE. If gaps are genuinely blocking — no defensible hand-off is possible without an answer — collect every such question across the whole run, ask them TOGETHER as one numbered list, and stop once. Never one round trip per question, never a second turn. If the invocation already carries the router's proposal or otherwise answers your doubts, do not re-ask what is settled. When in doubt between asking and assuming: assume, mark it `ASSUMED:`, keep moving.
 
 **Harden always.** Every non-blocking gap degrades into an `open_items` entry prefixed `ASSUMED:` — what was assumed, and what would confirm or refute it — and the run continues. A stalled run returns nothing; a hardened run returns a hand-off whose weak spots are named and checkable. When in doubt between asking and assuming: assume, mark it, keep moving.
 

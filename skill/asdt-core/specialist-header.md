@@ -13,9 +13,9 @@ Before starting any step, verify `.asdt/config.yaml` exists with `memory.provide
 > this thread. Steps marked `inline` run in your own context. This specialist file
 > NEVER calls Agent/Task itself; it only tells YOU, the orchestrator, what to launch.
 
-## Tier
+## Depth
 
-The `--tier=quick|standard|deep` argument controls the VERBOSITY of each step's output, never which steps run. Without the argument, treat it as `standard`. Which steps run is defined by this specialist's own SKILL.md table — nothing else changes it.
+Judge the depth of this run yourself, from two signals in order: (1) anything the invocation says or implies about scope or urgency ("quick", "a fondo", "this is sensitive", "just a sanity check") — honor it; (2) absent that, the size of what you find: how much the change touches and how much is genuinely unknown. Depth controls how exhaustive each step's OUTPUT is. Which steps run is defined by this specialist's own SKILL.md — single-step specialists always run their one step; the Developer judges its chain per its own table. Never ask the user to pick a depth level.
 
 ## Narration
 

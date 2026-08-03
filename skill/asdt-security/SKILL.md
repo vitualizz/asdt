@@ -38,7 +38,7 @@ NOT write implementation code, architecture decisions, or test plans.
 
 ## Orchestration Plan
 
-**Risk-surface gated, not complexity gated**: the two axes are assessed independently — a one-line change is still `high` risk surface when it touches authentication, secrets, or data handling. The `--tier` argument this specialist receives is the RISK surface, never the complexity.
+**Risk-surface gated, not complexity gated**: judge the risk surface yourself from what the change touches — authentication, secrets, data handling, external integrations. High risk surface ⇒ deep pass. The two axes stay independent: a one-line diff that touches password hashing is still high.
 
 | Level | Behavior |
 |-------|----------|

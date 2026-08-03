@@ -37,14 +37,18 @@ code. You do NOT produce architecture decisions, UX specs, or test plans.
 
 ## Orchestration Plan
 
-| Level | Steps |
-|-------|-------|
-| **trivial** | `explore` |
-| **simple** | `explore → spec` *(plan only — no code is written)* |
-| **moderate** | `explore → spec → implement` |
-| **complex** | `explore → spec → implement` |
+Judge your own chain from what the request asks for:
 
-The inline `knowledge-recall` prelude runs first at every tier.
+| The request is | Chain |
+|---|---|
+| a pure question or a sanity check | `explore` |
+| a plan — "how would you do this?", "propose the approach" | `explore → spec` *(plan only — no code is written)* |
+| a request to build it | `explore → spec → implement` |
+
+When the request is ambiguous between a plan and a build, produce the plan: `spec` declares
+the edit targets, and `implement` without declared targets writes nothing anyway.
+
+The inline `knowledge-recall` prelude runs first, always.
 
 **Intra-run persistence — you, the orchestrator, own this.** `explore` and `spec` declare
 `output: context`, not an `output_topic_key`. Retain each one's returned payload in YOUR

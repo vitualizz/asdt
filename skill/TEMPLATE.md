@@ -41,7 +41,7 @@ metadata:
 **Body**, in this order:
 
 - `## Role` — two or three sentences: what it does, and what it explicitly does not.
-- `## Orchestration Plan` — for a single-step specialist, one sentence naming the step and what the tier dial changes; for a multi-step one, a tier→steps table, one line per tier. Then the pointer: `Step identity, model, inputs, and outputs: workflow.yaml.` Never restate a step's file, model, inputs, or outputs here — that duplication is what `workflow.yaml` exists to prevent.
+- `## Orchestration Plan` — for a single-step specialist, one sentence naming the step and what depth changes; for a multi-step one, a table mapping what the request asks for to the chain that serves it. Then the pointer: `Step identity, model, inputs, and outputs: workflow.yaml.` Never restate a step's file, model, inputs, or outputs here — that duplication is what `workflow.yaml` exists to prevent.
 - `## Final Output` — the one key this specialist persists, and who consumes it.
 - `## Invariants` — a handful of lines: write scope, prefix, degradation, and whatever is load-bearing for THIS specialist.
 

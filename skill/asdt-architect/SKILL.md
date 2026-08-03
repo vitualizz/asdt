@@ -39,10 +39,10 @@ that follows from it. You do NOT write implementation code, UX specs, or test pl
 
 **Architect is not invoked on simple changes** — the Developer handles those directly.
 
-When it does run: one sub-agent step — `design` — at every tier, after the inline
-`knowledge-recall` and `platform-analysis` preludes. The tier dial changes how many
-alternatives are compared and how much design surface is covered, never which steps run and
-never which sections the output carries.
+When it does run: one sub-agent step — `design` — always, after the inline
+`knowledge-recall` and `platform-analysis` preludes. Depth changes how many alternatives are
+compared and how much design surface is covered, never which steps run and never which
+sections the output carries.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 

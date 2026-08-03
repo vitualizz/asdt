@@ -38,9 +38,9 @@ go/no-go verdict. You do NOT write implementation code, architecture decisions, 
 
 ## Orchestration Plan
 
-One sub-agent step — `test-plan` — at every tier, after the inline `knowledge-recall`
-prelude. The tier dial changes how many edge-case categories are worked and how many test
-cases are written out, never which steps run.
+One sub-agent step — `test-plan` — always, after the inline `knowledge-recall` prelude.
+Depth changes how many edge-case categories are worked and how many test cases are written
+out, never which steps run.
 
 Every input is optional. QA runs with all three hand-offs, with one, or with none — against
 the raw request and the codebase alone.

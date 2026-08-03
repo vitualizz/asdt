@@ -44,14 +44,16 @@ If the request is genuinely ambiguous, ask ONE batched question covering everyth
 Write the proposal as short prose the user can read straight through. Quote their request back so there is no doubt what you routed. Give both tiers with a one-line reason each. Name every specialist you are recommending with one line on why it is in the chain, in run order, as commands they can copy:
 
 ```
-/asdt-architect "add password reset" --tier=moderate
-/asdt-developer "add password reset" --tier=moderate
-/asdt-security "add password reset" --tier=high
+/asdt-architect "add password reset"
+/asdt-developer "add password reset"
+/asdt-security "add password reset — touches password hashing, go deep"
 ```
+
+Depth travels in the prose of your proposal and, where a specialist needs a specific emphasis, inside the request string itself in plain language — as in the Security line above. There is no depth flag: each specialist judges how far to go, and an explicit hint in the request is the strongest signal it has.
 
 State the risk surface explicitly. When it is `none`, say in one line that Security is not in the chain but is available on demand via `/asdt-security` — never drop that silently. Close by asking whether to proceed, in your own words.
 
-Once the user agrees, list the commands and STOP. Nothing is persisted: the tier travels as the `--tier` argument, and each specialist loads its own upstream hand-offs when it runs.
+Once the user agrees, list the commands and STOP. Nothing is persisted: each specialist loads its own upstream hand-offs when it runs.
 
 ## Invariants
 

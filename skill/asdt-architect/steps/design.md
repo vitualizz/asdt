@@ -44,9 +44,10 @@ request` in `open_items`.
 4. **Risks.** The 3 largest risks this design introduces — not generic engineering risks, the
    ones this specific design creates. One line of mitigation each.
 
-5. **Depth dial.** `--tier=deep` expands the alternatives compared and the design surface
-   covered; `--tier=quick` gives the minimum defensible content per section. **The tier NEVER
-   adds or removes a section** — every run emits the same shape, at a different depth.
+5. **Depth.** When the request warrants depth, expand the alternatives compared and the
+   design surface covered; on a quick consult, give the minimum defensible content per
+   section. **Depth NEVER adds or removes a section** — every run emits the same shape, at a
+   different depth.
 
 Do NOT write implementation code. Define the technical structure and stop.
 

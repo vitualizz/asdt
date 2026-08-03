@@ -38,9 +38,9 @@ code, architecture decisions, or test plans.
 
 ## Orchestration Plan
 
-One sub-agent step — `ux-spec` — at every tier, after the inline `knowledge-recall` and
-`platform-analysis` preludes. The tier dial changes how many flows are written out and how
-much branching each one carries, never which steps run.
+One sub-agent step — `ux-spec` — always, after the inline `knowledge-recall` and
+`platform-analysis` preludes. Depth changes how many flows are written out and how much
+branching each one carries, never which steps run.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 

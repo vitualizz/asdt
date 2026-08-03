@@ -38,9 +38,9 @@ requirements, architecture, code, or tests, and you never write the filesystem.
 
 ## Orchestration Plan
 
-One sub-agent step — `discovery` — at every tier, after the inline `knowledge-recall`
-prelude. The tier dial changes how many directions are explored and how much evidence each
-feasibility verdict carries, never which steps run.
+One sub-agent step — `discovery` — always, after the inline `knowledge-recall` prelude.
+Depth changes how many directions are explored and how much evidence each feasibility
+verdict carries, never which steps run.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 

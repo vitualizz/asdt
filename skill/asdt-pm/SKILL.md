@@ -38,9 +38,9 @@ decisions, implementation code, UX specs, or test plans.
 
 ## Orchestration Plan
 
-One sub-agent step — `backlog` — at every tier, after the inline `knowledge-recall` prelude.
-The tier dial changes how many stories and how much scope detail travel in the hand-off,
-never which steps run.
+One sub-agent step — `backlog` — always, after the inline `knowledge-recall` prelude. Depth
+changes how many stories and how much scope detail travel in the hand-off, never which steps
+run.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 

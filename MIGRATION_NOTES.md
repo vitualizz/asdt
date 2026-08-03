@@ -1,6 +1,6 @@
 # ASDT Refactor — Migration Notes
 
-Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. All five phases are complete — see §10 for status.
+Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. All five phases are complete, plus the post-refactor closing in §10 — see §11 for status.
 
 **Anything a phase defers goes to §9, not into a partial fix.** That backlog is worked in one pass after Phase 5.
 
@@ -334,14 +334,41 @@ In `skill/SKILL.md`, the `Tailored Workflow Generation` per-specialist table had
 
 The directory and every per-specialist `skills/` directory are deleted. What survived by moving, and the two installer constants that must be repointed, are recorded in §6.
 
-## 10. Phase status
+## 10. Closing — `--tier` removed
+
+An audit found the flag carrying FOUR incompatible meanings at once: the router emitted complexity values AND risk values through it, the specialist header defined it as `quick|standard|deep` verbosity that "never controls which steps run", the Developer's table used it to gate exactly that, and Security called it the risk surface. Four readings, one flag, no way to be right.
+
+**The flag is gone, with no substitute.** Depth now travels in natural language inside the invocation, and in its absence the specialist judges it — the same judgment the router already applies. That is only possible because the refactor left six of eight specialists with a single step: the flag's remaining jobs were output verbosity and the Developer's chain, and both are judgment calls the specialist is better placed to make than a caller typing a keyword.
+
+```
+/asdt-architect "add password reset"
+/asdt-security "add password reset — touches password hashing, go deep"
+/asdt-developer "rename this helper, quick one"
+```
+
+The two assessment axes are unchanged: the router still judges complexity and risk surface independently, and still states both. Only the transport changed — prose, not a flag.
+
+Files touched: `skill/SKILL.md` (Output section only), `skill/asdt-core/specialist-header.md` (`## Tier` → `## Depth`), `skill/asdt-core/protocol.md` (§2 suppression clause, which keyed on a flag anyone could type by hand without the router ever having asked), `skill/asdt-developer/SKILL.md` (the tier table became a request→chain judgment table), `skill/asdt-security/SKILL.md`, `skill/asdt-architect/{SKILL.md,steps/design.md}`, `skill/asdt-{pm,researcher,qa,ux-ui}/SKILL.md`, `skill/TEMPLATE.md`.
+
+Two words `tier` survive, both in the router and both correct: they name the complexity and risk-surface assessments, which still exist as the router's criteria.
+
+**Defect D-C closed in the same pass.** Payloads travelling by context were invisible to any machine reader — `workflow.yaml` said `output: context` on the producer but nothing on the consumer. Both consumers now declare it: `developer/implement` carries `context_inputs: [dev-spec]` and `security/harden` carries `context_inputs: [assess]`. The key is defined in one line of `protocol.md` §1. `skill/embedded.go`'s path-example comment, which still named the deleted `asdt-shared/` tree, now names `asdt-core/protocol.md` — comment only, no code touched.
+
+### Two more items for the §8 Go checklist
+
+**6. Audit `internal/installer/preset_tiers.go` and `tier_preset_validation_test.go` as dead code.** They exist to validate tier presets against per-specialist tier tables. Only the Developer still has a chain table, and it is now keyed on what the request asks for rather than on a tier level, so the concept these two files encode may no longer exist. Read them before deleting — three of the currently-red tests live in that file, and the question is whether they should be fixed or removed.
+
+**7. Delete any Go-side parsing of `--tier`.** Nothing in `skill/` emits or reads it any more. If the CLI or the installer parses that argument anywhere, it is now dead — and worse, it would accept a value no prompt will ever honor.
+
+## 11. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
 - **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §4.
 - **Phase 3 — done.** Architect 7→1, Developer 6→3, Security 4→2; `output: context` introduced for intra-run payloads. See §5.
 - **Phase 4 — done.** QA 8→1, UX/UI 8→1; `asdt-shared/` and every per-specialist `skills/` directory deleted. 41 sub-agent steps → 12. See §6.
 - **Phase 5 — done.** Router rewritten on judgment instead of keyword tables; both headers rewritten; `workflow.yaml` made the single machine-readable source; `TEMPLATE.md` rewritten for the new system. See §7.
-- **Go maintainer** — the checklist in §8.
+- **Go maintainer** — the checklist in §8, now seven items (§10 added two).
+- **Closing — done.** `--tier` removed system-wide; depth is judged, not flagged. Defect D-C closed. See §10.
 - **Post-refactor** — work the §9 backlog: the `site/` docs and the remaining red tests, alongside the §8 checklist.
 
 Each phase appends what it defers to §9 rather than fixing it partially.

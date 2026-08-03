@@ -39,6 +39,7 @@ steps:
     agent: builder
     inputs:
       - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
+    context_inputs: [dev-spec]
     output_topic_key: "{project}/{change}/developer/handoff"
     reference_skills:
       - ../asdt-core/references/conventions.md
