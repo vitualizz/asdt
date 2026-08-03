@@ -7,12 +7,12 @@ each estimate against the PM's budget. The Architect MEASURES (estimates) and em
 
 ## Inputs
 - `architect/system-design` — arrives as an `### INPUT {topic_key}` block; produced by the `system-design` step. Extract: `service_boundaries`, `data_model`, `api_surface`, and any scalability notes.
-- `pm/nfr-targets` — arrives as an `### INPUT {topic_key}` block; produced by PM `success-metrics`. Extract: each target's dimension and `budget`.
+- `pm/handoff` — arrives as an `### INPUT {topic_key}` block. Extract: ONLY the measurable NFR budgets from `constraints` (each one's dimension and budget value).
 
-**DEGRADATION — `pm/nfr-targets` is optional (PM `success-metrics` runs at `moderate` and above, so no budget exists below that tier)**: when it arrives as `### INPUT {project}/{change}/pm/nfr-targets: UNRESOLVED`, estimate every cost profile anyway WITHOUT a budget — leave `budget` empty and record the note "no budget to compare against" in place of a verdict, never inventing a budget and never silently claiming within-budget; append "pm/nfr-targets absent — cost profiles estimated with no budget to compare against" to open_items. Never block on this input.
+**DEGRADATION**: if `pm/handoff` is UNRESOLVED or carries no budget, estimate every profile anyway with `budget` empty and the note "no budget to compare against" in place of a verdict — never invent a budget, never claim within-budget — and note `ASSUMED:` in open_items.
 
 ## Context budget
-system-design boundaries + API surface + the nfr-targets list: max 1,200 tokens.
+system-design boundaries + API surface + the NFR budgets: max 1,200 tokens.
 
 ## Processing
 Apply the `nfr-budget` shared skill (`../asdt-shared/skills/nfr-budget.md`).
@@ -38,9 +38,9 @@ payload:
     - approach: ""             # design approach / component being estimated
       nfr_target_ref: ""       # the dimension this profile estimates against
       estimated_cost: ""       # the estimated value for the dimension
-      budget: ""               # the budget from pm/nfr-targets ("" when UNRESOLVED)
+      budget: ""               # the budget from pm/handoff constraints ("" when absent)
       measurement_method: ""   # basis of the estimate
       verdict: "within-budget | over-budget"   # when budget UNRESOLVED, note "no budget to compare against" instead
       rationale: ""
-  open_items: []               # MUST carry the UNRESOLVED pm/nfr-targets note when the budget input is absent
+  open_items: []               # MUST carry the ASSUMED: note when no budget arrived
 ```

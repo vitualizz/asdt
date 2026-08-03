@@ -15,7 +15,7 @@ boundaries unchanged.
 Referenced (via `reference_skills:` in `workflow.yaml`) by every step that defines or
 measures against an NFR budget:
 
-- **PM `success-metrics`** — DEFINES targets from user stories (verdict `n/a`; PM only sets).
+- **PM `backlog`** — DEFINES targets in the hand-off `constraints` (verdict `n/a`; PM only sets).
 - **Architect `cost-estimation`** — MEASURES estimated cost vs. budget (verdict `within-budget` | `over-budget`).
 - **QA `performance-validation`** — MEASURES planned/measured performance vs. target as a gate (verdict `pass` | `fail`).
 
@@ -53,7 +53,7 @@ nfr_target:
                           #   no-target      — any measurer: no budget available to compare against (honest gap, NOT a pass)
 ```
 
-**Verdict ownership (pinned)**: PM `success-metrics` uses `n/a`. Architect
+**Verdict ownership (pinned)**: PM `backlog` uses `n/a`. Architect
 `cost-estimation` uses `within-budget` | `over-budget`. QA `performance-validation`
 uses `pass` | `fail` (rolling up to a `go` | `no-go` gate). Any measurer falls back to
 `no-target` when the budget input is UNRESOLVED — a gate must NEVER be silently green

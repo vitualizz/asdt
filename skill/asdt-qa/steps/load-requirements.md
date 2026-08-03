@@ -6,7 +6,7 @@ QA starts from the deliverables of other specialists — not from the raw reques
 
 ## Inputs
 - Any available upstream artifacts (use artifact-loading shared skill):
-  - `pm/backlog-entry` (if PM specialist ran)
+  - `pm/handoff` (if PM specialist ran)
   - `ux-ui/ux-brief` (if UX/UI specialist ran)
   - `architect/architectural-decision` (if Architect specialist ran)
   - `developer/dev-implementation` (if Developer specialist ran)
@@ -17,9 +17,8 @@ no prior `subagent`-produced QA artifact to retrieve; it is QA's first generativ
 step and reads directly from upstream specialists' artifacts (or the raw request
 as fallback).
 
-Note: PM also produces `pm/nfr-targets` (from its `success-metrics` step) — an upstream
-`pm/*` artifact the QA chain consumes DOWNSTREAM in `performance-validation` (the gate),
-NOT here. `load-requirements` does not declare it; its `inputs:` stays empty.
+Note: the NFR targets inside `pm/handoff` are consumed DOWNSTREAM in
+`performance-validation` (the gate), NOT here. `load-requirements` declares no `inputs:`.
 
 ## Context budget
 Extract only: user_stories/acceptance_criteria/scope from each artifact.

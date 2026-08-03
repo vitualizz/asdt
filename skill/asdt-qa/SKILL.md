@@ -62,7 +62,7 @@ When a Tailored Workflow block is present in the prompt, its `steps:` list takes
 | test-strategy | steps/test-strategy.md | subagent | `qa/edge-cases` | `qa/test-strategy` |
 | test-case-generation | steps/test-case-generation.md | subagent | `qa/ac-list`, `qa/test-strategy` *(optional)*, `qa/edge-cases` *(optional)* | `qa/test-cases` |
 | quality-report | steps/quality-report.md | subagent | `qa/test-cases`, `qa/ac-gaps` | `qa/test-plan` |
-| performance-validation | steps/performance-validation.md | subagent | `qa/test-plan`, `pm/nfr-targets` | `qa/perf-validation` |
+| performance-validation | steps/performance-validation.md | subagent | `qa/test-plan`, `pm/handoff` *(optional)* | `qa/perf-validation` |
 | review | steps/review.md | subagent | `qa/test-plan`, `qa/ac-gaps`, `qa/perf-validation` *(optional)* | `qa/qa-review` |
 | decision-preservation | ../asdt-shared/skills/decision-preservation.md | inline | *(prior step's payload)* | *(no own artifact — attaches `summary` field)* |
 

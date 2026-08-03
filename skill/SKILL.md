@@ -56,7 +56,8 @@ When you receive a feature request:
 2. **Match to relevant specialists** based on request type (see Specialist Registry below).
 
 3. **Determine execution order** based on artifact dependencies:
-   - PM produces `pm/backlog-entry` → Architect, Developer, and QA can read it as the primary requirements source
+   - Researcher produces `researcher/handoff` → PM can read it as the explored direction
+   - PM produces `pm/handoff` → Architect, Developer, and QA can read it as the primary requirements source
    - UX/UI produces a `ux-brief` → Architect and Developer can read it
    - Architect produces `system-design` → Developer can read it
    - Developer produces `dev-implementation` → QA can read it
@@ -279,7 +280,7 @@ Authority: each specialist's workflow.yaml owns step identity, execution mode, a
 - For each step T in the list (front to back), find T's `inputs:` in `S/workflow.yaml`.
 - For each input topic_key I, identify which step P produces I (has `output_topic_key: I` in `S/workflow.yaml`).
 - If P has `execution: inline`: skip — inline steps inject into orchestrator context, not artifact storage, and are never required as explicit list entries.
-- If I's entry on T's `inputs:` line in `S/workflow.yaml` carries an end-of-line `# optional` comment (match the `# optional` prefix; everything after it is free-form rationale), OR no step in `S/workflow.yaml` declares `output_topic_key: I` at all (a cross-specialist input such as `pm/nfr-targets`): skip — do not resolve a producer, do not auto-insert, do not recurse; T's DEGRADATION paragraph handles the absence.
+- If I's entry on T's `inputs:` line in `S/workflow.yaml` carries an end-of-line `# optional` comment (match the `# optional` prefix; everything after it is free-form rationale), OR no step in `S/workflow.yaml` declares `output_topic_key: I` at all (a cross-specialist input such as `pm/handoff`): skip — do not resolve a producer, do not auto-insert, do not recurse; T's DEGRADATION paragraph handles the absence.
 - If P has `execution: subagent` AND P is NOT already in the list → AUTO-INSERT P immediately before T in the list.
 - Recurse on P (P may have its own `inputs:` requiring further insertions).
 - Repeat the full sweep until no new insertions occur (fixpoint).
@@ -289,13 +290,13 @@ Authority: each specialist's workflow.yaml owns step identity, execution mode, a
 **Inline steps** (outputs injected into context — NEVER required as explicit list producers):
 <!-- GENERATED REGION — do not hand-edit; regenerated at install time from each specialist's workflow.yaml by registry_gen.go. Edits here are overwritten. -->
 <!-- ASDT:GENERATED:9.2-inline-steps -->
-- PM: `knowledge-recall`, `decision-preservation`
+- PM: `knowledge-recall`
 - Architect: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - QA: `knowledge-recall`, `decision-preservation`
 - Security: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - UX/UI: `knowledge-recall`, `platform-analysis`, `decision-preservation`
 - Developer: `knowledge-recall`, `decision-preservation`
-- Researcher: `knowledge-recall`, `decision-preservation`
+- Researcher: `knowledge-recall`
 <!-- /ASDT:GENERATED:9.2-inline-steps -->
 
 **Trivial eligibility**: The `trivial` tier applies ONLY when the orchestrator independently classifies complexity as `trivial` (`Complexity Assessment`). It is not user-selectable. A `trivial` list is exactly the specialist's single `inputs: []` subagent step — by construction it always passes Pass 2 (no declared inputs to satisfy). If a specialist has no useful single-step output (QA), `trivial` is not eligible for that specialist — fall back to `simple` and label the block `complexity: simple`.
@@ -320,12 +321,12 @@ Before producing any `## Tailored Workflow` content, read the target specialist'
 
 | Specialist | File | Trivial step | Trivial eligible? |
 |---|---|---|---|
-| **PM** | `skill/asdt-pm/SKILL.md` | `feature-intake` | No — PM at `trivial` returns no backlog entry; route `simple` or above |
+| **PM** | `skill/asdt-pm/SKILL.md` | `backlog` | No — PM formalizes requirements; for a quick consult route Researcher or answer directly |
 | **Developer** | `skill/asdt-developer/SKILL.md` | `explore` | Yes |
 | **Architect** | `skill/asdt-architect/SKILL.md` | `load-constraints` | Yes — but at `simple`, Architect is not invoked at all |
 | **QA** | `skill/asdt-qa/SKILL.md` | — | No — falls back to `simple` |
 | **UX/UI** | `skill/asdt-ux-ui/SKILL.md` | `feature-brief` | Yes |
-| **Researcher** | `skill/asdt-researcher/SKILL.md` | `divergent-ideation` | Yes |
+| **Researcher** | `skill/asdt-researcher/SKILL.md` | `discovery` | Yes |
 | **Security** | `skill/asdt-security/SKILL.md` | — | N/A — risk-surface gated, not complexity gated |
 
 > **Adding a new specialist**: declare its tier→step mapping inside the `## Orchestration Plan` of its own `SKILL.md`, then add one row to this table. No other changes to this file are required for the tier mapping.

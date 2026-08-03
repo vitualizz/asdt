@@ -42,7 +42,7 @@ Produces the specialist's final cross-specialist artifact(s) — e.g.:
 - Architect → `architectural-decision` + `system-design-final` (a DISTINCT key from the intermediate `architect/system-design` written earlier in that chain)
 - QA → `qa-review` is QA's final artifact; this skill's consolidation step (`quality-report`) produces the `test-plan` it is derived from
 - Security → `security-findings` + `hardening-checklist`
-- PM → `backlog-entry`
+- PM → `pm/handoff`
 
 ## Quality gate
 Before writing the final artifact:

@@ -68,7 +68,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/architect/system-design"
-      - "{project}/{change}/pm/nfr-targets"  # optional (tier-gated: PM success-metrics runs at moderate+)
+      - "{project}/{change}/pm/handoff"  # optional — NFR budgets live in its constraints; degrade gracefully if absent
     output_topic_key: "{project}/{change}/architect/cost-estimate"
     reference_skills:
       - ../asdt-shared/skills/nfr-budget.md

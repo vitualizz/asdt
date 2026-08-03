@@ -6,9 +6,9 @@ Constraints come from: the existing platform, upstream specialist artifacts, and
 
 ## Inputs
 - Platform context (tech stack, existing patterns, service boundaries) — injected inline by the `platform-analysis` step that runs immediately before this one in the orchestrator's context
-- Any upstream artifacts (`ux-brief`, `pm/backlog-entry`) if present — read them from the injected content
+- Any upstream artifacts (`ux-brief`, `pm/handoff`) if present — read them from the injected content
 
-Note: this step's `inputs:` list in `workflow.yaml` is empty by design — it has no prior `subagent`-produced artifact to retrieve; it consumes the inline-injected platform context plus any upstream artifacts. If upstream artifacts are present (`ux-brief`, `pm/backlog-entry`), the orchestrator will have injected them as `### INPUT` blocks — read them from the injected content, do NOT call mem_search yourself.
+Note: this step's `inputs:` list in `workflow.yaml` is empty by design — it has no prior `subagent`-produced artifact to retrieve; it consumes the inline-injected platform context plus any upstream artifacts. If upstream artifacts are present (`ux-brief`, `pm/handoff`), the orchestrator will have injected them as `### INPUT` blocks — read them from the injected content, do NOT call mem_search yourself.
 
 Extract from the injected platform context: stack, key_patterns, naming_conventions.
 Extract from upstream artifacts (if present): scope.in, scope.out, key technical requirements.

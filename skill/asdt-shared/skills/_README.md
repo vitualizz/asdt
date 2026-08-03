@@ -40,7 +40,7 @@ The artifact contract itself — the `payload:` root, the trailing `open_items: 
 | `decision-preservation.md` | Runtime — deliberately not folded | Saves a permanent organizational knowledge record after a significant decision is produced. Used as the final inline step in most specialists. |
 | `scope-definition.md` | Runtime | Guidelines for defining explicit, unambiguous project scope. Used by Architect and Developer. |
 | `report.md` | Runtime | Generates a structured handoff document from multiple intermediate artifacts; includes the extraction rules (200-token budget per artifact). Used as the consolidation step in UX/UI, Architect, QA, Security, and PM. |
-| `nfr-budget.md` | Runtime | Shared NFR-target value-object shape + the measure-against-budget protocol; reference-only, produces no artifact. Referenced by PM `success-metrics`, Architect `cost-estimation`, QA `performance-validation`. |
+| `nfr-budget.md` | Runtime | Shared NFR-target value-object shape + the measure-against-budget protocol; reference-only, produces no artifact. Referenced by PM `backlog`, Architect `cost-estimation`, QA `performance-validation`. |
 
 ### Why two fragments stay runtime on purpose
 

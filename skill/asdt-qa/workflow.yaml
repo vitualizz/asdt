@@ -90,7 +90,7 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/qa/test-plan"
-      - "{project}/{change}/pm/nfr-targets"  # optional (tier-gated: PM success-metrics runs at moderate+)
+      - "{project}/{change}/pm/handoff"  # optional — NFR targets live in its constraints; degrade gracefully if absent
     output_topic_key: "{project}/{change}/qa/perf-validation"
     reference_skills:
       - ../asdt-shared/skills/nfr-budget.md

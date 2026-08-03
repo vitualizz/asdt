@@ -13,7 +13,7 @@ This skill applies ONLY to steps declared with `inputs: []` in `workflow.yaml` �
 Artifacts live in Engram, addressed by topic_key in the form `{project}/{change}/{specialist}/{artifact-type}`. One key holds exactly one artifact type, so every lookup resolves unambiguously.
 
 1. List what exists for this change: `mem_search(query: "{project}/{change}", project: "{project}")`.
-2. For each result whose topic_key matches an artifact type you need (see the extraction rules below), call `mem_get_observation(id: {id})` to retrieve the full content. When you already know the exact key you want, search for it directly: `mem_search(query: "{project}/{change}/pm/backlog-entry", project: "{project}")`.
+2. For each result whose topic_key matches an artifact type you need (see the extraction rules below), call `mem_get_observation(id: {id})` to retrieve the full content. When you already know the exact key you want, search for it directly: `mem_search(query: "{project}/{change}/pm/handoff", project: "{project}")`.
 3. Apply the extraction rules by artifact type — pull only the listed fields, never the whole payload.
 4. If `mem_search` returns nothing, record in `open_items[]`:
    ```
@@ -26,18 +26,17 @@ Artifacts live in Engram, addressed by topic_key in the form `{project}/{change}
 
 ## Extraction Rules by Artifact Type
 
-### `pm/backlog-entry` (from the PM specialist)
+### `pm/handoff` (from the PM specialist)
 
-The canonical requirements artifact for a change.
+The canonical requirements hand-off for a change.
 
 | Field | Where to find it | What to do with it |
 |---|---|---|
 | `acceptance_criteria` | `payload.acceptance_criteria[]` | Authoritative ACs — refine them, never re-derive an independent set |
-| `user_stories` | `payload.user_stories[]` | List each story ID and summary; use as `story_ref` in downstream steps |
-| `scope.in` | `payload.scope.in[]` | Constrain the plan to this list |
-| `scope.out` | `payload.scope.out[]` | Record any overlap as an `open_items[]` entry |
-| `nfrs` | `payload.nfrs[]` | Surface relevant NFRs (performance, security) in the plan |
-| `open_questions` | `payload.open_questions[]` | Carry unresolved questions forward into your own `open_items[]` |
+| `decisions` | `payload.decisions[]` | The user stories in delivery order — the order IS the priority |
+| `constraints` | `payload.constraints[]` | Scope in/out and the measurable NFRs; constrain the plan to them and record any overlap with out-of-scope as an `open_items[]` entry |
+| `risks` | `payload.risks[]` | Surface the ones that affect your own work |
+| `open_items` | `payload.open_items[]` | Carry unresolved `ASSUMED:` entries forward into your own `open_items[]` |
 
 ### `architect/system-design` (from the Architect specialist)
 
@@ -65,7 +64,7 @@ When an expected artifact is not found, do NOT stop or error. Follow this protoc
 1. Add a note to `open_items[]` describing what was absent and what was assumed:
    ```yaml
    open_items:
-     - "pm/backlog-entry absent — proceeding with inferred scope from feature description"
+     - "pm/handoff absent — proceeding with inferred scope from feature description"
      - "architect/system-design absent — no architectural constraints applied; flag complex decisions as open_items"
    ```
 
@@ -73,7 +72,7 @@ When an expected artifact is not found, do NOT stop or error. Follow this protoc
 
 3. Mark any plan entry that depends on an absent artifact with a note in its `rationale`:
    ```
-   rationale: "Inferred from feature description — no pm/backlog-entry present to confirm story coverage"
+   rationale: "Inferred from feature description — no pm/handoff present to confirm story coverage"
    ```
 
 ---
@@ -84,7 +83,7 @@ After loading everything you found, produce an internal summary (not written to 
 
 ```
 Loaded:
-  - pm/backlog-entry: {N} user stories, scope {in/out counts}
+  - pm/handoff: {N} user stories, scope {in/out counts}
   - knowledge.yaml: stack={stack}, conventions={summary}
 
 Missing:

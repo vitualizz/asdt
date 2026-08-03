@@ -10,8 +10,8 @@ Understand the area of the codebase that will change before writing a single lin
 Note: This step has no prior step artifacts. It operates purely on the request and platform context.
 Both the request and `platform-summary` arrive INJECTED in this prompt (this step's `inputs:` list in `workflow.yaml` is empty — it reads only the raw request and platform-summary, not a prior artifact). Do NOT fetch either yourself; if `platform-summary` is marked UNRESOLVED, record it in `open_items` and proceed.
 
-**Soft reference (optional)**: if a prior `researcher/discovery-brief` (topic_key
-`{project}/{change}/researcher/discovery-brief`) was recalled by the inline knowledge-recall
+**Soft reference (optional)**: if a prior `researcher/handoff` (topic_key
+`{project}/{change}/researcher/handoff`) was recalled by the inline knowledge-recall
 prelude, incorporate it as additional framing context. It is NOT a required input and is NOT a
 declared `inputs:` entry — when absent, proceed normally. Mirrors the soft-recall hint in
 `../asdt-shared/skills/knowledge-recall.md`.

@@ -23,7 +23,7 @@ Working document for the 5-phase refactor that replaces the current 12 shared sk
 - `accessibility.md` ← `asdt-ux-ui/skills/accessibility.md`
 - `conventions.md` ← `asdt-developer/skills/{code-generation,test-generation}.md`
 
-**Nothing under `asdt-shared/` or any specialist was deleted, edited, or unwired.** The originals remain the live path until Phase 4 purges them. Until then the two trees coexist and `asdt-shared/` stays authoritative for anything still pointing at it.
+**Phase 1 deleted and edited nothing.** The originals remain the live path until Phase 4 purges them; the two trees coexist and `asdt-shared/` stays authoritative for anything still pointing at it. (Phase 2 has since collapsed PM and Researcher — see §5.)
 
 Note on `go:embed`: `skill/embedded.go` embeds `SKILL.md asdt-*`, so `asdt-core/` ships automatically, and `installer.SiblingDestName` maps top-level entries verbatim, so it installs to `{SkillsDir}/asdt-core/` with no Go change. Two consequences worth knowing: a file added under `asdt-core/` whose name starts with `_` or `.` will silently NOT ship (that exclusion is what `TestEmbeddedSharedSkillsMatchDisk` guards for the shared tree), and `asdt-core/` has no `workflow.yaml`, so every registry walk skips it exactly as it skips `asdt-shared/`.
 
@@ -60,9 +60,57 @@ The Go code is untouched by Phase 1 and `make test` stays green. These are the p
 
 **`internal/installer/workflow_models.go`** walks `*/workflow.yaml` the same way and skips directories without one; step renames flow through it without edits.
 
+## 5. Phase 2 — PM and Researcher collapsed
+
+PM went from 6 sub-agent steps to 1, Researcher from 3 to 1, and both now persist a single hand-off. Nine step files were deleted and two created:
+
+| Specialist | Deleted steps | New step |
+|---|---|---|
+| PM | `feature-intake`, `user-stories`, `success-metrics`, `scope-analysis`, `prioritization`, `backlog-entry` | `steps/backlog.md` |
+| Researcher | `divergent-ideation`, `feasibility-scan`, `discovery-brief` | `steps/discovery.md` |
+
+Both dropped the inline `decision-preservation` step: `protocol.md` §1 replaces it with the optional one-line `{project}/journal` append.
+
+### Keys renamed
+
+| Old topic_key | New topic_key | Where the content went |
+|---|---|---|
+| `pm/feature-intake` | *(gone)* | intermediate — lives in the run's context only |
+| `pm/user-stories` | `pm/handoff` | `decisions[]`, in delivery order (the order IS the priority) |
+| `pm/scope-analysis` | `pm/handoff` | `constraints[]` (scope in/out) |
+| `pm/prioritization` | *(gone)* | replaced by story ORDER — no MoSCoW block, no separate ranking |
+| `pm/nfr-targets` | `pm/handoff` | `constraints[]` (the measurable NFRs) |
+| `pm/backlog-entry` | `pm/handoff` | the canonical hand-off itself |
+| `researcher/ideation` | `researcher/handoff` | `decisions[]` as `rejected: {direction} — {why}` |
+| `researcher/feasibility` | `researcher/handoff` | evidence folded into `decisions[]`; ungrounded verdicts become `ASSUMED:` `open_items` |
+| `researcher/discovery-brief` | `researcher/handoff` | the canonical hand-off itself |
+
+Consumers updated in the same pass: `asdt-developer/{workflow.yaml,steps/spec.md,steps/explore.md}`, `asdt-qa/{workflow.yaml,SKILL.md,steps/load-requirements.md,steps/performance-validation.md}`, `asdt-architect/{workflow.yaml,SKILL.md,steps/cost-estimation.md,steps/load-constraints.md}`, `asdt-shared/skills/{artifact-loading,knowledge-recall,report,nfr-budget,parallel-retrieval,_README}.md`, and `skill/SKILL.md`. Every DEGRADATION paragraph that named a renamed key was cut to one line — `protocol.md` §1 already norms the general case. The rule "PM is the AC authority — refine, never re-derive" survives verbatim in `asdt-developer/steps/spec.md`.
+
+Two NFR consumers now read a FIELD rather than a dedicated artifact: `architect/cost-estimation` and `qa/performance-validation` extract the measurable NFRs out of `pm/handoff.constraints`. Their no-budget / `no-target` semantics are unchanged — a missing budget still never becomes a silent `within-budget` or `go`.
+
+### Go-side status after Phase 2
+
+`skill/SKILL.md`'s generated inline-steps region WAS regenerated in this phase (PM and Researcher each lost `decision-preservation`), so **`TestRegistryDrift` is green**. Four tests in `internal/installer` are RED, all of them pinning the pre-collapse shape:
+
+| Test | Assertion | What it needs |
+|---|---|---|
+| `TestOrchestrationPlanCellClassification` | `wantRowCount` = 4 tier rows for `asdt-pm` / `asdt-researcher`, `totalRows` = 27 | Both SKILL.md files now carry a single-step plan with NO 4-row tier table. Decide whether a single-step specialist is exempt or declares a degenerate table — that decision belongs with the Phase 5 router pass. |
+| `TestOptionalMarkerReadsRawSourceLine` | `asdt-pm` optional markers = 3, tree total = 18 | PM now declares ONE optional input (`researcher/handoff`); actual counts are 1 and 16. |
+| `TestCollapseOnlyRunsAfterInsertion` | needs a `researcher/complex` tier row | Same root cause as the first row: no tier table to parse. |
+| `TestWorkflowSubagentStepsDeclareKnownAgentTypes` | `analystCount` = 40 | 7 sub-agent steps were removed (PM −5, Researcher −2); actual is 33. `builderCount` = 2 is unaffected. |
+
+The `Tailored Workflow Generation` per-specialist table in `skill/SKILL.md` had its PM and Researcher **step-name cells** refreshed (`feature-intake` → `backlog`, `divergent-ideation` → `discovery`) so no row names a step that no longer exists. The **trivial-eligible verdict prose** in those two rows was left conservative and still needs the Phase 5 router pass — with one step at every tier, "trivial eligible" no longer means what it meant when the tier bought a shorter chain.
+
+Deliberately NOT renamed in this phase, and still carrying old key names:
+
+- **`site/src/content/docs/{en,es}/specialists/*.md`** — the user-facing docs still describe `backlog-entry`, `nfr-targets`, `discovery-brief`, and the old step chains, in both languages. A docs rewrite belongs with the Phase 5 user-facing pass; doing it now means doing it twice, since Phases 3–4 change the same pages again.
+- **`internal/installer/workflow_models_test.go` and `internal/setup/model_test.go`** — these use `pm/feature-intake` / `pm/backlog-entry` as SYNTHETIC inline YAML fixtures, not as references to the shipped skill tree. They pass as-is. `model_test.go` additionally pins `feature-intake` to a model-tier classification, so renaming the fixture could change what the test asserts — leave both to the maintainer.
+
 ## 4. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
-- **Phase 2–3** — rewrite the specialists as declarative orchestrators against `protocol.md`; collapse the step lists; apply the topic_key rename.
+- **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §5.
+- **Phase 3** — the same collapse for Architect, Developer, QA, Security, UX/UI.
 - **Phase 4** — purge `asdt-shared/` and the superseded specialist skill files; repoint the Go references listed above.
-- **Phase 5** — final pass over the root `SKILL.md` and the registry mirrors.
+- **Phase 5** — router pass over the root `SKILL.md`, the registry mirrors, the four red tests above, and the `site/` docs.
