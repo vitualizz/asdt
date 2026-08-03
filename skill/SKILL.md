@@ -39,7 +39,7 @@ Judge two axes independently, and judge them — there is no keyword table, and 
 
 **Risk surface** (`none | moderate | high`): what an attacker or an accident could reach through this change. These axes are independent, and the interesting cases are where they disagree — changing a password hash is a simple change with a high risk surface, and it needs Security regardless of how small the diff is.
 
-If the request is genuinely ambiguous, ask ONE batched question covering everything you need, and only once. If a tier is arguable, take the lower defensible one and say you did — an under-scoped run is cheap to extend, an over-scoped one wastes the user's time before they can tell you it was wrong.
+If a tier is arguable, take the lower defensible one and say you did — an under-scoped run is cheap to extend, an over-scoped one wastes the user's time before they can tell you it was wrong.
 
 ## Status questions
 
@@ -49,9 +49,19 @@ One `mem_search` over `{project}/{change}`, or `{project}/study/{topic}` for a p
 
 If memory holds nothing for it, say so plainly and suggest where to start.
 
+## Sharpen the request
+
+Before you write any command below, sharpen the request that goes inside its quotes — this always happens once you have a chain or a single specialist to propose, never when the answer was a status report with no command to emit.
+
+Sharpening means putting the user's own words into their clearest, most concrete form: name the target as precisely as the conversation lets you, keep every scope, urgency, and sensitivity marker they used, and invent none they did not. Never flip what kind of request it is — "audit X" stays an audit, it does not become "implement X" because sharpening made it sound actionable.
+
+If the request is genuinely ambiguous, ask ONE batched question covering everything you need, and only once. You may resolve only what the request and the conversation already make decidable — you never read the codebase to settle anything, so an ambiguity that would only surface once a specialist opens the code or an upstream hand-off is not yours to close here; leave it for that specialist's own batched turn.
+
+The sharpened text is not a document to approve: it is the quoted argument of every `/asdt-*` command you emit, identical across all of them except for a trailing per-specialist emphasis clause where one is warranted.
+
 ## Output
 
-Write the proposal as short prose the user can read straight through. Quote their request back so there is no doubt what you routed. Give both tiers with a one-line reason each. Name every specialist you are recommending with one line on why it is in the chain, in run order, as commands they can copy:
+Write the proposal as short prose the user can read straight through. Quote their original request back, then show the sharpened version that becomes each command's argument, so there is no doubt what you routed and what changed on the way. Give both tiers with a one-line reason each. Name every specialist you are recommending with one line on why it is in the chain, in run order, as commands they can copy:
 
 ```
 /asdt-architect "add password reset"
@@ -69,5 +79,6 @@ Once the user agrees, list the commands and STOP. Nothing is persisted: each spe
 
 - Recommend or report, never execute — you never run a specialist's steps, and you never write to memory or to any file outside `.asdt/`; reading memory to answer a status question is the one thing you do yourself
 - Never write any file outside `.asdt/`
+- The sharpened request lives only inside the quotes of an emitted `/asdt-*` command — never a field, a key, or anything written to memory
 - Always confirm with the user before handing over the command list
 - One round of questions, batched — never a second

@@ -80,6 +80,8 @@ Examples:
 
 One key per role per change. That is the whole address space for delivering a change: a specialist looking for upstream work knows exactly what to ask for, and a run that finds nothing there proceeds and says so.
 
+The router's sharpened request is not one of these keys: it names no key, no field, and no file of its own — it lives only inside the quotes of the `/asdt-*` command the router emits, and it never reaches Engram.
+
 A run that EXAMINES what already exists — an audit, a review, an assessment with nothing to deliver — persists under a second namespace instead:
 
 ```
