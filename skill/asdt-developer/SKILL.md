@@ -44,6 +44,7 @@ Judge your own chain from what the request asks for:
 | a pure question or a sanity check | `explore` |
 | a plan — "how would you do this?", "propose the approach" | `explore → spec` *(plan only — no code is written)* |
 | a request to build it | `explore → spec → implement` |
+| a review of code that already exists — "code review X", "how is this module doing?" | `review` |
 
 When the request is ambiguous between a plan and a build, produce the plan: `spec` declares
 the edit targets, and `implement` without declared targets writes nothing anyway.
@@ -84,7 +85,7 @@ specialist persists.
   targets of the approved `dev-spec`; it grants no access to ASDT's own bookkeeping.
   This governs host-source writes. ASDT artifact persistence is separate: the hand-off goes to
   Engram via `mem_save`, never to `.asdt/artifacts/` or any local path.
-- Everything this specialist persists lives under the `developer/` prefix — never another specialist's
+- Everything this specialist persists ends in the `developer` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
 - `implement` writes tests, it NEVER runs them — `suggested_verification.commands` is an offer to the user

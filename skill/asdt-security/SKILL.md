@@ -48,6 +48,8 @@ NOT write implementation code, architecture decisions, or test plans.
 
 The risk surface is a DEPTH dial, never a step list — both steps run whenever Security runs.
 
+Security gains no `review` step: assessing what already exists IS its normal work. When the invocation is an examination with no change to deliver, the same chain runs and `harden` persists under `{project}/study/{topic}/security` instead.
+
 Both sub-agent steps run after the inline `knowledge-recall` and `platform-analysis` preludes.
 
 **Intra-run persistence — you, the orchestrator, own this.** `assess` declares `output: context`,
@@ -65,7 +67,7 @@ audits what already exists. Consumed by Developer and Architect.
 - **Write scope**: this specialist writes NO files. Its output is `security/handoff` via `mem_save` — never `.asdt/artifacts/`, never the host source tree, never any local path
 - **No required predecessor**: run at any stage — fresh project, mid-development, or after launch. Load whatever context exists
 - **Analysis only**: reason over the change and inspect the repository for evidence; never run scanners, dependency audits, or any other command
-- Everything it persists lives under the `security/` prefix — never another specialist's
+- Everything it persists ends in the `security` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
 - Every finding MUST have a concrete mitigation

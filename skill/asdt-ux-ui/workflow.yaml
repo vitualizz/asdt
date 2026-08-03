@@ -23,3 +23,15 @@ steps:
     reference_skills:
       - ../asdt-core/references/accessibility.md
       - ../asdt-core/protocol.md
+
+  - name: review
+    skill: steps/review.md
+    description: Audit the flows that already ship — friction, missing states, design-system drift, and accessibility
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs: []
+    output_topic_key: "{project}/study/{topic}/ux-ui"
+    reference_skills:
+      - ../asdt-core/references/accessibility.md
+      - ../asdt-core/protocol.md

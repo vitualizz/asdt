@@ -18,3 +18,15 @@ steps:
     reference_skills:
       - ../asdt-core/references/scope-definition.md
       - ../asdt-core/protocol.md
+
+  - name: review
+    skill: steps/review.md
+    description: Compare what exists against the requirements in force — unimplemented requirements, unrequested behavior, untestable criteria
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs: []
+    output_topic_key: "{project}/study/{topic}/pm"
+    reference_skills:
+      - ../asdt-core/references/scope-definition.md
+      - ../asdt-core/protocol.md

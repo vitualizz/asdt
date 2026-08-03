@@ -38,20 +38,31 @@ decisions, implementation code, UX specs, or test plans.
 
 ## Orchestration Plan
 
-One sub-agent step — `backlog` — always, after the inline `knowledge-recall` prelude. Depth
-changes how many stories and how much scope detail travel in the hand-off, never which steps
-run.
+Judge which step the request asks for:
+
+| The request asks to | Step |
+|---|---|
+| formalize a change that has not been built — "add password reset" | `backlog` |
+| compare what exists against its requirements — "what did we promise in checkout?" | `review` |
+
+Ambiguous → `backlog`. The inline `knowledge-recall` prelude runs first either way, and depth
+changes how much detail travels in the hand-off, never which steps run.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
-`pm/handoff` — the requirements hand-off, persisted at `{project}/{change}/pm/handoff`. In a study — when the run examines what already exists rather than delivering a change — the same hand-off is persisted at `{project}/study/{topic}/pm` instead, per `asdt-core/protocol.md` §1.
-Consumed by Architect, Developer (acceptance criteria), and QA (primary requirements
-source). It is the only artifact this specialist persists.
+One artifact, and which one depends on the step that ran.
+
+`backlog` produces `pm/handoff` at `{project}/{change}/pm/handoff` — consumed by Architect,
+Developer (acceptance criteria), and QA (primary requirements source).
+
+`review` produces `{project}/study/{topic}/pm` — the gap analysis of an existing area. No
+pipeline declares it as an input; it is organizational memory, reached through
+`knowledge-recall`.
 
 ## Invariants
 - This specialist writes NO files to the host repo — its output is `pm/handoff` via `mem_save`, nothing else
-- Everything PM persists lives under the `pm/` prefix — never another specialist's
+- Everything PM persists ends in the `pm` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
 - `scope.out` is MANDATORY — a hand-off without explicit out-of-scope items is incomplete

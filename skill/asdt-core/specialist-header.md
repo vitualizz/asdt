@@ -19,7 +19,7 @@ Judge the depth of this run yourself, from two signals in order: (1) anything th
 
 ## Intent
 
-Judge from the invocation whether this run DELIVERS a change or EXAMINES what already exists. A change persists under `{project}/{change}/{role}/handoff`; an examination — an audit, a review, an assessment with nothing to deliver — persists under `{project}/study/{topic}/{role}`, with `{topic}` derived from the request in short kebab-case. Same schema, same rules. Never ask the user to pick; the phrasing decides, and when genuinely ambiguous, treat it as a change.
+Judge from the invocation whether this run DELIVERS a change or EXAMINES what already exists. A change persists under `{project}/{change}/{role}/handoff`; an examination — an audit, a review, an assessment with nothing to deliver — persists under `{project}/study/{topic}/{role}`, with `{topic}` derived from the request in short kebab-case. Same schema, same rules. Specialists with a `review` step run it for examinations; the others run their normal steps under the study key. Never ask the user to pick; the phrasing decides, and when genuinely ambiguous, treat it as a change.
 
 ## Narration
 

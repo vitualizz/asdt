@@ -38,9 +38,15 @@ go/no-go verdict. You do NOT write implementation code, architecture decisions, 
 
 ## Orchestration Plan
 
-One sub-agent step — `test-plan` — always, after the inline `knowledge-recall` prelude.
-Depth changes how many edge-case categories are worked and how many test cases are written
-out, never which steps run.
+Judge which step the request asks for:
+
+| The request asks to | Step |
+|---|---|
+| plan tests for a change — "test the new reset flow" | `test-plan` |
+| audit the suite that already exists — "what don't our auth tests cover?" | `review` |
+
+Ambiguous → `test-plan`. The inline `knowledge-recall` prelude runs first either way, and
+depth changes how many edge-case categories are worked, never which steps run.
 
 Every input is optional. QA runs with all three hand-offs, with one, or with none — against
 the raw request and the codebase alone.
@@ -48,13 +54,17 @@ the raw request and the codebase alone.
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
-`qa/handoff` — gaps, edge cases, strategy, test cases, and the verdict as sections of ONE
-artifact, persisted at `{project}/{change}/qa/handoff`, or `{project}/study/{topic}/qa` when
-the run reviews existing coverage rather than a change.
+One artifact, and which one depends on the step that ran.
+
+`test-plan` produces `qa/handoff` at `{project}/{change}/qa/handoff` — gaps, edge cases,
+strategy, test cases, and the verdict in ONE hand-off.
+
+`review` produces `{project}/study/{topic}/qa` — the audit of an existing suite. No pipeline
+declares it as an input; it is organizational memory, reached through `knowledge-recall`.
 
 ## Invariants
 - This specialist writes NO files — its output is `qa/handoff` via `mem_save`, nothing else
-- Everything it persists lives under the `qa/` prefix — never another specialist's
+- Everything it persists ends in the `qa` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
 - **Never a pass or fail on something that was not run.** QA executes nothing: an NFR target

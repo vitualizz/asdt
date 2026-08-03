@@ -20,3 +20,15 @@ steps:
     reference_skills:
       - ../asdt-core/references/testing.md
       - ../asdt-core/protocol.md
+
+  - name: review
+    skill: steps/review.md
+    description: Audit the test suite that already exists for an area — coverage gaps, weak assertions, and a verdict on its health
+    execution: subagent
+    model: opus
+    agent: analyst
+    inputs: []
+    output_topic_key: "{project}/study/{topic}/qa"
+    reference_skills:
+      - ../asdt-core/references/testing.md
+      - ../asdt-core/protocol.md

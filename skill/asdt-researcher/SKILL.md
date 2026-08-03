@@ -42,6 +42,10 @@ One sub-agent step — `discovery` — always, after the inline `knowledge-recal
 Depth changes how many directions are explored and how much evidence each feasibility
 verdict carries, never which steps run.
 
+Researcher gains no `review` step: exploring what exists IS its normal work. When the
+invocation is an examination with no change to deliver, `discovery` runs and persists under
+`{project}/study/{topic}/researcher` instead.
+
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output

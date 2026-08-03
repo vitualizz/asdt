@@ -45,3 +45,15 @@ steps:
       - ../asdt-core/references/conventions.md
       - ../asdt-core/references/platform-context.md
       - ../asdt-core/protocol.md
+
+  - name: review
+    skill: steps/review.md
+    description: Judge the quality of code that already exists — findings with a one-line fix each, never a write
+    execution: subagent
+    model: sonnet
+    agent: analyst
+    inputs: []
+    output_topic_key: "{project}/study/{topic}/developer"
+    reference_skills:
+      - ../asdt-core/references/conventions.md
+      - ../asdt-core/protocol.md

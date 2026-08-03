@@ -38,20 +38,29 @@ code, architecture decisions, or test plans.
 
 ## Orchestration Plan
 
-One sub-agent step — `ux-spec` — always, after the inline `knowledge-recall` and
-`platform-analysis` preludes. Depth changes how many flows are written out and how much
-branching each one carries, never which steps run.
+Judge which step the request asks for:
+
+| The request asks to | Step |
+|---|---|
+| specify the flows of a change — "design the new onboarding" | `ux-spec` |
+| audit what already ships — "review the accessibility of checkout" | `review` |
+
+Ambiguous → `ux-spec`. The inline `knowledge-recall` and `platform-analysis` preludes run
+first either way, and depth changes how many flows are covered, never which steps run.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `ux-ui/handoff` — brief, IA, flows, component mapping, and accessibility as sections of ONE
-artifact, persisted at `{project}/{change}/ux-ui/handoff`, or `{project}/study/{topic}/ux-ui`
-when the run reviews an existing surface. Consumed by Architect and Developer.
+artifact, persisted at `{project}/{change}/ux-ui/handoff`. Consumed by Architect and Developer.
+
+`review` produces `{project}/study/{topic}/ux-ui` — the audit of an existing experience. No
+pipeline declares it as an input; it is organizational memory, reached through
+`knowledge-recall`.
 
 ## Invariants
 - This specialist writes NO files — its output is `ux-ui/handoff` via `mem_save`, nothing else
-- Everything it persists lives under the `ux-ui/` prefix — never another specialist's
+- Everything it persists ends in the `ux-ui` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
 - **The project's design system is the source of tokens and components** — never invent a

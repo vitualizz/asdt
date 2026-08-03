@@ -414,9 +414,27 @@ Every specialist already worked on a change. This extension makes the same speci
 
 **The intent is judged, not declared.** A run that DELIVERS a change persists at `{project}/{change}/{role}/handoff`; a run that EXAMINES what exists persists at `{project}/study/{topic}/{role}`, with `{topic}` derived from the request in short kebab-case. The specialist reads which one this is off the phrasing, exactly as it reads depth. It never asks, and genuine ambiguity means a change. Same schema, same load rules, same degradation — in a study, `decisions[]` carries the judgments and `risks[]` what was found.
 
-This is the one thing that changes. Resisting the urge to formalize it into a mode is the whole point: the tier flag was removed for being a formalization of something judgment already handled, and a `--study` flag would be the same disease wearing a new name.
+The judgment decides two things: which step runs, and under which namespace it persists. Resisting the urge to formalize that into a mode is the whole point — the tier flag was removed for being a formalization of something judgment already handled, and a `--study` flag would be the same disease wearing a new name.
 
 **A study is organizational memory.** No pipeline declares a study key as an input; later runs meet it through the `knowledge-recall` prelude, which now covers the `{project}/study/` namespace explicitly.
+
+### Five specialists gained a `review` step
+
+They gained one because their study is a genuinely different work product from their change step — forcing an audit through the change step would have produced a design, a spec, or a plan nobody asked for.
+
+| Specialist | Change step | `review` examines | Model | Reference |
+|---|---|---|---|---|
+| Architect | `design` | coupling and boundaries, scalability under expected load, one-way doors already crossed | opus | `api-design.md` |
+| Developer | `explore → spec → implement` | complexity hotspots, duplication past the third occurrence, error handling, convention drift, units that outgrew their purpose | sonnet | `conventions.md` |
+| QA | `test-plan` | untested behaviors, uncovered edge cases, weak or tautological assertions, tests coupled to internals, misclassified levels | opus | `testing.md` |
+| UX/UI | `ux-spec` | friction, missing empty/loading/error states, design-system drift, accessibility | sonnet | `accessibility.md` |
+| PM | `backlog` | unimplemented requirements, behavior with no requirement, untestable criteria, unmeasurable NFRs | sonnet | `scope-definition.md` |
+
+All five are `agent: analyst`, declare `inputs: []`, and cap findings at 7 with a one-word severity, evidence, and a one-line fix — plus 2–3 strengths, because a review that lists only defects miscalibrates the reader. The Developer's carries an extra invariant in its own file: it writes not one byte, and every fix is a proposal.
+
+**Security and Researcher gained nothing, deliberately.** Assessing what exists IS Security's normal work, and exploring it IS Researcher's. For them the judgment changes only the namespace: the same chain runs, and the final hand-off lands under the study key. Duplicating their chain into a `review` would have been ceremony.
+
+The UX/UI review is not the deleted `design-critique` returning. That step had the model grading its own output; this one audits the user's shipped product, and the file says so explicitly so nobody re-derives the old shape from the new name.
 
 ### The router gained a third answer
 
@@ -428,28 +446,23 @@ Added to the header's `## Narration`: a run ends by presenting its findings to t
 
 When a run closes on a negative verdict or a high risk, the report's last line proposes the next invocation as a copyable sentence. A sentence, not a mechanism.
 
-### One new step: `architect/review`
-
-The Architect is the one specialist whose study shape genuinely differs from its change shape — judging an existing architecture is not designing one, and forcing both through `design` would have produced a design nobody asked for. `steps/review.md` maps what exists, judges it against coupling/boundaries, scalability, and one-way doors already crossed, and returns at most 7 prioritized findings with evidence — plus 2–3 strengths, because a review that lists only defects miscalibrates the reader.
-
-Its SKILL.md now judges between its two steps the way the Developer judges its chain: "design a change" → `design`, "judge what exists" → `review`, ambiguous → `design`.
-
-Every other specialist covers the study intent through its existing step and its optional-input degradation. None gained a step, and none needed one.
-
 ### Files touched
 
-`asdt-core/protocol.md` §1, `asdt-core/specialist-header.md` (new `## Intent`, expanded `## Narration`), `asdt-core/references/knowledge-recall.md`, `skill/SKILL.md` (Role, new `## Status questions`, Invariants, a Registry footnote), `asdt-architect/{SKILL.md,workflow.yaml,steps/review.md}`, `skill/TEMPLATE.md` (two authoring norms), and a one-line generalization of `## Final Output` in the six other specialists, whose prose stated the change key as the only possibility.
+`asdt-core/protocol.md` §1, `asdt-core/specialist-header.md` (new `## Intent`, expanded `## Narration`), `asdt-core/references/knowledge-recall.md`, `skill/SKILL.md` (Role, new `## Status questions`, Invariants, a Registry footnote), five new `steps/review.md` with their `workflow.yaml` entries and judgment tables in `asdt-{architect,developer,qa,ux-ui,pm}/SKILL.md`, one sentence each in `asdt-{security,researcher}/SKILL.md`, and `skill/TEMPLATE.md`.
 
-### Two new authoring norms
+Prose that stated the change key as the only possibility was generalized in every specialist — a one-line edit each, no new blocks. The `Everything it persists lives under the {role}/ prefix` invariant became `ends in the {role} role slot`, which is what it always meant and is now true in both namespaces.
 
-- **Four steps maximum** per specialist. A fifth means the design is wrong: merge two, or split the specialist. Current maximum is 3 (Developer).
+### Three new authoring norms
+
+- **Four steps maximum** per specialist. A fifth means the design is wrong: merge two, or split the specialist. Current maximum is 4 (Developer, now at its ceiling).
 - **Every specialist works standalone.** No cross-specialist input may be mandatory.
+- **The study step is called `review`**, and a specialist whose normal work already examines what exists does not duplicate its chain into one.
 
 ### Go side
 
-One step added, absorbed with one number: `analystCount` 9 → **10** in `workflow_agents_test.go`, verified by counting the workflow.yaml files rather than trusting the delta. `TestRegistryDrift` derived the new step on its own. `TestOptionalMarkerReadsRawSourceLine` did not move — `review` declares `inputs: []`, so it contributes no optional markers.
+Five steps added, absorbed with one number: `analystCount` 9 → **14** in `workflow_agents_test.go`, verified by counting the workflow.yaml files rather than trusting the delta. `builderCount` stays 1 — `developer/implement` is still the only step that writes host files. `TestRegistryDrift` derived the new steps on its own. `TestOptionalMarkerReadsRawSourceLine` did not move: all five reviews declare `inputs: []`, so they contribute no optional markers. Nothing in the Go side keys on the `/{change}/` segment of an `output_topic_key`, so the study literal parses like any other.
 
-13 subagent steps total: architect 2, developer 3, security 2, init 2, and one each for pm, qa, researcher, ux-ui. `go build`, `go vet`, `go test ./...` all green.
+17 subagent steps total: architect 2, developer 4, qa 2, ux-ui 2, pm 2, security 2, researcher 1, init 2. `go build`, `go vet`, `go test ./...` all green.
 
 ## 12. Phase status
 
