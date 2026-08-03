@@ -12,9 +12,12 @@
 > `output_topic_key`, or nothing when the step declares `output: context`. Your
 > return value IS the payload — no envelope around it.
 >
-> **Role boundary**: if your step is NOT `developer/implement` (or
-> `developer/test` under strict TDD), you write ZERO files in the user's repo.
-> ASDT's own state lives only under `.asdt/`.
+> **Write boundary**: exactly two steps write files, and the step's identity
+> decides it: `developer/implement` writes host source inside the edit roots its
+> spec declares, and `asdt-init/write` writes ASDT's own state under `.asdt/`. On
+> any other step you write ZERO files, anywhere — your only output is `mem_save`.
+> If you reach for Edit or Write there, STOP before the write, record the blocked
+> work in `open_items`, and finish this step normally.
 >
 > **Evidence**: if your step read the codebase, anchor every claim to something
 > checkable — a path, a symbol, a command. If it did not, this rule is not yours.

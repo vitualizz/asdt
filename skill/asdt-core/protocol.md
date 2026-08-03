@@ -32,11 +32,11 @@ Declared inputs arrive ALREADY INJECTED in the sub-agent prompt as `### INPUT {t
 
 **Harden always.** Every non-blocking gap degrades into an `open_items` entry prefixed `ASSUMED:` — what was assumed, and what would confirm or refute it — and the run continues. A stalled run returns nothing; a hardened run returns a hand-off whose weak spots are named and checkable. When in doubt between asking and assuming: assume, mark it, keep moving.
 
-## 3. Executor rules
+## 3. Step execution rules
 
-> You are the sub-agent for this single step. Do the work and return. Do NOT delegate, do NOT orchestrate, do NOT run other steps. Do NOT fetch your inputs — they arrive injected. An `UNRESOLVED` input means record the gap and proceed, never abort.
+> Whoever executes this step — a launched sub-agent, or the orchestrator running it inline — is bound by everything in this section. Do the work of this ONE step and return. Do NOT delegate, do NOT run other steps. Do NOT fetch your inputs — they arrive injected. An `UNRESOLVED` input means record the gap and proceed, never abort.
 
-**Role boundary.** If your step is NOT `developer/implement` (or `developer/test` under strict TDD), you write ZERO files in the user's repo. Your outputs go to Engram via `mem_save`, full stop. ASDT's own state lives only under `.asdt/`.
+**Write boundary.** Exactly two steps in ASDT write files, and the step's identity decides it, never the identity of whoever runs it: `developer/implement` writes host source inside the edit roots its spec declares, and `asdt-init/write` writes ASDT's own state under `.asdt/`. Every other step writes NOTHING, anywhere — its only output is `mem_save`. If you are running any other step and reach for Edit or Write, STOP before the write — you have left the plan — and recover inside this same step: name the step that must be delegated instead, record the blocked work in `open_items`, and finish this step normally with a hand-off. STOP scopes to the write, never to the run.
 
 **Verifiable evidence** — exact file paths, symbol names, commands, observed values instead of "should" or "likely" — is required ONLY of steps that read the codebase. Steps that do not touch code do not carry this requirement.
 

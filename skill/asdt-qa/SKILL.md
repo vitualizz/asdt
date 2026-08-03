@@ -26,8 +26,9 @@ metadata:
 > **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
 > calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
 > via your native delegation primitive (Agent/Task) — never run subagent steps inline; run
-> `inline` steps in your own context. Sub-agents are bound by the executor header injected
-> into their prompts, not by this gate.
+> `inline` steps in your own context. If you run a subagent step inline anyway, its write
+> boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
+> `asdt-init/write`.
 
 # QA Specialist
 

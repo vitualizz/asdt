@@ -88,6 +88,47 @@ func TestEmbeddedCoreReferencesMatchDisk(t *testing.T) {
 	}
 }
 
+// TestCoreSourcesCarryWriteBoundaryPhrase asserts that all three asdt-core
+// sources an executor can be holding still state a write boundary. The rule that
+// only developer/implement and asdt-init/write may touch files is enforced by
+// prose alone — no ASDT process is alive while a step runs — so losing the phrase
+// from any one of these silently reopens the incident it was written to prevent:
+// a step whose plan grants no writes editing a user's source file anyway.
+//
+// TestRoutedSpecialistInvariants cannot cover this: it reads {dir}/SKILL.md in
+// the PRE-SPLICE embedded tree, where the core bodies are not yet present.
+func TestCoreSourcesCarryWriteBoundaryPhrase(t *testing.T) {
+	const phrase = "write boundary"
+
+	contains := func(body []byte) bool {
+		return strings.Contains(strings.ToLower(string(body)), phrase)
+	}
+
+	// The protocol is the only text BOTH parties hold: a declared reference skill
+	// on every subagent step, and — via specialist-header.md — spliced into every
+	// routed SKILL.md the orchestrator itself reads.
+	if body, err := fs.ReadFile(FS(), "asdt-core/protocol.md"); err != nil {
+		t.Errorf("asdt-core/protocol.md unreadable in embedded FS: %v", err)
+	} else if !contains(body) {
+		t.Errorf("asdt-core/protocol.md no longer states the %q rule; the orchestrator loses its only universal copy", phrase)
+	}
+
+	// What the orchestrator has in context at the moment it decides launch-vs-inline.
+	if body, err := fs.ReadFile(FS(), "asdt-core/specialist-header.md"); err != nil {
+		t.Errorf("asdt-core/specialist-header.md unreadable in embedded FS: %v", err)
+	} else if !contains(body) {
+		t.Errorf("asdt-core/specialist-header.md no longer states the %q rule; the ORCHESTRATOR GATE stops binding an inline run", phrase)
+	}
+
+	// Baked into every generated agent definition by internal/installer, so this
+	// is the copy a launched sub-agent reads.
+	if body, err := fs.ReadFile(FS(), "asdt-core/executor-header.md"); err != nil {
+		t.Errorf("asdt-core/executor-header.md unreadable in embedded FS: %v", err)
+	} else if !contains(body) {
+		t.Errorf("asdt-core/executor-header.md no longer states the %q rule; launched sub-agents ship without it", phrase)
+	}
+}
+
 // TestRoutedSpecialistInvariants asserts that every routed specialist's
 // embedded SKILL.md body carries the load-bearing header invariants: the SOLE
 // orchestrator gate, the FIRST ACTION self-load instruction, and both

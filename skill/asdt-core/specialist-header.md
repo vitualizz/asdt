@@ -12,6 +12,9 @@ Before starting any step, verify `.asdt/config.yaml` exists with `memory.provide
 > native delegation primitive (Agent/Task) — do NOT run subagent steps inline in
 > this thread. Steps marked `inline` run in your own context. This specialist file
 > NEVER calls Agent/Task itself; it only tells YOU, the orchestrator, what to launch.
+> If you run a subagent step inline anyway, that step's write boundary
+> (`asdt-core/protocol.md` §3) binds YOU: unless the step is `developer/implement`
+> or `asdt-init/write`, you write no files at all.
 
 ## Depth
 
