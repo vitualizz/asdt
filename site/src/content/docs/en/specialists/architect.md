@@ -26,7 +26,7 @@ The Architect Specialist never writes implementation code, UX specs, or test pla
 
 ## Pipeline position
 
-Typically runs **after PM** (reads `backlog-entry`) and **before Developer** (Developer reads `architectural-decision` + `system-design-final`). At `simple` complexity it is not called at all — the Developer handles it directly. At `trivial`, it runs a single `load-constraints` consult. At `moderate`, it runs `load-constraints → evaluate-approaches → decision-record → technical-handoff`. Only `complex` adds the deeper steps — `system-design`, `cost-estimation`, and `risk-analysis`.
+Typically runs **after PM** (reads `pm/handoff`) and **before Developer** (Developer reads `architect/handoff`). On simple changes it is not called at all — the Developer handles those directly. When it does run, it runs one step, `design`, and how deep that step goes is its own call.
 
 ## What it produces
 
@@ -37,7 +37,7 @@ Two final artifacts consumed by downstream specialists:
 
 Consumed by: **Developer** (reads both), **QA** (reads `architectural-decision` to understand design context).
 
-At `complex`, the `cost-estimation` step also produces **`architect/cost-estimate`** — the operational and infrastructure cost profile of the chosen design. It reads the `complex`-tier `architect/system-design` plus an optional `pm/nfr-targets`; when the PM artifact is absent the step degrades gracefully and notes the gap rather than failing.
+NFR budgets, when PM set any, arrive inside `pm/handoff.constraints` and the design has to live within them. When PM never ran, the design proceeds and records the gap rather than inventing a budget.
 
 ## Common patterns
 

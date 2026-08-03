@@ -26,7 +26,7 @@ The QA Specialist is not trivial-eligible. At trivial complexity it falls back t
 
 ## Pipeline position
 
-Typically runs **after Developer** (reads `dev-implementation`) and is the final sign-off before code merges. Can run earlier — against PM's `backlog-entry` or Architect's `architectural-decision` — to catch AC quality issues before implementation starts. That early pass saves far more time than finding gaps after the code is written.
+Typically runs **after Developer** (reads `developer/handoff`) and is the final sign-off before code merges. Can run earlier — against `pm/handoff` or `architect/handoff` — to catch AC quality issues before implementation starts. That early pass saves far more time than finding gaps after the code is written. Every input is optional: with none of them, it works from the request and the codebase.
 
 ## What it produces
 
@@ -43,7 +43,7 @@ Consumed by: **Developer** (to implement the test suite), used as the sign-off a
 
 ```
 /asdt-qa Validate acceptance criteria before implementation starts
-# → Run QA on PM's backlog-entry to catch AC quality issues early
+# → Run QA against pm/handoff to catch AC quality issues early
 ```
 
 ```

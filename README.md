@@ -66,19 +66,28 @@ ASDT analyzes the request and suggests a route — for example `/asdt-pm` → `/
 
 ## How it works
 
+Three layers, and each one only does its own job:
+
 ```mermaid
 flowchart TD
     req([Feature request]) --> asdt
-    asdt["/asdt\nroutes — never executes"]
-    asdt -->|user confirms| specialists
-    specialists["Specialists run in suggested order\n/asdt-ux-ui · /asdt-architect · /asdt-developer · …"]
-    specialists -->|each launches isolated steps| steps
-    steps["Step sub-agents\none artifact per step"]
-    steps -->|saved to| engram[(Shared memory\npersistent knowledge base)]
-    engram -->|next specialist reads automatically| specialists
+    asdt["/asdt\nreads the request · recommends a route\nnever executes"]
+    asdt -->|you confirm| specialists
+    specialists["Specialist\n/asdt-architect · /asdt-developer · …\norchestrates its own steps"]
+    specialists -->|launches, isolated| steps
+    steps["Step sub-agent\ndoes one thing · never delegates"]
+    steps -.->|working notes stay in context| specialists
+    specialists -->|one hand-off per specialist| engram[(Shared memory\npersistent knowledge base)]
+    engram -->|the next specialist reads it| specialists
 ```
 
-Each specialist runs its own isolated steps. Steps that produce artifacts run as separate sub-agents, so they don't pollute each other's context. Artifacts are saved to a persistent memory layer (default: [Engram](https://github.com/Gentleman-Programming/engram)) — not to files on disk — so work survives across sessions and the next specialist picks it up automatically.
+**The router recommends.** `/asdt` reads your request, judges how much it touches and how much risk it carries, and proposes a chain of specialists. It never runs one.
+
+**Each specialist finishes with exactly one hand-off.** Whatever it worked through on the way — exploration, drafts, intermediate analysis — stays in the conversation and disappears with it. What crosses the boundary to the next specialist is a single record at `{project}/{change}/{role}/handoff`, saved to a persistent memory layer (default: [Engram](https://github.com/Gentleman-Programming/engram)) rather than to files on disk. Work survives across sessions, and the next specialist picks it up without being told to.
+
+**Steps run isolated.** A step that reads the codebase gets its own sub-agent so it never pollutes the others' context, and it never delegates further.
+
+When a run produces a decision that would not be obvious from the code later, one line goes to the project journal. That is the only other thing ASDT writes.
 
 The same skill tree installs natively into either host — one embedded source renders to both Claude Code and OpenCode.
 

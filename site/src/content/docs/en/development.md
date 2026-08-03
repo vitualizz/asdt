@@ -104,7 +104,7 @@ skill/
   README.md         # skill layer overview
   embedded.go       # go:embed registry
   embedded_test.go  # routed-invariant + embed tests
-  asdt-shared/      # shared skill fragments
+  asdt-core/        # protocol, headers, and optional references
   asdt-architect/   # Architect specialist
   asdt-developer/   # Developer specialist
   asdt-pm/          # Product Manager specialist

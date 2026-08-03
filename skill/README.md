@@ -14,14 +14,17 @@ flowchart TD
     B -->|inline| C["knowledge-recall · platform-analysis\ncontext injection only · no artifact produced"]
     B -->|subagent| D["steps/step-name.md\nexecutor-only · never delegates"]
 
+    D -.->|"output: context\nintermediate payloads stay in the thread"| B
     D <-->|"mem_save / mem_search\ntopic_key: project/change/role/handoff"| E[(Engram)]
 ```
 
-**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Analyzes the request, assesses complexity, recommends which specialists to invoke and in what order. Never executes a single specialist step.
+**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Reads the request, judges complexity and risk surface, recommends which specialists to invoke and in what order. Never executes a single specialist step.
 
 **Specialist as orchestrator** (`skill/asdt-{name}/SKILL.md`) — reads `workflow.yaml` and drives the steps. Does not do the specialist work itself — it tells the calling assistant which steps to run inline and which to launch as isolated sub-agents.
 
-**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. Each step does one thing, produces one artifact, saves it to Engram, and returns. Steps never delegate further.
+**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. Each step does one thing and returns. Only a specialist's LAST step persists, and what it persists is that specialist's single hand-off; earlier steps hand their payload back to the orchestrator, which injects it into the next step. Steps never delegate further.
+
+The full contract — what gets persisted, how inputs arrive, how a step degrades when one is missing — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
 
 ## Directory Structure
 
@@ -51,13 +54,15 @@ Every step in `workflow.yaml` has an `execution:` field:
 | Mode | What it means | Produces an artifact? |
 |---|---|---|
 | `inline` | Runs in the orchestrator's context — pure context injection | No |
-| `subagent` | Launched as an isolated sub-agent | Yes — one artifact per step |
+| `subagent` | Launched as an isolated sub-agent | Only if it declares `output_topic_key` |
 
 **Inline steps** (`knowledge-recall`, `platform-analysis`) inject context into the orchestrator's thread. They have no `inputs:` or `output_topic_key` — they enrich context for the next step.
 
 **Subagent steps** each declare:
 - `inputs:` — topic keys to retrieve from Engram before starting
-- `output_topic_key` — where to save the hand-off in Engram, OR `output: context` when the payload is retained by the orchestrator and injected into the next step instead of persisted
+- `output_topic_key` — where to save the hand-off in Engram
+- `output: context` — declared *instead of* `output_topic_key`: the step persists nothing, and the orchestrator keeps its payload and injects it into the next step
+- `context_inputs:` — the earlier `output: context` payloads this step expects, injected as `### INPUT {name}` blocks
 - `reference_skills:` — which shared skill files to load as guidelines
 
 ## Artifact Topic Keys
@@ -73,7 +78,9 @@ Examples:
   myapp/add-auth/security/handoff
 ```
 
-This naming lets the next specialist retrieve a specific artifact unambiguously via a single `mem_search` call.
+One key per role per change. That is the whole address space: a specialist looking for upstream work knows exactly what to ask for, and a run that finds nothing there proceeds and says so.
+
+A run that made a non-obvious decision also appends one line to `{project}/journal`. Nothing else is written.
 
 ## Adding a New Specialist
 
@@ -81,6 +88,6 @@ This naming lets the next specialist retrieve a specific artifact unambiguously 
 
 1. Create `skill/asdt-{name}/` with `SKILL.md`, `workflow.yaml`, and `steps/`
 2. Add the ORCHESTRATOR GATE block to `SKILL.md` — copy from any existing specialist
-3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, `output_topic_key:`
+3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, and either `output_topic_key:` or `output: context`
 4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-core/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-core/protocol.md` for which of the two applies
 5. Register the specialist in the `Specialist Registry` section of `skill/SKILL.md`

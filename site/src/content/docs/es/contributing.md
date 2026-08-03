@@ -107,7 +107,7 @@ go test ./skill/...
 
 Las shared skills son fragmentos de capacidad reutilizados entre múltiples specialists — detección de platform context, knowledge recall, definición de scope.
 
-1. Creá `skill/asdt-shared/skills/{name}.md` con las instrucciones de la capacidad.
+1. Creá `skill/asdt-core/references/{name}.md` con las instrucciones de la capacidad.
 2. Conectala a través de uno de los tres mecanismos de carga de abajo. Una shared skill que nadie declara nunca se lee — no hay carga implícita ni ambiental.
 3. Abrí un PR.
 
@@ -115,7 +115,7 @@ Las shared skills son fragmentos de capacidad reutilizados entre múltiples spec
 
 Tres mecanismos, y solo tres. Los paths siempre se resuelven desde el directorio propio del specialist.
 
-**1. Splice en tiempo de instalación.** El instalador injerta `asdt-shared/skills/specialist-header.md` en una región generada de cada `SKILL.md` routado, así el orquestador lee el header inline en lugar de ir a buscar un archivo aparte. Esto aplica solo a ese archivo. El blockquote de FIRST ACTION ya no indica leer `specialist-header.md` — el único archivo al que te manda es `./workflow.yaml`. Nunca edites a mano entre los marcadores de la región; el splice sobrescribe lo que haya ahí.
+**1. Splice en tiempo de instalación.** El instalador injerta `asdt-core/specialist-header.md` en una región generada de cada `SKILL.md` routado, así el orquestador lee el header inline en lugar de ir a buscar un archivo aparte. Esto aplica solo a ese archivo. El blockquote de FIRST ACTION ya no indica leer `specialist-header.md` — el único archivo al que te manda es `./workflow.yaml`. Nunca edites a mano entre los marcadores de la región; el splice sobrescribe lo que haya ahí.
 
 **2. Inline step.** Un step de `workflow.yaml` con `execution: inline` cuyo `skill:` nombra un archivo compartido — `knowledge-recall.md`, `platform-context.md` (declarado como el step `platform-analysis`), `decision-preservation.md`. El orquestador lee ese archivo y lo sigue en su propio contexto. No se inyecta nada en ningún lado y no se lanza ningún sub-agente.
 

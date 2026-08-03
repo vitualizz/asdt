@@ -26,7 +26,7 @@ El especialista QA no es elegible para complejidad trivial. En trivial vuelve a 
 
 ## Posición en el pipeline
 
-Típicamente corre **después del Developer** (lee `dev-implementation`) y es el sign-off final antes de que el código se mergee. Puede correr antes — contra el `backlog-entry` del PM o el `architectural-decision` del Arquitecto — para detectar problemas de calidad en los ACs antes de que empiece la implementación. Ese pase temprano ahorra mucho más tiempo que encontrar las brechas después de que el código está escrito.
+Típicamente corre **después del Developer** (lee `developer/handoff`) y es el sign-off final antes de mergear. Puede correr antes — contra `pm/handoff` o `architect/handoff` — para detectar problemas en los criterios de aceptación antes de que empiece la implementación. Ese pase temprano ahorra mucho más que encontrar las brechas con el código ya escrito. Toda entrada es opcional: sin ninguna, trabaja desde la petición y el código.
 
 ## Qué produce
 
@@ -43,7 +43,7 @@ Consumido por: **Developer** (para implementar la suite de tests), usado como ar
 
 ```
 /asdt-qa Validar criterios de aceptación antes de que empiece la implementación
-# → Correr QA sobre el backlog-entry del PM para detectar problemas de calidad en los ACs temprano
+# → Correr QA contra pm/handoff para detectar problemas en los ACs temprano
 ```
 
 ```

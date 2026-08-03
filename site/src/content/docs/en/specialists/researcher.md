@@ -1,61 +1,64 @@
 ---
 title: Researcher
-description: Explores fuzzy problems and opportunities through divergent ideation and feasibility scanning, converging on one recommended direction — the specialist to bring in before requirements exist, when you don't yet know what to build.
+description: Takes a fuzzy problem and returns ONE recommended direction with feasibility behind it — the specialist to bring in before requirements exist, when you don't yet know what to build.
 order: 26
 locale: en
 ---
 
 # Researcher (`/asdt-researcher`)
 
-> Explores fuzzy problems and opportunities through divergent ideation and feasibility scanning, converging on one recommended direction — the specialist to bring in before requirements exist, when you don't yet know what to build.
+> Takes a fuzzy problem and returns ONE recommended direction with feasibility behind it — the specialist to bring in before requirements exist, when you don't yet know what to build.
 
 ## What it does
 
-The Researcher Specialist diverges before PM converges. It takes a fuzzy problem or opportunity and runs a structured discovery sequence: frame the problem and generate deliberately divergent candidate directions, assess each one with a feasibility verdict grounded in evidence, then converge on a single recommended direction packaged as a `discovery-brief`.
+It diverges before PM converges, in a single step:
 
-Two properties keep the contract honest: ideation is **generative, never selective** — the ideation step produces candidates without ranking them, so promising-but-unusual directions survive long enough to be assessed. And the brief recommends exactly **one** direction with explicit rationale; candidates that didn't make the cut are recorded as won't-do entries that seed PM's out-of-scope list.
+1. **Frames the problem.** A fuzzy request usually hides two or three different problems. It names which one it is exploring and which ones it is deliberately setting aside.
+2. **Diverges.** Generates 3 to 5 genuinely different directions. Different means they fail for different reasons — three variations on one idea is one direction, not three.
+3. **Judges feasibility.** Green, yellow, or red per direction, each with **one line of evidence**: a file that already does something similar, a missing dependency, a constraint that rules it out. A verdict with nothing behind it isn't a verdict — it gets marked `ASSUMED:` and stays visible.
+4. **Converges.** Recommends exactly one direction and says why it beat the others. Every discarded one carries its reason: a rejected direction with no reason written down is the one that comes back next quarter.
 
-The Researcher is analyst-only — it never writes the filesystem. Its one job is to turn "we don't know what to build" into a feasibility-grounded recommendation that PM can treat as a well-formed raw request.
+## When to bring it in
 
-## When to invoke it
+- You don't know what to build yet, only what hurts
+- Several paths look plausible and you want the tradeoffs before committing
+- Someone already proposed a solution and you want to know whether it's the only one
 
-- The problem or opportunity is fuzzy ("we're losing users somewhere", "costs feel too high")
-- The direction is unclear — multiple plausible solutions exist and nobody has compared them
-- You need a feasibility-grounded recommendation **before** writing requirements
-- You're weighing build-vs-buy or approach-vs-approach trade-offs at the idea stage
+## How to invoke it
 
-## Pipeline position
+Plain language, no flags. If you want it to go deeper or lighter, say so in the request.
 
-The only **pre-PM** specialist in the pipeline — it runs before requirements exist. Its `discovery-brief` summary and recommended direction are rendered as prose and handed to `/asdt-pm` feature-intake as the raw request, so PM starts from an explored, feasibility-checked direction instead of a guess. Can run standalone when you only need structured exploration without proceeding to requirements.
+```
+/asdt-researcher "users drop out of onboarding and we don't know where"
+```
+
+```
+/asdt-researcher "we want semantic search — explore thoroughly before we commit"
+```
 
 ## What it produces
 
-**researcher/ideation** — the framed problem plus divergent candidate directions, unranked by design. **researcher/feasibility** — a green/yellow/red verdict per candidate with supporting evidence and effort estimates. **researcher/discovery-brief** — the converged recommendation: one direction, rationale, feasibility notes, and won't-do candidates.
+A single hand-off at `{project}/{change}/researcher/handoff`:
 
-Consumed by: **PM** (reads the discovery-brief as its raw request; `wont_candidates` seed the backlog-entry's out-of-scope list). At the trivial tier only the ideation artifact is produced.
+| Field | What it carries |
+|---|---|
+| `what` | The recommended direction in one sentence |
+| `decisions` | The recommendation first, then every discarded direction as `rejected: {direction} — {why}` |
+| `constraints` | What any implementation of that direction has to respect |
+| `files_hint` | The code it actually read while judging feasibility |
+| `risks` | `{risk, mitigation}` for the recommended direction |
+| `open_items` | Verdicts it couldn't ground in evidence, prefixed `ASSUMED:` |
 
-## Common patterns
+`decisions` is where the exploration survives: not just what it picked, but what it looked at and set down.
 
-```
-/asdt-researcher We're losing users during onboarding but don't know why
-# → Fuzzy problem, needs framing and candidate directions before requirements
-```
+Consumed by **PM** as an optional input: the recommended direction becomes its starting point, and the rejected ones seed its out-of-scope list.
 
-```
-/asdt-researcher Native mobile app or PWA for offline support?
-# → Competing directions, needs feasibility verdicts before committing
-```
+## Where it sits
 
-```
-/asdt-researcher Explore ways to cut our infra costs
-# → Open opportunity, needs divergent ideation before anyone picks a lane
-```
+The only **pre-requirements** specialist. It runs before PM and never replaces it: it recommends a direction, PM decides what gets built. It also works standalone, when structured exploration is all you want.
 
-## Limits — what it does NOT do
+## Boundaries
 
-- Does not write requirements or user stories (that's PM's job)
-- Does not write architecture decisions or ADRs
-- Does not write implementation code or tests
-- Never acts as a builder — analyst-only, never writes the filesystem
-- Never replaces PM — its brief feeds PM intake, it doesn't skip it
-- Ideation never ranks candidates — convergence happens only in the brief, which recommends exactly ONE direction
+- Doesn't write requirements, architecture, code, or tests
+- Never writes to the filesystem
+- Doesn't rank while diverging — ranking early throws away the option you hadn't finished thinking about

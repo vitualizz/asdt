@@ -307,7 +307,10 @@ Values below are the Phase 3 state, re-measured after Architect, Developer, and 
 
 Blocked on: Phase 5 fixing the final tier/router semantics. Until then the counts keep moving.
 
-### D2 — User-facing docs still describe the old artifacts
+### D2 — User-facing docs still describe the old artifacts — **CLOSED by the docs pass**
+
+All pages rewritten in both languages, plus the site's data layer (`specialist-steps.ts`, `artifact-graph.ts`), the components that render it, and the i18n step catalogue.
+
 
 Eleven files under `site/src/content/docs/`, in BOTH languages, still name `backlog-entry`, `nfr-targets`, `discovery-brief`, `ideation`, and the old multi-step chains:
 
@@ -319,7 +322,10 @@ en/specialists/{pm,qa,architect,researcher}.md
 
 `site/src/content/docs/{en,es}/specialists/pm.md` and `researcher.md` need the most work — they document the six-step and three-step chains as the product's behavior, not just the artifact names. Blocked on: the last specialist collapsing (Phase 3), so the pages are rewritten once against the final shape.
 
-### D3 — The authoring contract still teaches the old shape
+### D3 — The authoring contract still teaches the old shape — **CLOSED by the docs pass**
+
+`TEMPLATE.md` was already rewritten in Phase 5 and audited clean this pass; both READMEs now describe the hand-off contract instead of one-artifact-per-step.
+
 
 - **`skill/TEMPLATE.md`** — the normative contract for adding a specialist. Still prescribes one artifact per step (`:107`, `:139`), the `summary: ""` field read by decision-preservation (`:118`), `decision-preservation` as a standard inline step (`:205`), and a worked example built from a `discover → brief` chain with `researcher/discovery` / `researcher/feasibility-brief` keys (`:212`, `:213`, `:225`, `:235`). Every one of those is false under `protocol.md`.
 - **`skill/README.md`** — "one artifact per step" (`:15`, `:24`), and `decision-preservation` listed among the standard inline steps (`:54`).
@@ -409,6 +415,7 @@ An authoring guard that a `subagent` step declares either `output_topic_key` or 
 - **Phase 5 — done.** Router rewritten on judgment instead of keyword tables; both headers rewritten; `workflow.yaml` made the single machine-readable source; `TEMPLATE.md` rewritten for the new system. See §7.
 - **Go maintainer** — the checklist in §8, now seven items (§10 added two).
 - **Closing — done.** `--tier` removed system-wide; depth is judged, not flagged. Defect D-C closed. See §10.
+- **Docs pass — done.** Both READMEs, the site in both languages, and the site's data/components/i18n layer rewritten against the final system. D2 and D3 closed.
 - **Go pass — done.** §8 checklist executed; D1, D4, D6 closed. `go test ./...` green except one real skill-tree defect awaiting a decision. See §11.
 - **Post-refactor** — work the §9 backlog: the `site/` docs and the remaining red tests, alongside the §8 checklist.
 

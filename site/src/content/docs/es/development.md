@@ -104,7 +104,7 @@ skill/
   README.md         # panorama de la capa de skills
   embedded.go       # registro go:embed
   embedded_test.go  # tests de invariantes routed + embed
-  asdt-shared/      # fragmentos de skill compartidos
+  asdt-core/        # protocolo, headers y referencias opcionales
   asdt-architect/   # especialista Architect
   asdt-developer/   # especialista Developer
   asdt-pm/          # especialista Product Manager
