@@ -63,7 +63,8 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `developer/handoff` — the implementation hand-off, persisted at
-`{project}/{change}/developer/handoff`. Consumed by QA. It is the only artifact this
+`{project}/{change}/developer/handoff`, or `{project}/study/{topic}/developer` when the run
+examines existing code rather than changing it. Consumed by QA. It is the only artifact this
 specialist persists.
 
 ## Invariants

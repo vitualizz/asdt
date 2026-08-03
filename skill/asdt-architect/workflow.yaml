@@ -24,3 +24,15 @@ steps:
       - ../asdt-core/references/api-design.md
       - ../asdt-core/references/scope-definition.md
       - ../asdt-core/protocol.md
+
+  - name: review
+    skill: steps/review.md
+    description: Judge the architecture that already exists in an area — prioritized findings with evidence, not a design
+    execution: subagent
+    model: opus
+    agent: analyst
+    inputs: []
+    output_topic_key: "{project}/study/{topic}/architect"
+    reference_skills:
+      - ../asdt-core/references/api-design.md
+      - ../asdt-core/protocol.md

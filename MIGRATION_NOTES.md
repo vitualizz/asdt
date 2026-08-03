@@ -408,6 +408,49 @@ Deleting the sentence instead was considered and rejected. It is the ONLY consum
 
 An authoring guard that a `subagent` step declares either `output_topic_key` or `output: context` — never neither. Nothing enforces it today; the three `output: context` steps are correct, but a fourth added without either key would install silently.
 
+## 13. Extension — standalone specialists
+
+Every specialist already worked on a change. This extension makes the same specialist work on what already exists — an audit, a review, an assessment — through the SAME mechanism, with no new skill, no flag, and no mode.
+
+**The intent is judged, not declared.** A run that DELIVERS a change persists at `{project}/{change}/{role}/handoff`; a run that EXAMINES what exists persists at `{project}/study/{topic}/{role}`, with `{topic}` derived from the request in short kebab-case. The specialist reads which one this is off the phrasing, exactly as it reads depth. It never asks, and genuine ambiguity means a change. Same schema, same load rules, same degradation — in a study, `decisions[]` carries the judgments and `risks[]` what was found.
+
+This is the one thing that changes. Resisting the urge to formalize it into a mode is the whole point: the tier flag was removed for being a formalization of something judgment already handled, and a `--study` flag would be the same disease wearing a new name.
+
+**A study is organizational memory.** No pipeline declares a study key as an input; later runs meet it through the `knowledge-recall` prelude, which now covers the `{project}/study/` namespace explicitly.
+
+### The router gained a third answer
+
+It answered two things before: a chain, or a single specialist. Now, when the question is about the STATE of the work — "how are we doing on X?", "what did we decide about Y?" — it answers that itself: one `mem_search` over the change or study namespace plus the journal, read the hand-offs, narrate in prose. Inline, no sub-agents, nothing persisted. Its first invariant softened from "recommend, never execute" to "recommend or report, never execute — reading memory to answer a status question is the one thing it does itself."
+
+### Every run now closes with a human report
+
+Added to the header's `## Narration`: a run ends by presenting its findings to the user as short prose — what was found, what was decided, what stayed `ASSUMED:`. The persisted hand-off is the record for the team; the narrated report is the answer to the person, and **it is never persisted**. There is no report artifact, and the moment one appears the system has regressed to the shape this refactor spent five phases removing.
+
+When a run closes on a negative verdict or a high risk, the report's last line proposes the next invocation as a copyable sentence. A sentence, not a mechanism.
+
+### One new step: `architect/review`
+
+The Architect is the one specialist whose study shape genuinely differs from its change shape — judging an existing architecture is not designing one, and forcing both through `design` would have produced a design nobody asked for. `steps/review.md` maps what exists, judges it against coupling/boundaries, scalability, and one-way doors already crossed, and returns at most 7 prioritized findings with evidence — plus 2–3 strengths, because a review that lists only defects miscalibrates the reader.
+
+Its SKILL.md now judges between its two steps the way the Developer judges its chain: "design a change" → `design`, "judge what exists" → `review`, ambiguous → `design`.
+
+Every other specialist covers the study intent through its existing step and its optional-input degradation. None gained a step, and none needed one.
+
+### Files touched
+
+`asdt-core/protocol.md` §1, `asdt-core/specialist-header.md` (new `## Intent`, expanded `## Narration`), `asdt-core/references/knowledge-recall.md`, `skill/SKILL.md` (Role, new `## Status questions`, Invariants, a Registry footnote), `asdt-architect/{SKILL.md,workflow.yaml,steps/review.md}`, `skill/TEMPLATE.md` (two authoring norms), and a one-line generalization of `## Final Output` in the six other specialists, whose prose stated the change key as the only possibility.
+
+### Two new authoring norms
+
+- **Four steps maximum** per specialist. A fifth means the design is wrong: merge two, or split the specialist. Current maximum is 3 (Developer).
+- **Every specialist works standalone.** No cross-specialist input may be mandatory.
+
+### Go side
+
+One step added, absorbed with one number: `analystCount` 9 → **10** in `workflow_agents_test.go`, verified by counting the workflow.yaml files rather than trusting the delta. `TestRegistryDrift` derived the new step on its own. `TestOptionalMarkerReadsRawSourceLine` did not move — `review` declares `inputs: []`, so it contributes no optional markers.
+
+13 subagent steps total: architect 2, developer 3, security 2, init 2, and one each for pm, qa, researcher, ux-ui. `go build`, `go vet`, `go test ./...` all green.
+
 ## 12. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
@@ -417,6 +460,7 @@ An authoring guard that a `subagent` step declares either `output_topic_key` or 
 - **Phase 5 — done.** Router rewritten on judgment instead of keyword tables; both headers rewritten; `workflow.yaml` made the single machine-readable source; `TEMPLATE.md` rewritten for the new system. See §7.
 - **Go maintainer** — the checklist in §8, now seven items (§10 added two).
 - **Closing — done.** `--tier` removed system-wide; depth is judged, not flagged. Defect D-C closed. See §10.
+- **Standalone specialists — done.** Study namespace judged from the phrasing, router answers status questions, `architect/review` added. See §13.
 - **Docs pass — done.** Both READMEs, the site in both languages, and the site's data/components/i18n layer rewritten against the final system. D2 and D3 closed.
 - **Go pass — done.** §8 checklist executed; D1, D4, D6 closed. `go test ./...` green except one real skill-tree defect awaiting a decision. See §11.
 - **Post-refactor** — work the §9 backlog: the `site/` docs and the remaining red tests, alongside the §8 checklist.

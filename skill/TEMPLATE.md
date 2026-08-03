@@ -67,6 +67,10 @@ steps:
 
 A step whose payload feeds the NEXT step of the same run declares `output: context` instead of `output_topic_key`. It persists nothing; the orchestrator retains the payload and injects it into the next step. Only the last step of a specialist persists.
 
+**Ceiling: four steps.** A specialist declares AT MOST four steps in its `workflow.yaml`. Needing a fifth means the design is wrong — merge two, or split the specialist.
+
+**Every specialist works standalone.** No specialist may require another's hand-off: every cross-specialist input is optional and degrades. Whether a run delivers a change or studies what already exists is judged from the invocation per `asdt-core/protocol.md` §1, never from a flag or a mode.
+
 Paths in `skill:` and `reference_skills:` resolve from the specialist's own directory.
 
 ## 4. Step file

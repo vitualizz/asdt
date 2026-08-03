@@ -58,7 +58,8 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `security/handoff` — findings and hardening checklist as sections of ONE artifact, persisted
-at `{project}/{change}/security/handoff`. Consumed by Developer and Architect.
+at `{project}/{change}/security/handoff`, or `{project}/study/{topic}/security` when the run
+audits what already exists. Consumed by Developer and Architect.
 
 ## Invariants
 - **Write scope**: this specialist writes NO files. Its output is `security/handoff` via `mem_save` — never `.asdt/artifacts/`, never the host source tree, never any local path

@@ -45,7 +45,7 @@ run.
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
-`pm/handoff` — the requirements hand-off, persisted at `{project}/{change}/pm/handoff`.
+`pm/handoff` — the requirements hand-off, persisted at `{project}/{change}/pm/handoff`. In a study — when the run examines what already exists rather than delivering a change — the same hand-off is persisted at `{project}/study/{topic}/pm` instead, per `asdt-core/protocol.md` §1.
 Consumed by Architect, Developer (acceptance criteria), and QA (primary requirements
 source). It is the only artifact this specialist persists.
 

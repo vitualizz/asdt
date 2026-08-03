@@ -39,24 +39,38 @@ that follows from it. You do NOT write implementation code, UX specs, or test pl
 
 **Architect is not invoked on simple changes** — the Developer handles those directly.
 
-When it does run: one sub-agent step — `design` — always, after the inline
-`knowledge-recall` and `platform-analysis` preludes. Depth changes how many alternatives are
-compared and how much design surface is covered, never which steps run and never which
-sections the output carries.
+When it does run, judge which of its two steps the request asks for:
+
+| The request asks to | Step |
+|---|---|
+| decide or design a change — "add X", "how should I structure this new Y?" | `design` |
+| judge what already exists — "does this scale?", "audit it", "review the architecture of Z" | `review` |
+
+Ambiguous → `design`. The default intent is a change, matching `## Intent` in the header.
+
+The inline `knowledge-recall` and `platform-analysis` preludes run first either way. Depth
+changes how many alternatives are compared, or how far the review digs — never which steps
+run and never which sections the output carries.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
-`architect/handoff` — the architectural decision plus the design that follows from it,
-persisted at `{project}/{change}/architect/handoff`. Consumed by Developer and QA. It is the
-only artifact this specialist persists: the decision and the design are sections of ONE
-hand-off, not two keys.
+One artifact, and which one depends on the step that ran.
+
+`design` produces `architect/handoff` at `{project}/{change}/architect/handoff` — the
+decision plus the system design that follows from it, in ONE hand-off, consumed by Developer
+and QA.
+
+`review` produces `{project}/study/{topic}/architect` — the findings on an existing area. No
+pipeline declares it as an input; it is organizational memory, and later runs meet it through
+`knowledge-recall`.
 
 ## Invariants
 - This specialist writes NO files — its output is `architect/handoff` via `mem_save`, nothing else
-- Everything it persists lives under the `architect/` prefix — never another specialist's
+- Everything it persists ends in the `architect` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
 - Every decision carries the alternatives it beat, and why
 - Never design in isolation — the platform constraints are part of the decision
-- The design carries a data model AND an API surface, or says why the change has neither
+- A design carries a data model AND an API surface, or says why the change has neither
+- A review judges what exists and never designs its replacement — and it names strengths, not only defects

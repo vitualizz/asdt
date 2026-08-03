@@ -97,11 +97,11 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 	}
 
 	// Counts over the 7 routed specialists (asdt-init is excluded above).
-	// Re-measured against the final tree after the refactor collapsed every
-	// specialist to its hand-off shape: 41 subagent steps became 12, of which
-	// 10 are routed (2 belong to asdt-init).
-	if analystCount != 9 {
-		t.Errorf("analyst subagent steps = %d, want 9", analystCount)
+	// 13 subagent steps across the tree, 11 of them routed: architect 2
+	// (design + review), developer 3, security 2, and one each for pm, qa,
+	// researcher and ux-ui. One of the routed 11 is a builder, leaving 10.
+	if analystCount != 10 {
+		t.Errorf("analyst subagent steps = %d, want 10", analystCount)
 	}
 	if builderCount != 1 {
 		t.Errorf("builder subagent steps = %d, want 1 (got %v)", builderCount, builderSteps)

@@ -6,6 +6,10 @@ The one shared skill every run loads. It defines what gets persisted, how inputs
 
 **Persist hand-offs only.** One key per role per change: `{project}/{change}/{role}/handoff`. Written with `mem_save`, title `"{change}/{role}/handoff"`, type `"decision"`. Everything a run produces on the way there — exploration, drafts, intermediate analysis — lives in the orchestrator's context and dies with the run. If it does not cross a specialist boundary, it is not saved.
 
+**Two intents, one contract.** When the run DELIVERS a change, the key is `{project}/{change}/{role}/handoff`. When it EXAMINES what already exists — an audit, a review, an assessment with nothing to deliver — the key is `{project}/study/{topic}/{role}`, where `{topic}` is derived from the request in short, stable kebab-case ("audit the payments module" → `payments-module`). The specialist judges which one this is from the invocation; it never asks the user to pick, and genuine ambiguity means a change.
+
+Everything else is identical: same schema, same load rules, same degradation. In a study, `decisions[]` carries the judgments and `risks[]` what was found — the schema does not grow a study variant. A past study is organizational memory: later runs meet it through the `knowledge-recall` prelude, never as a declared input.
+
 A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING: its payload stays in the orchestrator's context and is injected into the next step as an `### INPUT {step-name}` block. A step may declare `context_inputs:` — payloads of earlier `output: context` steps that the orchestrator injects as `### INPUT {name}` blocks.
 
 **Load at start.** ONE `mem_search("{project}/{change}")` to list what exists, then `mem_get_observation(id)` for the `*/handoff` records this specialist declares it consumes — nothing else. Budget: 2–3 MCP calls per run.

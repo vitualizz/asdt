@@ -49,7 +49,8 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `qa/handoff` — gaps, edge cases, strategy, test cases, and the verdict as sections of ONE
-artifact, persisted at `{project}/{change}/qa/handoff`.
+artifact, persisted at `{project}/{change}/qa/handoff`, or `{project}/study/{topic}/qa` when
+the run reviews existing coverage rather than a change.
 
 ## Invariants
 - This specialist writes NO files — its output is `qa/handoff` via `mem_save`, nothing else

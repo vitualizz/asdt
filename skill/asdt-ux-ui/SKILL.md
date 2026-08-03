@@ -46,7 +46,8 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `ux-ui/handoff` — brief, IA, flows, component mapping, and accessibility as sections of ONE
-artifact, persisted at `{project}/{change}/ux-ui/handoff`. Consumed by Architect and Developer.
+artifact, persisted at `{project}/{change}/ux-ui/handoff`, or `{project}/study/{topic}/ux-ui`
+when the run reviews an existing surface. Consumed by Architect and Developer.
 
 ## Invariants
 - This specialist writes NO files — its output is `ux-ui/handoff` via `mem_save`, nothing else

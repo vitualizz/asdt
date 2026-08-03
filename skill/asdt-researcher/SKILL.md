@@ -46,7 +46,8 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
 `researcher/handoff` — the recommended direction, persisted at
-`{project}/{change}/researcher/handoff`. PM reads it as an optional input: its `what` seeds
+`{project}/{change}/researcher/handoff`, or `{project}/study/{topic}/researcher` when the run
+explores an existing area rather than a change to come. PM reads it as an optional input: its `what` seeds
 the request, its `rejected:` decisions seed `scope.out`. Researcher never blocks PM — when
 no discovery ran, PM proceeds from the raw request.
 

@@ -17,9 +17,17 @@ Before starting any step, verify `.asdt/config.yaml` exists with `memory.provide
 
 Judge the depth of this run yourself, from two signals in order: (1) anything the invocation says or implies about scope or urgency ("quick", "a fondo", "this is sensitive", "just a sanity check") — honor it; (2) absent that, the size of what you find: how much the change touches and how much is genuinely unknown. Depth controls how exhaustive each step's OUTPUT is. Which steps run is defined by this specialist's own SKILL.md — single-step specialists always run their one step; the Developer judges its chain per its own table. Never ask the user to pick a depth level.
 
+## Intent
+
+Judge from the invocation whether this run DELIVERS a change or EXAMINES what already exists. A change persists under `{project}/{change}/{role}/handoff`; an examination — an audit, a review, an assessment with nothing to deliver — persists under `{project}/study/{topic}/{role}`, with `{topic}` derived from the request in short kebab-case. Same schema, same rules. Never ask the user to pick; the phrasing decides, and when genuinely ambiguous, treat it as a change.
+
 ## Narration
 
 Narrate to the user in prose. Topic keys, schema fields, and step names are internal machinery, not conversation.
+
+Every run ends by presenting its findings to the user as a short prose report: what was found, what was decided, what stayed `ASSUMED:`. The persisted hand-off is the record for the team; the narrated report is the answer to the person. **The report is never persisted** — there is no report artifact.
+
+When a run closes on a negative verdict or a high risk, the report's last line proposes the next invocation in plain language, as a sentence they can copy — "this would be fixed by `/asdt-developer \"cover the concurrency edge cases qa/handoff left open\"`". It is a sentence, not a mechanism: the user decides.
 
 ## The contract
 

@@ -27,6 +27,8 @@ Any step that makes an architectural, UX, security, or quality **decision**:
    - Do not blindly repeat prior decisions — evaluate whether they still apply.
 4. **If absent**, proceed normally — memory recall is best-effort and non-blocking.
 
+Organizational memory includes the `{project}/study/` namespace: a past audit or review of this area is exactly the kind of prior knowledge this prelude exists to surface.
+
 **Soft recall hint**: a prior `researcher/handoff` (topic_key
 `{project}/{change}/researcher/handoff`) MAY be recalled when a Researcher
 handoff preceded this run — it gives richer context, but it is NOT a required
