@@ -1,6 +1,8 @@
 # ASDT Refactor — Migration Notes
 
-Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. **Phase 1 is complete: it added the new core and changed nothing else.**
+Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. Phases 1 and 2 are complete — see §6 for status.
+
+**Anything a phase defers goes to §5, not into a partial fix.** That backlog is worked in one pass after Phase 5.
 
 ## 1. `skill/asdt-core/` is the new core; `skill/asdt-shared/` is deprecated but intact
 
@@ -23,7 +25,7 @@ Working document for the 5-phase refactor that replaces the current 12 shared sk
 - `accessibility.md` ← `asdt-ux-ui/skills/accessibility.md`
 - `conventions.md` ← `asdt-developer/skills/{code-generation,test-generation}.md`
 
-**Phase 1 deleted and edited nothing.** The originals remain the live path until Phase 4 purges them; the two trees coexist and `asdt-shared/` stays authoritative for anything still pointing at it. (Phase 2 has since collapsed PM and Researcher — see §5.)
+**Phase 1 deleted and edited nothing.** The originals remain the live path until Phase 4 purges them; the two trees coexist and `asdt-shared/` stays authoritative for anything still pointing at it. (Phase 2 has since collapsed PM and Researcher — see §4.)
 
 Note on `go:embed`: `skill/embedded.go` embeds `SKILL.md asdt-*`, so `asdt-core/` ships automatically, and `installer.SiblingDestName` maps top-level entries verbatim, so it installs to `{SkillsDir}/asdt-core/` with no Go change. Two consequences worth knowing: a file added under `asdt-core/` whose name starts with `_` or `.` will silently NOT ship (that exclusion is what `TestEmbeddedSharedSkillsMatchDisk` guards for the shared tree), and `asdt-core/` has no `workflow.yaml`, so every registry walk skips it exactly as it skips `asdt-shared/`.
 
@@ -60,7 +62,7 @@ The Go code is untouched by Phase 1 and `make test` stays green. These are the p
 
 **`internal/installer/workflow_models.go`** walks `*/workflow.yaml` the same way and skips directories without one; step renames flow through it without edits.
 
-## 5. Phase 2 — PM and Researcher collapsed
+## 4. Phase 2 — PM and Researcher collapsed
 
 PM went from 6 sub-agent steps to 1, Researcher from 3 to 1, and both now persist a single hand-off. Nine step files were deleted and two created:
 
@@ -102,15 +104,68 @@ Two NFR consumers now read a FIELD rather than a dedicated artifact: `architect/
 
 The `Tailored Workflow Generation` per-specialist table in `skill/SKILL.md` had its PM and Researcher **step-name cells** refreshed (`feature-intake` → `backlog`, `divergent-ideation` → `discovery`) so no row names a step that no longer exists. The **trivial-eligible verdict prose** in those two rows was left conservative and still needs the Phase 5 router pass — with one step at every tier, "trivial eligible" no longer means what it meant when the tier bought a shorter chain.
 
-Deliberately NOT renamed in this phase, and still carrying old key names:
+Everything this phase deliberately left untouched is recorded in §5, not fixed inline.
 
-- **`site/src/content/docs/{en,es}/specialists/*.md`** — the user-facing docs still describe `backlog-entry`, `nfr-targets`, `discovery-brief`, and the old step chains, in both languages. A docs rewrite belongs with the Phase 5 user-facing pass; doing it now means doing it twice, since Phases 3–4 change the same pages again.
-- **`internal/installer/workflow_models_test.go` and `internal/setup/model_test.go`** — these use `pm/feature-intake` / `pm/backlog-entry` as SYNTHETIC inline YAML fixtures, not as references to the shipped skill tree. They pass as-is. `model_test.go` additionally pins `feature-intake` to a model-tier classification, so renaming the fixture could change what the test asserts — leave both to the maintainer.
+## 5. Deferred — the post-refactor backlog
 
-## 4. Phase status
+**Standing rule for this refactor: anything a phase leaves behind gets an entry here instead of a partial fix.** These items are settled AFTER Phase 5, in one pass, for one reason — every one of them tracks a structure that phases 3–5 are still moving. Fixing them per phase means fixing them three times and reviewing churn that says nothing about whether the refactor is correct.
+
+Each entry states what it is, exactly where, and what has to be true before it can be closed.
+
+### D1 — Four red tests in `internal/installer`
+
+Red since Phase 2. Two are pure constants; two need a design call.
+
+| Test | Assertion | Closing move |
+|---|---|---|
+| `TestWorkflowSubagentStepsDeclareKnownAgentTypes` | `analystCount` = 40 (actual 33 after Phase 2) | Recount once, at the end. Every phase changes this number, so any value set before Phase 5 is wrong by the next commit. `builderCount` = 2 is stable. |
+| `TestOptionalMarkerReadsRawSourceLine` | `asdt-pm` markers = 3, tree total = 18 (actual 1 and 16) | Same — recount at the end. |
+| `TestOrchestrationPlanCellClassification` | `wantRowCount` = 4 tier rows per specialist, `totalRows` = 27 | Needs a decision, not a number: a collapsed specialist has ONE step at every tier and therefore no 4-row tier table. Decide whether single-step specialists are exempt from the parse or declare a degenerate table, then teach `parseOrchestrationPlan` that shape. |
+| `TestCollapseOnlyRunsAfterInsertion` | expects a `researcher/complex` tier row | Same root cause as the row above; closes with it. |
+
+Blocked on: Phase 5 fixing the final tier/router semantics. Until then the counts keep moving.
+
+### D2 — User-facing docs still describe the old artifacts
+
+Eleven files under `site/src/content/docs/`, in BOTH languages, still name `backlog-entry`, `nfr-targets`, `discovery-brief`, `ideation`, and the old multi-step chains:
+
+```
+en/commands.mdx            es/tutorial.mdx
+en/tutorial.mdx            es/specialists/{pm,qa,architect,researcher}.md
+en/specialists/{pm,qa,architect,researcher}.md
+```
+
+`site/src/content/docs/{en,es}/specialists/pm.md` and `researcher.md` need the most work — they document the six-step and three-step chains as the product's behavior, not just the artifact names. Blocked on: the last specialist collapsing (Phase 3), so the pages are rewritten once against the final shape.
+
+### D3 — The authoring contract still teaches the old shape
+
+- **`skill/TEMPLATE.md`** — the normative contract for adding a specialist. Still prescribes one artifact per step (`:107`, `:139`), the `summary: ""` field read by decision-preservation (`:118`), `decision-preservation` as a standard inline step (`:205`), and a worked example built from a `discover → brief` chain with `researcher/discovery` / `researcher/feasibility-brief` keys (`:212`, `:213`, `:225`, `:235`). Every one of those is false under `protocol.md`.
+- **`skill/README.md`** — "one artifact per step" (`:15`, `:24`), and `decision-preservation` listed among the standard inline steps (`:54`).
+- **`README.md`** (repo root) — the architecture diagram and `:81` describe "one artifact per step" saved to Engram, which is exactly the behavior this refactor removes.
+
+Blocked on: nothing structural — but rewriting the authoring contract before the last specialist is collapsed would document a shape that is still moving. This is the highest-value item in the list: TEMPLATE.md is what the next contributor copies.
+
+### D4 — Go test fixtures naming dead artifacts
+
+`internal/installer/workflow_models_test.go` (21 hits) and `internal/setup/model_test.go` (9 hits) use `pm/feature-intake` and `pm/backlog-entry` as SYNTHETIC inline YAML fixtures. They are not references to the shipped tree, and they pass as-is — this is naming hygiene, not a defect.
+
+One caveat when it is picked up: `model_test.go` pins `feature-intake` to a model-tier classification (`:478`, `:528`), so renaming the fixture can change what the test asserts, not just what it reads. Rename fixture and expectation together.
+
+### D5 — Router prose left conservative on purpose
+
+In `skill/SKILL.md`, the `Tailored Workflow Generation` per-specialist table had its PM and Researcher step-name cells refreshed in Phase 2, but the **trivial-eligible verdict prose** in those two rows was not re-reasoned. With one step at every tier, "trivial eligible" no longer means what it meant when a lower tier bought a shorter chain. Closes with the Phase 5 router pass, which owns that column's semantics.
+
+### D6 — `asdt-shared/` still live
+
+Five specialists (`architect`, `developer`, `qa`, `security`, `ux-ui`) still declare the inline `decision-preservation` step in their `workflow.yaml`, and the shared fragments remain wired into the installer. Phase 3 removes the step declarations, Phase 4 purges the directory and repoints the Go references listed in §3 — this entry exists so the dependency is visible from the backlog, not to schedule work outside those phases.
+
+## 6. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
 - **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §5.
 - **Phase 3** — the same collapse for Architect, Developer, QA, Security, UX/UI.
 - **Phase 4** — purge `asdt-shared/` and the superseded specialist skill files; repoint the Go references listed above.
-- **Phase 5** — router pass over the root `SKILL.md`, the registry mirrors, the four red tests above, and the `site/` docs.
+- **Phase 5** — router pass over the root `SKILL.md` and the registry mirrors.
+- **Post-refactor** — work the §5 backlog in one pass: the red tests, the `site/` docs, and the authoring contract (`TEMPLATE.md`, the READMEs).
+
+Each phase appends what it defers to §5 rather than fixing it partially.
