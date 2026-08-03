@@ -23,7 +23,7 @@ Any step that produces a **final decision artifact**:
 2. **Extract Why**: the driving constraint, user request, or force that made this
    decision necessary.
 3. **Extract Where**: the change ID and the Engram topic_key for the primary artifact
-   (e.g. `topic_key: "{project}/{change}/architect/architectural-decision"`).
+   (e.g. `topic_key: "{project}/{change}/architect/handoff"`).
 4. **Extract Learned** (optional): a gotcha, rejected alternative, or edge case
    worth remembering for future changes.
 5. **Shape as Entry**:

@@ -6,6 +6,8 @@ The one shared skill every run loads. It defines what gets persisted, how inputs
 
 **Persist hand-offs only.** One key per role per change: `{project}/{change}/{role}/handoff`. Written with `mem_save`, title `"{change}/{role}/handoff"`, type `"decision"`. Everything a run produces on the way there — exploration, drafts, intermediate analysis — lives in the orchestrator's context and dies with the run. If it does not cross a specialist boundary, it is not saved.
 
+A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING: its payload stays in the orchestrator's context and is injected into the next step as an `### INPUT {step-name}` block.
+
 **Load at start.** ONE `mem_search("{project}/{change}")` to list what exists, then `mem_get_observation(id)` for the `*/handoff` records this specialist declares it consumes — nothing else. Budget: 2–3 MCP calls per run.
 
 **Organizational memory.** When a run closes, and only if it made a decision that is not obvious from the code, append ONE line to topic_key `{project}/journal`:

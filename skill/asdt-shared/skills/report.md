@@ -33,15 +33,15 @@ If a list has more than 5 items, keep the 5 most important and note "… N more"
 
 Example:
 - Question: "What are the implementation steps I need to test?"
-- Artifact: `developer/dev-tasks` (contains 20+ fields)
-- Extracted: tasks[].id, tasks[].title only — discard estimates, rationale, files.
+- Artifact: `developer/handoff` (contains 20+ fields)
+- Extracted: files_changed[].path and its rationale only — discard the rest.
 
 ## Output
 Produces the specialist's final cross-specialist artifact(s) — e.g.:
 - UX/UI → `ux-brief` + `component-spec`
-- Architect → `architectural-decision` + `system-design-final` (a DISTINCT key from the intermediate `architect/system-design` written earlier in that chain)
+- Architect → `architect/handoff`
 - QA → `qa-review` is QA's final artifact; this skill's consolidation step (`quality-report`) produces the `test-plan` it is derived from
-- Security → `security-findings` + `hardening-checklist`
+- Security → `security/handoff`
 - PM → `pm/handoff`
 
 ## Quality gate

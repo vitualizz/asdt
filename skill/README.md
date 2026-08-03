@@ -66,9 +66,9 @@ Every artifact is stored in Engram under a structured key:
 {project}/{change}/specialist/artifact-type
 
 Examples:
-  myapp/add-auth/architect/constraints-analysis
-  myapp/add-auth/architect/adr
-  myapp/add-auth/developer/dev-spec
+  myapp/add-auth/architect/handoff
+  myapp/add-auth/developer/handoff
+  myapp/add-auth/security/handoff
 ```
 
 This naming lets the next specialist retrieve a specific artifact unambiguously via a single `mem_search` call.

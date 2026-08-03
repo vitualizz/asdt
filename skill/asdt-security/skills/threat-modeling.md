@@ -116,7 +116,7 @@ Goal: Bypass authentication
     └── No rate limiting on /login
 ```
 
-Document the highest-risk paths in the `threats[]` array of the `security/stride-threats` payload.
+Document the highest-risk paths in the `threats[]` array of the assessment payload.
 
 ## Data Flow Diagrams (Text-Based)
 

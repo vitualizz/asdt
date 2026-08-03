@@ -38,14 +38,15 @@ The canonical requirements hand-off for a change.
 | `risks` | `payload.risks[]` | Surface the ones that affect your own work |
 | `open_items` | `payload.open_items[]` | Carry unresolved `ASSUMED:` entries forward into your own `open_items[]` |
 
-### `architect/system-design` (from the Architect specialist)
+### `architect/handoff` (from the Architect specialist)
 
 | Field | Where to find it | What to do with it |
 |---|---|---|
-| `decisions` | `payload.decisions[]` | Treat as architectural constraints; do not contradict them |
-| `components` | `payload.components[]` | Map plan entries to declared components |
-| `api_contracts` | `payload.api_contracts[]` | Produce work that satisfies the declared API surface |
-| `risk_items` | `payload.risk_items[]` | Surface as `open_items[]` entries when they affect the plan |
+| `decisions` | `payload.decisions[]` | The chosen approach and its rejected alternatives — treat as constraints, do not contradict them |
+| `data_model` | `payload.data_model[]` | Entities and fields the work must match |
+| `api_surface` | `payload.api_surface[]` | Produce work that satisfies the declared signatures |
+| `constraints` | `payload.constraints[]` | What the implementation must respect, including migration phases |
+| `risks` | `payload.risks[]` | Surface as `open_items[]` entries when they affect the plan |
 
 ### `ux-ui/ux-brief` (from the UX/UI specialist)
 
@@ -65,7 +66,7 @@ When an expected artifact is not found, do NOT stop or error. Follow this protoc
    ```yaml
    open_items:
      - "pm/handoff absent — proceeding with inferred scope from feature description"
-     - "architect/system-design absent — no architectural constraints applied; flag complex decisions as open_items"
+     - "architect/handoff absent — no architectural constraints applied; flag complex decisions as open_items"
    ```
 
 2. Continue with whatever context is available (`.asdt/knowledge/knowledge.yaml`, visible code, the feature description provided at invocation).
@@ -87,11 +88,11 @@ Loaded:
   - knowledge.yaml: stack={stack}, conventions={summary}
 
 Missing:
-  - architect/system-design
+  - architect/handoff
   - ux-ui/ux-brief
 
 open_items to carry forward:
-  - "architect/system-design absent — ..."
+  - "architect/handoff absent — ..."
   - "ux-ui/ux-brief absent — ..."
 ```
 

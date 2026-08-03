@@ -1,8 +1,8 @@
 # ASDT Refactor — Migration Notes
 
-Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. Phases 1 and 2 are complete — see §6 for status.
+Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. Phases 1, 2, and 3 are complete — see §7 for status.
 
-**Anything a phase defers goes to §5, not into a partial fix.** That backlog is worked in one pass after Phase 5.
+**Anything a phase defers goes to §6, not into a partial fix.** That backlog is worked in one pass after Phase 5.
 
 ## 1. `skill/asdt-core/` is the new core; `skill/asdt-shared/` is deprecated but intact
 
@@ -104,9 +104,63 @@ Two NFR consumers now read a FIELD rather than a dedicated artifact: `architect/
 
 The `Tailored Workflow Generation` per-specialist table in `skill/SKILL.md` had its PM and Researcher **step-name cells** refreshed (`feature-intake` → `backlog`, `divergent-ideation` → `discovery`) so no row names a step that no longer exists. The **trivial-eligible verdict prose** in those two rows was left conservative and still needs the Phase 5 router pass — with one step at every tier, "trivial eligible" no longer means what it meant when the tier bought a shorter chain.
 
-Everything this phase deliberately left untouched is recorded in §5, not fixed inline.
+Everything this phase deliberately left untouched is recorded in §6, not fixed inline.
 
-## 5. Deferred — the post-refactor backlog
+## 5. Phase 3 — Architect, Developer, and Security collapsed
+
+Architect went 7 sub-agent steps → 1, Developer 6 → 3, Security 4 → 2. Fourteen step files deleted, five written.
+
+| Specialist | Deleted steps | New steps |
+|---|---|---|
+| Architect | `load-constraints`, `evaluate-approaches`, `decision-record`, `system-design`, `cost-estimation`, `risk-analysis`, `technical-handoff` | `steps/design.md` |
+| Developer | `design`, `tasks`, `test` | `steps/explore.md` (kept), `steps/spec.md` (absorbed `design`), `steps/implement.md` (absorbed `test`) |
+| Security | `threat-modeling`, `attack-surface`, `owasp-analysis`, `hardening-checklist` | `steps/assess.md`, `steps/harden.md` |
+
+All three dropped the inline `decision-preservation` step. Both dual-artifact steps are gone with it — Architect's `architectural-decision` + `system-design-final` and Security's `security-findings` + `hardening-checklist` are now sections of ONE hand-off each, and the workaround comments that explained the second `output_topic_key` were deleted along with them.
+
+Two orderings were corrected rather than carried over. Security's chain ran STRIDE *before* mapping the attack surface; `assess.md` maps the surface first, runs STRIDE over it, then cross-checks only the applicable OWASP categories. Developer's tier table gated the technical design behind `moderate`, so a `simple` change got no design at all; `spec.md` now judges the needed depth itself.
+
+### New in this phase: `output: context`
+
+A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING. Its payload stays in the orchestrator's context and is injected into the next step as an `### INPUT {step-name}` block. Documented in one line in `asdt-core/protocol.md` §1.
+
+Three steps use it: `developer/explore`, `developer/spec`, and `security/assess`. Their SKILL.md files carry the matching orchestrator instruction, because retaining and injecting those payloads is the orchestrator's job, not the sub-agent's.
+
+### Keys renamed
+
+| Old topic_key | New topic_key | Where the content went |
+|---|---|---|
+| `architect/constraints-analysis` | *(gone)* | intermediate — folded into `design`, step 1 |
+| `architect/approaches` | `architect/handoff` | `decisions[]` as `rejected: {approach} — {why}` |
+| `architect/adr` | `architect/handoff` | the decision IS the hand-off — no separate ADR artifact |
+| `architect/system-design` | `architect/handoff` | `data_model[]` + `api_surface[]` |
+| `architect/cost-estimate` | *(gone)* | the step is gone; NFR budgets stay in `pm/handoff.constraints` |
+| `architect/risks` | `architect/handoff` | `risks[]` |
+| `architect/architectural-decision` | `architect/handoff` | the canonical hand-off itself |
+| `architect/system-design-final` | `architect/handoff` | merged — the dual-artifact split is gone |
+| `developer/dev-exploration` | *(context)* | `output: context`, injected into `spec` |
+| `developer/dev-spec` | *(context)* | `output: context`, injected into `implement` |
+| `developer/dev-design` | *(gone)* | absorbed into `spec.md` step 4 |
+| `developer/dev-tasks` | *(gone)* | S/M/L estimates and the dependency graph dropped — no consumer used them |
+| `developer/dev-implementation` | `developer/handoff` | the canonical hand-off itself |
+| `developer/dev-tests` | `developer/handoff` | tests are written inside `implement`, same mode and roots |
+| `security/stride-threats` | *(context)* | `assess` output, injected into `harden` |
+| `security/attack-surface` | *(context)* | same |
+| `security/owasp-findings` | *(context)* | same |
+| `security/security-findings` | `security/handoff` | `risks[]` with one-word severity |
+| `security/hardening-checklist` | `security/handoff` | `constraints[]` — a section, not a second key |
+
+Also dropped: the structured `traceability_report[]` (now one `AC not covered: {text}` line in `open_items` per uncovered AC), CVSS-lite severity (now one word: `high`/`medium`/`low`), and every numeric context budget in the rewritten steps.
+
+Consumers updated: `asdt-qa/steps/load-requirements.md`, `asdt-shared/skills/{artifact-loading,report,decision-preservation}.md`, `skill/README.md`, and `skill/SKILL.md` (dependency list, the Architect trivial-step cell, and the generated inline-steps region). QA and UX/UI were touched ONLY on those lines — their own collapse is Phase 4.
+
+**`implement`'s write-scope semantics are unchanged.** Mode resolution (plan-only vs writing), `allowedEditRoots`, STOP-on-out-of-scope, and the `.asdt/`-only rule for ASDT's own state survive verbatim in substance. The only change is where the roots come from: `dev-spec.files_to_create` + `files_to_modify` instead of `dev-tasks`/`dev-design`. "Writes tests, NEVER runs them" survives too — `suggested_verification.commands` remains an offer to the user.
+
+### Go-side status after Phase 3
+
+`TestRegistryDrift` is still GREEN — the inline-steps region was regenerated again (Architect, Developer, and Security each lost `decision-preservation`). The same four tests from Phase 2 are red, with larger deltas; the numbers in §6 D1 are updated to the Phase 3 values.
+
+## 6. Deferred — the post-refactor backlog
 
 **Standing rule for this refactor: anything a phase leaves behind gets an entry here instead of a partial fix.** These items are settled AFTER Phase 5, in one pass, for one reason — every one of them tracks a structure that phases 3–5 are still moving. Fixing them per phase means fixing them three times and reviewing churn that says nothing about whether the refactor is correct.
 
@@ -116,11 +170,13 @@ Each entry states what it is, exactly where, and what has to be true before it c
 
 Red since Phase 2. Two are pure constants; two need a design call.
 
-| Test | Assertion | Closing move |
+Values below are the Phase 3 state, re-measured after Architect, Developer, and Security collapsed.
+
+| Test | Assertion vs actual | Closing move |
 |---|---|---|
-| `TestWorkflowSubagentStepsDeclareKnownAgentTypes` | `analystCount` = 40 (actual 33 after Phase 2) | Recount once, at the end. Every phase changes this number, so any value set before Phase 5 is wrong by the next commit. `builderCount` = 2 is stable. |
-| `TestOptionalMarkerReadsRawSourceLine` | `asdt-pm` markers = 3, tree total = 18 (actual 1 and 16) | Same — recount at the end. |
-| `TestOrchestrationPlanCellClassification` | `wantRowCount` = 4 tier rows per specialist, `totalRows` = 27 | Needs a decision, not a number: a collapsed specialist has ONE step at every tier and therefore no 4-row tier table. Decide whether single-step specialists are exempt from the parse or declare a degenerate table, then teach `parseOrchestrationPlan` that shape. |
+| `TestWorkflowSubagentStepsDeclareKnownAgentTypes` | `analystCount` = 40, actual **23** | Recount once, at the end. Every phase changes this number, so any value set before Phase 5 is wrong by the next commit. `builderCount` = 2 is stable (only `developer/implement` writes). |
+| `TestOptionalMarkerReadsRawSourceLine` | per-specialist `# optional` counts and tree total 18, actual **14** — architect 1 (want 3), developer 3 (want 4), pm 1 (want 3), security 2 (want 1) | Same — recount at the end. Note security went UP: `assess` declares two optional inputs where the old chain declared one. |
+| `TestOrchestrationPlanCellClassification` | 4 tier rows per specialist, `totalRows` = 27, actual **12** — only developer, QA, and UX/UI still carry a tier table; architect, pm, researcher, and security parse 0 rows. Also `asdt-security/none` and `asdt-architect/simple` noRun rows not found | Needs a decision, not a number: a collapsed specialist has ONE step at every tier and therefore no 4-row tier table. Decide whether single-step specialists are exempt from the parse or declare a degenerate table, then teach `parseOrchestrationPlan` that shape — including how a noRun row is expressed when there is no table to put it in. |
 | `TestCollapseOnlyRunsAfterInsertion` | expects a `researcher/complex` tier row | Same root cause as the row above; closes with it. |
 
 Blocked on: Phase 5 fixing the final tier/router semantics. Until then the counts keep moving.
@@ -157,15 +213,15 @@ In `skill/SKILL.md`, the `Tailored Workflow Generation` per-specialist table had
 
 ### D6 — `asdt-shared/` still live
 
-Five specialists (`architect`, `developer`, `qa`, `security`, `ux-ui`) still declare the inline `decision-preservation` step in their `workflow.yaml`, and the shared fragments remain wired into the installer. Phase 3 removes the step declarations, Phase 4 purges the directory and repoints the Go references listed in §3 — this entry exists so the dependency is visible from the backlog, not to schedule work outside those phases.
+After Phase 3, only `qa` and `ux-ui` still declare the inline `decision-preservation` step, and the shared fragments remain wired into the installer. Phase 4 removes those two declarations, purges the directory, and repoints the Go references listed in §3 — this entry exists so the dependency is visible from the backlog, not to schedule work outside those phases.
 
-## 6. Phase status
+## 7. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
-- **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §5.
-- **Phase 3** — the same collapse for Architect, Developer, QA, Security, UX/UI.
-- **Phase 4** — purge `asdt-shared/` and the superseded specialist skill files; repoint the Go references listed above.
+- **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §4.
+- **Phase 3 — done.** Architect 7→1, Developer 6→3, Security 4→2; `output: context` introduced for intra-run payloads. See §5.
+- **Phase 4** — the same collapse for QA and UX/UI; purge `asdt-shared/` and the superseded specialist `skills/` directories; repoint the Go references listed in §3.
 - **Phase 5** — router pass over the root `SKILL.md` and the registry mirrors.
-- **Post-refactor** — work the §5 backlog in one pass: the red tests, the `site/` docs, and the authoring contract (`TEMPLATE.md`, the READMEs).
+- **Post-refactor** — work the §6 backlog in one pass: the red tests, the `site/` docs, and the authoring contract (`TEMPLATE.md`, the READMEs).
 
-Each phase appends what it defers to §5 rather than fixing it partially.
+Each phase appends what it defers to §6 rather than fixing it partially.

@@ -8,8 +8,8 @@ QA starts from the deliverables of other specialists — not from the raw reques
 - Any available upstream artifacts (use artifact-loading shared skill):
   - `pm/handoff` (if PM specialist ran)
   - `ux-ui/ux-brief` (if UX/UI specialist ran)
-  - `architect/architectural-decision` (if Architect specialist ran)
-  - `developer/dev-implementation` (if Developer specialist ran)
+  - `architect/handoff` (if Architect specialist ran)
+  - `developer/handoff` (if Developer specialist ran)
   - Raw request (fallback if no upstream artifacts)
 
 Note: this step's `inputs:` list in `workflow.yaml` is empty by design — it has

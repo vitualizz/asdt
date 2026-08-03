@@ -59,8 +59,8 @@ When you receive a feature request:
    - Researcher produces `researcher/handoff` → PM can read it as the explored direction
    - PM produces `pm/handoff` → Architect, Developer, and QA can read it as the primary requirements source
    - UX/UI produces a `ux-brief` → Architect and Developer can read it
-   - Architect produces `system-design` → Developer can read it
-   - Developer produces `dev-implementation` → QA can read it
+   - Architect produces `architect/handoff` → Developer can read it
+   - Developer produces `developer/handoff` → QA can read it
    - Security can run at ANY point — it reads whatever exists, nothing is required
 
 ---
@@ -291,11 +291,11 @@ Authority: each specialist's workflow.yaml owns step identity, execution mode, a
 <!-- GENERATED REGION — do not hand-edit; regenerated at install time from each specialist's workflow.yaml by registry_gen.go. Edits here are overwritten. -->
 <!-- ASDT:GENERATED:9.2-inline-steps -->
 - PM: `knowledge-recall`
-- Architect: `knowledge-recall`, `platform-analysis`, `decision-preservation`
+- Architect: `knowledge-recall`, `platform-analysis`
 - QA: `knowledge-recall`, `decision-preservation`
-- Security: `knowledge-recall`, `platform-analysis`, `decision-preservation`
+- Security: `knowledge-recall`, `platform-analysis`
 - UX/UI: `knowledge-recall`, `platform-analysis`, `decision-preservation`
-- Developer: `knowledge-recall`, `decision-preservation`
+- Developer: `knowledge-recall`
 - Researcher: `knowledge-recall`
 <!-- /ASDT:GENERATED:9.2-inline-steps -->
 
@@ -323,7 +323,7 @@ Before producing any `## Tailored Workflow` content, read the target specialist'
 |---|---|---|---|
 | **PM** | `skill/asdt-pm/SKILL.md` | `backlog` | No — PM formalizes requirements; for a quick consult route Researcher or answer directly |
 | **Developer** | `skill/asdt-developer/SKILL.md` | `explore` | Yes |
-| **Architect** | `skill/asdt-architect/SKILL.md` | `load-constraints` | Yes — but at `simple`, Architect is not invoked at all |
+| **Architect** | `skill/asdt-architect/SKILL.md` | `design` | Yes — but at `simple`, Architect is not invoked at all |
 | **QA** | `skill/asdt-qa/SKILL.md` | — | No — falls back to `simple` |
 | **UX/UI** | `skill/asdt-ux-ui/SKILL.md` | `feature-brief` | Yes |
 | **Researcher** | `skill/asdt-researcher/SKILL.md` | `discovery` | Yes |
