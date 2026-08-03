@@ -66,19 +66,19 @@ func TestInstallOne_SiblingLayout(t *testing.T) {
 // productionShapedFS mirrors the POST-RENAME embedded skill/ tree shape using
 // the actual production sibling names: a loose root-level SKILL.md (the
 // asdt consultant), a renamed specialist directory (asdt-architect), the
-// renamed shared fragment library (asdt-shared), and a literal "asdt/" entry
+// shared core library (asdt-core), and a literal "asdt/" entry
 // — covering the edge case where the embedded tree itself contains a
 // directory literally named "asdt" (e.g. a future asdt-prefixed addition)
 // alongside the loose root SKILL.md that also maps to "asdt".
 var productionShapedFS = fstest.MapFS{
-	"SKILL.md":                &fstest.MapFile{Data: []byte("# ASDT consultant")},
-	"asdt-architect/SKILL.md": &fstest.MapFile{Data: []byte("# Architect skill")},
-	"asdt-shared/skills/x.md": &fstest.MapFile{Data: []byte("# Shared fragment")},
-	"asdt/extra.md":           &fstest.MapFile{Data: []byte("# Extra consultant-scoped file")},
+	"SKILL.md":                  &fstest.MapFile{Data: []byte("# ASDT consultant")},
+	"asdt-architect/SKILL.md":   &fstest.MapFile{Data: []byte("# Architect skill")},
+	"asdt-core/references/x.md": &fstest.MapFile{Data: []byte("# Shared fragment")},
+	"asdt/extra.md":             &fstest.MapFile{Data: []byte("# Extra consultant-scoped file")},
 }
 
 // TestInstallOne_ProductionShapedSiblingLayout verifies installOne against the
-// real post-rename production naming: asdt-architect and asdt-shared land as
+// real post-rename production naming: asdt-architect and asdt-core land as
 // their own top-level siblings, and a literal top-level "asdt/" directory
 // entry merges correctly into the same "asdt" destination as the loose
 // root-level SKILL.md (both belong to the consultant) — without the
@@ -97,12 +97,12 @@ func TestInstallOne_ProductionShapedSiblingLayout(t *testing.T) {
 	}
 
 	checkFile(t, filepath.Join(root, "asdt-architect", "SKILL.md"))
-	checkFile(t, filepath.Join(root, "asdt-shared", "skills", "x.md"))
+	checkFile(t, filepath.Join(root, "asdt-core", "references", "x.md"))
 	checkFile(t, filepath.Join(root, "asdt", "SKILL.md"))
 	checkFile(t, filepath.Join(root, "asdt", "extra.md"))
 
 	checkFileAbsent(t, filepath.Join(root, "asdt", "asdt-architect", "SKILL.md"))
-	checkFileAbsent(t, filepath.Join(root, "asdt", "asdt-shared", "skills", "x.md"))
+	checkFileAbsent(t, filepath.Join(root, "asdt", "asdt-core", "references", "x.md"))
 	checkFileAbsent(t, filepath.Join(root, "asdt-architect", "asdt", "SKILL.md"))
 }
 
@@ -126,7 +126,7 @@ func TestSiblingDestName(t *testing.T) {
 		{entry: ".", want: "asdt"},
 		{entry: "asdt-architect", want: "asdt-architect"},
 		{entry: "asdt-developer", want: "asdt-developer"},
-		{entry: "asdt-shared", want: "asdt-shared"},
+		{entry: "asdt-core", want: "asdt-core"},
 		{entry: "asdt-init", want: "asdt-init"},
 		{entry: "asdt", want: "asdt"},
 		{entry: "anything-else", want: "anything-else"},
@@ -226,7 +226,7 @@ specialist-id: developer
 
 # Developer specialist
 `)},
-	"asdt-shared/skills/executor-header.md": &fstest.MapFile{Data: []byte("# Executor Header\n\n> **EXECUTOR**: test header.\n")},
+	"asdt-core/executor-header.md": &fstest.MapFile{Data: []byte("# Executor Header\n\n> **EXECUTOR**: test header.\n")},
 }
 
 // TestInstall_AgentGenFailureIsolation verifies that a failure generating

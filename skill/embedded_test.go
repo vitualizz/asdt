@@ -19,8 +19,14 @@ func TestEmbeddedSkillTree(t *testing.T) {
 	// The installer bakes this header into generated agent definitions
 	// (internal/installer/agent_adapters.go) and silently generates nothing
 	// when it is absent — so its presence here is load-bearing.
-	if _, err := fs.Stat(FS(), "asdt-shared/skills/executor-header.md"); err != nil {
-		t.Errorf("asdt-shared/skills/executor-header.md missing from embedded FS: %v", err)
+	if _, err := fs.Stat(FS(), "asdt-core/executor-header.md"); err != nil {
+		t.Errorf("asdt-core/executor-header.md missing from embedded FS: %v", err)
+	}
+
+	// Spliced into every routed SKILL.md at install time by registry_gen.go;
+	// a missing fragment is an install-time error, so guard it here too.
+	if _, err := fs.Stat(FS(), "asdt-core/specialist-header.md"); err != nil {
+		t.Errorf("asdt-core/specialist-header.md missing from embedded FS: %v", err)
 	}
 
 	diskEntries, err := os.ReadDir(".")
@@ -38,7 +44,7 @@ func TestEmbeddedSkillTree(t *testing.T) {
 			t.Errorf("directory %s exists on disk but is missing from embedded FS: %v", name, err)
 			continue
 		}
-		// asdt-shared has no SKILL.md; only require it when it exists on disk.
+		// asdt-core has no SKILL.md; only require it when it exists on disk.
 		if _, err := os.Stat(name + "/SKILL.md"); err == nil {
 			if _, err := fs.Stat(FS(), name+"/SKILL.md"); err != nil {
 				t.Errorf("%s/SKILL.md missing from embedded FS: %v", name, err)
@@ -47,17 +53,17 @@ func TestEmbeddedSkillTree(t *testing.T) {
 	}
 }
 
-// TestEmbeddedSharedSkillsMatchDisk asserts that the embedded FS view of
-// skill/asdt-shared/skills/ matches disk in BOTH directions: every regular
-// fragment on disk ships, and every underscore- or dot-prefixed entry does not.
+// TestEmbeddedCoreReferencesMatchDisk asserts that the embedded FS view of
+// skill/asdt-core/references/ matches disk in BOTH directions: every regular
+// reference on disk ships, and every underscore- or dot-prefixed entry does not.
 //
 // This is the only guard against a genuinely silent failure mode: an embed glob
-// that is wrong produces no error at all — a fragment simply stops shipping (so
-// the installer's header fold fails at install time, or worse, ships short), or
-// an excluded draft file suddenly starts shipping. Neither shows up as a build
-// or install error, only as a missing/extra file inside the embedded tree.
-func TestEmbeddedSharedSkillsMatchDisk(t *testing.T) {
-	const sharedSkillsDir = "asdt-shared/skills"
+// that is wrong produces no error at all — a reference simply stops shipping (so
+// a step's reference_skills entry resolves to nothing at run time), or an
+// excluded draft file suddenly starts shipping. Neither shows up as a build or
+// install error, only as a missing/extra file inside the embedded tree.
+func TestEmbeddedCoreReferencesMatchDisk(t *testing.T) {
+	const sharedSkillsDir = "asdt-core/references"
 
 	diskEntries, err := os.ReadDir(sharedSkillsDir)
 	if err != nil {

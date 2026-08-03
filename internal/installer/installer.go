@@ -69,7 +69,7 @@ const siblingConsultantDir = "asdt"
 //
 // This keeps the consultant-vs-specialist distinction to a single named,
 // testable unit while the rest of the mapping stays generic (per design:
-// "asdt-shared is just another entry, zero special-casing").
+// "asdt-core is just another entry, zero special-casing").
 func SiblingDestName(entry string) string {
 	if entry == "." {
 		return siblingConsultantDir
@@ -85,7 +85,7 @@ func SiblingDestName(entry string) string {
 //
 // Top-level entries are:
 //   - directories directly under the embedded tree root (e.g.
-//     "asdt-architect/", "asdt-shared/") — their entire subtree is copied to
+//     "asdt-architect/", "asdt-core/") — their entire subtree is copied to
 //     {SkillsDir}/{SiblingDestName(entry)}/...
 //   - loose files directly at the embedded tree root (e.g. "SKILL.md") —
 //     they belong to the consultant and are copied to

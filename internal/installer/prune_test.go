@@ -9,14 +9,14 @@ import (
 )
 
 func TestUnderManagedRoot(t *testing.T) {
-	roots := []string{"asdt", "asdt-shared"}
+	roots := []string{"asdt", "asdt-core"}
 	cases := []struct {
 		name string
 		rel  string
 		want bool
 	}{
 		{name: "file inside managed root", rel: "asdt/SKILL.md", want: true},
-		{name: "nested file inside managed root", rel: "asdt-shared/skills/x.md", want: true},
+		{name: "nested file inside managed root", rel: "asdt-core/references/x.md", want: true},
 		{name: "absolute path", rel: "/etc/passwd", want: false},
 		{name: "parent escape", rel: "asdt/../../evil.md", want: false},
 		{name: "leading parent escape", rel: "../outside.md", want: false},
@@ -42,7 +42,7 @@ func TestHasDotComponent(t *testing.T) {
 		{rel: ".hidden/file.md", want: true},
 		{rel: "asdt/.cache/x.md", want: true},
 		{rel: "asdt/SKILL.md", want: false},
-		{rel: "asdt-shared/skills/x.md", want: false},
+		{rel: "asdt-core/references/x.md", want: false},
 	}
 	for _, c := range cases {
 		if got := hasDotComponent(c.rel); got != c.want {
@@ -55,14 +55,14 @@ func TestRelativizeWritten(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), "skills")
 	written := []string{
 		filepath.Join(skillsDir, "asdt", "SKILL.md"),
-		filepath.Join(skillsDir, "asdt-shared", "skills", "x.md"),
+		filepath.Join(skillsDir, "asdt-core", "references", "x.md"),
 		filepath.Join(skillsDir, "..", "outside.md"), // escapes skillsDir → dropped
 	}
 
 	got := relativizeWritten(skillsDir, written)
 	want := []string{
 		filepath.Join("asdt", "SKILL.md"),
-		filepath.Join("asdt-shared", "skills", "x.md"),
+		filepath.Join("asdt-core", "references", "x.md"),
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("relativizeWritten = %v, want %v", got, want)
@@ -73,15 +73,15 @@ func TestManagedRootsFor(t *testing.T) {
 	// Directory entries map verbatim; the loose root file contributes "asdt";
 	// a literal "asdt/" entry must dedupe against the loose-file mapping.
 	skillsFS := fstest.MapFS{
-		"SKILL.md":                &fstest.MapFile{Data: []byte("# consultant")},
-		"asdt/extra.md":           &fstest.MapFile{Data: []byte("# extra")},
-		"asdt-architect/SKILL.md": &fstest.MapFile{Data: []byte("# architect")},
-		"asdt-shared/skills/x.md": &fstest.MapFile{Data: []byte("# shared")},
+		"SKILL.md":                  &fstest.MapFile{Data: []byte("# consultant")},
+		"asdt/extra.md":             &fstest.MapFile{Data: []byte("# extra")},
+		"asdt-architect/SKILL.md":   &fstest.MapFile{Data: []byte("# architect")},
+		"asdt-core/references/x.md": &fstest.MapFile{Data: []byte("# shared")},
 	}
 
 	got := managedRootsFor(skillsFS)
 	slices.Sort(got)
-	want := []string{"asdt", "asdt-architect", "asdt-shared"}
+	want := []string{"asdt", "asdt-architect", "asdt-core"}
 	if !slices.Equal(got, want) {
 		t.Errorf("managedRootsFor = %v, want %v", got, want)
 	}
@@ -181,22 +181,22 @@ func TestPruneStale_OutOfRootManifestEntriesIgnored(t *testing.T) {
 
 func TestPruneStale_EmptyDirCleanup(t *testing.T) {
 	skillsDir := t.TempDir()
-	seedFile(t, skillsDir, "asdt-shared/skills/deep/old.md")
-	seedFile(t, skillsDir, "asdt-shared/keep.md")
+	seedFile(t, skillsDir, "asdt-core/references/deep/old.md")
+	seedFile(t, skillsDir, "asdt-core/keep.md")
 
-	prev := []string{"asdt-shared/skills/deep/old.md", "asdt-shared/keep.md"}
-	current := []string{"asdt-shared/keep.md"}
+	prev := []string{"asdt-core/references/deep/old.md", "asdt-core/keep.md"}
+	current := []string{"asdt-core/keep.md"}
 
-	removed := pruneStale(skillsDir, []string{"asdt-shared"}, prev, current)
+	removed := pruneStale(skillsDir, []string{"asdt-core"}, prev, current)
 
-	if !slices.Equal(removed, []string{"asdt-shared/skills/deep/old.md"}) {
-		t.Errorf("removed = %v, want [asdt-shared/skills/deep/old.md]", removed)
+	if !slices.Equal(removed, []string{"asdt-core/references/deep/old.md"}) {
+		t.Errorf("removed = %v, want [asdt-core/references/deep/old.md]", removed)
 	}
 	// Emptied parents below the managed root are gone; the root itself survives.
-	checkFileAbsentInternal(t, filepath.Join(skillsDir, "asdt-shared", "skills", "deep"))
-	checkFileAbsentInternal(t, filepath.Join(skillsDir, "asdt-shared", "skills"))
-	checkFileInternal(t, filepath.Join(skillsDir, "asdt-shared"))
-	checkFileInternal(t, filepath.Join(skillsDir, "asdt-shared", "keep.md"))
+	checkFileAbsentInternal(t, filepath.Join(skillsDir, "asdt-core", "skills", "deep"))
+	checkFileAbsentInternal(t, filepath.Join(skillsDir, "asdt-core", "skills"))
+	checkFileInternal(t, filepath.Join(skillsDir, "asdt-core"))
+	checkFileInternal(t, filepath.Join(skillsDir, "asdt-core", "keep.md"))
 }
 
 func TestPruneStale_DirWithDotfileSurvivesCleanup(t *testing.T) {

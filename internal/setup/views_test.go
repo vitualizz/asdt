@@ -623,7 +623,7 @@ func TestView_DoneScreenShowsNextStepHint(t *testing.T) {
 func TestView_DoneScreenShowsStaleRemovedLine(t *testing.T) {
 	result := installer.InstallResult{
 		AssistantID: installer.AssistantClaudeCode,
-		Removed:     []string{"asdt/old.md", "asdt-shared/skills/gone.md"},
+		Removed:     []string{"asdt/old.md", "asdt-core/references/gone.md"},
 	}
 	m := setup.New(fstest.MapFS{}, "dev")
 	next, _ := m.Update(setup.InstallDoneMsg{Results: []installer.InstallResult{result}})

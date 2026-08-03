@@ -60,7 +60,7 @@ func WorkflowModelSteps(skillsFS fs.FS) ([]WorkflowStepModel, error) {
 		wfPath := path.Join(dir, "workflow.yaml")
 		data, readErr := fs.ReadFile(skillsFS, wfPath)
 		if readErr != nil {
-			continue // specialist without workflow.yaml (e.g. asdt-init, asdt-shared)
+			continue // directory without workflow.yaml (e.g. asdt-core)
 		}
 
 		var wf workflowModelFile

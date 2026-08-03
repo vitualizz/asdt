@@ -1,6 +1,6 @@
 # ASDT Refactor — Migration Notes
 
-Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. All five phases are complete, plus the post-refactor closing in §10 — see §11 for status.
+Working document for the 5-phase refactor that replaces the current 12 shared skills / 41 sub-agent steps / persist-everything design with a smaller core. All five phases are complete, plus the post-refactor closing (§10) and the Go pass (§11) — see §12 for status.
 
 **Anything a phase defers goes to §9, not into a partial fix.** That backlog is worked in one pass after Phase 5.
 
@@ -285,7 +285,12 @@ const executorHeaderPath = "asdt-core/executor-header.md"
 
 Each entry states what it is, exactly where, and what has to be true before it can be closed.
 
-### D1 — Four red tests in `internal/installer`
+### D1 — Four red tests in `internal/installer` — **CLOSED by the Go pass**
+
+Recounted against the final tree (`analystCount` 9, `builderCount` 1, optional markers 11) and the design call was made: a single-step specialist has no tier table, and the tier-table machinery was deleted rather than exempted — see §11.
+
+<details><summary>Original entry</summary>
+
 
 Red since Phase 2. Two are pure constants; two need a design call.
 
@@ -297,6 +302,8 @@ Values below are the Phase 3 state, re-measured after Architect, Developer, and 
 | `TestOptionalMarkerReadsRawSourceLine` | per-specialist `# optional` counts and tree total 18, actual **14** — architect 1 (want 3), developer 3 (want 4), pm 1 (want 3), security 2 (want 1) | Same — recount at the end. Note security went UP: `assess` declares two optional inputs where the old chain declared one. |
 | `TestOrchestrationPlanCellClassification` | 4 tier rows per specialist, `totalRows` = 27, actual **12** — only developer, QA, and UX/UI still carry a tier table; architect, pm, researcher, and security parse 0 rows. Also `asdt-security/none` and `asdt-architect/simple` noRun rows not found | Needs a decision, not a number: a collapsed specialist has ONE step at every tier and therefore no 4-row tier table. Decide whether single-step specialists are exempt from the parse or declare a degenerate table, then teach `parseOrchestrationPlan` that shape — including how a noRun row is expressed when there is no table to put it in. |
 | `TestCollapseOnlyRunsAfterInsertion` | expects a `researcher/complex` tier row | Same root cause as the row above; closes with it. |
+
+</details>
 
 Blocked on: Phase 5 fixing the final tier/router semantics. Until then the counts keep moving.
 
@@ -320,7 +327,10 @@ en/specialists/{pm,qa,architect,researcher}.md
 
 Blocked on: nothing structural — but rewriting the authoring contract before the last specialist is collapsed would document a shape that is still moving. This is the highest-value item in the list: TEMPLATE.md is what the next contributor copies.
 
-### D4 — Go test fixtures naming dead artifacts
+### D4 — Go test fixtures naming dead artifacts — **CLOSED by the Go pass**
+
+Renamed to new-world names. The documented caveat held: the model-tier classification keys on the fixture's `model: haiku` value, not on the step name, so renaming the step and its comment together left the assertion intact.
+
 
 `internal/installer/workflow_models_test.go` (21 hits) and `internal/setup/model_test.go` (9 hits) use `pm/feature-intake` and `pm/backlog-entry` as SYNTHETIC inline YAML fixtures. They are not references to the shipped tree, and they pass as-is — this is naming hygiene, not a defect.
 
@@ -360,7 +370,37 @@ Two words `tier` survive, both in the router and both correct: they name the com
 
 **7. Delete any Go-side parsing of `--tier`.** Nothing in `skill/` emits or reads it any more. If the CLI or the installer parses that argument anywhere, it is now dead — and worse, it would accept a value no prompt will ever honor.
 
-## 11. Phase status
+## 11. The Go pass
+
+One pass over `internal/` and `cmd/`, executing the §8 checklist. `go build`, `go vet`, and `go test ./...` are green except for one real defect, reported below.
+
+**Constants repointed.** `specialistHeaderFragments` is now `["asdt-core/specialist-header.md", "asdt-core/protocol.md"]` with its load-bearing order comment rewritten; `executorHeaderPath` is `"asdt-core/executor-header.md"`.
+
+**Numbers were re-measured, not copied.** §8 said `analystCount` 9 and "builderCount 2 unchanged". The first was right; the second was wrong — the only builder step left is `developer/implement`, because `developer/test` was absorbed into it in Phase 3. Actual: analyst **9**, builder **1**. Optional markers: 11 total, matching the notes.
+
+**Three test sites lost their target and were removed, not repointed.** `trivialTableRows` (the `Tailored Workflow Generation` trivial table), the inline-steps parity assertion (its `<!-- ASDT:GENERATED:9.2-inline-steps -->` region), and the tier-table machinery. All three mirrored router sections that Phase 5 deleted. `section5Rows` was repointed (`## 5. Specialist Registry` → `## Registry`) and renamed `registrySectionRows`; the `agents-template.md` mirror still matches the workflow.yaml roster.
+
+**`tier_preset_validation_test.go` DELETED (26 KB).** Four of its five tests validated the router's two-pass "Step List Validation" fixpoint (`applyPass1`/`applyPass2`/`applyCollapse`) against the per-specialist tier tables — an algorithm Phase 5 deleted from the router, and tables that no longer exist. Its parser anchored on the literal `| Level | Steps |` header, so after the `--tier` removal retitled the Developer's table, ZERO specialists parsed. The fifth test survived: `TestOptionalMarkerReadsRawSourceLine` guards a property nothing else does — `yaml.v3` drops comments, so an input's optionality has to be read off the raw source line the node came from. It moved to `internal/installer/workflow_inputs_test.go` with its minimal helpers and recounted expectations.
+
+**`preset_tiers.go` KEPT — it is not what §10 assumed.** It has nothing to do with the deleted `--tier` flag: it classifies a step's *source-default model* (haiku/sonnet/opus) into cost tiers for the setup TUI's model-preset gate, and it is consumed by `internal/setup/model.go:620,628`. `preset_tiers_test.go` goes with it. The filename collision is what made it look dead. No Go code parses a `--tier` argument anywhere; nothing to delete on that front.
+
+**`output: context` needed no parser change.** `workflow_models.go` and `parseRegistry` only read `name`/`execution`/`model`, so they already tolerated a missing `output_topic_key`. `context_inputs:` is likewise ignored by both and can never be confused with `inputs:`. The "fail loud when a subagent step declares neither" guard belongs in an authoring test rather than in the installer, and is noted as optional below.
+
+**Dead-tree references swept.** `grep -rn "asdt-shared" internal/ cmd/ skill/*.go` → 0. That included synthetic fixture directory names in `adapters_test.go`, `prune_test.go`, and `installer_test.go`, which used `asdt-shared` as a stand-in for "a directory with no SKILL.md" — now `asdt-core`, which is that same shape for real.
+
+### One real defect found, NOT fixed — needs your call
+
+`TestNuanceIsolatedFromProvenance` is red, and it is right. `skill/asdt-core/references/platform-context.md` mentions `human_nuance` at line 41, **inside the `## Injection Format` section**. The invariant that test guards is that `human_nuance` must never appear in the automatic injection path: those entries are user-authored, carry no confidence rating, and were deliberately excluded from the ≤500-token auto-injected block.
+
+The Phase 1 trim dropped the original's explicit clarifier — "it is intentionally NOT auto-injected" — and left the sentence sitting in the section that defines what gets injected. A specialist reading it today could reasonably fold user notes into the compact block.
+
+The fix is one line in `skill/`, which this pass was not allowed to touch: either move that sentence into `## Degradation`, or restore the "NOT auto-injected" clarifier in place. The test's section anchors were updated to the post-refactor headings, so it now fails on the substance rather than on a missing heading.
+
+### Optional follow-up, not done
+
+An authoring guard that a `subagent` step declares either `output_topic_key` or `output: context` — never neither. Nothing enforces it today; the three `output: context` steps are correct, but a fourth added without either key would install silently.
+
+## 12. Phase status
 
 - **Phase 1 — done.** `asdt-core/protocol.md`, six files in `asdt-core/references/`, this document. Zero existing files modified.
 - **Phase 2 — done.** PM 6→1 step, Researcher 3→1, both on `{role}/handoff`; all in-tree consumers repointed. See §4.
@@ -369,6 +409,7 @@ Two words `tier` survive, both in the router and both correct: they name the com
 - **Phase 5 — done.** Router rewritten on judgment instead of keyword tables; both headers rewritten; `workflow.yaml` made the single machine-readable source; `TEMPLATE.md` rewritten for the new system. See §7.
 - **Go maintainer** — the checklist in §8, now seven items (§10 added two).
 - **Closing — done.** `--tier` removed system-wide; depth is judged, not flagged. Defect D-C closed. See §10.
+- **Go pass — done.** §8 checklist executed; D1, D4, D6 closed. `go test ./...` green except one real skill-tree defect awaiting a decision. See §11.
 - **Post-refactor** — work the §9 backlog: the `site/` docs and the remaining red tests, alongside the §8 checklist.
 
 Each phase appends what it defers to §9 rather than fixing it partially.

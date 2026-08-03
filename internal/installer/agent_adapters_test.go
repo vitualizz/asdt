@@ -23,7 +23,7 @@ const testExecutorHeader = `# Executor Header — injected by the orchestrator i
 // agentFixtureFS carries the one file agent generation depends on: the shared
 // executor header that gets baked into every agent definition body.
 var agentFixtureFS = fstest.MapFS{
-	"asdt-shared/skills/executor-header.md": &fstest.MapFile{Data: []byte(testExecutorHeader)},
+	"asdt-core/executor-header.md": &fstest.MapFile{Data: []byte(testExecutorHeader)},
 }
 
 // headerlessFS models a partial fixture without the executor header: agent
@@ -418,22 +418,25 @@ func TestGenerateAgentFiles_MissingExecutorHeaderIsNoOp(t *testing.T) {
 	checkFileAbsent(t, agentRoot)
 }
 
-// TestExecutorHeaderCarriesFalsifiabilityCondition reads the REAL embedded
-// executor header — not the trimmed agentFixtureFS copy — because the
-// falsifiability clause's condition sentence is a one-way-door contract: it is
-// what exempts steps without an `output_topic_key` from the falsifiable-output
-// requirement. The sentence is asserted verbatim so any reword that widens or
-// narrows the exemption fails loudly here instead of shipping silently baked
-// into both agent definitions.
-func TestExecutorHeaderCarriesFalsifiabilityCondition(t *testing.T) {
-	data, err := fs.ReadFile(skill.FS(), "asdt-shared/skills/executor-header.md")
+// TestExecutorHeaderCarriesEvidenceCondition reads the REAL embedded executor
+// header — not the trimmed agentFixtureFS copy — because the evidence clause's
+// condition is a one-way-door contract: it is what exempts steps that never
+// touched the codebase from the verifiable-evidence requirement. The sentence is
+// asserted verbatim so any reword that widens or narrows the exemption fails
+// loudly here instead of shipping silently baked into both agent definitions.
+//
+// The condition was rekeyed by the refactor: it used to exempt steps without an
+// `output_topic_key`, which stopped being the right axis once steps could
+// declare `output: context`. It now turns on whether the step read the codebase.
+func TestExecutorHeaderCarriesEvidenceCondition(t *testing.T) {
+	data, err := fs.ReadFile(skill.FS(), "asdt-core/executor-header.md")
 	if err != nil {
 		t.Fatalf("read embedded executor-header.md: %v", err)
 	}
 
-	const condition = "applies only when this step declares an `output_topic_key` in `workflow.yaml`; steps without one are exempt."
+	const condition = "if your step read the codebase, anchor every claim to something"
 	if !strings.Contains(string(data), condition) {
-		t.Errorf("embedded executor-header.md is missing the verbatim falsifiability condition sentence %q", condition)
+		t.Errorf("embedded executor-header.md is missing the verbatim evidence condition sentence %q", condition)
 	}
 }
 

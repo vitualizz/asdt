@@ -59,13 +59,7 @@ func TestRegistryDrift(t *testing.T) {
 			name:        "Specialist Registry",
 			path:        filepath.Join(root, "SKILL.md"),
 			excludeDirs: map[string]bool{},
-			rows:        section5Rows,
-		},
-		{
-			name:        "Tailored Workflow Generation trivial table",
-			path:        filepath.Join(root, "SKILL.md"),
-			excludeDirs: map[string]bool{},
-			rows:        trivialTableRows,
+			rows:        registrySectionRows,
 		},
 		{
 			name: "agents-template",
@@ -113,21 +107,11 @@ func TestRegistryDrift(t *testing.T) {
 		}
 	}
 
-	// Inline-steps list parity: the committed `Tailored Workflow Generation`
-	// region must equal what the generator would render, so install-time
-	// regeneration is a no-op.
-	skillMD, err := os.ReadFile(filepath.Join(root, "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read SKILL.md: %v", err)
-	}
-	wantBody := renderInlineStepsRegion(regs)
-	gotBody, err := extractMarkerRegion(skillMD, inlineStepsBeginMarker, inlineStepsEndMarker)
-	if err != nil {
-		t.Fatalf("extract Tailored Workflow Generation inline-steps region: %v", err)
-	}
-	if gotBody != wantBody {
-		t.Errorf("Tailored Workflow Generation inline-steps region drifted from workflow.yaml derivation:\n--- committed ---\n%q\n--- derived ---\n%q", gotBody, wantBody)
-	}
+	// The inline-steps parity assertion was dropped with the router rewrite:
+	// the `Tailored Workflow Generation` region it compared against no longer
+	// exists in skill/SKILL.md. renderInlineStepsRegion still exists and is
+	// still exercised by its own unit test; it simply has no committed mirror
+	// left to drift from.
 }
 
 // asdtCommandRe matches an /asdt-<name> slash command token.
@@ -146,9 +130,9 @@ func firstCommandDir(row string) string {
 	return ""
 }
 
-// section5Rows extracts the canonical dirs of the `Specialist Registry` table.
-func section5Rows(content string) []string {
-	return commandRowsBetween(content, "## 5. Specialist Registry", "| Specialist | Command |")
+// registrySectionRows extracts the canonical dirs of the `## Registry` table.
+func registrySectionRows(content string) []string {
+	return commandRowsBetween(content, "## Registry", "| Specialist | Command |")
 }
 
 // agentsTemplateRows extracts the canonical dirs of the agents-template.md
@@ -190,37 +174,6 @@ func commandRowsBetween(content, sectionHint, headerHint string) []string {
 		}
 		if dir := firstCommandDir(trimmed); dir != "" {
 			dirs = append(dirs, dir)
-		}
-	}
-	return dirs
-}
-
-// trivialTableRows extracts the canonical dirs of the `Tailored Workflow
-// Generation` per-specialist trivial-step table, whose rows reference
-// `skill/asdt-<name>/SKILL.md` paths (no slash command).
-func trivialTableRows(content string) []string {
-	lines := strings.Split(content, "\n")
-	var dirs []string
-	inTable := false
-	for _, line := range lines {
-		if !inTable {
-			if strings.Contains(line, "| Specialist | File | Trivial step | Trivial eligible? |") {
-				inTable = true
-			}
-			continue
-		}
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, "|") {
-			if trimmed == "" {
-				break
-			}
-			continue
-		}
-		if strings.HasPrefix(trimmed, "|---") || strings.HasPrefix(trimmed, "|--") {
-			continue
-		}
-		if m := asdtPathRe.FindString(trimmed); m != "" {
-			dirs = append(dirs, m)
 		}
 	}
 	return dirs
@@ -340,13 +293,18 @@ func TestNuanceIsolatedFromProvenance(t *testing.T) {
 		}
 	}
 
-	pcMD, err := os.ReadFile(filepath.Join(root, "asdt-shared", "skills", "platform-context.md"))
+	pcMD, err := os.ReadFile(filepath.Join(root, "asdt-core", "references", "platform-context.md"))
 	if err != nil {
-		t.Fatalf("read asdt-shared/skills/platform-context.md: %v", err)
+		t.Fatalf("read asdt-core/references/platform-context.md: %v", err)
 	}
 	pc := string(pcMD)
 
-	reuseGuard := lineSliceBetween(pc, "## Reuse Guard", "## How to Find")
+	// Section anchors follow the post-refactor platform-context.md, which
+	// collapsed "How to Find" + "What to Inject" + the injection format into a
+	// single "## Injection Format" section. The invariant is unchanged:
+	// human_nuance is user-authored and carries no confidence rating, so it
+	// must never appear in the automatic injection path.
+	reuseGuard := lineSliceBetween(pc, "## Reuse Guard", "## Injection Format")
 	if reuseGuard == "" {
 		t.Fatalf("could not isolate platform-context.md Reuse Guard section")
 	}
@@ -354,12 +312,12 @@ func TestNuanceIsolatedFromProvenance(t *testing.T) {
 		t.Errorf("platform-context.md Reuse Guard must not reference human_nuance")
 	}
 
-	whatToInject := lineSliceBetween(pc, "## What to Inject", "## Graceful Degradation")
+	whatToInject := lineSliceBetween(pc, "## Injection Format", "## Degradation")
 	if whatToInject == "" {
-		t.Fatalf("could not isolate platform-context.md What to Inject section")
+		t.Fatalf("could not isolate platform-context.md Injection Format section")
 	}
 	if strings.Contains(whatToInject, "human_nuance") {
-		t.Errorf("platform-context.md What to Inject must not reference human_nuance")
+		t.Errorf("platform-context.md Injection Format must not reference human_nuance")
 	}
 }
 
