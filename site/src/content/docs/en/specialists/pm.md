@@ -60,6 +60,14 @@ A single hand-off at `{project}/{change}/pm/handoff`:
 
 Consumed by **Architect**, **Developer**, **QA**, and **UX/UI**. All of them read it as an optional input: if PM never ran, each works from the raw request and records that.
 
+## On its own
+
+It also serves to make sense of what already exists, without opening a change:
+
+```
+/asdt-pm "what ended up out of scope in the notifications redesign?"
+```
+
 ## What it consumes
 
 The raw request, the project's detected conventions, and — when Researcher ran first — its `researcher/handoff`: the recommended direction becomes the starting point, and the rejected directions seed out-of-scope.

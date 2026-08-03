@@ -9,7 +9,7 @@ import TutorialPipelineStepper from '@components/TutorialPipelineStepper.astro'
 
 # Tutorial: Tu primer pipeline
 
-En este tutorial vas a instalar ASDT y correr un pipeline completo PM → Arquitecto → Developer para una feature concreta: **agregar un formulario de contacto con validación**.
+En este tutorial vas a instalar ASDT, hacerle una primera pregunta a un especialista sobre un repo que ya tenés, y recién después correr una entrega completa PM → Arquitecto → Developer para una feature concreta: **agregar un formulario de contacto con validación**.
 
 ASDT funciona con dos asistentes de IA — **Claude Code** y **OpenCode**. Los pasos de abajo son idénticos para ambos; donde difieren (ubicación de la configuración, reinicio, autenticación) se muestran ambos lado a lado. Elegí el que uses.
 
@@ -64,7 +64,21 @@ Abrí tu asistente (Claude Code u OpenCode) en el directorio de tu proyecto y ej
 
 Esto crea `.asdt/config.yaml` (configuración del memory provider) y `.asdt/knowledge/platform.yaml` (stack detectado), para que cada especialista adapte su output a tu proyecto.
 
-## Paso 3 — Pedirle a ASDT una recomendación de pipeline
+## Paso 3 — Preguntale algo a un especialista
+
+Antes de construir nada, probá el camino más corto. Apuntá un especialista a código que ya tenés:
+
+```
+/asdt-security "audita cómo manejamos las sesiones"
+```
+
+Lee el código que corresponde, te cuenta en prosa qué encontró, y guarda los hallazgos: lo que corras después sobre esa área ya arranca sabiéndolos. No se planificó nada, no se ruteó nada — una pregunta, una respuesta.
+
+Todos los especialistas funcionan así. `/asdt-architect "¿esta estructura escala?"`, `/asdt-qa "¿qué no cubren nuestros tests?"`. Eso es todo, y muchos días es lo único que vas a necesitar.
+
+El resto del tutorial es la otra mitad: pasarle al equipo algo para construir.
+
+## Paso 4 — Pedirle a ASDT una recomendación de pipeline
 
 En tu asistente, ejecutá:
 
@@ -87,7 +101,7 @@ Pipeline recomendado:
 Ejecutá cada comando en orden. Cada especialista lee el output del anterior automáticamente.
 ```
 
-## Paso 4 — Correr el Product Manager
+## Paso 5 — Correr el Product Manager
 
 ```text
 /asdt-pm "Agregar un formulario de contacto con validación"
@@ -121,7 +135,7 @@ Producido: pm/handoff
 Artefacto guardado en la base de conocimiento.
 ```
 
-## Paso 5 — Correr el Arquitecto
+## Paso 6 — Correr el Arquitecto
 
 ```text
 /asdt-architect
@@ -154,7 +168,7 @@ Producido: architectural-decision + system-design
 Artefactos guardados en la base de conocimiento.
 ```
 
-## Paso 6 — Correr el Developer
+## Paso 7 — Correr el Developer
 
 ```text
 /asdt-developer

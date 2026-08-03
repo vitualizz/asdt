@@ -18,11 +18,11 @@ flowchart TD
     D <-->|"mem_save / mem_search\ntopic_key: project/change/role/handoff"| E[(Engram)]
 ```
 
-**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Reads the request, judges complexity and risk surface, recommends which specialists to invoke and in what order. Never executes a single specialist step.
+**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Reads the request and answers one of three ways: a specialist chain, a single specialist, or — when the question is about the STATE of the work ("what did we decide about X?") — the answer itself, read inline from memory. It never executes a specialist step and never writes to memory.
 
 **Specialist as orchestrator** (`skill/asdt-{name}/SKILL.md`) — reads `workflow.yaml` and drives the steps. Does not do the specialist work itself — it tells the calling assistant which steps to run inline and which to launch as isolated sub-agents.
 
-**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. Each step does one thing and returns. Only a specialist's LAST step persists, and what it persists is that specialist's single hand-off; earlier steps hand their payload back to the orchestrator, which injects it into the next step. Steps never delegate further.
+**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. No specialist requires another's work: every cross-specialist input is optional and degrades, which is what lets any of them run alone. Each step does one thing and returns. Only a specialist's LAST step persists, and what it persists is that specialist's single hand-off; earlier steps hand their payload back to the orchestrator, which injects it into the next step. Steps never delegate further.
 
 The full contract — what gets persisted, how inputs arrive, how a step degrades when one is missing — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
 
@@ -78,7 +78,19 @@ Examples:
   myapp/add-auth/security/handoff
 ```
 
-One key per role per change. That is the whole address space: a specialist looking for upstream work knows exactly what to ask for, and a run that finds nothing there proceeds and says so.
+One key per role per change. That is the whole address space for delivering a change: a specialist looking for upstream work knows exactly what to ask for, and a run that finds nothing there proceeds and says so.
+
+A run that EXAMINES what already exists — an audit, a review, an assessment with nothing to deliver — persists under a second namespace instead:
+
+```
+{project}/study/{topic}/{role}
+
+Examples:
+  myapp/study/payments-module/security
+  myapp/study/checkout-flow/architect
+```
+
+Which namespace applies is judged from the invocation, never declared: same schema, same load rules, same degradation. A past study is organizational memory — no step declares it as an input, and later runs meet it through the `knowledge-recall` prelude. The full contract is `asdt-core/protocol.md` §1.
 
 A run that made a non-obvious decision also appends one line to `{project}/journal`. Nothing else is written.
 

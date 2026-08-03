@@ -53,6 +53,15 @@ A single hand-off at `{project}/{change}/researcher/handoff`:
 
 Consumed by **PM** as an optional input: the recommended direction becomes its starting point, and the rejected ones seed its out-of-scope list.
 
+## On its own
+
+Nothing has to be waiting to be built:
+
+```
+/asdt-researcher "what are our options for replacing the sync job?"
+/asdt-researcher "explore why onboarding loses people"
+```
+
 ## Where it sits
 
 The only **pre-requirements** specialist. It runs before PM and never replaces it: it recommends a direction, PM decides what gets built. It also works standalone, when structured exploration is all you want.

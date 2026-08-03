@@ -53,6 +53,15 @@ En `decisions` es donde sobrevive la exploración: no solo qué eligió, sino qu
 
 Lo consume el **PM**, como entrada opcional: la dirección recomendada le da el punto de partida y las descartadas alimentan su alcance fuera.
 
+## Por su cuenta
+
+No hace falta que haya nada que construir todavía:
+
+```
+/asdt-researcher "¿qué opciones tenemos para reemplazar el job de sincronización?"
+/asdt-researcher "explorá por qué el onboarding pierde gente"
+```
+
 ## Su lugar en el pipeline
 
 Es el único especialista **pre-requisitos**. Corre antes que el PM y nunca lo reemplaza: recomienda una dirección, el PM decide qué se construye. También funciona solo, cuando lo único que querés es exploración estructurada.

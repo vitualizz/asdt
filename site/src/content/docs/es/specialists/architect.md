@@ -24,6 +24,18 @@ El especialista Arquitecto nunca escribe código de implementación, specs de UX
 - Una preocupación transversal (estrategia de caché, modelo de auth, event bus) necesita una decisión documentada
 - Querés un ADR formal para explicar a futuros ingenieros por qué el código es como es
 
+## Por su cuenta
+
+No hace falta un cambio en marcha. Apúntalo a lo que ya existe y lo juzga en vez de rediseñarlo — te devuelve hallazgos priorizados con evidencia, y también lo que está bien:
+
+```
+/asdt-architect "¿escala esta estructura si triplicamos el tráfico?"
+/asdt-architect "audita los boundaries del módulo de pagos"
+/asdt-architect "¿qué decisiones de este diseño ya son caras de revertir?"
+```
+
+Lo que encuentre queda guardado, así que la próxima corrida sobre esa área arranca sabiéndolo.
+
 ## Posición en el pipeline
 
 Típicamente corre **después del PM** (lee `pm/handoff`) y **antes del Developer** (el Developer lee `architect/handoff`). En cambios simples no se invoca — de eso se encarga el Developer directamente. Cuando corre, corre un solo paso, `design`, y qué tan profundo va lo decide él mismo.

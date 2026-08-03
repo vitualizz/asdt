@@ -24,6 +24,17 @@ El especialista QA no es elegible para complejidad trivial. En trivial vuelve a 
 - Querés cobertura sistemática de casos borde, no solo tests del happy path
 - Necesitás un plan de pruebas estructurado que un Developer pueda implementar sin adivinar
 
+## Por su cuenta
+
+No necesita que alguien acabe de programar. Apúntalo a lo que ya está:
+
+```
+/asdt-qa "¿qué no cubren nuestros tests de auth?"
+/asdt-qa "revisa la cobertura del carrito y dame un veredicto"
+```
+
+Trabaja con lo que encuentre —hand-offs previos si los hay, el código si no— y cierra igual con go/no-go.
+
 ## Posición en el pipeline
 
 Típicamente corre **después del Developer** (lee `developer/handoff`) y es el sign-off final antes de mergear. Puede correr antes — contra `pm/handoff` o `architect/handoff` — para detectar problemas en los criterios de aceptación antes de que empiece la implementación. Ese pase temprano ahorra mucho más que encontrar las brechas con el código ya escrito. Toda entrada es opcional: sin ninguna, trabaja desde la petición y el código.

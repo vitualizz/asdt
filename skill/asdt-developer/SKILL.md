@@ -68,7 +68,7 @@ examines existing code rather than changing it. Consumed by QA. It is the only a
 specialist persists.
 
 ## Invariants
-- **Write scope (MODE-gated, sdd-apply model)**: the `implement` step runs in one of two modes,
+- **Write scope (MODE-gated)**: the `implement` step runs in one of two modes,
   gated by whether declared edit roots are resolved:
   - **plan-only mode** (default): if NO `files_to_create`/`files_to_modify` targets are declared
     in `dev-spec`, write NOTHING to the host repo. Produce plan-only output — code as

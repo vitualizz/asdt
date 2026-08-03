@@ -25,6 +25,15 @@ Una dependencia fuerte: `information-architecture` debe correr antes que `user-f
 - Los requisitos de accesibilidad necesitan especificarse explícitamente
 - Querés que el Developer reciba una spec en lugar de inferir la UX de los requisitos
 
+## Por su cuenta
+
+Apúntalo a una pantalla o un flujo que ya existe:
+
+```
+/asdt-ux-ui "revisá la accesibilidad del checkout"
+/asdt-ux-ui "¿qué componentes del design system no estamos usando en el onboarding?"
+```
+
 ## Posición en el pipeline
 
 Funciona mejor **antes del Developer** — el `ux-brief` y el `component-spec` son inputs que el Developer lee para implementar la UI correctamente. Puede correr en paralelo con el Arquitecto, ya que el diseño UX y las decisiones de arquitectura son en gran medida independientes. Correrlo después de que el Developer ya construyó una pantalla significa que la spec llega demasiado tarde para guiar la implementación.

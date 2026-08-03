@@ -24,6 +24,18 @@ The Architect Specialist never writes implementation code, UX specs, or test pla
 - A cross-cutting concern (caching strategy, auth model, event bus) needs a documented decision
 - You want a formal ADR to explain to future engineers why the code is the way it is
 
+## On its own
+
+No change in flight required. Point it at what already exists and it judges it instead of redesigning it — prioritized findings with evidence, and the strengths too:
+
+```
+/asdt-architect "does this structure scale if traffic triples?"
+/asdt-architect "audit the boundaries of the payments module"
+/asdt-architect "which decisions here are already expensive to reverse?"
+```
+
+What it finds is kept, so the next run over that area starts already knowing it.
+
 ## Pipeline position
 
 Typically runs **after PM** (reads `pm/handoff`) and **before Developer** (Developer reads `architect/handoff`). On simple changes it is not called at all — the Developer handles those directly. When it does run, it runs one step, `design`, and how deep that step goes is its own call.

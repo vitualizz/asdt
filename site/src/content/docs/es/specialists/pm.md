@@ -60,6 +60,14 @@ Un único hand-off en `{project}/{change}/pm/handoff`:
 
 Lo consumen: **Arquitecto**, **Developer**, **QA** y **UX/UI**. Todos lo leen como entrada opcional: si el PM no corrió, cada uno trabaja desde la petición cruda y lo anota.
 
+## Por su cuenta
+
+También sirve para ordenar lo que ya existe sin abrir un cambio:
+
+```
+/asdt-pm "¿qué quedó fuera de alcance en el rediseño de notificaciones?"
+```
+
 ## Qué consume
 
 La petición cruda, las convenciones detectadas del proyecto, y —si el Researcher corrió antes— su `researcher/handoff`: la dirección recomendada le da el punto de partida, y las direcciones descartadas alimentan el alcance fuera.

@@ -9,7 +9,7 @@ import TutorialPipelineStepper from '@components/TutorialPipelineStepper.astro'
 
 # Tutorial: Your First Pipeline
 
-In this tutorial you will install ASDT and run a complete PM → Architect → Developer pipeline for a concrete feature: **adding a contact form with validation**.
+In this tutorial you will install ASDT, ask a specialist one question about a repo you already have, and only then run a complete PM → Architect → Developer delivery for a concrete feature: **adding a contact form with validation**.
 
 ASDT works with two AI assistants — **Claude Code** and **OpenCode**. The steps below are identical for both; wherever they differ (config location, restart, auth) both are shown side by side. Pick whichever you use.
 
@@ -64,7 +64,21 @@ Open your assistant (Claude Code or OpenCode) in your project directory and run:
 
 This creates `.asdt/config.yaml` (memory provider settings) and `.asdt/knowledge/platform.yaml` (detected stack), so every specialist tailors its output to your project.
 
-## Step 3 — Ask ASDT for a pipeline recommendation
+## Step 3 — Ask a specialist something
+
+Before building anything, try the shortest path in. Point a specialist at code you already have:
+
+```
+/asdt-security "audit how we handle sessions"
+```
+
+It reads the relevant code, tells you what it found in plain prose, and keeps the findings so anything you run later over that area starts already knowing them. Nothing was planned, nothing was routed — one question, one answer.
+
+Every specialist works this way. `/asdt-architect "does this structure scale?"`, `/asdt-qa "what don't our tests cover?"`. That is the whole of it, and for many days it is all you need.
+
+The rest of this tutorial is the other half: handing the team something to build.
+
+## Step 4 — Ask ASDT for a pipeline recommendation
 
 In your assistant, run:
 
@@ -87,7 +101,7 @@ Recommended pipeline:
 Run each command in order. Each specialist reads the previous one's output automatically.
 ```
 
-## Step 4 — Run the Product Manager
+## Step 5 — Run the Product Manager
 
 ```text
 /asdt-pm "Add a contact form with validation"
@@ -121,7 +135,7 @@ Produced: pm/handoff
 Artifact saved to knowledge base.
 ```
 
-## Step 5 — Run the Architect
+## Step 6 — Run the Architect
 
 ```text
 /asdt-architect
@@ -154,7 +168,7 @@ Produced: architectural-decision + system-design
 Artifacts saved to knowledge base.
 ```
 
-## Step 6 — Run the Developer
+## Step 7 — Run the Developer
 
 ```text
 /asdt-developer

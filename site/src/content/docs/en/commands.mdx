@@ -41,10 +41,18 @@ Initialize ASDT in the current project. Detects your stack and creates `.asdt/co
 
 ### `/asdt`
 
-Pipeline routing suggestion. Describe what you want to build — ASDT analyzes the request, recommends which specialists to involve and in what order, and waits for your confirmation before listing the commands to run.
+Ask the team. Describe what you want built and it recommends which specialists to involve and in what order, waiting for your confirmation before listing the commands to run.
 
 ```
-/asdt Add email verification to the signup flow
+/asdt "add email verification to the signup flow"
+```
+
+It also answers questions about the state of the work, straight from what the team already worked out — no specialists are run:
+
+```
+/asdt "what did we decide about the password hashing?"
+/asdt "how are we doing on the checkout redesign?"
+/asdt "what's still open?"
 ```
 
 ### `/asdt-researcher`

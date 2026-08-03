@@ -24,6 +24,17 @@ Two operating modes gate actual file writes. In **plan-only mode** (default), th
 - You want production code written directly to the codebase (writing mode, with declared targets)
 - You're picking up from a prior Architect or PM artifact stored in the knowledge base
 
+## On its own
+
+Point it at code that already exists and it answers without touching it:
+
+```
+/asdt-developer "how is the login flow put together today?"
+/asdt-developer "how would you migrate this to the new API?"
+```
+
+A question stops at exploration; asking for a plan reaches the spec; only asking it to build writes files.
+
 ## Pipeline position
 
 Typically runs **after Architect** (reads `architectural-decision` + `system-design-final`) and produces the final `dev-implementation` consumed by QA. Can run standalone with just a request description — it will explore and spec the problem itself without upstream artifacts. At `simple` complexity, it bypasses the Architect entirely.

@@ -2,6 +2,8 @@
 
 **A full software team of AI specialists — architect, developer, QA, security, UX — for when you're building alone.**
 
+Ask one of them to look at what you already have, or hand the whole job to the team. Either way your project remembers: every decision one specialist makes is there for the next one, minutes or days later.
+
 📖 **[Read the docs →](https://vitualizz.github.io/asdt)**
 
 ---
@@ -10,11 +12,11 @@
 
 A plain chat with an AI assistant improvises. It forgets what you decided yesterday, reinvents its process on every prompt, and leaves no trail behind.
 
-ASDT turns that chat into a **team**. It installs a set of AI specialists into [Claude Code](https://claude.com/claude-code) or [OpenCode](https://opencode.ai) — each one owns a discipline and hands its work to the next through a shared memory:
+ASDT turns that chat into a **team**. It installs a set of AI specialists into [Claude Code](https://claude.com/claude-code) or [OpenCode](https://opencode.ai), each one owning a discipline:
 
-- The **architect** decides → the **developer** builds on that decision → the **QA** tests what was built → the **security** engineer reviews it.
-- You stay in charge: you describe what you need, ASDT suggests who should work on it and in what order, and you confirm.
-- Nothing gets forgotten. Every decision, plan, and test lives in a shared knowledge base, so a specialist can pick up where another left off — minutes or days later.
+- **Any of them works on its own.** Point the security engineer at your payments module, ask the architect whether a structure will hold, ask QA what your tests are missing. No setup, no pipeline, no ceremony — one question, one answer.
+- **Or they work as a team.** Describe what you want built and they pass the work between them: the architect decides, the developer builds on that decision, QA tests it, security reviews it. You say who runs and in what order — the team proposes, you confirm.
+- **Your project remembers.** What each specialist worked out is kept, so the next one starts from it instead of from scratch. You can also just ask what the team decided last week.
 
 > **AI-powered. Human-directed.** You lead, the team executes.
 
@@ -30,7 +32,7 @@ It downloads the pre-built binary for your platform (Linux/macOS · x86_64/arm64
 
 > If `~/.local/bin` isn't on your `PATH`, the installer tells you exactly what line to add.
 
-## Get started in 3 steps
+## Get started
 
 **1. Install the specialists into your assistant**
 
@@ -50,19 +52,33 @@ Open your AI assistant in your project folder and run:
 
 It detects your stack, asks a couple of questions, and writes `.asdt/config.yaml`.
 
-**3. Put the team to work**
+**3. Ask a specialist**
 
-Not sure who you need? Just ask:
-
-```
-/asdt Add user authentication with email and password
-```
-
-ASDT analyzes the request and suggests a route — for example `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Confirm it, then run each command. Already know who you need? Call a specialist directly:
+The fastest way in. Point one at something you already have — no plan, no setup:
 
 ```
-/asdt-developer Implement the password reset endpoint
+/asdt-security "audit the payments module"
 ```
+
+It reads the code, tells you what it found, and keeps the findings for later. Every specialist works this way: `/asdt-architect "does this structure scale?"`, `/asdt-qa "what don't our auth tests cover?"`.
+
+**4. Hand work to the team**
+
+When there's something to build and you're not sure who you need, ask for the whole thing:
+
+```
+/asdt "add password reset"
+```
+
+The team reads the request and proposes who should work on it and in what order — say, the architect, then the developer, then security because passwords are involved. Confirm, and run the commands it gives you. Each one picks up what the previous left behind.
+
+**5. Ask how it's going**
+
+```
+/asdt "what did we decide about the password hashing?"
+```
+
+That one is answered straight from what the team already worked out — no work is run.
 
 ## How it works
 
@@ -79,6 +95,8 @@ flowchart TD
     steps -.->|working notes stay in context| specialists
     specialists -->|one hand-off per specialist| engram[(Shared memory\npersistent knowledge base)]
     engram -->|the next specialist reads it| specialists
+
+    ask([Question about what exists]) -->|straight to one specialist| specialists
 ```
 
 **The router recommends.** `/asdt` reads your request, judges how much it touches and how much risk it carries, and proposes a chain of specialists. It never runs one.
@@ -86,6 +104,8 @@ flowchart TD
 **Each specialist finishes with exactly one hand-off.** Whatever it worked through on the way — exploration, drafts, intermediate analysis — stays in the conversation and disappears with it. What crosses the boundary to the next specialist is a single record at `{project}/{change}/{role}/handoff`, saved to a persistent memory layer (default: [Engram](https://github.com/Gentleman-Programming/engram)) rather than to files on disk. Work survives across sessions, and the next specialist picks it up without being told to.
 
 **Steps run isolated.** A step that reads the codebase gets its own sub-agent so it never pollutes the others' context, and it never delegates further.
+
+Under the hood, every specialist produces a structured hand-off before any code is written — what the industry calls spec-driven. You never have to think about it; it is why the next specialist can start from a decision instead of a guess.
 
 When a run produces a decision that would not be obvious from the code later, one line goes to the project journal. That is the only other thing ASDT writes.
 

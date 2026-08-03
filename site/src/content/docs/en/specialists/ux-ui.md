@@ -25,6 +25,15 @@ One hard dependency: `information-architecture` must run before `user-flows`. Yo
 - Accessibility requirements need to be specified explicitly
 - You want the Developer to receive a spec rather than infer the UX from the requirements
 
+## On its own
+
+Point it at a screen or a flow that already exists:
+
+```
+/asdt-ux-ui "review the accessibility of checkout"
+/asdt-ux-ui "which design-system components are we not using in onboarding?"
+```
+
 ## Pipeline position
 
 Works best **before Developer** — the `ux-brief` and `component-spec` are inputs the Developer reads to implement the UI correctly. Can run in parallel with Architect, since UX design and architecture decisions are largely independent. Running it after the Developer has already built a screen means the spec arrives too late to guide the implementation.
