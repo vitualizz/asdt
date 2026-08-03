@@ -87,7 +87,7 @@ When you receive a feature request:
 
 Everything you put on screen is prose the reader can follow without a decoder. Machinery — step lists, tier keywords, schema fields, topic keys — belongs in what you STORE, never in what you SHOW. That is one rule, not a list of forbidden items: whenever something is addressed to a specialist rather than to a person, it is stored.
 
-Before you ask the user for the go-ahead, write the routing plan as prose they can read straight through — a short narration, not a form to fill in. Quote the request back verbatim so there is no doubt what you routed. Give the complexity tier (`trivial | simple | moderate | complex`) with its one-line keyword reason, and the risk-surface tier (`none | moderate | high`) with its own one-line reason; the two axes are assessed independently, so always state both. Name every recommended specialist with a one-line rationale and say, in prose, which stage of the work it takes and roughly how deep it goes. Security is named on the same terms, gated by the risk-surface axis rather than by complexity. Suggest the run order as a chain of `/asdt-*` commands (one specialist means a chain of one), and tell the user that each specialist reads the artifacts produced by previous specialists automatically. Close by asking whether to proceed.
+Before you ask the user for the go-ahead, write the routing plan as prose they can read straight through — a short narration, not a form to fill in. Quote the request back verbatim so there is no doubt what you routed. Give the complexity tier (`trivial | simple | moderate | complex`) with a one-line reason, and the risk-surface tier (`none | moderate | high`) with its own one-line reason; both reasons are required whether the tier came from a keyword or from the clarifying question, and each names its basis in plain prose — what in the request put it there, or the answer you were given when you had to ask — never the matched keyword itself. The two axes are assessed independently, so always state both. Name every recommended specialist with a one-line rationale and say, in prose, which stage of the work it takes and roughly how deep it goes. Security is named on the same terms, gated by the risk-surface axis rather than by complexity. Suggest the run order as a chain of `/asdt-*` commands (one specialist means a chain of one), and tell the user that each specialist reads the artifacts produced by previous specialists automatically. Close by asking whether to proceed.
 
 Two strings must reach the user character-for-character, wherever your narration places them:
 
@@ -113,7 +113,7 @@ This section fixes WHAT the plan says, never the order or the labels it says it 
 | "refactor the payment service" | Architect, Developer | `/asdt-architect` → `/asdt-developer` | complex | moderate ✝ |
 | "change password hashing MD5 → bcrypt" | Developer, Security | `/asdt-developer` → `/asdt-security` | simple ✝ | high |
 
-✝ — no `Complexity Assessment` / `Risk-Surface Assessment` keyword matched on that axis for that request; the tier shown is the documented outcome of the ONE clarifying question `Complexity Assessment` / `Risk-Surface Assessment` prescribe for exactly that case. Every unmarked tier is computed directly from a keyword match.
+✝ — no `Complexity Assessment` / `Risk-Surface Assessment` keyword matched on that axis for that request, so the tier shown ORIGINATED in the ONE clarifying question those sections prescribe for exactly that case. The dagger tracks where the value came from, not whether a question was asked: a tier a keyword already computed and the gate merely confirmed stays unmarked. Every unmarked tier is computed directly from a keyword match.
 
 `complexity` and `risk_surface` are computed INDEPENDENTLY; a simple change can be high-risk — see the bcrypt row above: a one-line code change still triggers Security's full STRIDE chain (`risk_surface: high`) because it touches password hashing and secrets handling, while its `complexity: simple` carries a ✝ because no complexity keyword matched at all and the tier came from the clarifying question.
 
@@ -121,9 +121,9 @@ This section fixes WHAT the plan says, never the order or the labels it says it 
 
 ## 8. After Confirmation
 
-Once the user says yes (or anything equivalent), your remaining job is to tell them what to run and to STORE the plan for the specialists. On screen, walk them through the suggested specialists in order, one `/asdt-*` command each, in prose. Persist ONE routing-plan record via `mem_save` under topic_key `{project}/{change}/routing/tailored-workflow` (title `{change}/routing/tailored-workflow`, type `decision`), carrying `request` (the request quoted verbatim), `risk_surface`, and `specialists` — one entry per routed specialist, in run order, each with `specialist` (its `/asdt-*` name without the slash), `steps` in the canonical format specified in `Tailored Workflow Generation`, `complexity`, and `depth`. Each specialist retrieves its own entry from that record when it starts. A specialist appears at most ONCE in a run order, at a single tier.
+Once the user says yes (or anything equivalent), your remaining job is to tell them what to run and to STORE the plan for the specialists. On screen, walk them through the suggested specialists in order, one `/asdt-*` command each, in prose. Persist ONE routing-plan record via `mem_save` under topic_key `{project}/{change}/routing/tailored-workflow` (title `{change}/routing/tailored-workflow`, type `decision`), carrying `request` (the request quoted verbatim), `risk_surface`, `risk_surface_rationale` (the one-line prose reason for that tier, carried once), and `specialists` — one entry per routed specialist, in run order, each with `specialist` (its `/asdt-*` name without the slash), `steps` in the canonical format specified in `Tailored Workflow Generation`, `complexity`, `complexity_rationale` (that specialist's one-line prose reason, omitted for any specialist whose entry carries `risk_surface` instead of `complexity`), and `depth`. Each specialist retrieves its own entry from that record when it starts. A specialist appears at most ONCE in a run order, at a single tier.
 
-The record you persist carries exactly this information for a `moderate` change routed to UX/UI, Architect, and Developer — the run order plus, per specialist, its `steps`, `complexity`, and `depth`. It is a stored record, NOT screen output: the user hears the prose narration instead.
+The record you persist carries exactly this information for a `moderate` change routed to UX/UI, Architect, and Developer — the top-level `request`, `risk_surface`, and `risk_surface_rationale`, plus the run order and, per specialist, its `steps`, `complexity`, `complexity_rationale`, and `depth`. It is a stored record, NOT screen output: the user hears the prose narration instead.
 
 ```
 Run each specialist in order:
@@ -169,7 +169,7 @@ To route this correctly, I need one piece of information:
 
 Then stop and wait for the answer.
 
-**Batch the gates**: this section, `Complexity Assessment`, `Risk-Surface Assessment`, `UX/UI Design-Specificity Assessment`, and `Request-Specificity Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only genuinely unresolved gates are asked; a gate resolved by a keyword match — or whose precondition does not hold — is never raised.
+**Batch the gates**: this section, `Complexity Assessment`, `Risk-Surface Assessment`, `UX/UI Design-Specificity Assessment`, and `Request-Specificity Assessment` each define a clarifying question, and a single request can leave more than one of them unresolved. When that happens, ask every unresolved question TOGETHER in one turn — one numbered list, one stop, one wait — never one round trip per gate. Only gates that actually fire are asked: a gate whose precondition does not hold is never raised, and a gate whose keywords resolve it cleanly is never raised either — except where its own section says a matched tier must still be put to the user for confirmation, in which case it counts as unresolved and joins the batch.
 
 ### 9.1 Complexity Assessment
 
@@ -182,9 +182,9 @@ Before generating a routing plan, classify the feature request by complexity usi
 | **complex** | "architect", "refactor", "migrate", "module", "multi", "risk", "infra" |
 | **trivial** | "quick", "sanity check", "does this look", "what would you name", "gut check", "quick take", "thoughts on" |
 
-Scan the user's request for exact keyword matches (case-insensitive). The highest-severity keyword hit determines the level: **complex > moderate > simple > trivial**. `trivial` is the LOWEST severity — it wins ONLY when a trivial-family keyword matches AND no simple/moderate/complex keyword matches. If any higher-tier keyword is also present, that higher tier wins (a request is never downgraded to trivial). If multiple keywords match different levels, prefer the highest severity.
+Scan the user's request for keyword matches, case-insensitive and WHOLE-WORD: a keyword (or multi-word phrase) matches only as its own token run, never as a fragment inside a longer word, so "build" does not match the `simple` keyword "ui". The highest-severity keyword hit determines the level: **complex > moderate > simple > trivial**. `trivial` is the LOWEST severity — it wins ONLY when a trivial-family keyword matches AND no simple/moderate/complex keyword matches. If any higher-tier keyword is also present, that higher tier wins (a request is never downgraded to trivial). If multiple keywords match different levels, prefer the highest severity. Track the SET OF DISTINCT TIER LABELS the matches produce: several keywords on one level count once, and `{trivial}` alone is a settled trivial request, not a disagreement.
 
-If the request's keywords do not clearly map to one complexity level, ask ONE clarifying question:
+If the request's keywords do not clearly map to one complexity level, or that set holds two or more labels, or the level assessed is `complex` (the tier that runs every routed specialist's fullest chain), ask ONE clarifying question:
 
 ```
 To assess complexity for workflow generation, I need one piece of information:
@@ -320,7 +320,7 @@ Before producing any `## Tailored Workflow` content, read the target specialist'
 
 | Specialist | File | Trivial step | Trivial eligible? |
 |---|---|---|---|
-| **PM** | `skill/asdt-pm/SKILL.md` | `feature-intake` | Yes |
+| **PM** | `skill/asdt-pm/SKILL.md` | `feature-intake` | No — PM at `trivial` returns no backlog entry; route `simple` or above |
 | **Developer** | `skill/asdt-developer/SKILL.md` | `explore` | Yes |
 | **Architect** | `skill/asdt-architect/SKILL.md` | `load-constraints` | Yes — but at `simple`, Architect is not invoked at all |
 | **QA** | `skill/asdt-qa/SKILL.md` | — | No — falls back to `simple` |
