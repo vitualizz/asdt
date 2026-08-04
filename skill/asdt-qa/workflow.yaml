@@ -2,116 +2,33 @@ specialist: qa
 routable: true
 steps:
   - name: knowledge-recall
-    skill: ../asdt-shared/skills/knowledge-recall.md
-    description: Query organizational memory for prior QA decisions, known edge cases, and test strategies relevant to this change before acting
+    skill: ../asdt-core/references/knowledge-recall.md
+    description: Query organizational memory for prior quality findings, edge cases, and test decisions relevant to this change
     execution: inline
 
-  - name: load-requirements
-    skill: steps/load-requirements.md
-    description: Load upstream spec artifacts and extract acceptance criteria into the ac-list artifact
-    execution: subagent
-    model: haiku
-    agent: analyst
-    inputs: []
-    output_topic_key: "{project}/{change}/qa/ac-list"
-    reference_skills:
-      - ../asdt-shared/skills/artifact-loading.md
-
-  - name: ac-validation
-    skill: steps/ac-validation.md
-    description: Validate acceptance criteria for completeness and surface any gaps
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/qa/ac-list"
-    output_topic_key: "{project}/{change}/qa/ac-gaps"
-    reference_skills:
-      - skills/acceptance-criteria.md
-      - ../asdt-shared/skills/platform-context.md
-
-  - name: edge-case-analysis
-    skill: steps/edge-case-analysis.md
-    description: Identify edge cases not covered by the acceptance criteria
+  - name: test-plan
+    skill: steps/test-plan.md
+    description: Find the gaps and edge cases the acceptance criteria missed, turn them into concrete test cases, and give a go/no-go verdict
     execution: subagent
     model: opus
     agent: analyst
     inputs:
-      - "{project}/{change}/qa/ac-list"
-    output_topic_key: "{project}/{change}/qa/edge-cases"
+      - "{project}/{change}/pm/handoff" # optional — acceptance criteria and NFR targets
+      - "{project}/{change}/developer/handoff" # optional — what was actually built
+      - "{project}/{change}/architect/handoff" # optional — the design and its declared risks
+    output_topic_key: "{project}/{change}/qa/handoff"
     reference_skills:
-      - skills/edge-case-analysis.md
-      - ../asdt-shared/skills/platform-context.md
+      - ../asdt-core/references/testing.md
+      - ../asdt-core/protocol.md
 
-  - name: test-strategy
-    skill: steps/test-strategy.md
-    description: Define the test strategy (unit / integration / e2e split, coverage targets)
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/qa/edge-cases"
-    output_topic_key: "{project}/{change}/qa/test-strategy"
-    reference_skills:
-      - skills/test-strategy.md
-
-  - name: test-case-generation
-    skill: steps/test-case-generation.md
-    description: Generate concrete test cases from the strategy and edge case analysis
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/qa/ac-list"
-      - "{project}/{change}/qa/test-strategy"  # optional (tier-gated: test-strategy runs at moderate+)
-      - "{project}/{change}/qa/edge-cases"  # optional (tier-gated: edge-case-analysis runs at moderate+)
-    output_topic_key: "{project}/{change}/qa/test-cases"
-    reference_skills:
-      - ../asdt-shared/skills/platform-context.md
-
-  - name: quality-report
-    skill: steps/quality-report.md
-    description: Consolidate test cases and AC gaps into the final test-plan artifact
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/qa/test-cases"
-      - "{project}/{change}/qa/ac-gaps"
-    output_topic_key: "{project}/{change}/qa/test-plan"
-    reference_skills:
-      - ../asdt-shared/skills/report.md
-
-  - name: performance-validation
-    skill: steps/performance-validation.md
-    description: Gate — validate planned/measured performance against the PM NFR targets and produce a go/no-go verdict
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/qa/test-plan"
-      - "{project}/{change}/pm/nfr-targets"  # optional (tier-gated: PM success-metrics runs at moderate+)
-    output_topic_key: "{project}/{change}/qa/perf-validation"
-    reference_skills:
-      - ../asdt-shared/skills/nfr-budget.md
-
-  # Placed last among the subagent steps: the go/no-go shipping verdict is
-  # produced before knowledge is preserved, so decision-preservation records a
-  # decided outcome rather than an open question.
   - name: review
     skill: steps/review.md
-    description: Evaluate the test-plan holistically and produce a final go/no-go shipping verdict
+    description: Audit the test suite that already exists for an area — coverage gaps, weak assertions, and a verdict on its health
     execution: subagent
-    model: sonnet
+    model: opus
     agent: analyst
-    inputs:
-      - "{project}/{change}/qa/test-plan"
-      - "{project}/{change}/qa/ac-gaps"
-      - "{project}/{change}/qa/perf-validation"  # optional (tier-gated)
-    output_topic_key: "{project}/{change}/qa/qa-review"
-    reference_skills: []
-
-  - name: decision-preservation
-    skill: ../asdt-shared/skills/decision-preservation.md
-    description: Save a permanent organizational knowledge record of QA decisions made during this run
-    execution: inline
+    inputs: []
+    output_topic_key: "{project}/study/{topic}/qa"
+    reference_skills:
+      - ../asdt-core/references/testing.md
+      - ../asdt-core/protocol.md

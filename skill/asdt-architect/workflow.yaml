@@ -2,106 +2,37 @@ specialist: architect
 routable: true
 steps:
   - name: knowledge-recall
-    skill: ../asdt-shared/skills/knowledge-recall.md
+    skill: ../asdt-core/references/knowledge-recall.md
     description: Query organizational memory for prior architectural decisions relevant to this change before acting
     execution: inline
 
   - name: platform-analysis
-    skill: ../asdt-shared/skills/platform-context.md
+    skill: ../asdt-core/references/platform-context.md
     description: Load and inject platform conventions and design fingerprint from knowledge.yaml
     execution: inline
 
-  - name: load-constraints
-    skill: steps/load-constraints.md
-    description: Load architectural constraints from platform context into the constraints artifact
+  - name: design
+    skill: steps/design.md
+    description: Make the architectural decision, design the data model and API surface, and emit the hand-off Developer and QA consume
     execution: subagent
-    model: sonnet
+    model: opus
+    agent: analyst
+    inputs:
+      - "{project}/{change}/pm/handoff" # optional — the requirements this design satisfies; degrade gracefully if absent
+    output_topic_key: "{project}/{change}/architect/handoff"
+    reference_skills:
+      - ../asdt-core/references/api-design.md
+      - ../asdt-core/references/scope-definition.md
+      - ../asdt-core/protocol.md
+
+  - name: review
+    skill: steps/review.md
+    description: Judge the architecture that already exists in an area — prioritized findings with evidence, not a design
+    execution: subagent
+    model: opus
     agent: analyst
     inputs: []
-    output_topic_key: "{project}/{change}/architect/constraints-analysis"
+    output_topic_key: "{project}/study/{topic}/architect"
     reference_skills:
-      - skills/architecture-review.md
-      - ../asdt-shared/skills/artifact-loading.md
-
-  - name: evaluate-approaches
-    skill: steps/evaluate-approaches.md
-    description: Evaluate candidate architectural approaches against the loaded constraints
-    execution: subagent
-    model: opus
-    agent: analyst
-    inputs:
-      - "{project}/{change}/architect/constraints-analysis"
-    output_topic_key: "{project}/{change}/architect/approaches"
-    reference_skills: []
-
-  - name: decision-record
-    skill: steps/decision-record.md
-    description: Select the winning approach and produce an Architecture Decision Record
-    execution: subagent
-    model: opus
-    agent: analyst
-    inputs:
-      - "{project}/{change}/architect/approaches"
-    output_topic_key: "{project}/{change}/architect/adr"
-    reference_skills: []
-
-  - name: system-design
-    skill: steps/system-design.md
-    description: Produce the full system design artifact (data model + API surface) from the ADR
-    execution: subagent
-    model: opus
-    agent: analyst
-    inputs:
-      - "{project}/{change}/architect/adr"
-    output_topic_key: "{project}/{change}/architect/system-design"
-    reference_skills:
-      - ../asdt-shared/skills/platform-context.md
-      - ../asdt-shared/skills/scope-definition.md
-      - skills/api-design.md
-      - skills/scalability-analysis.md
-
-  - name: cost-estimation
-    skill: steps/cost-estimation.md
-    description: Estimate the cost profile of the system design per NFR dimension and judge each against the PM budget
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/architect/system-design"
-      - "{project}/{change}/pm/nfr-targets"  # optional (tier-gated: PM success-metrics runs at moderate+)
-    output_topic_key: "{project}/{change}/architect/cost-estimate"
-    reference_skills:
-      - ../asdt-shared/skills/nfr-budget.md
-
-  - name: risk-analysis
-    skill: steps/risk-analysis.md
-    description: Identify risks introduced by the system design and rate them by severity
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/architect/system-design"
-    output_topic_key: "{project}/{change}/architect/risks"
-    reference_skills: []
-
-  - name: technical-handoff
-    skill: steps/technical-handoff.md
-    description: Consolidate ADR, system-design, and risks into the final architectural-decision + system-design artifacts
-    execution: subagent
-    model: sonnet
-    agent: analyst
-    inputs:
-      - "{project}/{change}/architect/adr"
-      - "{project}/{change}/architect/system-design"  # optional (tier-gated: system-design runs at complex)
-      - "{project}/{change}/architect/risks"  # optional (tier-gated: risk-analysis runs at complex)
-    output_topic_key: "{project}/{change}/architect/architectural-decision"
-    # NOTE: dual-artifact step — the second final artifact persists under
-    # "{project}/{change}/architect/system-design-final". Full contract in the
-    # step file's `## Output`.
-    reference_skills:
-      - ../asdt-shared/skills/report.md
-
-  - name: decision-preservation
-    skill: ../asdt-shared/skills/decision-preservation.md
-    description: Save a permanent organizational knowledge record of the architectural decision made during this run
-    execution: inline
+      - ../asdt-core/references/api-design.md
+      - ../asdt-core/protocol.md

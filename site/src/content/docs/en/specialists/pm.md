@@ -1,60 +1,82 @@
 ---
 title: Product Manager
-description: Transforms raw feature requests into structured backlog entries with user stories, scope boundaries, and prioritization — the specialist to bring in before architecture or code when requirements need formalization.
+description: Turns a raw request into requirements the rest of the team can build from without guessing — stories in delivery order, explicit scope, and acceptance criteria.
 order: 20
 locale: en
 ---
 
 # Product Manager (`/asdt-pm`)
 
-> Transforms raw feature requests into structured backlog entries with user stories, scope boundaries, and prioritization — the specialist to bring in before architecture or code when requirements need formalization.
+> Turns a raw request into requirements the rest of the team can build from without guessing — stories in delivery order, explicit scope, and acceptance criteria.
 
 ## What it does
 
-The PM Specialist turns vague feature requests into a precise requirements artifact that every other specialist can consume without ambiguity. It extracts the core problem, identifies stakeholders, writes user stories with preliminary acceptance criteria, defines explicit scope boundaries, and consolidates everything into a single `backlog-entry` that flows downstream.
+PM runs one step and hands back one artifact. It takes what you asked for and turns it into 3 to 6 user stories, each carrying one or two acceptance criteria in plain language.
 
-Two properties make the backlog-entry contract strict: scope boundaries are **mandatory** — a backlog-entry without explicit out-of-scope items is considered incomplete, because scope ambiguity is the root cause of most scope creep. And the acceptance criteria in the backlog-entry are high-level plain English conditions — **not** final testable criteria. QA formalizes them into Given/When/Then format.
+**The order of the stories is the priority.** The first one ships first. No MoSCoW ratings, no separate priority field, no matrix to keep in sync: to change the priority, change the order.
 
-The PM Specialist never writes architecture decisions, implementation code, or UX specs. Its one job is to make requirements unambiguous so that no downstream specialist has to guess.
+**Out-of-scope is mandatory.** A hand-off that does not say explicitly what is excluded is incomplete — not "there was nothing to exclude". Scope ambiguity is where most scope creep comes from, and naming the adjacent thing is what stops it.
 
-## When to invoke it
+NFRs only make the cut when the feature genuinely implies them and they are measurable. "p95 under 200ms, measured with k6" is an NFR; "it should be fast" is nothing.
 
-- The request is phrased in vague or user-facing language ("add dark mode", "improve search")
-- You need explicit user stories before the Architect or Developer gets involved
-- Scope needs to be locked down before work starts to prevent mid-sprint expansion
-- Multiple stakeholders are involved and their needs need to be reconciled
+## When to bring it in
 
-## Pipeline position
+- The request is in user language and needs pinning down before design or code
+- Scope has to be agreed before work starts, so it cannot grow mid-flight
+- Several needs have to be reconciled and someone has to decide the order
 
-Works best as the **first** specialist in a pipeline — its `backlog-entry` is the primary requirements source for Architect, Developer, and QA. Running it after architecture is already decided risks scope/requirements drift. Can run standalone when you only need formalized requirements without proceeding further.
+Don't call it for a refactor, a cosmetic change, or a request that already arrives technically scoped. Go straight to Developer for those.
+
+## How to invoke it
+
+You talk to it. There are no flags: if you want more or less depth, say so inside the request and the specialist adjusts.
+
+```
+/asdt-pm "add email and password authentication"
+```
+
+```
+/asdt-pm "redesign notifications — several teams are involved, take your time"
+```
+
+```
+/asdt-pm "CSV export on the reports panel, keep it tight"
+```
 
 ## What it produces
 
-`pm/backlog-entry` — the canonical requirements artifact. Contains: feature name, executive summary, ordered user stories with acceptance criteria, full scope block (in/out of scope, integration points, risk flags), and open items for downstream specialists.
+A single hand-off at `{project}/{change}/pm/handoff`:
 
-Consumed by: **Architect** (reads executive summary + scope), **Developer** (reads user stories + priority order), **QA** (reads user stories + acceptance criteria as the primary requirements source).
+| Field | What it carries |
+|---|---|
+| `what` | The change in one sentence |
+| `decisions` | The stories, in delivery order |
+| `constraints` | Scope in, scope out, and the measurable NFRs |
+| `acceptance_criteria` | Given/When/Then, max 5 |
+| `risks` | `{risk, mitigation}`, one line each |
+| `open_items` | Real gaps, prefixed `ASSUMED:` where PM answered its own question |
 
-## Common patterns
+**PM is the authority on acceptance criteria.** Everyone downstream refines them — Developer takes them to implementation granularity, QA hunts for what they missed — but nobody rewrites them from scratch.
+
+Consumed by **Architect**, **Developer**, **QA**, and **UX/UI**. All of them read it as an optional input: if PM never ran, each works from the raw request and records that.
+
+## On its own
+
+It also serves to make sense of what already exists, without opening a change:
 
 ```
-/asdt-pm Add user authentication with email and password
-# → Ambiguous requirements, needs scope before architecture
+/asdt-pm "what ended up out of scope in the notifications redesign?"
 ```
 
-```
-/asdt-pm Redesign the notification system
-# → Multiple stakeholders with potentially competing needs
-```
+## What it consumes
 
-```
-/asdt-pm Add CSV export to the reporting dashboard
-# → Simple on the surface, but integration points and scope risk need mapping
-```
+The raw request, the project's detected conventions, and — when Researcher ran first — its `researcher/handoff`: the recommended direction becomes the starting point, and the rejected directions seed out-of-scope.
 
-## Limits — what it does NOT do
+With none of that available, it works from the request alone and says so.
 
-- Does not write architecture decisions or ADRs
-- Does not write implementation code or technical designs
-- Does not write UX specs, wireframes, or component specs
-- Does not produce final testable acceptance criteria (that's QA's job)
-- Never produces a backlog-entry without explicit out-of-scope items
+## Boundaries
+
+- Doesn't write architecture decisions or ADRs
+- Doesn't write code or technical designs
+- Doesn't write UX flows or component specs
+- Never produces a hand-off without explicit out-of-scope items

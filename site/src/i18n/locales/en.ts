@@ -185,242 +185,92 @@ export const en: UIStrings = {
     forWord: 'for',
   },
   data: {
+    chainsLabel: 'The request is',
+    chains: {
+      question: 'a question',
+      plan: 'a plan',
+      build: 'build it',
+    },
     specialistSteps: {
       'researcher:knowledge-recall': {
-        purpose: 'Search organizational memory for prior discovery, related decisions, and known constraints before ideating',
+        purpose: 'Recall prior discovery and related decisions before exploring',
         produces: 'context (inline)',
       },
-      'researcher:divergent-ideation': {
-        purpose: 'Frame the problem and generate divergent candidate directions — deliberately generative, never selective',
-        produces: 'researcher/ideation',
-      },
-      'researcher:feasibility-scan': {
-        purpose: 'Assess each idea with a green/yellow/red feasibility verdict, supporting evidence, and effort estimate',
-        produces: 'researcher/feasibility',
-      },
-      'researcher:discovery-brief': {
-        purpose: "Converge to ONE recommended direction with rationale; won't-do candidates seed PM's out-of-scope list",
-        produces: 'researcher/discovery-brief',
-      },
-      'researcher:decision-preservation': {
-        purpose: "Preserve the chosen direction as permanent organizational knowledge via the brief's summary field",
-        produces: 'summary (inline)',
+      'researcher:discovery': {
+        purpose: 'Frame the problem, diverge into candidate directions, judge feasibility with evidence, converge on one recommendation',
+        produces: 'researcher/handoff',
       },
       'pm:knowledge-recall': {
-        purpose: 'Search organizational memory for prior scope decisions and related requirements before formalizing the request',
+        purpose: 'Recall prior requirements and scope decisions for this project',
         produces: 'context (inline)',
       },
-      'pm:feature-intake': {
-        purpose: 'Parse raw request into structured problem statement — extracts problem, goal, stakeholders, flags ambiguities',
-        produces: 'pm/feature-intake',
-      },
-      'pm:user-stories': {
-        purpose: 'Write user stories with MoSCoW priorities and 1–3 high-level acceptance criteria per story',
-        produces: 'pm/user-stories',
-      },
-      'pm:success-metrics': {
-        purpose: 'Derive measurable NFR targets — budget, target value, and measurement method — from the user stories',
-        produces: 'pm/nfr-targets',
-      },
-      'pm:scope-analysis': {
-        purpose: 'Define explicit in/out of scope boundaries, integration points, and scope risk flags',
-        produces: 'pm/scope-analysis',
-      },
-      'pm:prioritization': {
-        purpose: 'Order stories by dependency and risk; move Won\'t stories to deferred with explicit reasons',
-        produces: 'pm/prioritization',
-      },
-      'pm:backlog-entry': {
-        purpose: 'Consolidate all PM artifacts into the final backlog entry with executive summary and ordered story list',
-        produces: 'pm/backlog-entry',
-      },
-      'pm:decision-preservation': {
-        purpose: "Preserve the scope and priority decisions as permanent organizational knowledge via the backlog entry's summary field",
-        produces: 'summary (inline)',
-      },
-      'architect:knowledge-recall': {
-        purpose: 'Search organizational memory for prior architectural decisions and known constraints before evaluating approaches',
-        produces: 'context (inline)',
-      },
-      'architect:platform-analysis': {
-        purpose: 'Read the detected platform knowledge and inject stack, conventions, and boundaries into the architectural context',
-        produces: 'platform context (inline)',
-      },
-      'architect:load-constraints': {
-        purpose: 'Read platform context and classify constraints as HARD (non-negotiable), SOFT (preferences), or OPPORTUNITIES',
-        produces: 'architect/constraints-analysis',
-      },
-      'architect:evaluate-approaches': {
-        purpose: 'Compare 2–3 viable approaches; choose one with explicit rationale; document why alternatives were rejected',
-        produces: 'architect/approaches',
-      },
-      'architect:decision-record': {
-        purpose: 'Write the ADR: context, decision, alternatives, and consequences — including negatives. Positives-only = incomplete',
-        produces: 'architect/adr',
-      },
-      'architect:system-design': {
-        purpose: 'Define data model, API surface (method/inputs/errors), service boundaries, and the happy-path sequence',
-        produces: 'architect/system-design',
-      },
-      'architect:cost-estimation': {
-        purpose: 'Estimate the cost profile of the system design per NFR dimension and judge each against the PM budget',
-        produces: 'architect/cost-estimate',
-      },
-      'architect:risk-analysis': {
-        purpose: 'Identify top 3–5 risks (performance, security, reliability, coupling, migration) with concrete mitigations',
-        produces: 'architect/risks',
-      },
-      'architect:technical-handoff': {
-        purpose: 'Consolidate all architectural work into two final artifacts for Developer and QA',
-        produces: 'architect/architectural-decision + architect/system-design-final',
-      },
-      'architect:decision-preservation': {
-        purpose: "Preserve the architectural decision as permanent organizational knowledge via the handoff's summary field",
-        produces: 'summary (inline)',
-      },
-      'developer:knowledge-recall': {
-        purpose: 'Search organizational memory for prior implementation decisions and conventions in this code area before exploring',
-        produces: 'context (inline)',
-      },
-      'developer:explore': {
-        purpose: 'Read affected files and modules; map naming patterns and constraints before designing anything',
-        produces: 'developer/dev-exploration',
-      },
-      'developer:spec': {
-        purpose: 'Define scope boundary, answer open questions, write acceptance criteria in Given/When/Then format',
-        produces: 'developer/dev-spec',
-      },
-      'developer:design': {
-        purpose: 'Choose technical approach, define data model and API shape, list key implementation constraints',
-        produces: 'developer/dev-design',
-      },
-      'developer:tasks': {
-        purpose: 'Break implementation into atomic tasks (<2h each) ordered by dependency, with S/M/L estimates',
-        produces: 'developer/dev-tasks',
-      },
-      'developer:implement': {
-        purpose: 'Write code for each task — plan-only mode (snippets) or writing mode (real files to declared targets)',
-        produces: 'developer/dev-implementation',
-      },
-      'developer:test': {
-        purpose: 'Write tests covering the implementation tasks and edge cases; emits suggested verification commands — never runs them',
-        produces: 'developer/dev-tests',
-      },
-      'developer:decision-preservation': {
-        purpose: "Preserve the implementation decision as permanent organizational knowledge via the implementation's summary field",
-        produces: 'summary (inline)',
-      },
-      'qa:knowledge-recall': {
-        purpose: 'Search organizational memory for prior quality decisions, known regressions, and past coverage gaps before validating',
-        produces: 'context (inline)',
-      },
-      'qa:load-requirements': {
-        purpose: 'Extract and normalize acceptance criteria from upstream artifacts into Given/When/Then format',
-        produces: 'qa/ac-list',
-      },
-      'qa:ac-validation': {
-        purpose: 'Review each AC for atomicity, measurability, independence, completeness, unambiguity — rewrite failing ones',
-        produces: 'qa/ac-gaps',
-      },
-      'qa:edge-case-analysis': {
-        purpose: 'Discover edge cases via boundary values, equivalence partitioning, state transitions, concurrent access, permission boundaries',
-        produces: 'qa/edge-cases',
-      },
-      'qa:test-strategy': {
-        purpose: 'Define test pyramid: what each level covers, what it does not, test data strategy, and flakiness tolerance',
-        produces: 'qa/test-strategy',
-      },
-      'qa:test-case-generation': {
-        purpose: 'Write structured test specs (Given/When/Then) for happy path, validated ACs, and critical/high edge cases',
-        produces: 'qa/test-cases',
-      },
-      'qa:quality-report': {
-        purpose: 'Verify AC coverage, compute percentage, render READY / READY WITH CAVEATS / BLOCKED verdict',
-        produces: 'qa/test-plan',
-      },
-      'qa:performance-validation': {
-        purpose: 'Validate planned or measured performance against the PM NFR targets and emit a go/no-go gate verdict',
-        produces: 'qa/perf-validation',
-      },
-      'qa:review': {
-        purpose: 'Go/no-go shipping verdict — holistic release-readiness decision integrating all QA findings before knowledge preservation',
-        produces: 'qa/qa-review',
-      },
-      'qa:decision-preservation': {
-        purpose: "Preserve the release-readiness verdict as permanent organizational knowledge via the review's summary field",
-        produces: 'summary (inline)',
-      },
-      'security:knowledge-recall': {
-        purpose: 'Search organizational memory for prior threat findings and accepted risks before modeling new threats',
-        produces: 'context (inline)',
-      },
-      'security:platform-analysis': {
-        purpose: 'Read the detected platform knowledge and inject stack, auth surface, and data handling into the security context',
-        produces: 'platform context (inline)',
-      },
-      'security:threat-modeling': {
-        purpose: 'Apply STRIDE: Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation of Privilege',
-        produces: 'security/stride-threats',
-      },
-      'security:attack-surface': {
-        purpose: 'Map entry points, trust boundaries, data flows — verify validation/sanitization/encoding at each step',
-        produces: 'security/attack-surface',
-      },
-      'security:owasp-analysis': {
-        purpose: 'Check all 10 OWASP Top 10 categories (A01–A10) as APPLICABLE/NOT APPLICABLE and MITIGATED/AT RISK',
-        produces: 'security/owasp-findings',
-      },
-      'security:hardening-checklist': {
-        purpose: 'Deduplicate findings, prioritize by severity, group by effort: quick wins / medium / significant',
-        produces: 'security/security-findings + security/hardening-checklist',
-      },
-      'security:decision-preservation': {
-        purpose: "Preserve the hardening decisions as permanent organizational knowledge via the checklist's summary field",
-        produces: 'summary (inline)',
+      'pm:backlog': {
+        purpose: 'Turn the request into user stories in delivery order, explicit scope, measurable NFRs and acceptance criteria',
+        produces: 'pm/handoff',
       },
       'ux-ui:knowledge-recall': {
-        purpose: 'Search organizational memory for prior UX decisions, existing patterns, and known usability constraints before designing',
+        purpose: 'Recall prior UX decisions and component patterns',
         produces: 'context (inline)',
       },
       'ux-ui:platform-analysis': {
-        purpose: 'Read the detected platform knowledge and inject the design system fingerprint and component conventions into the UX context',
-        produces: 'platform context (inline)',
+        purpose: "Load the project's detected design system, conventions and fingerprint",
+        produces: 'context (inline)',
       },
-      'ux-ui:feature-brief': {
-        purpose: 'Identify primary actor, define core problem (not solution), establish 3–5 observable success criteria',
-        produces: 'ux-ui/feature-brief',
+      'ux-ui:ux-spec': {
+        purpose: 'Turn the requirement into user flows mapped to existing components, with the accessibility each one owes',
+        produces: 'ux-ui/handoff',
       },
-      'ux-ui:design-tokens': {
-        purpose: 'Derive the design token set from the feature brief design intent and the platform design system fingerprint',
-        produces: 'ux-ui/design-tokens',
+      'architect:knowledge-recall': {
+        purpose: 'Recall prior architectural decisions relevant to this change',
+        produces: 'context (inline)',
       },
-      'ux-ui:information-architecture': {
-        purpose: 'Organize content into sections, prioritize immediate vs. progressive disclosure, define navigation path',
-        produces: 'ux-ui/ia',
+      'architect:platform-analysis': {
+        purpose: 'Load platform conventions and design fingerprint from knowledge.yaml',
+        produces: 'context (inline)',
       },
-      'ux-ui:user-flows': {
-        purpose: 'Map happy path, error path, and 2–3 edge case flows as numbered steps from the actor\'s perspective',
-        produces: 'ux-ui/flows',
+      'architect:design': {
+        purpose: 'Decide the approach against its alternatives, then design the data model and API surface that follow',
+        produces: 'architect/handoff',
       },
-      'ux-ui:content-design': {
-        purpose: 'Catalog the text touchpoints surfaced by the flows, elaborating the IA content intent into an illustrative content inventory',
-        produces: 'ux-ui/content-inventory',
+      'developer:knowledge-recall': {
+        purpose: 'Recall prior decisions relevant to this change',
+        produces: 'context (inline)',
       },
-      'ux-ui:component-mapping': {
-        purpose: 'Classify each UI state as reuse / extend / new — quality gate: >2:1 reuse ratio required',
-        produces: 'ux-ui/components',
+      'developer:explore': {
+        purpose: 'Read the area of the codebase that will change, and name the open questions',
+        produces: 'context — stays in the run',
       },
-      'ux-ui:design-critique': {
-        purpose: 'Single-pass annotation of the component inventory against the design tokens for consistency and accessibility; derives needs_review',
-        produces: 'ux-ui/design-critique',
+      'developer:spec': {
+        purpose: 'Define scope, acceptance criteria, the technical approach, and the files implement may touch',
+        produces: 'context — stays in the run',
       },
-      'ux-ui:ux-handoff': {
-        purpose: 'Consolidate all UX work into ux-brief (flows + IA) and component-spec (inventory + props + events)',
-        produces: 'ux-ui/ux-brief + ux-ui/component-spec',
+      'developer:implement': {
+        purpose: 'Write the code — and its tests under strict TDD — within the edit roots the spec declared',
+        produces: 'developer/handoff',
       },
-      'ux-ui:decision-preservation': {
-        purpose: "Preserve the UX decisions as permanent organizational knowledge via the handoff's summary field",
-        produces: 'summary (inline)',
+      'security:knowledge-recall': {
+        purpose: 'Recall prior findings, threat models and mitigations',
+        produces: 'context (inline)',
+      },
+      'security:platform-analysis': {
+        purpose: 'Load platform conventions and architectural fingerprint',
+        produces: 'context (inline)',
+      },
+      'security:assess': {
+        purpose: 'Map the attack surface, run STRIDE over it, cross-check the surviving threats against the applicable OWASP categories',
+        produces: 'context — stays in the run',
+      },
+      'security:harden': {
+        purpose: 'Turn the assessment into prioritized findings with concrete mitigations and an actionable checklist',
+        produces: 'security/handoff',
+      },
+      'qa:knowledge-recall': {
+        purpose: 'Recall prior quality findings and test decisions',
+        produces: 'context (inline)',
+      },
+      'qa:test-plan': {
+        purpose: 'Find the gaps and edge cases the acceptance criteria missed, turn them into test cases, and give a go/no-go verdict',
+        produces: 'qa/handoff',
       },
     },
     pipelineFlows: {
@@ -431,7 +281,7 @@ export const en: UIStrings = {
             description: 'Ask the orchestrator — ASDT analyzes the request and recommends which specialists to involve and in what order.',
           },
           pm: {
-            description: 'PM defines scope, writes user stories with acceptance criteria, saves pm/backlog-entry to the knowledge base.',
+            description: 'PM defines scope, writes user stories with acceptance criteria, saves pm/handoff to the knowledge base.',
           },
           architect: {
             description: 'Architect reads the backlog entry, designs the token flow and API contracts, saves architectural-decision + system-design-final.',
@@ -571,7 +421,7 @@ export const en: UIStrings = {
       pm: {
         teaser: 'Locks scope and turns vague requests into structured user stories.',
         invokeWhen: "The request is vague or user-facing, scope isn't locked, or user stories don't exist yet",
-        produces: 'pm/backlog-entry — feature summary, ordered user stories with AC, in/out scope, risk flags',
+        produces: 'pm/handoff — the change in one sentence, stories in delivery order, in/out scope, acceptance criteria, risks',
         doNotUseWhen: 'You already have a clear backlog entry — re-running PM regenerates stories from scratch',
       },
       architect: {
@@ -607,7 +457,7 @@ export const en: UIStrings = {
       researcher: {
         teaser: 'Explores a fuzzy problem before anyone commits to a direction.',
         invokeWhen: 'The problem is fuzzy or open-ended — you need discovery and framing before requirements can be written',
-        produces: 'researcher/discovery-brief — problem framing, divergent idea set, feasibility scan, single recommended direction',
+        produces: 'researcher/handoff — problem framing, one recommended direction, every rejected one with its reason, feasibility evidence',
         doNotUseWhen: 'You already have a defined problem statement — Researcher explores; it does not produce user stories or ADRs',
       },
     },

@@ -1,61 +1,73 @@
 ---
 title: Researcher
-description: Explora problemas y oportunidades difusas mediante ideación divergente y escaneo de factibilidad, convergiendo en una única dirección recomendada — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabes qué construir.
+description: Toma un problema difuso y devuelve UNA dirección recomendada con factibilidad detrás — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabés qué construir.
 order: 26
 locale: es
 ---
 
 # Researcher (`/asdt-researcher`)
 
-> Explora problemas y oportunidades difusas mediante ideación divergente y escaneo de factibilidad, convergiendo en una única dirección recomendada — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabes qué construir.
+> Toma un problema difuso y devuelve UNA dirección recomendada con factibilidad detrás — el especialista a invocar antes de que existan los requisitos, cuando todavía no sabés qué construir.
 
 ## Qué hace
 
-El especialista Researcher diverge antes de que PM converja. Toma un problema u oportunidad difusa y ejecuta una secuencia de descubrimiento estructurada: encuadra el problema y genera direcciones candidatas deliberadamente divergentes, evalúa cada una con un veredicto de factibilidad basado en evidencia, y luego converge en una única dirección recomendada empaquetada como un `discovery-brief`.
+Diverge antes de que el PM converja, en un solo paso:
 
-Dos propiedades mantienen el contrato honesto: la ideación es **generativa, nunca selectiva** — el paso de ideación produce candidatas sin rankearlas, así las direcciones prometedoras pero inusuales sobreviven lo suficiente para ser evaluadas. Y el brief recomienda exactamente **una** dirección con justificación explícita; las candidatas que no quedaron se registran como ítems descartados que alimentan la lista de fuera de alcance de PM.
-
-El Researcher es solo analista — nunca escribe en el filesystem. Su único trabajo es convertir "no sabemos qué construir" en una recomendación con base de factibilidad que PM pueda tratar como una petición bien formada.
+1. **Encuadra el problema.** Una petición difusa casi siempre esconde dos o tres problemas distintos. Nombra cuál está explorando y cuáles deja de lado a propósito.
+2. **Diverge.** Genera de 3 a 5 direcciones genuinamente distintas. Distintas significa que fallan por razones distintas — tres variaciones de una misma idea son una dirección, no tres.
+3. **Juzga factibilidad.** Verde, amarillo o rojo por dirección, cada una con **una línea de evidencia**: un fichero que ya hace algo parecido, una dependencia que falta, una restricción que la descarta. Un veredicto sin evidencia detrás no es un veredicto — se marca `ASSUMED:` y queda a la vista.
+4. **Converge.** Recomienda exactamente una dirección y dice por qué le ganó a las otras. Cada descartada se lleva su razón: una dirección rechazada sin motivo escrito es la que vuelve el trimestre que viene.
 
 ## Cuándo invocarlo
 
-- El problema o la oportunidad es difusa ("estamos perdiendo usuarios en algún lado", "los costos parecen demasiado altos")
-- La dirección no está clara — existen múltiples soluciones plausibles y nadie las comparó
-- Necesitás una recomendación con base de factibilidad **antes** de escribir requisitos
-- Estás sopesando trade-offs de construir-vs-comprar o enfoque-vs-enfoque en la etapa de idea
+- No sabés todavía qué construir, solo qué duele
+- Hay varios caminos plausibles y querés ver los tradeoffs antes de comprometerte
+- Alguien propuso una solución y querés saber si es la única
 
-## Posición en el pipeline
+## Cómo invocarlo
 
-El único especialista **pre-PM** del pipeline — corre antes de que existan los requisitos. El resumen y la dirección recomendada de su `discovery-brief` se renderizan como prosa y se entregan al feature-intake de `/asdt-pm` como la petición cruda, así PM arranca desde una dirección explorada y verificada en factibilidad en lugar de una suposición. Puede correr de forma standalone cuando solo necesitas exploración estructurada sin continuar hacia requisitos.
+Lenguaje natural, sin flags. Si querés que se tome más tiempo o menos, decilo en la petición.
+
+```
+/asdt-researcher "los usuarios abandonan el onboarding y no sabemos en qué punto"
+```
+
+```
+/asdt-researcher "queremos búsqueda semántica — explorá a fondo antes de que decidamos"
+```
 
 ## Qué produce
 
-**researcher/ideation** — el problema encuadrado más las direcciones candidatas divergentes, sin rankear por diseño. **researcher/feasibility** — un veredicto verde/amarillo/rojo por candidata con evidencia de soporte y estimaciones de esfuerzo. **researcher/discovery-brief** — la recomendación convergida: una dirección, justificación, notas de factibilidad y candidatas descartadas.
+Un único hand-off en `{project}/{change}/researcher/handoff`:
 
-Consumido por: **PM** (lee el discovery-brief como su petición cruda; las `wont_candidates` alimentan la lista de fuera de alcance del backlog-entry). En el nivel trivial solo se produce el artefacto de ideación.
+| Campo | Qué lleva |
+|---|---|
+| `what` | La dirección recomendada en una frase |
+| `decisions` | La recomendación primero, después cada dirección descartada como `rejected: {dirección} — {porqué}` |
+| `constraints` | Lo que cualquier implementación de esa dirección tiene que respetar |
+| `files_hint` | El código que realmente leyó para juzgar factibilidad |
+| `risks` | `{riesgo, mitigación}` de la dirección recomendada |
+| `open_items` | Veredictos que no pudo anclar en evidencia, con prefijo `ASSUMED:` |
 
-## Patrones comunes
+En `decisions` es donde sobrevive la exploración: no solo qué eligió, sino qué miró y descartó.
+
+Lo consume el **PM**, como entrada opcional: la dirección recomendada le da el punto de partida y las descartadas alimentan su alcance fuera.
+
+## Por su cuenta
+
+No hace falta que haya nada que construir todavía:
 
 ```
-/asdt-researcher Estamos perdiendo usuarios durante el onboarding pero no sabemos por qué
-# → Problema difuso, necesita encuadre y direcciones candidatas antes de los requisitos
+/asdt-researcher "¿qué opciones tenemos para reemplazar el job de sincronización?"
+/asdt-researcher "explorá por qué el onboarding pierde gente"
 ```
 
-```
-/asdt-researcher ¿App móvil nativa o PWA para soporte offline?
-# → Direcciones en competencia, necesita veredictos de factibilidad antes de comprometerse
-```
+## Su lugar en el pipeline
 
-```
-/asdt-researcher Explorar formas de reducir nuestros costos de infraestructura
-# → Oportunidad abierta, necesita ideación divergente antes de que alguien elija un camino
-```
+Es el único especialista **pre-requisitos**. Corre antes que el PM y nunca lo reemplaza: recomienda una dirección, el PM decide qué se construye. También funciona solo, cuando lo único que querés es exploración estructurada.
 
-## Límites — qué NO hace
+## Límites
 
-- No escribe requisitos ni historias de usuario (eso es trabajo de PM)
-- No escribe decisiones de arquitectura ni ADRs
-- No escribe código de implementación ni tests
-- Nunca actúa como builder — solo analista, nunca escribe en el filesystem
-- Nunca reemplaza a PM — su brief alimenta el intake de PM, no lo saltea
-- La ideación nunca rankea candidatas — la convergencia ocurre solo en el brief, que recomienda exactamente UNA dirección
+- No escribe requisitos, arquitectura, código ni tests
+- Nunca escribe en el sistema de ficheros
+- No rankea durante la divergencia — ranquear temprano tira la opción que todavía no terminaste de pensar

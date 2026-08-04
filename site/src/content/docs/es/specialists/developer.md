@@ -24,6 +24,17 @@ Dos modos de operación controlan las escrituras reales de archivos. En **modo p
 - Querés código de producción escrito directamente en el codebase (modo escritura, con targets declarados)
 - Estás retomando desde un artefacto anterior del Arquitecto o PM almacenado en la base de conocimiento
 
+## Por su cuenta
+
+Apúntalo a código que ya existe y responde sin tocarlo:
+
+```
+/asdt-developer "¿cómo está armado el flujo de login hoy?"
+/asdt-developer "¿cómo encararías migrar esto a la nueva API?"
+```
+
+Una pregunta se queda en exploración; pedirle un plan llega hasta el spec; solo pedirle que lo construya escribe ficheros.
+
 ## Posición en el pipeline
 
 Típicamente corre **después del Arquitecto** (lee `architectural-decision` + `system-design-final`) y produce el `dev-implementation` final consumido por QA. Puede correr standalone con solo una descripción de la petición — explorará y especificará el problema él mismo sin artefactos previos. En complejidad `simple`, bypassa el Arquitecto por completo.

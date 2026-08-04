@@ -25,6 +25,18 @@ Depth is gated by `risk_surface`, not complexity. This is the only specialist wh
 - New API endpoints are being exposed publicly
 - Any time before shipping to production when security hasn't been reviewed
 
+## On its own
+
+The specialist most often used alone. It requires no change in progress:
+
+```
+/asdt-security "audit the payments module"
+/asdt-security "review how we handle sessions"
+/asdt-security "what does our webhooks endpoint expose?"
+```
+
+It maps the surface, judges it, and leaves you prioritized findings with a concrete mitigation each.
+
 ## Pipeline position
 
 **No required predecessor** — invoke at any point. For maximum impact, run it after the Architect produces `system-design` (Security can then analyze the API surface and service boundaries). For a quick threat model early in design, run it before architecture is finalized to surface design-level risks before they're baked in.

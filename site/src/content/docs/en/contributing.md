@@ -107,7 +107,7 @@ go test ./skill/...
 
 Shared skills are capability fragments reused across multiple specialists — platform context detection, knowledge recall, scope definition.
 
-1. Create `skill/asdt-shared/skills/{name}.md` with the capability instructions.
+1. Create `skill/asdt-core/references/{name}.md` with the capability instructions.
 2. Wire it through one of the three loading mechanisms below. A shared skill that nothing declares is never read — there is no implicit, ambient loading.
 3. Open a PR.
 
@@ -115,7 +115,7 @@ Shared skills are capability fragments reused across multiple specialists — pl
 
 Three mechanisms, and only three. Paths always resolve from the specialist's own directory.
 
-**1. Install-time splice.** The installer splices `asdt-shared/skills/specialist-header.md` into a generated region of every routed `SKILL.md`, so the orchestrator reads the header inline instead of chasing a separate file. This applies to that one file only. The FIRST ACTION blockquote no longer instructs reading `specialist-header.md` — the only file it sends you to is `./workflow.yaml`. Never hand-edit between the region markers; the splice overwrites whatever is there.
+**1. Install-time splice.** The installer splices `asdt-core/specialist-header.md` into a generated region of every routed `SKILL.md`, so the orchestrator reads the header inline instead of chasing a separate file. This applies to that one file only. The FIRST ACTION blockquote no longer instructs reading `specialist-header.md` — the only file it sends you to is `./workflow.yaml`. Never hand-edit between the region markers; the splice overwrites whatever is there.
 
 **2. Inline step.** A `workflow.yaml` step with `execution: inline` whose `skill:` names a shared file — `knowledge-recall.md`, `platform-context.md` (declared as the `platform-analysis` step), `decision-preservation.md`. The orchestrator reads that file and follows it in its own context. Nothing is injected anywhere and no sub-agent is launched.
 

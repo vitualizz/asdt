@@ -6,83 +6,53 @@ import type { Locale } from '@i18n/utils'
 interface Props {
   specialist: string
   lang: Locale
-  labels: {
-    complexity: string
-    riskSurface: string
-    notCalled: string
-    notEligible: string
-    notAutoInvoked: string
-    produces: string
-  }
 }
-const { specialist, labels, lang } = Astro.props
+const { specialist, lang } = Astro.props
 const t = useTranslations(lang)
 const config = specialistSteps[specialist]
 if (!config) return
 
-const isRisk = config.tierType === 'risk-surface'
-const tiers = isRisk
-  ? (['none', 'moderate', 'high'] as const)
-  : (['trivial', 'simple', 'moderate', 'complex'] as const)
-
-// All steps ordered by max tier (complex/high has the full set)
-const maxKey = isRisk ? 'high' : 'complex'
-const allStepIds: string[] = config.tiers[maxKey as keyof typeof config.tiers] ?? Object.keys(config.steps)
-const defaultTier = isRisk ? 'high' : 'complex'
+// Every specialist runs one fixed chain; only the Developer picks between
+// chains, and it picks from what the request asks for.
+const chains = config.chains
+const multi = chains.length > 1
+const allStepIds: string[] = chains[chains.length - 1].steps
+const defaultChain = String(chains.length - 1)
 ---
 
-<div
-  class="sf"
-  data-active={defaultTier}
-  style={`--sc: var(${config.color})`}
->
-  <div class="sf-header">
-    <span class="sf-dim-label">{isRisk ? labels.riskSurface : labels.complexity}</span>
-    <div class="sf-tiers" role="tablist">
-      {tiers.map((tier) => (
-        <button
-          class="sf-btn"
-          role="tab"
-          data-tier={tier}
-          aria-selected={tier === defaultTier ? 'true' : 'false'}
-        >
-          {tier}
-        </button>
-      ))}
-    </div>
-  </div>
-
-  {tiers.map((tier) => {
-    const special = config.special?.[tier as keyof typeof config.special]
-    const tierSteps = config.tiers[tier as keyof typeof config.tiers] ?? []
-    let specialMsg = ''
-    if (special === 'not-called') specialMsg = labels.notCalled
-    else if (special === 'not-eligible') specialMsg = labels.notEligible
-    else if (special === 'not-auto-invoked') specialMsg = labels.notAutoInvoked
-    return (
-      <div class="sf-panel" data-panel={tier} role="tabpanel" aria-hidden={tier !== defaultTier ? 'true' : 'false'}>
-        {specialMsg ? (
-          <p class="sf-special">{specialMsg}</p>
-        ) : (
-          <div class="sf-table">
-            {allStepIds.map((id) => {
-              const step = config.steps[id]
-              if (!step) return null
-              const active = tierSteps.includes(id)
-              const stepText = t.data.specialistSteps[`${specialist}:${step.id}`]
-              return (
-                <div class="sf-row" data-active={active ? 'true' : 'false'}>
-                  <code class="sf-id">{step.id}</code>
-                  <p class="sf-purpose">{stepText?.purpose}</p>
-                  <span class="sf-produces">→ {stepText?.produces}</span>
-                </div>
-              )
-            })}
-          </div>
-        )}
+<div class="sf" data-active={defaultChain} style={`--sc: var(${config.color})`}>
+  {multi && (
+    <div class="sf-header">
+      <span class="sf-dim-label">{t.data.chainsLabel}</span>
+      <div class="sf-tiers" role="tablist">
+        {chains.map((chain, i) => (
+          <button class="sf-btn" role="tab" data-tier={String(i)} aria-selected={String(i) === defaultChain ? 'true' : 'false'}>
+            {chain.when ? t.data.chains[chain.when] : ''}
+          </button>
+        ))}
       </div>
-    )
-  })}
+    </div>
+  )}
+
+  {chains.map((chain, i) => (
+    <div class="sf-panel" data-panel={String(i)} role="tabpanel" aria-hidden={String(i) !== defaultChain ? 'true' : 'false'}>
+      <div class="sf-table">
+        {allStepIds.map((id) => {
+          const step = config.steps[id]
+          if (!step) return null
+          const active = chain.steps.includes(id)
+          const stepText = t.data.specialistSteps[`${specialist}:${step.id}`]
+          return (
+            <div class="sf-row" data-active={active ? 'true' : 'false'}>
+              <code class="sf-id">{step.id}</code>
+              <p class="sf-purpose">{stepText?.purpose}</p>
+              <span class="sf-produces">→ {stepText?.produces}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  ))}
 </div>
 
 <script>

@@ -39,7 +39,7 @@ metadata:
 
 # Architect specialist
 `)},
-	"asdt-shared/skills/x.md": &fstest.MapFile{Data: []byte("# Shared fragment")},
+	"asdt-core/references/x.md": &fstest.MapFile{Data: []byte("# Shared fragment")},
 }
 
 var malformedFrontmatterFS = fstest.MapFS{
@@ -114,7 +114,7 @@ func TestGenerateOpenCodeCommands_ProducesCorrectlyDerivedWrappers(t *testing.T)
 		t.Fatalf("generateOpenCodeCommands returned error: %v", err)
 	}
 	if len(written) != 2 {
-		t.Fatalf("expected 2 written wrappers (asdt-shared has no SKILL.md), got %d: %v", len(written), written)
+		t.Fatalf("expected 2 written wrappers (asdt-core has no SKILL.md), got %d: %v", len(written), written)
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -141,7 +141,7 @@ func TestGenerateOpenCodeCommands_ProducesCorrectlyDerivedWrappers(t *testing.T)
 			}
 		})
 	}
-	checkFileAbsent(t, filepath.Join(commandRoot, "asdt-shared.md"))
+	checkFileAbsent(t, filepath.Join(commandRoot, "asdt-core.md"))
 }
 
 func TestGenerateOpenCodeCommands_DerivesFilenameFromDirNotSpecialistID(t *testing.T) {

@@ -24,9 +24,21 @@ El especialista Arquitecto nunca escribe código de implementación, specs de UX
 - Una preocupación transversal (estrategia de caché, modelo de auth, event bus) necesita una decisión documentada
 - Querés un ADR formal para explicar a futuros ingenieros por qué el código es como es
 
+## Por su cuenta
+
+No hace falta un cambio en marcha. Apúntalo a lo que ya existe y lo juzga en vez de rediseñarlo — te devuelve hallazgos priorizados con evidencia, y también lo que está bien:
+
+```
+/asdt-architect "¿escala esta estructura si triplicamos el tráfico?"
+/asdt-architect "audita los boundaries del módulo de pagos"
+/asdt-architect "¿qué decisiones de este diseño ya son caras de revertir?"
+```
+
+Lo que encuentre queda guardado, así que la próxima corrida sobre esa área arranca sabiéndolo.
+
 ## Posición en el pipeline
 
-Típicamente corre **después del PM** (lee `backlog-entry`) y **antes del Developer** (Developer lee `architectural-decision` + `system-design-final`). En complejidad `simple` no se invoca — el Developer lo maneja directamente. En `trivial` corre una consulta única de `load-constraints`. En `moderate` corre `load-constraints → evaluate-approaches → decision-record → technical-handoff`. Solo `complex` agrega los pasos más profundos — `system-design`, `cost-estimation` y `risk-analysis`.
+Típicamente corre **después del PM** (lee `pm/handoff`) y **antes del Developer** (el Developer lee `architect/handoff`). En cambios simples no se invoca — de eso se encarga el Developer directamente. Cuando corre, corre un solo paso, `design`, y qué tan profundo va lo decide él mismo.
 
 ## Qué produce
 
@@ -37,7 +49,7 @@ Dos artefactos finales consumidos por especialistas posteriores:
 
 Consumido por: **Developer** (lee ambos), **QA** (lee `architectural-decision` para entender el contexto de diseño).
 
-En `complex`, el paso `cost-estimation` también produce **`architect/cost-estimate`** — el perfil de costos operativos y de infraestructura del diseño elegido. Lee el `architect/system-design` del nivel `complex` más un `pm/nfr-targets` opcional; cuando el artefacto del PM está ausente el paso degrada con elegancia y anota el faltante en lugar de fallar.
+Los presupuestos de NFR, si el PM fijó alguno, llegan dentro de `pm/handoff.constraints` y el diseño tiene que caber en ellos. Si el PM no corrió, el diseño sigue igual y anota el faltante en vez de inventar un presupuesto.
 
 ## Patrones comunes
 

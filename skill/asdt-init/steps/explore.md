@@ -14,11 +14,6 @@ model or session runs it.
   the gate (`knowledge-gate`) before launching you. Do NOT re-verify Engram's
   tool list — that is the orchestrator's job and it already did it.
 
-## Context budget
-Raw request / launch context: max ~500 tokens. Everything else this step needs
-it discovers by running bounded shell commands against the project tree — it
-does not pull large inputs into context.
-
 ## Processing
 
 The analyst is **read-only**: it runs detection commands and returns a

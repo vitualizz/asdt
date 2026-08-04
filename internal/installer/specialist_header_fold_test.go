@@ -38,9 +38,7 @@ func TestInstall_SpecialistHeaderFoldReachesInstalledSKILL(t *testing.T) {
 		sentinel string
 	}{
 		{name: "specialist-header", sentinel: "ORCHESTRATOR GATE"},
-		{name: "parallel-retrieval", sentinel: "## Cache Ledger Rule (orchestrator)"},
-		{name: "intake-contract", sentinel: "# Intake Contract — Shared Skill"},
-		{name: "knowledge-recall", sentinel: "# Knowledge Recall — Shared Skill"},
+		{name: "protocol", sentinel: "# ASDT Protocol"},
 	}
 
 	// The expected-order slice above must cover the production fragment list
@@ -50,9 +48,9 @@ func TestInstall_SpecialistHeaderFoldReachesInstalledSKILL(t *testing.T) {
 		t.Fatalf("specialistHeaderFragments has %d entries but this test's folded slice has %d — keep registry_gen.go's specialistHeaderFragments and the folded expectations in lockstep", len(specialistHeaderFragments), len(folded))
 	}
 
-	// decision-preservation is deliberately NOT folded — specialists load it per
-	// step. Its presence would mean the fragment list grew by accident.
-	const notFolded = "# Decision Preservation — Shared Skill"
+	// knowledge-recall is deliberately NOT folded — it is a per-specialist inline
+	// step, not a header fragment. Its presence would mean the list grew by accident.
+	const notFolded = "# Knowledge Recall — Shared Skill"
 
 	tests := []struct {
 		name string

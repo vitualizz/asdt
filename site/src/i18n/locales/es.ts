@@ -185,242 +185,92 @@ export const es: UIStrings = {
     forWord: 'para',
   },
   data: {
+    chainsLabel: 'La petición es',
+    chains: {
+      question: 'una pregunta',
+      plan: 'un plan',
+      build: 'construirlo',
+    },
     specialistSteps: {
       'researcher:knowledge-recall': {
-        purpose: 'Busca en la memoria organizacional descubrimientos previos, decisiones relacionadas y restricciones conocidas antes de idear',
-        produces: 'contexto (en línea)',
+        purpose: 'Recuerda descubrimientos previos y decisiones relacionadas antes de explorar',
+        produces: 'contexto (inline)',
       },
-      'researcher:divergent-ideation': {
-        purpose: 'Enmarca el problema y genera direcciones candidatas divergentes — deliberadamente generativo, nunca selectivo',
-        produces: 'researcher/ideation',
-      },
-      'researcher:feasibility-scan': {
-        purpose: 'Evalúa cada idea con un veredicto de factibilidad verde/amarillo/rojo, evidencia de respaldo y estimación de esfuerzo',
-        produces: 'researcher/feasibility',
-      },
-      'researcher:discovery-brief': {
-        purpose: 'Converge en UNA dirección recomendada con su justificación; los candidatos descartados alimentan la lista de fuera de alcance del PM',
-        produces: 'researcher/discovery-brief',
-      },
-      'researcher:decision-preservation': {
-        purpose: 'Preserva la dirección elegida como conocimiento organizacional permanente mediante el campo summary del brief',
-        produces: 'resumen (en línea)',
+      'researcher:discovery': {
+        purpose: 'Encuadra el problema, diverge en direcciones candidatas, juzga factibilidad con evidencia y converge en una recomendación',
+        produces: 'researcher/handoff',
       },
       'pm:knowledge-recall': {
-        purpose: 'Busca en la memoria organizacional decisiones de alcance previas y requisitos relacionados antes de formalizar el pedido',
-        produces: 'contexto (en línea)',
+        purpose: 'Recuerda requisitos y decisiones de alcance previas del proyecto',
+        produces: 'contexto (inline)',
       },
-      'pm:feature-intake': {
-        purpose: 'Convierte el pedido en bruto en un enunciado de problema estructurado — extrae problema, objetivo, stakeholders y marca ambigüedades',
-        produces: 'pm/feature-intake',
-      },
-      'pm:user-stories': {
-        purpose: 'Escribe historias de usuario con prioridades MoSCoW y de 1 a 3 criterios de aceptación de alto nivel por historia',
-        produces: 'pm/user-stories',
-      },
-      'pm:success-metrics': {
-        purpose: 'Deriva objetivos de NFR medibles — presupuesto, valor objetivo y método de medición — a partir de las historias de usuario',
-        produces: 'pm/nfr-targets',
-      },
-      'pm:scope-analysis': {
-        purpose: 'Define límites explícitos de dentro/fuera de alcance, puntos de integración y señales de riesgo de alcance',
-        produces: 'pm/scope-analysis',
-      },
-      'pm:prioritization': {
-        purpose: 'Ordena las historias por dependencia y riesgo; mueve las historias Won\'t a diferidas con razones explícitas',
-        produces: 'pm/prioritization',
-      },
-      'pm:backlog-entry': {
-        purpose: 'Consolida todos los artefactos del PM en el backlog entry final con resumen ejecutivo y lista ordenada de historias',
-        produces: 'pm/backlog-entry',
-      },
-      'pm:decision-preservation': {
-        purpose: 'Preserva las decisiones de alcance y prioridad como conocimiento organizacional permanente mediante el campo summary del backlog entry',
-        produces: 'resumen (en línea)',
-      },
-      'architect:knowledge-recall': {
-        purpose: 'Busca en la memoria organizacional decisiones de arquitectura previas y restricciones conocidas antes de evaluar enfoques',
-        produces: 'contexto (en línea)',
-      },
-      'architect:platform-analysis': {
-        purpose: 'Lee el conocimiento detectado de la plataforma e inyecta stack, convenciones y límites en el contexto de arquitectura',
-        produces: 'contexto de plataforma (en línea)',
-      },
-      'architect:load-constraints': {
-        purpose: 'Lee el contexto de la plataforma y clasifica las restricciones como HARD (no negociables), SOFT (preferencias) u OPPORTUNITIES',
-        produces: 'architect/constraints-analysis',
-      },
-      'architect:evaluate-approaches': {
-        purpose: 'Compara 2 o 3 enfoques viables; elige uno con justificación explícita; documenta por qué se rechazaron las alternativas',
-        produces: 'architect/approaches',
-      },
-      'architect:decision-record': {
-        purpose: 'Escribe el ADR: contexto, decisión, alternativas y consecuencias — incluyendo las negativas. Solo positivas = incompleto',
-        produces: 'architect/adr',
-      },
-      'architect:system-design': {
-        purpose: 'Define el modelo de datos, la superficie de API (método/entradas/errores), los límites de servicios y la secuencia del happy path',
-        produces: 'architect/system-design',
-      },
-      'architect:cost-estimation': {
-        purpose: 'Estima el perfil de costo del system design por cada dimensión de NFR y evalúa cada una contra el presupuesto del PM',
-        produces: 'architect/cost-estimate',
-      },
-      'architect:risk-analysis': {
-        purpose: 'Identifica los 3 a 5 riesgos principales (rendimiento, seguridad, fiabilidad, acoplamiento, migración) con mitigaciones concretas',
-        produces: 'architect/risks',
-      },
-      'architect:technical-handoff': {
-        purpose: 'Consolida todo el trabajo de arquitectura en dos artefactos finales para Developer y QA',
-        produces: 'architect/architectural-decision + architect/system-design-final',
-      },
-      'architect:decision-preservation': {
-        purpose: 'Preserva la decisión de arquitectura como conocimiento organizacional permanente mediante el campo summary del handoff',
-        produces: 'resumen (en línea)',
-      },
-      'developer:knowledge-recall': {
-        purpose: 'Busca en la memoria organizacional decisiones de implementación previas y convenciones de esta zona del código antes de explorar',
-        produces: 'contexto (en línea)',
-      },
-      'developer:explore': {
-        purpose: 'Lee los archivos y módulos afectados; mapea los patrones de nombres y las restricciones antes de diseñar nada',
-        produces: 'developer/dev-exploration',
-      },
-      'developer:spec': {
-        purpose: 'Define el límite de alcance, responde las preguntas abiertas y escribe criterios de aceptación en formato Given/When/Then',
-        produces: 'developer/dev-spec',
-      },
-      'developer:design': {
-        purpose: 'Elige el enfoque técnico, define el modelo de datos y la forma de la API, y lista las restricciones clave de implementación',
-        produces: 'developer/dev-design',
-      },
-      'developer:tasks': {
-        purpose: 'Divide la implementación en tareas atómicas (<2h cada una) ordenadas por dependencia, con estimaciones S/M/L',
-        produces: 'developer/dev-tasks',
-      },
-      'developer:implement': {
-        purpose: 'Escribe el código de cada tarea — modo solo-plan (snippets) o modo escritura (archivos reales en los destinos declarados)',
-        produces: 'developer/dev-implementation',
-      },
-      'developer:test': {
-        purpose: 'Escribe los tests que cubren las tareas de implementación y los edge cases; emite comandos de verificación sugeridos — nunca los ejecuta',
-        produces: 'developer/dev-tests',
-      },
-      'developer:decision-preservation': {
-        purpose: 'Preserva la decisión de implementación como conocimiento organizacional permanente mediante el campo summary de la implementación',
-        produces: 'resumen (en línea)',
-      },
-      'qa:knowledge-recall': {
-        purpose: 'Busca en la memoria organizacional decisiones de calidad previas, regresiones conocidas y huecos de cobertura pasados antes de validar',
-        produces: 'contexto (en línea)',
-      },
-      'qa:load-requirements': {
-        purpose: 'Extrae y normaliza los criterios de aceptación de los artefactos previos al formato Given/When/Then',
-        produces: 'qa/ac-list',
-      },
-      'qa:ac-validation': {
-        purpose: 'Revisa cada AC en cuanto a atomicidad, medibilidad, independencia, completitud y no ambigüedad — reescribe los que fallan',
-        produces: 'qa/ac-gaps',
-      },
-      'qa:edge-case-analysis': {
-        purpose: 'Descubre edge cases mediante valores límite, particiones de equivalencia, transiciones de estado, acceso concurrente y límites de permisos',
-        produces: 'qa/edge-cases',
-      },
-      'qa:test-strategy': {
-        purpose: 'Define la pirámide de tests: qué cubre cada nivel, qué no, la estrategia de datos de prueba y la tolerancia a la inestabilidad',
-        produces: 'qa/test-strategy',
-      },
-      'qa:test-case-generation': {
-        purpose: 'Escribe specs de test estructuradas (Given/When/Then) para el happy path, los ACs validados y los edge cases críticos/altos',
-        produces: 'qa/test-cases',
-      },
-      'qa:quality-report': {
-        purpose: 'Verifica la cobertura de ACs, calcula el porcentaje y emite el veredicto READY / READY WITH CAVEATS / BLOCKED',
-        produces: 'qa/test-plan',
-      },
-      'qa:performance-validation': {
-        purpose: 'Valida el rendimiento planificado o medido contra los objetivos de NFR del PM y emite un veredicto de compuerta go/no-go',
-        produces: 'qa/perf-validation',
-      },
-      'qa:review': {
-        purpose: 'Veredicto go/no-go de despliegue — decisión holística de preparación para release que integra todos los hallazgos de QA antes de preservar el conocimiento',
-        produces: 'qa/qa-review',
-      },
-      'qa:decision-preservation': {
-        purpose: 'Preserva el veredicto de preparación para release como conocimiento organizacional permanente mediante el campo summary del review',
-        produces: 'resumen (en línea)',
-      },
-      'security:knowledge-recall': {
-        purpose: 'Busca en la memoria organizacional hallazgos de amenazas previos y riesgos aceptados antes de modelar nuevas amenazas',
-        produces: 'contexto (en línea)',
-      },
-      'security:platform-analysis': {
-        purpose: 'Lee el conocimiento detectado de la plataforma e inyecta stack, superficie de autenticación y manejo de datos en el contexto de seguridad',
-        produces: 'contexto de plataforma (en línea)',
-      },
-      'security:threat-modeling': {
-        purpose: 'Aplica STRIDE: Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation of Privilege',
-        produces: 'security/stride-threats',
-      },
-      'security:attack-surface': {
-        purpose: 'Mapea los puntos de entrada, los límites de confianza y los flujos de datos — verifica validación/sanitización/codificación en cada paso',
-        produces: 'security/attack-surface',
-      },
-      'security:owasp-analysis': {
-        purpose: 'Revisa las 10 categorías del OWASP Top 10 (A01–A10) como APPLICABLE/NOT APPLICABLE y MITIGATED/AT RISK',
-        produces: 'security/owasp-findings',
-      },
-      'security:hardening-checklist': {
-        purpose: 'Deduplica los hallazgos, prioriza por severidad y agrupa por esfuerzo: quick wins / medio / significativo',
-        produces: 'security/security-findings + security/hardening-checklist',
-      },
-      'security:decision-preservation': {
-        purpose: 'Preserva las decisiones de hardening como conocimiento organizacional permanente mediante el campo summary del checklist',
-        produces: 'resumen (en línea)',
+      'pm:backlog': {
+        purpose: 'Convierte la petición en historias en orden de entrega, alcance explícito, NFRs medibles y criterios de aceptación',
+        produces: 'pm/handoff',
       },
       'ux-ui:knowledge-recall': {
-        purpose: 'Busca en la memoria organizacional decisiones de UX previas, patrones existentes y restricciones de usabilidad conocidas antes de diseñar',
-        produces: 'contexto (en línea)',
+        purpose: 'Recuerda decisiones de UX y patrones de componentes previos',
+        produces: 'contexto (inline)',
       },
       'ux-ui:platform-analysis': {
-        purpose: 'Lee el conocimiento detectado de la plataforma e inyecta la huella del design system y las convenciones de componentes en el contexto de UX',
-        produces: 'contexto de plataforma (en línea)',
+        purpose: 'Carga el design system detectado del proyecto, sus convenciones y su huella',
+        produces: 'contexto (inline)',
       },
-      'ux-ui:feature-brief': {
-        purpose: 'Identifica al actor principal, define el problema central (no la solución) y establece de 3 a 5 criterios de éxito observables',
-        produces: 'ux-ui/feature-brief',
+      'ux-ui:ux-spec': {
+        purpose: 'Convierte el requisito en flujos mapeados a componentes existentes, con la accesibilidad que cada uno debe cumplir',
+        produces: 'ux-ui/handoff',
       },
-      'ux-ui:design-tokens': {
-        purpose: 'Deriva el conjunto de design tokens a partir de la intención de diseño del feature brief y la huella del design system de la plataforma',
-        produces: 'ux-ui/design-tokens',
+      'architect:knowledge-recall': {
+        purpose: 'Recuerda decisiones arquitectónicas previas relevantes a este cambio',
+        produces: 'contexto (inline)',
       },
-      'ux-ui:information-architecture': {
-        purpose: 'Organiza el contenido en secciones, prioriza la divulgación inmediata frente a la progresiva y define la ruta de navegación',
-        produces: 'ux-ui/ia',
+      'architect:platform-analysis': {
+        purpose: 'Carga convenciones de plataforma y huella de diseño desde knowledge.yaml',
+        produces: 'contexto (inline)',
       },
-      'ux-ui:user-flows': {
-        purpose: 'Mapea el happy path, el flujo de error y de 2 a 3 flujos de edge cases como pasos numerados desde la perspectiva del actor',
-        produces: 'ux-ui/flows',
+      'architect:design': {
+        purpose: 'Decide el enfoque frente a sus alternativas y diseña el modelo de datos y la superficie de API que se derivan',
+        produces: 'architect/handoff',
       },
-      'ux-ui:content-design': {
-        purpose: 'Cataloga los puntos de contacto de texto que surgen de los flows, ampliando el content intent de la IA en un inventario de contenido ilustrativo',
-        produces: 'ux-ui/content-inventory',
+      'developer:knowledge-recall': {
+        purpose: 'Recuerda decisiones previas relevantes a este cambio',
+        produces: 'contexto (inline)',
       },
-      'ux-ui:component-mapping': {
-        purpose: 'Clasifica cada estado de UI como reuse / extend / new — quality gate: se requiere una relación de reutilización >2:1',
-        produces: 'ux-ui/components',
+      'developer:explore': {
+        purpose: 'Lee la zona del código que va a cambiar y nombra las preguntas abiertas',
+        produces: 'contexto — vive dentro de la corrida',
       },
-      'ux-ui:design-critique': {
-        purpose: 'Anotación en una sola pasada del inventario de componentes contra los design tokens en consistencia y accesibilidad; deriva needs_review',
-        produces: 'ux-ui/design-critique',
+      'developer:spec': {
+        purpose: 'Define alcance, criterios de aceptación, el enfoque técnico y los ficheros que implement puede tocar',
+        produces: 'contexto — vive dentro de la corrida',
       },
-      'ux-ui:ux-handoff': {
-        purpose: 'Consolida todo el trabajo de UX en ux-brief (flows + IA) y component-spec (inventario + props + events)',
-        produces: 'ux-ui/ux-brief + ux-ui/component-spec',
+      'developer:implement': {
+        purpose: 'Escribe el código — y sus tests bajo TDD estricto — dentro de los límites de edición que declaró el spec',
+        produces: 'developer/handoff',
       },
-      'ux-ui:decision-preservation': {
-        purpose: 'Preserva las decisiones de UX como conocimiento organizacional permanente mediante el campo summary del handoff',
-        produces: 'resumen (en línea)',
+      'security:knowledge-recall': {
+        purpose: 'Recuerda hallazgos, modelos de amenaza y mitigaciones previas',
+        produces: 'contexto (inline)',
+      },
+      'security:platform-analysis': {
+        purpose: 'Carga convenciones de plataforma y huella arquitectónica',
+        produces: 'contexto (inline)',
+      },
+      'security:assess': {
+        purpose: 'Mapea la superficie de ataque, aplica STRIDE sobre ella y cruza las amenazas que sobreviven con las categorías OWASP aplicables',
+        produces: 'contexto — vive dentro de la corrida',
+      },
+      'security:harden': {
+        purpose: 'Convierte la evaluación en hallazgos priorizados con mitigaciones concretas y una checklist accionable',
+        produces: 'security/handoff',
+      },
+      'qa:knowledge-recall': {
+        purpose: 'Recuerda hallazgos de calidad y decisiones de test previas',
+        produces: 'contexto (inline)',
+      },
+      'qa:test-plan': {
+        purpose: 'Encuentra los huecos y casos límite que los criterios de aceptación no cubren, los vuelve casos de test y da un veredicto go/no-go',
+        produces: 'qa/handoff',
       },
     },
     pipelineFlows: {
@@ -431,7 +281,7 @@ export const es: UIStrings = {
             description: 'Pedile al orquestador — ASDT analiza el pedido y recomienda qué especialistas involucrar y en qué orden.',
           },
           pm: {
-            description: 'PM define el alcance, escribe historias de usuario con criterios de aceptación y guarda pm/backlog-entry en la base de conocimientos.',
+            description: 'El PM define el alcance, escribe historias con criterios de aceptación y guarda pm/handoff en la base de conocimientos.',
           },
           architect: {
             description: 'Architect lee el backlog entry, diseña el flujo de tokens y los contratos de API, guarda architectural-decision + system-design-final.',
@@ -571,7 +421,7 @@ export const es: UIStrings = {
       pm: {
         teaser: 'Fija el alcance y convierte pedidos vagos en historias de usuario estructuradas.',
         invokeWhen: 'El pedido es vago o de cara al usuario, el alcance no está definido, o todavía no existen historias de usuario',
-        produces: 'pm/backlog-entry — resumen de la feature, historias de usuario ordenadas con AC, alcance dentro/fuera, riesgos',
+        produces: 'pm/handoff — el cambio en una frase, historias en orden de entrega, alcance dentro/fuera, criterios de aceptación, riesgos',
         doNotUseWhen: 'Ya tenés un backlog entry claro — volver a correr PM regenera las historias desde cero',
       },
       architect: {
@@ -607,7 +457,7 @@ export const es: UIStrings = {
       researcher: {
         teaser: 'Explora un problema difuso antes de comprometerse con una dirección.',
         invokeWhen: 'El problema es difuso o abierto — necesitás descubrimiento y enmarcado antes de poder escribir requisitos',
-        produces: 'researcher/discovery-brief — enmarcado del problema, conjunto divergente de ideas, análisis de factibilidad, una dirección recomendada',
+        produces: 'researcher/handoff — encuadre del problema, una dirección recomendada, cada descartada con su razón, evidencia de factibilidad',
         doNotUseWhen: 'Ya tenés un problema bien definido — Researcher explora; no produce historias de usuario ni ADRs',
       },
     },

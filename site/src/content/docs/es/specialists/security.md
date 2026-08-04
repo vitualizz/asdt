@@ -25,6 +25,18 @@ La profundidad está controlada por `risk_surface`, no por complejidad. Este es 
 - Se están exponiendo nuevos endpoints de API públicamente
 - En cualquier momento antes de salir a producción cuando la seguridad no ha sido revisada
 
+## Por su cuenta
+
+Es el especialista que más se usa solo. No requiere que haya un cambio en curso:
+
+```
+/asdt-security "audita el módulo de pagos"
+/asdt-security "revisa cómo manejamos las sesiones"
+/asdt-security "¿qué expone nuestro endpoint de webhooks?"
+```
+
+Mapea la superficie, la evalúa y te deja hallazgos priorizados con mitigación concreta.
+
 ## Posición en el pipeline
 
 **Sin predecesor requerido** — invocalo en cualquier punto. Para máximo impacto, correlo después de que el Arquitecto produce `system-design` (Seguridad puede analizar la superficie de API y los límites de servicios). Para un modelo de amenazas temprano en el diseño, correlo antes de que la arquitectura esté finalizada para exponer riesgos a nivel de diseño antes de que queden incorporados.

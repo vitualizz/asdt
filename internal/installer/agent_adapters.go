@@ -11,7 +11,7 @@ import (
 // executorHeaderPath is the embedded path of the shared executor header that
 // every generated agent definition bakes into its body. Its presence in the
 // production embedded FS is guarded by skill/embedded_test.go.
-const executorHeaderPath = "asdt-shared/skills/executor-header.md"
+const executorHeaderPath = "asdt-core/executor-header.md"
 
 // agentTypeSpec describes one ASDT executor agent type. The same spec is
 // rendered into each assistant's native agent-definition format.

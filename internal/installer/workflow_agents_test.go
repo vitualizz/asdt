@@ -11,7 +11,7 @@ import (
 // workflowSpecialistDirs lists the specialist directories whose workflow.yaml
 // declares per-step agent types. asdt-init has its own workflow.yaml with
 // `agent:` fields, but it is a non-routable setup-class command and is
-// deliberately excluded from this per-specialist agent-type audit; asdt-shared
+// deliberately excluded from this per-specialist agent-type audit; asdt-core
 // is the fragment library and has no workflow.yaml at all.
 var workflowSpecialistDirs = []string{
 	"asdt-architect",
@@ -96,15 +96,21 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 		}
 	}
 
-	if analystCount != 40 {
-		t.Errorf("analyst subagent steps = %d, want 40", analystCount)
+	// Counts over the 7 routed specialists (asdt-init is excluded above).
+	// 17 subagent steps across the tree, 15 of them routed: architect 2,
+	// developer 4, qa 2, ux-ui 2, pm 2, security 2, researcher 1. Five of
+	// those are the `review` study steps. One of the routed 15 is a builder
+	// (developer/implement), leaving 14 analysts.
+	if analystCount != 14 {
+		t.Errorf("analyst subagent steps = %d, want 14", analystCount)
 	}
-	if builderCount != 2 {
-		t.Errorf("builder subagent steps = %d, want 2 (got %v)", builderCount, builderSteps)
+	if builderCount != 1 {
+		t.Errorf("builder subagent steps = %d, want 1 (got %v)", builderCount, builderSteps)
 	}
+	// Only implement writes host files. The former `test` step was absorbed
+	// into implement, which now writes tests under the same mode and roots.
 	wantBuilder := map[string]bool{
 		"asdt-developer/implement": true,
-		"asdt-developer/test":      true,
 	}
 	for _, step := range builderSteps {
 		if !wantBuilder[step] {

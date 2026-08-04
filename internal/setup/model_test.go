@@ -475,12 +475,12 @@ func TestUpdate_ModelGate_DownCapsAtCustomizeChoice(t *testing.T) {
 }
 
 // presetWorkflowFS is a two-step workflow whose source defaults span two tiers,
-// so preset classification is observable: feature-intake (haiku → TierLight)
+// so preset classification is observable: explore (haiku → TierLight)
 // and decide (opus → TierDecision).
 var presetWorkflowFS = fstest.MapFS{
 	"asdt-pm/workflow.yaml": {Data: []byte(
 		"specialist: pm\nsteps:\n" +
-			"  - name: feature-intake\n    execution: subagent\n    model: haiku\n" +
+			"  - name: explore\n    execution: subagent\n    model: haiku\n" +
 			"  - name: decide\n    execution: subagent\n    model: opus\n",
 	)},
 }
@@ -525,9 +525,9 @@ func TestUpdate_ModelGate_SprinterClassifiesByTier(t *testing.T) {
 		t.Fatalf("Sprinter Enter: state = %v, want StateAgentSetup", m2.State())
 	}
 	sel := m2.SelectedModels()
-	// feature-intake is TierLight → haiku; decide is TierDecision → sonnet.
-	if sel["pm/feature-intake"] != "haiku" {
-		t.Errorf("Sprinter pm/feature-intake = %q, want haiku", sel["pm/feature-intake"])
+	// explore is TierLight → haiku; decide is TierDecision → sonnet.
+	if sel["pm/explore"] != "haiku" {
+		t.Errorf("Sprinter pm/explore = %q, want haiku", sel["pm/explore"])
 	}
 	if sel["pm/decide"] != "sonnet" {
 		t.Errorf("Sprinter pm/decide = %q, want sonnet (decision tier, never haiku)", sel["pm/decide"])
@@ -610,7 +610,7 @@ func TestUpdate_ModelSetup_UntouchedSkipLeavesModelsUntouched(t *testing.T) {
 func TestUpdate_ModelSetup_AccordionExpandCycleAndReset(t *testing.T) {
 	skillsFS := fstest.MapFS{
 		"asdt-pm/workflow.yaml": {Data: []byte(
-			"specialist: pm\nsteps:\n  - name: feature-intake\n    execution: subagent\n    model: haiku\n",
+			"specialist: pm\nsteps:\n  - name: explore\n    execution: subagent\n    model: haiku\n",
 		)},
 	}
 	m := setup.New(skillsFS, "dev")
@@ -619,11 +619,11 @@ func TestUpdate_ModelSetup_AccordionExpandCycleAndReset(t *testing.T) {
 	// Cursor 0 is the collapsed pm group header; Right on a step is a no-op
 	// until the group is expanded.
 	m = updateKeyMsg(t, m, tea.KeyMsg{Type: tea.KeySpace}) // expand pm
-	m = updateKey(t, m, tea.KeyDown)                       // onto feature-intake
+	m = updateKey(t, m, tea.KeyDown)                       // onto explore
 	m = updateKey(t, m, tea.KeyRight)                      // haiku → next option
 
 	models := m.SelectedModels()
-	if models["pm/feature-intake"] == "haiku" {
+	if models["pm/explore"] == "haiku" {
 		t.Error("Right on expanded step: selection still haiku, want next option")
 	}
 	if !m.ModelsTouched() {
@@ -632,7 +632,7 @@ func TestUpdate_ModelSetup_AccordionExpandCycleAndReset(t *testing.T) {
 
 	// r resets the focused step back to its shipped default.
 	m = updateKeyMsg(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("r")})
-	if got := m.SelectedModels()["pm/feature-intake"]; got != "haiku" {
+	if got := m.SelectedModels()["pm/explore"]; got != "haiku" {
 		t.Errorf("after reset: selection = %q, want haiku", got)
 	}
 	if m.ModelsTouched() {

@@ -1,82 +1,57 @@
 # Review — QA Specialist
 
 ## Purpose
-Go/no-go shipping verdict. Evaluate the test-plan, the AC validation results, and the
-performance gate holistically and produce a final release-readiness decision before
-knowledge is preserved.
+This step EXAMINES the test suite that already exists for an area; `test-plan` plans tests
+for a change. The product is a verdict on the suite's health plus the gaps behind it.
 
 ## Inputs
-- `qa/test-plan` — arrives as an `### INPUT {topic_key}` block. Extract: `quality_verdict`, `ac_coverage.coverage_percent`, `ac_gaps[]`, `open_items[]`.
-- `qa/ac-gaps` — arrives as an `### INPUT {topic_key}` block. Extract: `validated_criteria[].id`, `validated_criteria[].status` (`valid` | `needs-revision` | `invalid`), `validated_criteria[].issue`, `gap_count`, `open_items[]`.
-- `qa/perf-validation` — arrives as an `### INPUT {topic_key}` block. Extract: `gate_verdict` (`go` | `no-go` | `no-target`), `validations[].dimension` and `validations[].verdict` for any failing target.
+- Platform summary — the project's test framework and conventions, injected inline
+- The area named in the request
 
-**DEGRADATION — `qa/perf-validation` is optional (produced only when the tier or Tailored Workflow ran `performance-validation`)**: when it arrives as `### INPUT {project}/{change}/qa/perf-validation: UNRESOLVED`, decide the verdict from coverage, AC status, and blocking open items alone with NO penalty for the missing gate; append "qa/perf-validation absent — performance gate not run, verdict covers functional readiness only" to open_items. Never block on this input.
-
-## Context budget
-test-plan summary + ac-gaps `validated_criteria[]` + perf gate verdict: max 1,500 tokens.
-
-## Output budget
-Max 600 tokens. Exceeding the budget is a defect: trim, do not spill.
+No declared input from another specialist: this step runs standalone, and anything prior
+about the area was already surfaced by the `knowledge-recall` prelude. Everything arrives
+ALREADY INJECTED — never self-fetch.
 
 ## Processing
 
-### 1. Coverage gate
-Does `test-plan.ac_coverage.coverage_percent` meet the minimum threshold?
-- ≥ 80%: pass
-- 50–79%: pass-with-notes
-- < 50%: fail
+1. **Map what is tested.** Find the tests covering the area and read what each one actually
+   asserts — not what its name claims. Anchor to real paths and test names: this step reads
+   the codebase, so the evidence rule applies in full. A behavior with a test whose
+   assertions never reach it is UNTESTED, and saying so is the point of this step.
 
-### 2. Blocking open items
-Scan `test-plan.open_items[]` and `ac-gaps.open_items[]`.
-Flag any item that:
-- Requires upstream specialist input before testing can proceed
-- Indicates a testable AC with no test case
+2. **Find the gaps**, using the catalogue in `asdt-core/references/testing.md`:
+   - **Behaviors with no test at all** — start from what the code does, not from what the
+     test directory suggests
+   - **Edge cases uncovered** — work the categories the area actually touches: boundaries,
+     null versus empty versus absent, invalid state transitions, concurrency, dependency
+     failure
+   - **Weak or tautological assertions** — the test that asserts a mock was called, the one
+     that re-computes the expected value with the same code under test
+   - **Brittle tests coupled to internals** — the ones that break on a rename and pass
+     through a real regression
+   - **Misclassified levels** — the "unit" test that opens a socket, the e2e that only
+     needed a function call
 
-### 3. AC status roll-up
-Scan `ac-gaps.validated_criteria[]` and bucket by `status`:
-- `invalid` — BLOCKING finding. Record it as a blocking item (`source: ac-gaps`, `item:` the AC id plus its `issue`) and force the no-go path in step 5.
-- `needs-revision` — MAJOR finding. Record it as a condition (the AC id plus its `issue`) and cap the verdict at go-with-conditions; it never on its own forces no-go.
-- `valid` — no action.
+3. **Verdict on the suite, two lines.** Does this area's suite catch what it is meant to
+   catch? Answer plainly, and say what would change the answer.
 
-If `validated_criteria[]` is empty but `gap_count` is greater than zero, treat the
-discrepancy as a blocking item rather than assuming the ACs are clean.
+4. **Findings.** At most 7, each with a one-word severity (`high`, `medium`, `low`),
+   evidence, and the fix in one line. Plus two or three strengths with the same evidence
+   standard — a coverage audit that only lists holes tells the reader nothing about what
+   they can already trust.
 
-### 4. Performance gate
-Read `perf-validation.gate_verdict`:
-- `no-go` — forces this review's verdict to no-go. Name each failing `validations[].dimension` in `blocking_items`.
-- `no-target` — no target existed to validate against; cap the verdict at go-with-conditions and add the condition "define NFR targets before shipping".
-- `go` — no action.
-
-### 5. Quality verdict alignment
-If `test-plan.quality_verdict` is `BLOCKED` → verdict is no-go regardless of the
-coverage gate. If `READY` and coverage ≥ 80% with no blockers → go. Intermediate
-cases → go-with-conditions with explicit rationale.
-
-### 6. Go/no-go decision
-Assign:
-- **go** — coverage ≥ 80%, no `invalid` AC, no blocking open items, performance gate `go` or absent
-- **go-with-conditions** — `needs-revision` ACs, a `no-target` performance gate, or minor caveats; list every condition that must close before shipping
-- **no-go** — one or more `invalid` ACs, a `no-go` performance gate, a `BLOCKED` quality verdict, a blocking open item, or coverage < 50%; name each blocker explicitly
-
-Do NOT invent issues. Only surface defects evident from the artifact content.
+**Never a pass or fail on something you did not run.** This step reads tests; it does not
+execute them. If measuring would settle a question, name the command the USER can run.
 
 ## Output
-Produces: `qa/qa-review`
+Produces: `{project}/study/{topic}/qa`, with `{topic}` derived from the request in short
+kebab-case.
 
-Include a `summary` field (≤ 150 tokens) — decision-preservation reads this field.
+Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+schema from `asdt-core/protocol.md`:
 
-Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
-
-```yaml
-payload:
-  verdict: "go|go-with-conditions|no-go"
-  summary: ""     # ≤ 150 tokens — consumed by decision-preservation
-  coverage_gate: "pass|pass-with-notes|fail"
-  performance_gate: "go|no-go|no-target|not-run"
-  blocking_items:
-    - source: "test-plan|ac-gaps|perf-validation"
-      item: ""
-  conditions:     # populated only when verdict is go-with-conditions
-    - ""
-  open_items: []
-```
+- `what` — the health of this area's suite in one sentence
+- `decisions` — the verdict and the judgments behind it, strengths among them
+- `risks` — `{risk, mitigation}` per gap, highest severity first
+- `files_hint` — the test files and the code they should be covering
+- `open_items` — anything you could not ground in evidence, `ASSUMED:` prefix

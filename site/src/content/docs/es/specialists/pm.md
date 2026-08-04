@@ -1,60 +1,82 @@
 ---
 title: Product Manager
-description: Transforma peticiones de features sin estructura en backlog entries con historias de usuario, límites de alcance y priorización — el especialista a invocar antes de la arquitectura o el código cuando los requisitos necesitan formalización.
+description: Convierte una petición cruda en requisitos que el resto del equipo puede construir sin adivinar — historias en orden de entrega, alcance explícito y criterios de aceptación.
 order: 20
 locale: es
 ---
 
 # Product Manager (`/asdt-pm`)
 
-> Transforma peticiones de features sin estructura en backlog entries con historias de usuario, límites de alcance y priorización — el especialista a invocar antes de la arquitectura o el código cuando los requisitos necesitan formalización.
+> Convierte una petición cruda en requisitos que el resto del equipo puede construir sin adivinar — historias en orden de entrega, alcance explícito y criterios de aceptación.
 
 ## Qué hace
 
-El especialista PM convierte peticiones vagas en un artefacto de requisitos preciso que todos los demás especialistas pueden consumir sin ambigüedad. Extrae el problema central, identifica stakeholders, escribe historias de usuario con criterios de aceptación preliminares, define límites de alcance explícitos y consolida todo en un `backlog-entry` que fluye hacia los siguientes especialistas.
+El PM corre un solo paso y entrega un solo artefacto. Toma lo que pediste y lo convierte en de 3 a 6 historias de usuario, cada una con uno o dos criterios de aceptación en lenguaje llano.
 
-Dos propiedades hacen que el contrato del backlog-entry sea estricto: los límites de alcance son **obligatorios** — un backlog-entry sin ítems explícitos fuera del alcance se considera incompleto, porque la ambigüedad de alcance es la causa raíz del scope creep. Y los criterios de aceptación en el backlog-entry son condiciones en inglés simple de alto nivel — **no** son criterios de prueba finales. QA los formaliza en formato Given/When/Then.
+**El orden de las historias es la prioridad.** La primera es la que se entrega primero. No hay ratings MoSCoW, ni un campo de prioridad aparte, ni una matriz que mantener: si querés cambiar la prioridad, cambiás el orden.
 
-El especialista PM nunca escribe decisiones de arquitectura, código de implementación ni specs de UX. Su único trabajo es hacer que los requisitos sean inequívocos para que ningún especialista posterior tenga que adivinar.
+**El alcance fuera es obligatorio.** Un hand-off que no dice explícitamente qué queda afuera está incompleto — no "no había nada que excluir". La ambigüedad de alcance es de donde sale casi todo el scope creep, y nombrar lo adyacente es lo que la corta.
+
+Los NFRs solo entran si el feature realmente los implica y si son medibles. "p95 bajo 200ms, medido con k6" es un NFR; "que sea rápido" no es nada.
 
 ## Cuándo invocarlo
 
-- La petición está formulada en lenguaje vago o centrado en el usuario ("agregar modo oscuro", "mejorar la búsqueda")
-- Necesitás historias de usuario explícitas antes de que el Arquitecto o el Developer intervengan
-- El alcance necesita quedar cerrado antes de que empiece el trabajo para evitar expansión en el medio del sprint
-- Hay múltiples stakeholders con necesidades que hay que conciliar
+- La petición está en lenguaje de usuario y hace falta cerrarla antes de diseñar o programar
+- El alcance necesita quedar acordado antes de empezar, para que no se expanda en el medio
+- Hay varias necesidades que conciliar y alguien tiene que decidir el orden
 
-## Posición en el pipeline
+No lo llames para un refactor, un cambio cosmético o una petición que ya viene con alcance técnico definido. Para eso, andá directo al Developer.
 
-Funciona mejor como el **primer** especialista en un pipeline — su `backlog-entry` es la fuente principal de requisitos para Arquitecto, Developer y QA. Invocarlo después de que la arquitectura ya está decidida arriesga divergencia entre requisitos y diseño. Puede correr de forma standalone cuando solo necesitas requisitos formalizados sin continuar el pipeline.
+## Cómo invocarlo
+
+Se le habla en lenguaje natural. No hay flags: si querés más o menos profundidad, decilo dentro de la petición y el especialista la ajusta.
+
+```
+/asdt-pm "agregar autenticación con email y contraseña"
+```
+
+```
+/asdt-pm "rediseñar las notificaciones — hay varios equipos involucrados, tomate el tiempo"
+```
+
+```
+/asdt-pm "exportar CSV en el panel de reportes, algo acotado"
+```
 
 ## Qué produce
 
-`pm/backlog-entry` — el artefacto canónico de requisitos. Contiene: nombre del feature, resumen ejecutivo, historias de usuario ordenadas con criterios de aceptación, bloque completo de alcance (dentro/fuera, puntos de integración, flags de riesgo) e ítems abiertos para especialistas posteriores.
+Un único hand-off en `{project}/{change}/pm/handoff`:
 
-Consumido por: **Arquitecto** (lee resumen ejecutivo + alcance), **Developer** (lee historias de usuario + orden de prioridad), **QA** (lee historias de usuario + criterios de aceptación como fuente principal de requisitos).
+| Campo | Qué lleva |
+|---|---|
+| `what` | El cambio en una frase |
+| `decisions` | Las historias en orden de entrega |
+| `constraints` | Alcance dentro, alcance fuera, y los NFRs medibles |
+| `acceptance_criteria` | Given/When/Then, máximo 5 |
+| `risks` | `{riesgo, mitigación}`, una línea cada uno |
+| `open_items` | Huecos reales, con prefijo `ASSUMED:` cuando el PM asumió una respuesta |
 
-## Patrones comunes
+**El PM es la autoridad de los criterios de aceptación.** Quien viene después los refina —el Developer los lleva a granularidad de implementación, QA busca lo que les falta— pero nadie los reescribe desde cero.
+
+Lo consumen: **Arquitecto**, **Developer**, **QA** y **UX/UI**. Todos lo leen como entrada opcional: si el PM no corrió, cada uno trabaja desde la petición cruda y lo anota.
+
+## Por su cuenta
+
+También sirve para ordenar lo que ya existe sin abrir un cambio:
 
 ```
-/asdt-pm Agregar autenticación de usuario con email y contraseña
-# → Requisitos ambiguos, necesita alcance antes de la arquitectura
+/asdt-pm "¿qué quedó fuera de alcance en el rediseño de notificaciones?"
 ```
 
-```
-/asdt-pm Rediseñar el sistema de notificaciones
-# → Múltiples stakeholders con necesidades potencialmente en conflicto
-```
+## Qué consume
 
-```
-/asdt-pm Agregar exportación CSV al panel de reportes
-# → Simple en la superficie, pero los puntos de integración y el riesgo de alcance necesitan mapearse
-```
+La petición cruda, las convenciones detectadas del proyecto, y —si el Researcher corrió antes— su `researcher/handoff`: la dirección recomendada le da el punto de partida, y las direcciones descartadas alimentan el alcance fuera.
 
-## Límites — qué NO hace
+Si no hay nada de eso, arranca igual desde la petición y lo deja registrado.
+
+## Límites
 
 - No escribe decisiones de arquitectura ni ADRs
-- No escribe código de implementación ni diseños técnicos
-- No escribe specs de UX, wireframes ni specs de componentes
-- No produce criterios de aceptación finales y testeables (eso es trabajo de QA)
-- Nunca produce un backlog-entry sin ítems explícitos fuera del alcance
+- No escribe código ni diseños técnicos
+- No escribe flujos de UX ni specs de componentes
+- No produce un hand-off sin alcance fuera explícito

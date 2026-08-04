@@ -24,9 +24,20 @@ The QA Specialist is not trivial-eligible. At trivial complexity it falls back t
 - You want systematic edge case coverage, not just happy-path tests
 - You need a structured test plan that a developer can implement without guessing
 
+## On its own
+
+It doesn't need someone to have just finished coding. Point it at what is already there:
+
+```
+/asdt-qa "what don't our auth tests cover?"
+/asdt-qa "review the cart's coverage and give me a verdict"
+```
+
+It works from whatever it finds — prior hand-offs if any, the codebase if not — and still closes with go/no-go.
+
 ## Pipeline position
 
-Typically runs **after Developer** (reads `dev-implementation`) and is the final sign-off before code merges. Can run earlier — against PM's `backlog-entry` or Architect's `architectural-decision` — to catch AC quality issues before implementation starts. That early pass saves far more time than finding gaps after the code is written.
+Typically runs **after Developer** (reads `developer/handoff`) and is the final sign-off before code merges. Can run earlier — against `pm/handoff` or `architect/handoff` — to catch AC quality issues before implementation starts. That early pass saves far more time than finding gaps after the code is written. Every input is optional: with none of them, it works from the request and the codebase.
 
 ## What it produces
 
@@ -43,7 +54,7 @@ Consumed by: **Developer** (to implement the test suite), used as the sign-off a
 
 ```
 /asdt-qa Validate acceptance criteria before implementation starts
-# → Run QA on PM's backlog-entry to catch AC quality issues early
+# → Run QA against pm/handoff to catch AC quality issues early
 ```
 
 ```

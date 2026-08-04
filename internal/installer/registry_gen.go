@@ -56,20 +56,18 @@ var registryRenderOrder = []string{
 //   - specialist-header.md first: the Prerequisites gate and the ORCHESTRATOR
 //     GATE must be the very first thing a specialist reads, before it can act
 //     on anything else in the document.
-//   - parallel-retrieval.md second: the Cache Ledger Rule and the Injection
-//     Format are needed at launch time — the orchestrator must already hold
-//     them before it runs the first inline step.
-//   - intake-contract.md third: the declared-vs-present input check, the single
-//     batched clarification turn, and the harden-always ASSUMED: degradation
-//     govern how every step treats its inputs, so they must be settled before
-//     any step content arrives.
-//   - knowledge-recall.md last: it is the content of that first inline step, so
-//     it only has to be in context once the launch contract above is settled.
+//   - protocol.md second: the intake contract, the injection format, the Engram
+//     persistence rules, and the degradation contract govern how every step
+//     treats its inputs, so they must be settled before any step content
+//     arrives. It absorbed the former parallel-retrieval.md and
+//     intake-contract.md fragments.
+//
+// knowledge-recall.md is deliberately NOT here: it is no longer a header
+// fragment but a per-specialist inline step pointing at
+// asdt-core/references/knowledge-recall.md.
 var specialistHeaderFragments = []string{
-	"asdt-shared/skills/specialist-header.md",
-	"asdt-shared/skills/parallel-retrieval.md",
-	"asdt-shared/skills/intake-contract.md",
-	"asdt-shared/skills/knowledge-recall.md",
+	"asdt-core/specialist-header.md",
+	"asdt-core/protocol.md",
 }
 
 // inlineStepsDisplayNames maps a specialist directory to the display label
@@ -135,7 +133,7 @@ func parseRegistry(skillsFS fs.FS) ([]specialistRegistry, error) {
 		wfPath := path.Join(dir, "workflow.yaml")
 		data, readErr := fs.ReadFile(skillsFS, wfPath)
 		if readErr != nil {
-			continue // directory without workflow.yaml (e.g. asdt-shared)
+			continue // directory without workflow.yaml (e.g. asdt-core)
 		}
 
 		var wf registryFile
@@ -267,7 +265,7 @@ func GenerateInlineSteps(skillsFS fs.FS, skillMD []byte) ([]byte, error) {
 // in specialistHeaderFragments order. It exists so the header is already
 // spliced into each routed specialist's installed SKILL.md: the orchestrator
 // then has the header in context the moment it reads the specialist, instead of
-// depending on separate reads of the asdt-shared/skills/*.md fragments that may
+// depending on separate reads of the asdt-core/*.md fragments that may
 // never happen. Files without the markers pass through unchanged
 // (replaceMarkerRegion's no-region skip), so this is safe to run over every
 // SKILL.md the installer writes.

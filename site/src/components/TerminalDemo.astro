@@ -60,10 +60,10 @@ const { t, lang } = Astro.props
             <div class="t-line t-eph" style="--d:2.05s; --d2:2.65s;">{'  '}<span class="t-spin"></span> <span class="t-shim">Leyendo el contexto del proyecto…</span></div>
             <div class="t-line" style="--d:2.75s;">{'  '}<span style="color:var(--c-pm);">◆ pm</span> <span class="t-mut">— 4 pasos</span></div>
             <div class="t-line" style="--d:2.75s;">&nbsp;</div>
-            <div class="t-line" style="--d:3.0s;">{'  '}<span class="t-step"></span> <span class="t-cmd">feature-intake        </span><span class="t-mut">necesidades           </span><span class="t-dim">pm/feature-intake</span></div>
+            <div class="t-line" style="--d:3.0s;">{'  '}<span class="t-step"></span> <span class="t-cmd">knowledge-recall      </span><span class="t-mut">memoria previa        </span><span class="t-dim">contexto</span></div>
             <div class="t-line" style="--d:3.6s;">{'  '}<span class="t-step"></span> <span class="t-cmd">user-stories          </span><span class="t-mut">3 historias           </span><span class="t-dim">pm/user-stories</span></div>
             <div class="t-line" style="--d:4.2s;">{'  '}<span class="t-step"></span> <span class="t-cmd">scope-analysis        </span><span class="t-mut">alcance definido      </span><span class="t-dim">pm/scope-analysis</span></div>
-            <div class="t-line" style="--d:4.8s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog-entry         </span><span class="t-mut">ítem de backlog       </span><span class="t-dim">pm/backlog-entry</span></div>
+            <div class="t-line" style="--d:4.8s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog               </span><span class="t-mut">requisitos            </span><span class="t-dim">pm/handoff</span></div>
             <div class="t-line" style="--d:5.5s;">&nbsp;</div>
             <div class="t-line t-dim" style="--d:5.7s;">{'  '}Cada artefacto queda en la base de conocimientos.</div>
             <div class="t-line" style="--d:6.2s;">{'  '}<span class="t-dim">→ siguiente:</span> <span style="color:var(--c-arch);">/asdt-architect</span> <span class="caret"></span></div>
@@ -127,10 +127,10 @@ const { t, lang } = Astro.props
             <div class="t-line t-eph" style="--d:2.05s; --d2:2.65s;">{'  '}<span class="t-spin"></span> <span class="t-shim">Reading project knowledge…</span></div>
             <div class="t-line" style="--d:2.75s;">{'  '}<span style="color:var(--c-pm);">◆ pm</span> <span class="t-mut">— 4 steps</span></div>
             <div class="t-line" style="--d:2.75s;">&nbsp;</div>
-            <div class="t-line" style="--d:3.0s;">{'  '}<span class="t-step"></span> <span class="t-cmd">feature-intake        </span><span class="t-mut">user needs            </span><span class="t-dim">pm/feature-intake</span></div>
+            <div class="t-line" style="--d:3.0s;">{'  '}<span class="t-step"></span> <span class="t-cmd">knowledge-recall      </span><span class="t-mut">prior memory          </span><span class="t-dim">context</span></div>
             <div class="t-line" style="--d:3.6s;">{'  '}<span class="t-step"></span> <span class="t-cmd">user-stories          </span><span class="t-mut">3 user stories        </span><span class="t-dim">pm/user-stories</span></div>
             <div class="t-line" style="--d:4.2s;">{'  '}<span class="t-step"></span> <span class="t-cmd">scope-analysis        </span><span class="t-mut">scope + boundaries    </span><span class="t-dim">pm/scope-analysis</span></div>
-            <div class="t-line" style="--d:4.8s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog-entry         </span><span class="t-mut">backlog item          </span><span class="t-dim">pm/backlog-entry</span></div>
+            <div class="t-line" style="--d:4.8s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog               </span><span class="t-mut">requirements          </span><span class="t-dim">pm/handoff</span></div>
             <div class="t-line" style="--d:5.5s;">&nbsp;</div>
             <div class="t-line t-dim" style="--d:5.7s;">{'  '}Each artifact is saved to the shared knowledge base.</div>
             <div class="t-line" style="--d:6.2s;">{'  '}<span class="t-dim">→ next:</span> <span style="color:var(--c-arch);">/asdt-architect</span> <span class="caret"></span></div>
@@ -366,10 +366,10 @@ const { t, lang } = Astro.props
       },
       devFlow: '— flujo de 8 pasos',
       pmInfo: {
-        'feature-intake':  ['necesidades',     'pm/feature-intake'],
+        'knowledge-recall': ['memoria previa',  'contexto'],
         'user-stories':    ['3 historias',      'pm/user-stories'],
         'scope-analysis':  ['alcance definido', 'pm/scope-analysis'],
-        'backlog-entry':   ['ítem de backlog',  'pm/backlog-entry'],
+        'backlog':          ['requisitos',      'pm/handoff'],
       },
       pmFlow: '— 4 pasos',
       archInfo: {
@@ -427,10 +427,10 @@ const { t, lang } = Astro.props
       },
       devFlow: '— 8-step flow',
       pmInfo: {
-        'feature-intake':  ['user needs',        'pm/feature-intake'],
+        'knowledge-recall': ['prior memory',    'context'],
         'user-stories':    ['3 user stories',     'pm/user-stories'],
         'scope-analysis':  ['scope + boundaries', 'pm/scope-analysis'],
-        'backlog-entry':   ['backlog item',        'pm/backlog-entry'],
+        'backlog':          ['requirements',    'pm/handoff'],
       },
       pmFlow: '— 4 steps',
       archInfo: {
@@ -479,7 +479,7 @@ const { t, lang } = Astro.props
   const s = lang === 'es' ? STR.es : STR.en
 
   const DEV_STEPS  = ['knowledge-recall','explore','spec','design','tasks','implement','test','decision-preservation']
-  const PM_STEPS   = ['feature-intake','user-stories','scope-analysis','backlog-entry']
+  const PM_STEPS   = ['knowledge-recall','backlog']
   const ARCH_STEPS = ['load-constraints','evaluate-approaches','decision-record']
   const SEC_STEPS  = ['threat-modeling','attack-surface','owasp-analysis','hardening-checklist']
   const QA_STEPS   = ['load-requirements','ac-validation','edge-case-analysis','test-strategy','test-case-generation','quality-report']

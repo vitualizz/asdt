@@ -12,7 +12,7 @@ import (
 var skillFS embed.FS
 
 // FS returns the full embedded skill tree rooted at skill/.
-// Paths: "asdt-developer/SKILL.md", "asdt-shared/skills/platform-context.md", etc.
+// Paths: "asdt-developer/SKILL.md", "asdt-core/protocol.md", etc.
 // This is the production FS consumed by cmd/asdt-tui via skill.FS().
 func FS() fs.FS {
 	return skillFS

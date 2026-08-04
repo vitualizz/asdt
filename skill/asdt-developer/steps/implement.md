@@ -1,146 +1,90 @@
 # Implement — Developer Specialist
 
 ## Purpose
-Generate implementation code for each task, respecting existing conventions.
+Write the implementation — and its tests when TDD is on — respecting existing conventions and
+never leaving the declared edit roots.
 
 ## Inputs
-- `developer/dev-tasks` (optional — tier-gated: the `tasks` step runs at complex): ordered task list with files and dependencies
-- `developer/dev-design` (optional — tier-gated: the `design` step runs at moderate and above): technical approach, key constraints
-- `developer/dev-spec` (optional — spec→code traceability): acceptance criteria for this change
+- `dev-spec` — injected from the orchestrator's context as `### INPUT dev-spec`. Extract:
+  `files_to_create`, `files_to_modify`, `acceptance_criteria[]`, `approach`, `key_constraints`
+- `{project}/{change}/architect/handoff` (optional) — the architectural decision, from Engram
 
-Extract from dev-tasks: `tasks` list.
-Extract from dev-design: `key_constraints`, `data_model` field shapes.
-Extract from dev-spec: `acceptance_criteria[]` (for the traceability_report — see Processing).
-
-**Soft input (no `dev-spec`)**: if dev-spec is ABSENT, do NOT fail — note the absence in
-`open_items`, emit an empty `traceability_report[]`, and proceed with available context.
-
-**DEGRADATION — `dev-tasks` is optional (the `tasks` step runs at `complex` only, so it is absent at
-`simple` and `moderate`)**: when it arrives as `### INPUT {project}/{change}/developer/dev-tasks: UNRESOLVED`,
-do NOT fail and do NOT STOP on the missing artifact alone — fall back to `developer/dev-spec` +
-`developer/dev-design` as primary inputs and derive the task list inline from those two artifacts, then
-proceed; append "developer/dev-tasks absent — task list derived inline from dev-spec and dev-design" to
-open_items. Never block on this input. The Mode resolution below (PLAN-ONLY vs WRITING, gated on declared
-edit roots) applies unchanged to the inline-derived tasks.
-
-**DEGRADATION — `dev-design` is optional (the `design` step runs at `moderate` and above, so it is
-absent at `simple`)**: when it arrives as `### INPUT {project}/{change}/developer/dev-design: UNRESOLVED`,
-fall back to `developer/dev-spec` as the design authority — take `key_constraints` from the spec's
-stated constraints and non-functional requirements, derive data-model field shapes from the
-acceptance criteria, and mark every shape the spec does not settle as unresolved rather than
-inventing it; append "developer/dev-design absent — implementation derived from dev-spec at spec
-granularity" to open_items. Never block on this input. At `simple` BOTH `dev-tasks` and `dev-design`
-are absent, so `developer/dev-spec` is the sole primary input and the inline-derived task list comes
-from it alone.
-
-## Context budget
-dev-tasks + dev-design summary: max 3,000 tokens. Generate code for tasks in batches
-if the task list is large.
+**DEGRADATION**: if `dev-spec` is UNRESOLVED, do NOT proceed to writing — there are no declared edit roots, so PLAN-ONLY mode applies; note `ASSUMED:` in open_items. If `architect/handoff` is UNRESOLVED, take the design authority from `dev-spec` and note `ASSUMED:` in open_items.
 
 ## Mode resolution (do this FIRST)
-1. Resolve `allowedEditRoots` = union of `files_to_create` + `files_to_modify` across all tasks
-   in `dev-tasks` (cross-check `dev-design` for additional declared targets).
+1. Resolve `allowedEditRoots` = union of `files_to_create` + `files_to_modify` declared in
+   `dev-spec` (cross-check `architect/handoff` for additional declared targets).
 2. If `allowedEditRoots` is EMPTY → PLAN-ONLY MODE: emit the snippet-based artifact (unchanged
    schema below, `code_snippets[]`). Write NO host files.
-3. If `allowedEditRoots` is NON-EMPTY → WRITING MODE: for each task, write the real file(s) to
-   disk, but ONLY to paths within `allowedEditRoots`. Before each write, confirm the target path
-   is under a declared root; if not, STOP and report the unsafe path in `open_items` — do not write.
+3. If `allowedEditRoots` is NON-EMPTY → WRITING MODE: write the real file(s) to disk, but ONLY
+   to paths within `allowedEditRoots`. Before each write, confirm the target path is under a
+   declared root; if not, STOP and report the unsafe path in `open_items` — do not write.
 4. Match existing conventions: read the current content of any `files_to_modify` target first
-   (per `skills/code-generation.md`) before editing it.
+   (per `../asdt-core/references/conventions.md`) before editing it.
 
 ## Processing
 
 ### Plan-only mode
-For each task in dev-tasks:
-1. Generate the implementation code respecting `key_constraints` from dev-design.
-2. Follow naming conventions from the platform-summary (loaded by platform-context shared skill).
-3. Apply early return pattern, no global state, small functions.
-4. Emit the code as inline `code_snippets[]` — write nothing to the host filesystem.
+1. Generate the implementation code respecting `key_constraints` from the spec, the
+   platform-summary conventions, early-return, no global state, small focused functions.
+2. Emit the code as inline `code_snippets[]` — write nothing to the host filesystem.
 
 ### Writing mode
-For each task in dev-tasks:
-1. Confirm the task's declared `files_to_create`/`files_to_modify` paths are within `allowedEditRoots`;
-   if any path falls outside, STOP before writing it, do not expand scope, and record the unsafe
-   path plus the triggering task in `open_items`.
-2. Read existing file content for any `files_to_modify` target before editing (match conventions,
-   avoid clobbering unrelated code).
-3. Generate the implementation respecting `key_constraints` from dev-design, naming conventions
-   from platform-summary, early-return pattern, no global state, small functions.
+1. Confirm each declared path is within `allowedEditRoots`; if any path falls outside, STOP
+   before writing it, do not expand scope, and record the unsafe path in `open_items`.
+2. Read existing file content for any `files_to_modify` target before editing (match
+   conventions, avoid clobbering unrelated code).
+3. Generate the implementation respecting `key_constraints`, the platform-summary conventions,
+   early-return, no global state, small functions.
 4. Write the real file to disk via the filesystem write tool, within the validated root.
-5. Record the written path, action (`created`|`modified`), and rationale in the `files_changed[]`
-   manifest entry for that task.
-6. Compose — never execute — the verification the USER may run: put the build/lint/test commands
-   in `suggested_verification.commands` and what a healthy run looks like in
-   `suggested_verification.expected`. This step writes code and NEVER runs build, lint, or tests;
-   deciding when to verify is always the user's call.
+5. Record the written path, action (`created`|`modified`), and rationale in `files_changed[]`.
+6. Compose — never execute — the verification the USER may run: the build/lint/test commands in
+   `suggested_verification.commands`, what a healthy run looks like in `.expected`. This step
+   writes code and NEVER runs build, lint, or tests; when to verify is always the user's call.
 
-### Traceability (both modes)
-Every acceptance criterion must be answerable with "which code addresses this". After generating
-code, build a top-level `traceability_report[]`:
-1. Read `dev-spec.acceptance_criteria[]`. If dev-spec was absent, emit `traceability_report: []`.
-2. For each AC, identify the task(s) / file(s) that address it. Set `coverage_status: covered`
-   and list the addressing `task_id`(s) in `addressed_by`.
-3. If no task addresses an AC, set `coverage_status: unaddressed` and add a NON-BLOCKING warning
-   to `open_items`. Unaddressed ACs are WARNINGS — do NOT halt the step.
+### Tests
+Generate tests HERE, in this same step, when `strict_tdd: true` in `.asdt/config.yaml` or the
+user asked for them. Otherwise skip this section entirely. Tests obey the SAME mode and the
+SAME `allowedEditRoots` as the code above — in plan-only mode they are `code_snippets[]`
+entries like any other file; in writing mode they are real files, and a test path outside the
+declared roots STOPS exactly as a source path does.
 
-## Dual mem_save semantics
-This step persists TWICE, and the two saves are DISTINCT — never merge them:
-- **PRIMARY (canonical)**: the artifact save under the `output_topic_key` from `workflow.yaml`
-  (`developer/dev-implementation`). This is the artifact sub-agents retrieve via their declared `inputs:`.
-- **SECONDARY (knowledge record)**: the `decision-preservation` save under its own title pattern
-  (`"{specialist-role}: {change-name}"`). This is the permanent organizational memory entry.
+Per unit under test: one happy-path test for the acceptance criterion, and one edge-case test
+for the most likely failure mode. Follow the project's existing test framework; use
+table-driven cases where the framework offers them; test behavior, never internals.
 
-See `../asdt-shared/skills/decision-preservation.md` for the shared definition.
+This step WRITES tests; it NEVER runs them. Running build, lint, or a test suite is always the
+user's call, so `suggested_verification.commands` is an offer to the user, not a step this
+specialist performs.
+
+### Coverage
+Every acceptance criterion should be answerable with "which code addresses this". After
+generating the code, walk `dev-spec.acceptance_criteria[]`: for each one no file addresses,
+append a single line to `open_items` — `AC not covered: {ac text}`. Warnings, never a halt.
 
 ## Output
-Produces: `developer/dev-implementation`
+Produces: `developer/handoff` — persist via `mem_save` under this step's `output_topic_key`,
+using the canonical hand-off schema from `asdt-core/protocol.md`. Set `mode` to the resolved
+value; `files_changed` carries real paths in writing mode, `code_snippets` the code in plan-only.
 
-Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
-
-The output schema is mode-dependent — set `mode` to the resolved value and emit the matching shape.
-
-### Plan-only mode schema
 ```yaml
 payload:
-  mode: "plan-only"
-  steps:
-    - task_id: "T-001"
-      title: ""
-      files_to_create: []
-      files_to_modify: []
-      rationale: ""
-      code_snippets:
-        - file: ""
-          language: ""
-          content: ""
-  traceability_report:        # top-level — maps each dev-spec AC to the code addressing it
-    - ac_id: ""
-      ac_text: ""
-      addressed_by: []        # [task_id]
-      coverage_status: "covered|unaddressed"
-  summary: ""                 # ≤ 150 tokens — consumed by decision-preservation
-  open_items: []
-```
-
-### Writing mode schema
-```yaml
-payload:
-  mode: "writing"
-  allowedEditRoots: []        # resolved list, recorded verbatim for traceability
-  files_changed:
+  what: ""                    # what was implemented, one sentence
+  mode: "writing | plan-only"
+  allowedEditRoots: []        # resolved list, recorded verbatim (writing mode)
+  files_changed:              # writing mode
     - path: ""
       action: "created|modified"
-      task_id: "T-001"
       rationale: ""
-  unsafe_skipped: []          # paths STOPPED on, with the triggering task_id
-  traceability_report:        # top-level — maps each dev-spec AC to the code addressing it
-    - ac_id: ""
-      ac_text: ""
-      addressed_by: []        # [task_id]
-      coverage_status: "covered|unaddressed"
+  code_snippets:              # plan-only mode
+    - file: ""
+      language: ""
+      content: ""
+  unsafe_skipped: []          # paths STOPPED on, and what triggered them
   suggested_verification:     # commands the USER may run; this step never runs them
-    commands: []              # e.g. the project's build, lint, and test commands
-    expected: ""              # what a healthy run looks like
-  summary: ""                 # ≤ 150 tokens — consumed by decision-preservation
-  open_items: []
+    commands: []
+    expected: ""
+  decisions: []               # implementation choices worth carrying forward
+  risks: []                   # {risk, mitigation}
+  open_items: []              # includes one "AC not covered: ..." line per uncovered AC
 ```

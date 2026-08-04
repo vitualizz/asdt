@@ -2,87 +2,58 @@ specialist: developer
 routable: true
 steps:
   - name: knowledge-recall
-    skill: ../asdt-shared/skills/knowledge-recall.md
+    skill: ../asdt-core/references/knowledge-recall.md
     description: Query organizational memory for prior decisions relevant to this change before acting
     execution: inline
 
   - name: explore
     skill: steps/explore.md
-    description: Explore the request and platform context to produce a development exploration artifact
+    description: Explore the request and the affected area of the codebase before speccing
     execution: subagent
-    model: sonnet  # exploration / enumeration: lower ambiguity, favor throughput
+    model: sonnet
     agent: analyst
     inputs: []
-    output_topic_key: "{project}/{change}/developer/dev-exploration"
+    output: context # retained in the orchestrator's context, injected into spec — never persisted
     reference_skills:
-      - ../asdt-shared/skills/platform-context.md
-      - ../asdt-shared/skills/artifact-loading.md
+      - ../asdt-core/references/platform-context.md
 
   - name: spec
     skill: steps/spec.md
-    description: Transform the exploration into a structured development specification
+    description: Define scope, acceptance criteria, the technical approach, and the files implement is allowed to touch
     execution: subagent
-    model: sonnet  # structured transform / analysis: lower ambiguity, favor throughput
+    model: sonnet
     agent: analyst
     inputs:
-      - "{project}/{change}/developer/dev-exploration"
-      - "{project}/{change}/pm/backlog-entry"  # optional — acceptance-criteria authority; degrade gracefully if absent
-    output_topic_key: "{project}/{change}/developer/dev-spec"
+      - "{project}/{change}/pm/handoff" # optional — acceptance-criteria authority; degrade gracefully if absent
+      - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
+    output: context # retained in the orchestrator's context, injected into implement — never persisted
     reference_skills:
-      - ../asdt-shared/skills/scope-definition.md
-
-  - name: design
-    skill: steps/design.md
-    description: Produce a technical design from the spec (data model, API surface, component boundaries)
-    execution: subagent
-    model: opus  # deep design / synthesis: high ambiguity, strongest reasoning
-    agent: analyst
-    inputs:
-      - "{project}/{change}/developer/dev-spec"
-    output_topic_key: "{project}/{change}/developer/dev-design"
-    reference_skills: []
-
-  - name: tasks
-    skill: steps/tasks.md
-    description: Break the design into an ordered task list with dependency graph
-    execution: subagent
-    model: sonnet  # task enumeration / dependency mapping: lower ambiguity, favor throughput
-    agent: analyst
-    inputs:
-      - "{project}/{change}/developer/dev-spec"
-      - "{project}/{change}/developer/dev-design"
-    output_topic_key: "{project}/{change}/developer/dev-tasks"
-    reference_skills: []
+      - ../asdt-core/references/scope-definition.md
+      - ../asdt-core/protocol.md
 
   - name: implement
     skill: steps/implement.md
-    description: Generate the concrete implementation from the task list and design
+    description: Write the implementation and, under strict TDD, its tests — within the edit roots declared by the spec
     execution: subagent
-    model: opus  # real-file writing / code generation: high ambiguity, strongest reasoning
+    model: opus
     agent: builder
     inputs:
-      - "{project}/{change}/developer/dev-tasks"  # optional (tier-gated: tasks runs at complex)
-      - "{project}/{change}/developer/dev-design"  # optional (tier-gated: design runs at moderate+)
-    output_topic_key: "{project}/{change}/developer/dev-implementation"
+      - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
+    context_inputs: [dev-spec]
+    output_topic_key: "{project}/{change}/developer/handoff"
     reference_skills:
-      - skills/code-generation.md
-      - ../asdt-shared/skills/platform-context.md
+      - ../asdt-core/references/conventions.md
+      - ../asdt-core/references/platform-context.md
+      - ../asdt-core/protocol.md
 
-  - name: test
-    skill: steps/test.md
-    description: Write tests covering the implementation tasks and edge cases
+  - name: review
+    skill: steps/review.md
+    description: Judge the quality of code that already exists — findings with a one-line fix each, never a write
     execution: subagent
-    model: sonnet  # test enumeration from existing code: lower ambiguity, favor throughput
-    agent: builder
-    inputs:
-      - "{project}/{change}/developer/dev-tasks"  # optional (tier-gated: tasks runs at complex)
-      - "{project}/{change}/developer/dev-implementation"
-    output_topic_key: "{project}/{change}/developer/dev-tests"
+    model: sonnet
+    agent: analyst
+    inputs: []
+    output_topic_key: "{project}/study/{topic}/developer"
     reference_skills:
-      - skills/test-generation.md
-      - ../asdt-shared/skills/platform-context.md
-
-  - name: decision-preservation
-    skill: ../asdt-shared/skills/decision-preservation.md
-    description: Save a permanent organizational knowledge record of decisions made during this run
-    execution: inline
+      - ../asdt-core/references/conventions.md
+      - ../asdt-core/protocol.md

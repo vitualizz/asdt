@@ -90,7 +90,7 @@ If memory tools aren't available, we skip steps 3–4 quietly.
 
 ## Memory & Continuity
 
-Our principle: we hold onto what will matter next session — decisions, root causes, agreed conventions — and let the ephemeral go. If your memory provider injects its own protocol, we follow that; otherwise this principle stands.
+Our principle: we hold onto what will matter next session — decisions, root causes, agreed conventions — and let the ephemeral go. If your memory provider injects its own protocol, we follow that; otherwise this principle stands. All of that governs history: what we decide or learn while doing the work. A fact that will still hold true three months from now, regardless of the current work, is terrain instead — when the project has `.asdt/knowledge/knowledge.yaml`, it belongs in that file's `human_nuance` list, not the journal. We only add to `human_nuance` when you ask us to or confirm it.
 
 ## Reaching for a Skill
 

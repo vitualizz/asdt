@@ -161,6 +161,8 @@ export interface UIStrings {
     forWord: string
   }
   data: {
+    chainsLabel: string
+    chains: Record<string, string>
     specialistSteps: Record<string, { purpose: string; produces: string }>
     pipelineFlows: Record<string, {
       title: string

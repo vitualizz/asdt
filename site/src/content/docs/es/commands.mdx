@@ -41,15 +41,23 @@ Inicializa ASDT en el proyecto actual. Detecta tu stack y crea `.asdt/config.yam
 
 ### `/asdt`
 
-Sugerencia de ruteo del pipeline. Describí qué querés construir — ASDT analiza el pedido, recomienda qué especialistas involucrar y en qué orden, y espera tu confirmación antes de listar los comandos a ejecutar.
+Preguntale al equipo. Describí qué querés construir y te recomienda qué especialistas involucrar y en qué orden, esperando tu confirmación antes de listar los comandos.
 
 ```
-/asdt Agregar verificación de email al flujo de registro
+/asdt "agregar verificación de email al flujo de registro"
+```
+
+También responde preguntas sobre el estado del trabajo, directo desde lo que el equipo ya resolvió — sin correr ningún especialista:
+
+```
+/asdt "¿qué decidimos sobre el hashing de contraseñas?"
+/asdt "¿cómo vamos con el rediseño del checkout?"
+/asdt "¿qué quedó pendiente?"
 ```
 
 ### `/asdt-researcher`
 
-Corre solo al especialista Researcher — el especialista de descubrimiento para problemas difusos (ideación divergente, escaneo de factibilidad, brief de descubrimiento). Corre antes del PM cuando el problema todavía no está bien definido.
+Corre solo al especialista Researcher — descubrimiento para problemas difusos: encuadra el problema, diverge en direcciones candidatas, juzga la factibilidad de cada una contra el código y converge en una recomendación. Corre antes del PM cuando el problema todavía no está bien definido.
 
 ```
 /asdt-researcher Explorar formas de reducir el abandono en el onboarding

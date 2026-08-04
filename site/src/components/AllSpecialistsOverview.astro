@@ -23,11 +23,9 @@ interface Row {
 
 const rows: Row[] = PIPELINE_ORDER.map((id) => {
   const config = specialistSteps[id]
-  const isRisk = config.tierType === 'risk-surface'
-  const maxKey = isRisk ? 'high' : 'complex'
-  const stepIds: string[] = config.tiers[maxKey as keyof typeof config.tiers] ?? Object.keys(config.steps)
-  const lastStepId = stepIds[stepIds.length - 1]
-  const lastStep = config.steps[lastStepId]
+  const chain = config.chains[config.chains.length - 1]
+  const stepIds: string[] = chain.steps
+  const lastStep = config.steps[stepIds[stepIds.length - 1]]
   const purpose = (lastStep ? t.data.specialistSteps[`${id}:${lastStep.id}`]?.purpose : undefined) ?? ''
   const href = getLocalePath(`/docs/specialists/${id}`, lang)
 

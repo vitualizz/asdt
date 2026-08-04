@@ -25,7 +25,7 @@ Initialize ASDT for the current project: detect the stack, collect the configura
 | clarify | *(inline — no step file)* | inline | `init/stack-detection.ambiguities[]` + enrichment's `nuance.*` | *(no artifact — injects `answers{}` into write's prompt)* |
 | write | steps/write.md | subagent | `init/stack-detection` + `### CLARIFY ANSWERS` | `init/write-summary` |
 
-Step names byte-match `workflow.yaml`; when they differ, `workflow.yaml` is authoritative. The three inline steps have no step file — the sections below are their contracts. The detection and file-writing mechanics belong to `steps/explore.md` and `steps/write.md` and are not restated here.
+Setup-class flow: this table stays, unlike the routed specialists', because three of these steps have NO step file — the sections below are their only contract. `workflow.yaml` stays authoritative if the two ever disagree. The detection and file-writing mechanics belong to `steps/explore.md` and `steps/write.md` and are not restated here.
 
 ## knowledge-gate — Engram presence (inline)
 

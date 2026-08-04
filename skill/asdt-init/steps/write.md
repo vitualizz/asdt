@@ -22,10 +22,6 @@ the inline `clarify` step and the answers were injected into this prompt.
   blocking_open_items: []            # non-empty → HALT (see Halt contract)
   ```
 
-## Context budget
-`stack-detection`: max 2,000 tokens. The CLARIFY ANSWERS block is small by
-construction. Do not pull anything else into context.
-
 ## Recalibration contract
 The Engram gate already passed PRE-EXPLORE (the orchestrator checked its own tool
 list before launching explore). You do not re-run it.
