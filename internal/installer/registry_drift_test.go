@@ -1,7 +1,6 @@
 package installer
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -116,9 +115,6 @@ func TestRegistryDrift(t *testing.T) {
 
 // asdtCommandRe matches an /asdt-<name> slash command token.
 var asdtCommandRe = regexp.MustCompile(`/asdt-[a-z-]+`)
-
-// asdtPathRe matches an asdt-<name> directory token inside a skill/ path.
-var asdtPathRe = regexp.MustCompile(`asdt-[a-z-]+`)
 
 // firstCommandDir returns the canonical dir for the FIRST /asdt-<name> command
 // in a table row (the Command column precedes any prose that references other
@@ -388,24 +384,4 @@ func lineSliceBetween(content, startHint, endHint string) string {
 		}
 	}
 	return strings.Join(lines[start:end], "\n")
-}
-
-// extractMarkerRegion returns the bytes strictly between beginMarker and
-// endMarker as a string, erroring when either marker is absent or the end
-// precedes the begin.
-func extractMarkerRegion(content []byte, beginMarker, endMarker string) (string, error) {
-	s := string(content)
-	begin := strings.Index(s, beginMarker)
-	if begin < 0 {
-		return "", fmt.Errorf("begin marker %q not found", beginMarker)
-	}
-	end := strings.Index(s, endMarker)
-	if end < 0 {
-		return "", fmt.Errorf("end marker %q not found", endMarker)
-	}
-	regionStart := begin + len(beginMarker)
-	if end < regionStart {
-		return "", fmt.Errorf("end marker %q precedes begin marker %q", endMarker, beginMarker)
-	}
-	return s[regionStart:end], nil
 }
