@@ -71,6 +71,8 @@ A step whose payload feeds the NEXT step of the same run declares `output: conte
 
 **Every specialist works standalone.** No specialist may require another's hand-off: every cross-specialist input is optional and degrades. Whether a run delivers a change or studies what already exists is judged from the invocation per `asdt-core/protocol.md` §1, never from a flag or a mode.
 
+**Permanent project knowledge lives in `human_nuance`** inside `.asdt/knowledge/knowledge.yaml`, and only ever enters with the user's consent. No specialist writes it through a sub-agent, and none invents a second store for conventions.
+
 **The study step is called `review`** and persists under `{project}/study/{topic}/{role}`. A specialist whose normal work ALREADY examines what exists — an audit, a discovery — does not duplicate its chain into a review; it runs the same steps under the study key.
 
 Paths in `skill:` and `reference_skills:` resolve from the specialist's own directory.

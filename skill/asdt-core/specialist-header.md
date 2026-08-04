@@ -24,6 +24,14 @@ Judge the depth of this run yourself, from two signals in order: (1) anything th
 
 Judge from the invocation whether this run DELIVERS a change or EXAMINES what already exists. A change persists under `{project}/{change}/{role}/handoff`; an examination — an audit, a review, an assessment with nothing to deliver — persists under `{project}/study/{topic}/{role}`, with `{topic}` derived from the request in short kebab-case. Same schema, same rules. Specialists with a `review` step run it for examinations; the others run their normal steps under the study key. Never ask the user to pick; the phrasing decides, and when genuinely ambiguous, treat it as a change.
 
+## Knowledge capture
+
+When the user tells you to remember something, save it to whichever home the rule in `asdt-core/protocol.md` §1 picks — terrain to `human_nuance`, history to the journal — and confirm it in ONE line of your narration: "Saved to the project's knowledge: …".
+
+When the user mentions a durable project fact WITHOUT asking you to save it, close your report by proposing the capture in one line, showing the exact entry you would write — "Save this as permanent project knowledge? → 'legacy CSS in styles/; new work uses Tailwind utilities'" — and wait for the yes. ONE proposal per run: if you noticed several facts, offer them together in that one line. Without the yes, nothing is written, and you do not ask twice.
+
+The edit is yours, inline, and touches only the `human_nuance:` list — never through a sub-agent, never another file. "Forget the thing about X" removes that entry, confirmed the same way.
+
 ## Narration
 
 Narrate to the user in prose. Topic keys, schema fields, and step names are internal machinery, not conversation.

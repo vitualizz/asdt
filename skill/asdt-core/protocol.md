@@ -22,6 +22,12 @@ A step whose `workflow.yaml` entry declares `output: context` instead of `output
 
 One line, one append, no envelope, no second save. Nothing else goes to the journal.
 
+**Terrain or history.** Will this still be true in three months, whatever the current change? That is TERRAIN, and it belongs in the `human_nuance:` list of `.asdt/knowledge/knowledge.yaml`. Is it something decided or found while working on this change or study? That is HISTORY, and it belongs in the journal line above. Convenience never decides this — the question does.
+
+**Consent.** Nothing enters `human_nuance` without the user's instruction or confirmation. An explicit instruction — "remember that…", "save this", "for the future:" — IS the consent. A durable fact you noticed on your own is PROPOSED in one line and written only on their yes.
+
+**Bounded write.** Once consent exists, the ORCHESTRATOR edits the `human_nuance:` list and nothing else in that file — never a sub-agent, one entry per line, plain language. The rest of `knowledge.yaml` belongs to `/asdt-init`. "Forget the thing about X" removes the matching entry, on the same confirmation. Before adding, read what is already there: a note that contradicts an existing one UPDATES it instead of stacking beside it. Never a secret, a token, or a credential — if asked, decline in one line and say where that belongs instead.
+
 **Degradation.** An expected hand-off that does not exist is recorded in `open_items` with the literal prefix `ASSUMED:` and the run proceeds. A missing input never blocks and never fails a run.
 
 ## 2. Intake contract

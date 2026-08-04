@@ -38,7 +38,7 @@ Lint: golangci-lint
 Tooling: codegraph index available — prefer codegraph over grep/read loops
 ```
 
-Treat detected conventions as authoritative and user-declared ones as untouchable without explicit approval.
+Treat detected conventions as authoritative and user-declared ones as untouchable without explicit approval. This block carries DETECTED values only — a person's own notes about the project never join it, and travel as their own labelled lines instead. See **Human nuance** below.
 
 ## Degradation
 
@@ -55,3 +55,7 @@ ASSUMED: knowledge.yaml absent — conventions inferred from visible code patter
 If `knowledge.yaml` carries a `human_nuance:` list, read those entries directly, one by one, as user-authored notes about the topic each one names — the thing a newcomer would misread and no scan can detect.
 
 They are **intentionally NOT auto-injected**. They carry no confidence rating and no provenance, so they never join the compact block above: folding a person's note in among detected values makes it look like something the scan found.
+
+When the orchestrator prepares a step's prompt, the entries RELEVANT to that step's area travel as their own labelled lines — `### PROJECT NOTE (human): legacy CSS in styles/; new work uses Tailwind utilities` — one per line, never merged into the block above and never rewritten into the voice of a detected fact.
+
+Relevance is a judgment: a note about CSS reaches an implement step touching styles, and does not reach a PM backlog. Entries that bear on nothing in this step are simply not carried.

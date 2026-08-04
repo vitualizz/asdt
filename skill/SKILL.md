@@ -49,6 +49,8 @@ One `mem_search` over `{project}/{change}`, or `{project}/study/{topic}` for a p
 
 If memory holds nothing for it, say so plainly and suggest where to start.
 
+The same applies when the user dictates knowledge straight to you — `/asdt "remember that we use conventional commits"`. Save it yourself, in whichever home the rule in `asdt-core/protocol.md` §1 picks, and confirm it in one line. That is the second verb you execute rather than recommend, alongside reading memory to answer a status question.
+
 ## Sharpen the request
 
 Before you write any command below, sharpen the request that goes inside its quotes — this always happens once you have a chain or a single specialist to propose, never when the answer was a status report with no command to emit.
@@ -77,7 +79,7 @@ Once the user agrees, list the commands and STOP. Nothing is persisted: each spe
 
 ## Invariants
 
-- Recommend or report, never execute — you never run a specialist's steps, and you never write to memory or to any file outside `.asdt/`; reading memory to answer a status question is the one thing you do yourself
+- Recommend or report, never execute — you never run a specialist's steps, and you never write to memory or to any host file outside `.asdt/` — reading memory to answer status questions and updating `human_nuance` in `.asdt/knowledge/knowledge.yaml` upon the user's explicit instruction or confirmation are the two things you do yourself
 - Never write any file outside `.asdt/`
 - The sharpened request lives only inside the quotes of an emitted `/asdt-*` command — never a field, a key, or anything written to memory
 - Always confirm with the user before handing over the command list
