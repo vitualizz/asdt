@@ -15,6 +15,13 @@ interface FlowWalkerStep {
   description: string
 }
 
+interface FragmentIsland extends HTMLDivElement {
+  fragmentAdvance: () => boolean
+  fragmentBack: () => boolean
+  fragmentReset: () => void
+  fragmentShowAll: () => void
+}
+
 interface Props {
   title: string
   steps: FlowWalkerStep[]
@@ -35,20 +42,20 @@ export function FlowWalker({ title, steps, labelStep, labelOf }: Props) {
   // step-stepping via global next/prev. Re-assigned on each state change so the
   // closures stay fresh (deps include step, total).
   useEffect(() => {
-    const el = rootRef.current
+    const el = rootRef.current as FragmentIsland | null
     if (!el) return
-    ;(el as any).fragmentAdvance = () => {
+    el.fragmentAdvance = () => {
       if (step >= total - 1) return false // already at last; navigate
       setStep((s) => s + 1)
       return true // consumed a step; stay
     }
-    ;(el as any).fragmentBack = () => {
+    el.fragmentBack = () => {
       if (step <= 0) return false // already at first; navigate
       setStep((s) => s - 1)
       return true // consumed a step; stay
     }
-    ;(el as any).fragmentReset = () => setStep(0)
-    ;(el as any).fragmentShowAll = () => setStep(total - 1)
+    el.fragmentReset = () => setStep(0)
+    el.fragmentShowAll = () => setStep(total - 1)
   }, [step, total])
 
   return (
