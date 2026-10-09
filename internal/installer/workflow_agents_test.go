@@ -32,6 +32,10 @@ type workflowStep struct {
 	OutputTopicKey string   `yaml:"output_topic_key"`
 	ContextInputs  []string `yaml:"context_inputs"`
 	HostSkills     []string `yaml:"host_skills"`
+	// Output is `context` on a step whose payload is injected into the next
+	// step and never persisted (protocol.md §1).
+	Output          string   `yaml:"output"`
+	ReferenceSkills []string `yaml:"reference_skills"`
 }
 
 // readWorkflowFile reads and parses dir/workflow.yaml under the skill root.
@@ -68,8 +72,8 @@ func skillDir(t *testing.T) string {
 // TestWorkflowSubagentStepsDeclareKnownAgentTypes asserts that every
 // `execution: subagent` step in every specialist workflow.yaml declares an
 // `agent:` value drawn from AgentTypeNames, and that the agent-type split is
-// exactly the contract: the developer's implement and test steps are the only
-// builder steps (2), everything else is analyst (39).
+// exactly the contract: the developer's implement step is the only builder
+// step (1), everything else is analyst (15).
 func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 	root := skillDir(t)
 	known := make(map[string]bool, len(AgentTypeNames))
@@ -108,12 +112,12 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 	}
 
 	// Counts over the 7 routed specialists (asdt-init is excluded above).
-	// 17 subagent steps across the tree, 15 of them routed: architect 2,
-	// developer 4, qa 2, ux-ui 2, pm 2, security 2, researcher 1. Five of
-	// those are the `review` study steps. One of the routed 15 is a builder
-	// (developer/implement), leaving 14 analysts.
-	if analystCount != 14 {
-		t.Errorf("analyst subagent steps = %d, want 14", analystCount)
+	// 18 subagent steps across the tree, 16 of them routed: architect 2,
+	// developer 4, qa 2, ux-ui 3, pm 2, security 2, researcher 1. Five of
+	// those are the `review` study steps. One of the routed 16 is a builder
+	// (developer/implement), leaving 15 analysts.
+	if analystCount != 15 {
+		t.Errorf("analyst subagent steps = %d, want 15", analystCount)
 	}
 	if builderCount != 1 {
 		t.Errorf("builder subagent steps = %d, want 1 (got %v)", builderCount, builderSteps)
@@ -239,4 +243,54 @@ func markdownSection(doc, name string) (string, bool) {
 		return strings.Join(lines[i+1:end], "\n"), true
 	}
 	return "", false
+}
+
+// TestWorkflowPathsResolve guards TEMPLATE.md §3: every `skill:` and
+// `reference_skills:` path in every workflow.yaml under skill/ resolves, from
+// the specialist's own directory, to an existing file inside skill/. A renamed
+// or moved reference otherwise ships a step that tells its sub-agent to read a
+// file that is not there, with no other test noticing.
+func TestWorkflowPathsResolve(t *testing.T) {
+	root := skillDir(t)
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		t.Fatalf("resolve %s: %v", root, err)
+	}
+	matches, err := filepath.Glob(filepath.Join(root, "*", "workflow.yaml"))
+	if err != nil {
+		t.Fatalf("glob workflow.yaml under %s: %v", root, err)
+	}
+	if len(matches) == 0 {
+		t.Fatalf("no workflow.yaml found under %s", root)
+	}
+
+	for _, match := range matches {
+		dir := filepath.Base(filepath.Dir(match))
+		path, wf := readWorkflowFile(t, root, dir)
+		for _, s := range wf.Steps {
+			refs := append([]string{}, s.ReferenceSkills...)
+			if s.Skill != "" {
+				refs = append(refs, s.Skill)
+			}
+			for _, ref := range refs {
+				target, err := filepath.Abs(filepath.Join(root, dir, ref))
+				if err != nil {
+					t.Errorf("%s: step %q path %q: %v", path, s.Name, ref, err)
+					continue
+				}
+				if rel, err := filepath.Rel(absRoot, target); err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+					t.Errorf("%s: step %q path %q resolves to %s, outside skill/", path, s.Name, ref, target)
+					continue
+				}
+				info, err := os.Stat(target)
+				if err != nil {
+					t.Errorf("%s: step %q path %q does not resolve to a file: %v", path, s.Name, ref, err)
+					continue
+				}
+				if !info.Mode().IsRegular() {
+					t.Errorf("%s: step %q path %q resolves to %s, which is not a regular file", path, s.Name, ref, target)
+				}
+			}
+		}
+	}
 }

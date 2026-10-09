@@ -24,7 +24,7 @@ It judges its own chain from what you ask for:
 
 When a request is ambiguous between a plan and a build, it produces the plan. Because the plan is saved, building it later is a resume, not a redo: it searches memory for open plans, names the one it found — or lists them if there are several — and asks before going on. Finding none, it says so and stops.
 
-**The approval gate.** Before any file in your repo is written, it shows you the plan in plain prose: what is in scope and what is explicitly out, the acceptance criteria, the visual direction when there is one, the exact files it will create and modify, and anything it assumed or flagged — such as a UI file in a project with no visual surface. If the change was already delivered once, it also tells you that approving this plan replaces that delivered record. You answer approve, adjust, or stop. Adjust re-runs the spec once with your words; stop ends the run with the plan saved, ready to resume. When no human can answer, nothing gets written.
+**The approval gate.** Before any file in your repo is written, it shows you the plan in plain prose: what is in scope and what is explicitly out, the acceptance criteria, the visual direction when there is one, the names of the screens and components UX/UI designed, the exact files it will create and modify, and anything it assumed or flagged — such as a UI file in a project with no visual surface. If the change was already delivered once, it also tells you that approving this plan replaces that delivered record. You answer approve, adjust, or stop. Adjust re-runs the spec once with your words; stop ends the run with the plan saved, ready to resume. When no human can answer, nothing gets written.
 
 **Write scope.** `implement` only writes inside the files the spec declared. If a needed edit falls outside them, it stops and reports the path instead of freelancing the write. A spec that declares no files is a plan-only run: the code comes back as snippets in the hand-off and nothing touches the repo.
 
@@ -32,7 +32,7 @@ When a request is ambiguous between a plan and a build, it produces the plan. Be
 
 **The verify gate.** `implement` writes code and tests but never runs anything. After it, the Developer shows you the check commands it suggests — build, lint, test — and what a healthy run looks like, and asks whether to run them. A command that would write your source files — a `--fix` or `--write` flag, a snapshot update, a rewriting formatter, codegen — is never offered; build output and coverage reports don't count, and a non-writing variant (`--ci`, `tsc --noEmit`) is preferred where one exists. On your yes it runs exactly those commands and nothing else; without a yes, the outcome is recorded as not run, never as a pass. If something fails, it gets at most two fix rounds, inside the same files the spec declared, re-running the same commands; still failing after that, it stops and records what is failing. A resume that starts at verify has no spec in hand, so a failure there is recorded with no fix round.
 
-**UI files.** When a change writes views, components, or styles, it lays them out for the project's design surface first. An existing design system — or the visual direction UX/UI proposed when there isn't one — outranks everything but the approved scope. If the host assistant has a `frontend-design` skill installed, it is used to shape the visual execution, and it yields to all of the above.
+**UI files.** When a change writes views, components, or styles, it lays them out for the project's design surface first. When UX/UI ran, it builds each screen and component to the design in its hand-off — layout, hierarchy, typography, every state and breakpoint. With a design system, it adds only the tokens UX/UI proposed by name, in the system's token file, and a new variant leaves the existing ones untouched. An existing design system — or the visual direction UX/UI proposed when there isn't one — outranks everything but the approved scope. If the host assistant has a `frontend-design` skill installed, it is used to shape the visual execution, and it yields to all of the above.
 
 ## When to invoke it
 
@@ -55,7 +55,7 @@ A question stops at exploration; asking for a plan reaches the spec; only asking
 
 ## Pipeline position
 
-Typically runs **after Architect**, and it reads every upstream hand-off that exists: `pm/handoff` (the acceptance criteria authority), `architect/handoff` (the design decision — not re-opened), `ux-ui/handoff` (the flows, component mapping, and any visual direction), and `security/handoff` (the mitigations this change has to carry). All of them are optional — with none, it explores and specs the problem itself and records what it assumed. On simple changes the Architect isn't called at all.
+Typically runs **after Architect**, and it reads every upstream hand-off that exists: `pm/handoff` (the acceptance criteria authority), `architect/handoff` (the design decision — not re-opened), `ux-ui/handoff` (the flows, the screen and component designs, and any visual direction), and `security/handoff` (the mitigations this change has to carry). All of them are optional — with none, it explores and specs the problem itself and records what it assumed. On simple changes the Architect isn't called at all.
 
 ## What it produces
 

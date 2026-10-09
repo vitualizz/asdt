@@ -14,8 +14,9 @@ go/no-go verdict. One step, one artifact.
   record
 - `{project}/{change}/architect/handoff` — OPTIONAL. The design and its declared risks
 - `{project}/{change}/ux-ui/handoff` — OPTIONAL. Extract: `flows` — every step's `branches`,
-  and the empty, loading, and error states the flows name as steps; `copy` wherever an
-  assertion should check exact wording
+  the empty, loading, and error states the flows name as steps, and the step's `copy` wherever
+  an assertion should check exact wording; the `states` and `extremes` of `screens`; and only
+  the `disabled`, `loading`, and `error` states of `component_designs`
 - `{project}/{change}/security/handoff` — OPTIONAL. Extract: `risks` — each finding's
   `severity` and `mitigation`, and `files_hint` for where the mitigations land
 
@@ -45,8 +46,9 @@ verdict carries no Security condition — Security not running is the common cas
    - **Concurrency** — double submit, racing writers, read during partial write
    - **Dependency failure** — timeout, 500, connection dropped mid-operation
    When `ux-ui/handoff` exists, every flow branch and every empty, loading, and error state
-   it names is a candidate case — file each under the category it exercises. A branch the
-   designer drew and no AC mentions is exactly the case this step exists to find.
+   it names is a candidate case — file each under the category it exercises — and so is every
+   screen state or extreme, and every extracted component state, the flows do not already cover. A branch the designer drew and
+   no AC mentions is exactly the case this step exists to find.
    Spend your effort here. A plan that only re-states the ACs as tests has added nothing.
 
 3. **Strategy — three lines.** The unit / integration / e2e split for this change, and a

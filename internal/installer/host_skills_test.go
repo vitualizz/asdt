@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -52,7 +53,7 @@ func TestHostSkillsDeclaredOnSubagentSteps(t *testing.T) {
 		}
 	}
 
-	for _, want := range []string{"asdt-ux-ui/ux-spec", "asdt-developer/implement"} {
+	for _, want := range []string{"asdt-ux-ui/ui-design", "asdt-developer/implement"} {
 		found := false
 		for _, name := range declared[want] {
 			if name == "frontend-design" {
@@ -63,5 +64,48 @@ func TestHostSkillsDeclaredOnSubagentSteps(t *testing.T) {
 		if !found {
 			t.Errorf("%s: host_skills = %v, want it to include %q", want, declared[want], "frontend-design")
 		}
+	}
+}
+
+// TestUXUIDesignCraftIsBuiltIn guards the split of asdt-ux-ui into ux-spec →
+// ui-design. ux-spec hands its flows forward in context and persists nothing;
+// ui-design receives them as `ux-flows`, persists the specialist's ONE
+// hand-off, and declares the shipped visual-design reference. The reference
+// is what makes the design craft independent of any host skill: dropping it
+// would leave ui-design designing on frontend-design alone, which a host may
+// not have, with no other test noticing.
+func TestUXUIDesignCraftIsBuiltIn(t *testing.T) {
+	const (
+		handoffKey = "{project}/{change}/ux-ui/handoff"
+		craftRef   = "../asdt-core/references/visual-design.md"
+	)
+
+	root := skillDir(t)
+	path, wf := readWorkflowFile(t, root, "asdt-ux-ui")
+	steps := make(map[string]workflowStep, len(wf.Steps))
+	for _, s := range wf.Steps {
+		steps[s.Name] = s
+	}
+
+	spec, ok := steps["ux-spec"]
+	if !ok {
+		t.Fatalf("%s: step %q is missing", path, "ux-spec")
+	}
+	if spec.Output != "context" || spec.OutputTopicKey != "" {
+		t.Errorf("%s: ux-spec output = %q, output_topic_key = %q; want output: context and no key, ui-design persists the one hand-off", path, spec.Output, spec.OutputTopicKey)
+	}
+
+	design, ok := steps["ui-design"]
+	if !ok {
+		t.Fatalf("%s: step %q is missing", path, "ui-design")
+	}
+	if design.OutputTopicKey != handoffKey {
+		t.Errorf("%s: ui-design output_topic_key = %q, want %q", path, design.OutputTopicKey, handoffKey)
+	}
+	if !slices.Contains(design.ContextInputs, "ux-flows") {
+		t.Errorf("%s: ui-design context_inputs = %v, want it to include %q", path, design.ContextInputs, "ux-flows")
+	}
+	if !slices.Contains(design.ReferenceSkills, craftRef) {
+		t.Errorf("%s: ui-design reference_skills = %v, want it to include %q", path, design.ReferenceSkills, craftRef)
 	}
 }

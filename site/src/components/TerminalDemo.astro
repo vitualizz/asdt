@@ -386,9 +386,10 @@ const { t, lang } = Astro.props
       uxInfo: {
         'knowledge-recall':  ['decisiones de UX',      'contexto'],
         'platform-analysis': ['design system · mobile','contexto'],
-        'ux-spec':           ['3 flujos · 6 componentes','ux-ui/handoff'],
+        'ux-spec':           ['3 flujos · 6 componentes','contexto'],
+        'ui-design':         ['4 pantallas · 2 componentes','ux-ui/handoff'],
       },
-      uxFlow: '— 3 pasos',
+      uxFlow: '— 4 pasos',
       done: '→ handoff guardado · siguiente:',
       routeLabel: 'Ruta recomendada',
       routeStart: (r: string) => `Ejecutá <span class="t-cmd">/asdt-${r}</span> para empezar — aquí mismo, si querés.`,
@@ -438,9 +439,10 @@ const { t, lang } = Astro.props
       uxInfo: {
         'knowledge-recall':  ['prior UX decisions',    'context'],
         'platform-analysis': ['design system · mobile','context'],
-        'ux-spec':           ['3 flows · 6 components','ux-ui/handoff'],
+        'ux-spec':           ['3 flows · 6 components','context'],
+        'ui-design':         ['4 screens · 2 components','ux-ui/handoff'],
       },
-      uxFlow: '— 3 steps',
+      uxFlow: '— 4 steps',
       done: '→ hand-off saved · next:',
       routeLabel: 'Recommended route',
       routeStart: (r: string) => `Run <span class="t-cmd">/asdt-${r}</span> to start — right here if you want.`,
@@ -461,7 +463,7 @@ const { t, lang } = Astro.props
   const ARCH_STEPS = ['knowledge-recall','platform-analysis','design']
   const SEC_STEPS  = ['knowledge-recall','platform-analysis','assess','harden']
   const QA_STEPS   = ['knowledge-recall','test-plan']
-  const UX_STEPS   = ['knowledge-recall','platform-analysis','ux-spec']
+  const UX_STEPS   = ['knowledge-recall','platform-analysis','ux-spec','ui-design']
 
   function esc(str: string) {
     return str.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] ?? c))
@@ -556,7 +558,7 @@ const { t, lang } = Astro.props
     runFlow('security', s.secFlow, SEC_STEPS, s.secInfo as Record<string, string[]>, 22, 22, 'developer')
   }
   function runUxUi() {
-    runFlow('ux-ui', s.uxFlow, UX_STEPS, s.uxInfo as Record<string, string[]>, 22, 26, 'developer')
+    runFlow('ux-ui', s.uxFlow, UX_STEPS, s.uxInfo as Record<string, string[]>, 22, 28, 'developer')
   }
 
   function runSpecialist(name: string) {

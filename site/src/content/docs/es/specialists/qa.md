@@ -41,7 +41,7 @@ Trabaja con lo que encuentre —hand-offs previos si los hay, el código si no�
 
 ## Posición en el pipeline
 
-Típicamente corre **después del Developer** y es el sign-off final antes de mergear. Lee cada hand-off que exista: `pm/handoff` (criterios de aceptación y objetivos NFR), `developer/handoff` (el plan, o lo construido y si sus chequeos pasaron), `architect/handoff` (el diseño y sus riesgos declarados), `ux-ui/handoff` (bifurcaciones de flujo y estados) y `security/handoff` (las mitigaciones a probar). Puede correr antes — contra el hand-off del PM o un plan guardado del Developer — para detectar problemas en los criterios de aceptación antes de que empiece la implementación. Ese pase temprano ahorra mucho más que encontrar las brechas con el código ya escrito. Toda entrada es opcional: sin ninguna, trabaja desde la petición y el código.
+Típicamente corre **después del Developer** y es el sign-off final antes de mergear. Lee cada hand-off que exista: `pm/handoff` (criterios de aceptación y objetivos NFR), `developer/handoff` (el plan, o lo construido y si sus chequeos pasaron), `architect/handoff` (el diseño y sus riesgos declarados), `ux-ui/handoff` (bifurcaciones y copy de los flujos, estados y extremos de datos de las pantallas, y los estados disabled, loading y error de los componentes diseñados) y `security/handoff` (las mitigaciones a probar). Puede correr antes — contra el hand-off del PM o un plan guardado del Developer — para detectar problemas en los criterios de aceptación antes de que empiece la implementación. Ese pase temprano ahorra mucho más que encontrar las brechas con el código ya escrito. Toda entrada es opcional: sin ninguna, trabaja desde la petición y el código.
 
 ## Qué produce
 

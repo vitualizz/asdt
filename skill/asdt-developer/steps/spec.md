@@ -16,12 +16,15 @@ All of these arrive ALREADY INJECTED — never self-fetch them.
 - `{project}/{change}/architect/handoff` (optional). Extract: `decisions`, `constraints`,
   `data_model`, `api_surface`, `files_hint` — when it arrived the approach is ALREADY DECIDED, do
   not re-open it
-- `{project}/{change}/ux-ui/handoff` (optional). Extract: `flows`, `components`, `a11y_requirements`,
-  `surface`, `visual_direction` — `flows` (with their branches, states, and `copy`) and
-  `a11y_requirements` are carried verbatim, because they are what the UI code must implement step by step;
-  every component `gap` is a file to create or an `open_items` entry; `surface` becomes a
-  `key_constraints` entry; a `visual_direction` is carried verbatim, and the files that implement
-  it as the project's first tokens join the edit targets
+- `{project}/{change}/ux-ui/handoff` (optional). Extract: `flows`, `components`, `screens`,
+  `component_designs`, `a11y_requirements`, `surface`, `visual_direction` — `flows` (with their
+  branches, states, and `copy`), `screens`, `component_designs`, and `a11y_requirements` are
+  carried verbatim, because they are the design the UI code must implement; every
+  `component_designs` entry — each component `gap` has one — is a file to create or modify, or
+  an `open_items` entry when its location is unclear; `surface` becomes a `key_constraints` entry; a
+  `visual_direction` is carried verbatim, and the files that implement it as the project's
+  first tokens join the edit targets; each `open_items` entry starting `Proposed token:` is
+  carried verbatim into `key_constraints`, and the token file it names joins `files_to_modify`
 - `{project}/{change}/security/handoff` (optional). Extract: `risks[].mitigation` and
   `constraints` (the hardening checklist) — each mitigation that lands in this change's files is
   a `key_constraints` entry
@@ -98,6 +101,8 @@ payload:
   migration_notes: []
   key_constraints: []          # what implementation must respect
   ux_flows: []                 # verbatim `flows` from ux-ui/handoff — branches, states, copy
+  screens: []                  # verbatim from ux-ui/handoff — layout, hierarchy, type, states per screen
+  component_designs: []        # verbatim from ux-ui/handoff — anatomy, variants, states, tokens
   a11y_requirements: []        # verbatim from ux-ui/handoff
   visual_direction: {}         # verbatim from ux-ui/handoff, only when it carried one
   files_to_create: []          # real paths — feeds implement's allowedEditRoots

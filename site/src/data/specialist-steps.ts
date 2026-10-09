@@ -40,11 +40,12 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
 
   'ux-ui': {
     color: '--c-ux',
-    chains: [{ steps: ['knowledge-recall', 'platform-analysis', 'ux-spec'] }],
+    chains: [{ steps: ['knowledge-recall', 'platform-analysis', 'ux-spec', 'ui-design'] }],
     steps: {
       'knowledge-recall': { id: 'knowledge-recall', execution: 'inline' },
       'platform-analysis': { id: 'platform-analysis', execution: 'inline' },
       'ux-spec': { id: 'ux-spec', execution: 'subagent' },
+      'ui-design': { id: 'ui-design', execution: 'subagent' },
     },
   },
 

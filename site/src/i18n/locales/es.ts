@@ -41,7 +41,7 @@ export const es: UIStrings = {
       { id: 'developer', name: 'Developer', desc: 'Convierte especificaciones y diseños en código de producción, con plan de implementación.', command: '/asdt-developer' },
       { id: 'qa', name: 'QA Engineer', desc: 'Construye la red de seguridad: planes de prueba, criterios de aceptación y reportes de calidad.', command: '/asdt-qa' },
       { id: 'security', name: 'Seguridad', desc: 'Encuentra los huecos que un atacante vería primero: modelos de amenaza y endurecimiento.', command: '/asdt-security' },
-      { id: 'ux-ui', name: 'Diseño UX/UI', desc: 'Da forma a la experiencia: flujos, componentes y accesibilidad.', command: '/asdt-ux-ui' },
+      { id: 'ux-ui', name: 'Diseño UX/UI', desc: 'Diseña la experiencia: flujos, pantallas, componentes y accesibilidad.', command: '/asdt-ux-ui' },
     ],
     orchestrator: {
       id: 'orchestrator',
@@ -218,7 +218,11 @@ export const es: UIStrings = {
         produces: 'contexto (inline)',
       },
       'ux-ui:ux-spec': {
-        purpose: 'Convierte el requisito en flujos para la superficie de diseño del proyecto, mapeados a componentes existentes — o en una dirección visual propuesta cuando no hay design system — con la accesibilidad que cada uno debe cumplir',
+        purpose: 'Convierte el requisito en flujos para la superficie de diseño del proyecto — bifurcaciones, estados y copy — mapeados a componentes existentes, con la accesibilidad que cada uno debe cumplir',
+        produces: 'contexto — vive dentro de la corrida',
+      },
+      'ux-ui:ui-design': {
+        purpose: 'Diseña la UI que necesitan los flujos — layout, jerarquía, tipografía y estados de cada pantalla, cada componente faltante parte por parte, y la base visual cuando no hay design system',
         produces: 'ux-ui/handoff',
       },
       'architect:knowledge-recall': {
@@ -360,7 +364,7 @@ export const es: UIStrings = {
       },
       'design-new-ui-component': {
         title: 'Diseñar un nuevo componente de UI',
-        note: 'Cuando necesitás flujos, mapeo de componentes y accesibilidad antes de que el developer empiece a codear.',
+        note: 'Cuando necesitás flujos, pantallas y componentes diseñados, y accesibilidad, antes de que el developer empiece a codear.',
       },
       'validate-test-coverage': {
         title: 'Validar la cobertura de tests antes de publicar',
@@ -462,9 +466,9 @@ export const es: UIStrings = {
         doNotUseWhen: 'Querés código de implementación o decisiones arquitectónicas — Security solo produce findings y checklists',
       },
       'ux-ui': {
-        teaser: 'Mapea flujos y componentes antes de que arranque la implementación.',
+        teaser: 'Diseña flujos, pantallas y componentes antes de que arranque la implementación.',
         invokeWhen: 'Una pantalla nueva o una UI a nivel de feature necesita diseño antes de implementar, o hay que mapear flujos de usuario',
-        produces: 'ux-ui/handoff — flujos con sus estados y textos, mapeo de componentes, accesibilidad y una dirección visual cuando no hay design system',
+        produces: 'ux-ui/handoff — flujos con sus estados y textos, cada pantalla y cada componente faltante diseñados, accesibilidad y una dirección visual cuando no hay design system',
         doNotUseWhen: 'La pantalla ya está construida — una spec de UX entregada después de implementar llega demasiado tarde para darle forma',
       },
       researcher: {

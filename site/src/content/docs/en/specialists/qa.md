@@ -41,7 +41,7 @@ It works from whatever it finds — prior hand-offs if any, the codebase if not 
 
 ## Pipeline position
 
-Typically runs **after Developer** and is the final sign-off before code merges. It reads every hand-off that exists: `pm/handoff` (acceptance criteria and NFR targets), `developer/handoff` (the plan, or what was built and whether its checks passed), `architect/handoff` (the design and its declared risks), `ux-ui/handoff` (flow branches and states), and `security/handoff` (the mitigations to prove). Can run earlier — against the PM hand-off or a saved Developer plan — to catch AC quality issues before implementation starts. That early pass saves far more time than finding gaps after the code is written. Every input is optional: with none of them, it works from the request and the codebase.
+Typically runs **after Developer** and is the final sign-off before code merges. It reads every hand-off that exists: `pm/handoff` (acceptance criteria and NFR targets), `developer/handoff` (the plan, or what was built and whether its checks passed), `architect/handoff` (the design and its declared risks), `ux-ui/handoff` (flow branches and copy, screen states and data extremes, and the disabled, loading, and error states of designed components), and `security/handoff` (the mitigations to prove). Can run earlier — against the PM hand-off or a saved Developer plan — to catch AC quality issues before implementation starts. That early pass saves far more time than finding gaps after the code is written. Every input is optional: with none of them, it works from the request and the codebase.
 
 ## What it produces
 

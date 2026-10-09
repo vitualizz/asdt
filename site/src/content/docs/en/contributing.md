@@ -85,7 +85,7 @@ steps:
 - **Ceiling: four `subagent` steps.** Inline preludes and gates don't count. Needing a fifth means the design is wrong — merge two, or split the specialist.
 - Every cross-specialist input is optional and degrades — no specialist may require another's hand-off.
 
-`host_skills:` names skills the **host assistant** may have installed — a craft ASDT does not ship, such as `frontend-design`. They are names, never paths, and never required: when the host has the skill (or an obvious equivalent), the orchestrator reads the skill's file and injects its text into the sub-agent prompt as a `### HOST SKILL {name}` block — never activating it in its own context; when it doesn't, the skill is skipped silently and nothing is recorded. Declare one only on a `subagent` step whose step file says when it applies and what outranks it — a host skill sharpens execution inside the step's contract, never replaces it. Today UX/UI's `ux-spec` and the Developer's `implement` declare `frontend-design`.
+`host_skills:` names skills the **host assistant** may have installed — a craft ASDT does not ship, such as `frontend-design`. They are names, never paths, and never required: when the host has the skill (or an obvious equivalent), the orchestrator reads the skill's file and injects its text into the sub-agent prompt as a `### HOST SKILL {name}` block — never activating it in its own context; when it doesn't, the skill is skipped silently and nothing is recorded. Declare one only on a `subagent` step whose step file says when it applies and what outranks it — a host skill sharpens execution inside the step's contract, never replaces it. Today UX/UI's `ui-design` and the Developer's `implement` declare `frontend-design`.
 
 ### 4. Write step files
 

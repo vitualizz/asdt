@@ -9,7 +9,8 @@ Everything arrives ALREADY INJECTED — never self-fetch.
 
 - `dev-spec` — this run's spec, injected from the orchestrator's context as `### INPUT dev-spec`.
   Extract: `files_to_create`, `files_to_modify`, `scope`, `acceptance_criteria[]`, `approach`,
-  `key_constraints`, and — when present — `ux_flows`, `a11y_requirements`, `visual_direction`
+  `key_constraints`, and — when present — `ux_flows`, `screens`, `component_designs`,
+  `a11y_requirements`, `visual_direction`
 - `{project}/{change}/developer/handoff` (OPTIONAL) — the persisted spec, injected INSTEAD of
   `dev-spec` when this run resumes a plan saved in an earlier session. It is a spec only when
   it carries `stage: spec`; then extract the same fields. Below, `dev-spec` means whichever of the
@@ -53,15 +54,22 @@ Applies to every UI file this step produces — a view, a component, a styleshee
 whether written or emitted as a snippet; other files skip this section. Lay each one out for the
 `Design surface` first, then adapt to the others (as the spec's surface constraint says, when
 UX/UI ran). Under `Design surface: none`, add no responsive layer and record in `open_items`
-that a UI file contradicts the declared surface. A `visual_direction` in `dev-spec` is built as
-the project's first tokens, and every UI file consumes them instead of literal values.
+that a UI file contradicts the declared surface. When the spec carries a UX/UI design, every UI
+file consumes tokens, never literal values: a `visual_direction` in `dev-spec` is built as the project's first tokens; with a design
+system, each `Proposed token:` in `key_constraints` is added under its name and value to the
+token file it names — within `allowedEditRoots`, like any write — and no other token is
+invented. The `screens` and `component_designs` ARE the UI's design: build each screen to its
+layout, hierarchy and its type levels, spacing, components, states, extremes, and breakpoints,
+and each designed component to its anatomy, props, variants, sizes, states, tokens, and
+behavior — never re-design what they specify. A `kind: variant` design adds its option to the
+existing component and leaves every existing variant unchanged.
 
-An injected host skill shapes the visual execution only: with a design system, layout and
-hierarchy within its tokens and components; without one, also type, palette, composition, and
-motion. **Precedence, highest first: `allowedEditRoots` and `scope`; the project's
-existing design system, or else the dev-spec's `visual_direction`; the spec's `ux_flows` and
-`a11y_requirements`; then the host skill.** Where the skill pulls against anything above it, the skill
-yields.
+An injected host skill shapes the visual execution only, and only where the spec leaves room:
+with a design system, layout and hierarchy within its tokens and components; without one, also
+type, palette, composition, and motion. **Precedence, highest first: `allowedEditRoots` and
+`scope`; the project's existing design system, or else the dev-spec's `visual_direction`; the
+spec's `screens`, `component_designs`, `ux_flows`, and `a11y_requirements`; then the host
+skill.** Where the skill pulls against anything above it, the skill yields.
 
 ### Tests
 Generate tests HERE, in this same step, when `strict_tdd: true` in `.asdt/config.yaml` or the

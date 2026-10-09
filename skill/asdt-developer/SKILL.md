@@ -70,6 +70,8 @@ A consent gate where the chain puts it, not the run's clarification turn (`asdt-
 (`## Narration`'s opening line), then the plan —
 - what is in scope, and what is explicitly out; the acceptance criteria, one line each;
 - the visual direction in one line, when the plan carries one;
+- the designed screens and the designed components, one line each listing their names, when
+  the plan carries them — never the designs in full;
 - the exact files to create and to modify — or, with none, that nothing will be written and the
   code comes back as snippets;
 - every `open_items` entry — what the plan assumed, and any conflict it flagged;

@@ -29,7 +29,7 @@ steps:
     inputs:
       - "{project}/{change}/pm/handoff" # optional — acceptance-criteria authority; degrade gracefully if absent
       - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
-      - "{project}/{change}/ux-ui/handoff" # optional — the flows, component mapping, and any visual direction, when UX/UI ran
+      - "{project}/{change}/ux-ui/handoff" # optional — the flows, screen and component designs, and any visual direction, when UX/UI ran
       - "{project}/{change}/security/handoff" # optional — mitigations the change must carry, when Security ran
       - "{project}/{change}/developer/handoff" # optional — the record this plan replaces; any delivery it holds (files_changed, verification) is carried forward
     context_inputs:

@@ -41,7 +41,7 @@ export const en: UIStrings = {
       { id: 'developer', name: 'Developer', desc: 'Turns specs and designs into production code, with an implementation plan.', command: '/asdt-developer' },
       { id: 'qa', name: 'QA Engineer', desc: 'Builds the safety net: test plans, acceptance criteria, quality reports.', command: '/asdt-qa' },
       { id: 'security', name: 'Security', desc: 'Finds the gaps an attacker would see first: threat models and hardening.', command: '/asdt-security' },
-      { id: 'ux-ui', name: 'UX/UI Design', desc: 'Shapes the experience: flows, components, and accessibility.', command: '/asdt-ux-ui' },
+      { id: 'ux-ui', name: 'UX/UI Design', desc: 'Designs the experience: flows, screens, components, and accessibility.', command: '/asdt-ux-ui' },
     ],
     orchestrator: {
       id: 'orchestrator',
@@ -218,7 +218,11 @@ export const en: UIStrings = {
         produces: 'context (inline)',
       },
       'ux-ui:ux-spec': {
-        purpose: "Turn the requirement into user flows for the project's design surface, mapped to existing components — or a proposed visual direction when there is no design system — with the accessibility each one owes",
+        purpose: "Turn the requirement into user flows for the project's design surface — branches, states, and copy — mapped to existing components, with the accessibility each one owes",
+        produces: 'context — stays in the run',
+      },
+      'ux-ui:ui-design': {
+        purpose: "Design the UI the flows need — every screen's layout, hierarchy, typography, and states, every missing component part by part, and the visual foundation when there is no design system",
         produces: 'ux-ui/handoff',
       },
       'architect:knowledge-recall': {
@@ -360,7 +364,7 @@ export const en: UIStrings = {
       },
       'design-new-ui-component': {
         title: 'Design a new UI component',
-        note: 'When you need flows, component mapping and accessibility before the developer starts coding.',
+        note: 'When you need flows, screens and components designed, and accessibility, before the developer starts coding.',
       },
       'validate-test-coverage': {
         title: 'Validate test coverage before shipping',
@@ -462,9 +466,9 @@ export const en: UIStrings = {
         doNotUseWhen: 'You want implementation code or architectural decisions — Security produces findings and checklists only',
       },
       'ux-ui': {
-        teaser: 'Maps flows and components before implementation starts.',
+        teaser: 'Designs the flows, screens, and components before implementation starts.',
         invokeWhen: 'A new screen or feature-level UI needs design before implementation begins, or user flows need mapping',
-        produces: 'ux-ui/handoff — flows with their states and copy, component mapping, accessibility, and a visual direction when there is no design system',
+        produces: 'ux-ui/handoff — flows with their states and copy, every screen and missing component designed, accessibility, and a visual direction when there is no design system',
         doNotUseWhen: 'The screen has already been built — a UX spec delivered after implementation is too late to shape it',
       },
       researcher: {
