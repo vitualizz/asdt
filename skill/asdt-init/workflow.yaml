@@ -9,7 +9,7 @@ steps:
     skill: steps/explore.md
     description: Scan stack marker files and run bounded context probes; emit detected stack, per-field confidence, and ambiguities — never guesses
     execution: subagent
-    model: haiku
+    model: sonnet
     agent: analyst
     inputs: []
     output_topic_key: "{project}/{change}/init/stack-detection"

@@ -19,6 +19,8 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/pm/handoff" # optional — the requirements this design satisfies; degrade gracefully if absent
+      - "{project}/{change}/ux-ui/handoff" # optional — the flows and components the design has to serve
+      - "{project}/{change}/security/handoff" # optional — findings and checklist the design has to absorb
     output_topic_key: "{project}/{change}/architect/handoff"
     reference_skills:
       - ../asdt-core/references/api-design.md

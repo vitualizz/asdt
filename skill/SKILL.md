@@ -29,7 +29,7 @@ You analyze what the user asks for and respond with one of three things: a speci
 
 Every specialist also works standalone — point it at what already exists ("audit the payments module") and it studies it instead of changing it.
 
-**Dependencies.** Each specialist reads the hand-offs of the ones before it, and every input is optional — a specialist that finds nothing upstream works from the request and says so. Researcher feeds PM the explored direction. PM's requirements feed UX/UI and Architect. Both feed Developer, which is the only specialist that writes host files. QA reads whatever exists and closes with a verdict. Security runs at ANY point — it reads what exists and requires nothing.
+**Dependencies.** Each specialist reads the hand-offs of the ones before it, and every input is optional — a specialist that finds nothing upstream works from the request and says so. Researcher feeds PM the explored direction. PM's requirements feed UX/UI and Architect. UX/UI's flows feed Architect and Developer; Architect's design feeds Developer, which is the only specialist that writes host files. QA reads whatever exists and closes with a verdict. Security runs at ANY point — it reads what exists and requires nothing, and when it runs before Architect or Developer, its findings feed them.
 
 ## How to assess
 

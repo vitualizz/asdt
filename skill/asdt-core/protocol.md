@@ -10,7 +10,7 @@ The one shared skill every run loads. It defines what gets persisted, how inputs
 
 Everything else is identical: same schema, same load rules, same degradation. In a study, `decisions[]` carries the judgments and `risks[]` what was found — the schema does not grow a study variant. A past study is organizational memory: later runs meet it through the `knowledge-recall` prelude, never as a declared input.
 
-A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING: its payload stays in the orchestrator's context and is injected into the next step as an `### INPUT {step-name}` block. A step may declare `context_inputs:` — payloads of earlier `output: context` steps that the orchestrator injects as `### INPUT {name}` blocks.
+A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING: its payload stays in the orchestrator's context. Every such payload has a name — the one its step file declares under `Produces:` (`dev-spec`, `security-assessment`) — and a later step that consumes it lists that name in `context_inputs:`; the orchestrator injects each one as an `### INPUT {name}` block. The name in `context_inputs:`, the `Produces:` line, and the injected heading are always the same string.
 
 **Load at start.** ONE `mem_search("{project}/{change}")` to list what exists, then `mem_get_observation(id)` for the `*/handoff` records this specialist declares it consumes — nothing else. Budget: 2–3 MCP calls per run.
 
@@ -47,6 +47,8 @@ Declared inputs arrive ALREADY INJECTED in the sub-agent prompt as `### INPUT {t
 **Verifiable evidence** — exact file paths, symbol names, commands, observed values instead of "should" or "likely" — is required ONLY of steps that read the codebase. Steps that do not touch code do not carry this requirement.
 
 ## 4. Injection format (orchestrator)
+
+**Which sub-agent.** A step's `agent:` field names the executor to launch: `agent: analyst` → the `asdt-analyst` sub-agent, `agent: builder` → `asdt-builder`. Never launch a `subagent` step on a generic agent. If the host has no `asdt-{agent}` definition, launch the closest agent available and PREPEND the full text of `asdt-core/executor-header.md` to its prompt — the guardrails must reach the executor one way or the other.
 
 The orchestrator resolves each declared input ONCE per run and injects it. Resolved:
 

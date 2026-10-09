@@ -25,7 +25,7 @@ Initialize ASDT for the current project: detect the stack, collect the configura
 | clarify | *(inline — no step file)* | inline | `init/stack-detection.ambiguities[]` + enrichment's `nuance.*` | *(no artifact — injects `answers{}` into write's prompt)* |
 | write | steps/write.md | subagent | `init/stack-detection` + `### CLARIFY ANSWERS` | `init/write-summary` |
 
-Setup-class flow: this table stays, unlike the routed specialists', because three of these steps have NO step file — the sections below are their only contract. `workflow.yaml` stays authoritative if the two ever disagree. The detection and file-writing mechanics belong to `steps/explore.md` and `steps/write.md` and are not restated here.
+Setup-class flow: this table stays, unlike the routed specialists', because three of these steps have NO step file — the sections below are their only contract. `workflow.yaml` stays authoritative if the two ever disagree. The detection and file-writing mechanics belong to `steps/explore.md` and `steps/write.md` and are not restated here. Launch each `subagent` step as the `asdt-{agent}` sub-agent its `agent:` field names (`asdt-core/protocol.md` §4).
 
 ## knowledge-gate — Engram presence (inline)
 
@@ -46,7 +46,7 @@ Resolve the capability ladder against your OWN tool list, top rung first:
 2. **codegraph absent, `tree-sitter --version` answers.** Syntax is not centrality — a parse tree cannot tell you which symbol matters most. Surface nothing from this rung and note it in `open_items`, e.g. `enrichment: codegraph absent, tree-sitter only — centrality unavailable, skipped surfacing`.
 3. **Neither present.** Skip enrichment, note `enrichment: no code-intelligence tooling — skipped`, and proceed.
 
-Each chosen chunk becomes one `Ambiguity`: `field` is `nuance.<type>.<slug>` (e.g. `nuance.architectural.replaceMarkerRegion`), `question` asks the human what makes the symbol non-obvious — its role, an invariant, a gotcha a newcomer would miss — with `options: []`, `default: ""`, and `skippable: true` ALWAYS. A `nuance.*` ambiguity is NEVER a blocking open item. Three is the ceiling here; across the whole clarify pass — explore's ambiguities plus these — the ceiling is seven.
+Each chosen chunk becomes one `Ambiguity`: `field` is `nuance.<type>.<slug>` (e.g. `nuance.architectural.replaceMarkerRegion`), `question` asks the human what makes the symbol non-obvious — its role, an invariant, a gotcha a newcomer would miss — with `options: []`, `default: ""`, and `skippable: true` ALWAYS. A `nuance.*` ambiguity is NEVER a blocking open item. Three is the ceiling here; across the whole clarify pass — explore's ambiguities plus these — the ceiling is seven. When more than seven are pending, keep them in this order and ask only the first seven: non-skippable ambiguities first, then skippable `low` before skippable `medium`, then the `nuance.*` questions, ties in the order explore emitted them. Every skippable ambiguity past the ceiling takes its `default` as `origin: default` and is listed in the pending-writes preview so the human can still correct it; a non-skippable one is never cut.
 
 ## clarify — collect the decisions (inline)
 
@@ -77,7 +77,7 @@ Before launching write, show the user what is about to land. This is the last mo
 - `.asdt/knowledge/knowledge.yaml` — the stack, file structure, design fingerprint, the four decision fields, and any human nuance notes.
 - `.asdt/knowledge/provenance.yaml` — the write-only fingerprint provenance sidecar.
 
-List the key deltas alongside them — the fresh values, or the changes the human accepted in the recalibration review — and confirm. On confirmation, launch `steps/write.md` (`agent: builder`) via your delegation primitive with `init/stack-detection` and the `### CLARIFY ANSWERS` block injected. On a decline, nothing is written.
+List the key deltas alongside them — the fresh values, or the changes the human accepted in the recalibration review — and confirm. On confirmation, launch `steps/write.md` as the `asdt-builder` sub-agent via your delegation primitive (prepend `asdt-core/executor-header.md` if that definition is missing) with `init/stack-detection` and the `### CLARIFY ANSWERS` block injected. On a decline, nothing is written.
 
 When write returns, tell the user which files landed, surface anything it reported in `settings_preserved[]` or `open_items[]`, and point them at `/asdt-architect`, `/asdt-developer`, and the rest.
 

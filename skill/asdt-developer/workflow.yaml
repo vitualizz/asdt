@@ -26,6 +26,9 @@ steps:
     inputs:
       - "{project}/{change}/pm/handoff" # optional — acceptance-criteria authority; degrade gracefully if absent
       - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
+      - "{project}/{change}/ux-ui/handoff" # optional — the flows and component mapping, when UX/UI ran
+      - "{project}/{change}/security/handoff" # optional — mitigations the change must carry, when Security ran
+    context_inputs: [dev-exploration]
     output: context # retained in the orchestrator's context, injected into implement — never persisted
     reference_skills:
       - ../asdt-core/references/scope-definition.md

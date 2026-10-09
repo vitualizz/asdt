@@ -25,7 +25,8 @@ metadata:
 
 > **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
 > calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
-> via your native delegation primitive (Agent/Task) — never run subagent steps inline; run
+> as the `asdt-{agent}` sub-agent its `agent:` field names, via your native delegation
+> primitive (Agent/Task) — never run subagent steps inline; run
 > `inline` steps in your own context. If you run a subagent step inline anyway, its write
 > boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
 > `asdt-init/write`.
