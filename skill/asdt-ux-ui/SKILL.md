@@ -54,12 +54,12 @@ never which steps run.
 
 **Intra-run persistence — you, the orchestrator, own this.** `ux-spec` declares `output:
 context`, not an `output_topic_key`. Retain its returned payload in YOUR context and inject it
-into `ui-design` as `### INPUT ux-flows`. It is NEVER written to Engram: `ui-design` persists
+into `ui-design` as `### INPUT ux-flows`. It is NEVER written to memory: `ui-design` persists
 the one hand-off, flows included.
 
 **No visual surface.** When the platform summary reads `Design surface: none`, a change has no
 screens to design: launch neither `ux-spec` nor `ui-design`. Persist the minimal hand-off yourself with
-`mem_save` under `{project}/{change}/ux-ui/handoff` — `what: "no UX/UI spec: the project
+memory **save** under `{project}/{change}/ux-ui/handoff` — `what: "no UX/UI spec: the project
 declares no visual surface"`, `surface: {primary: none}`, and one `decisions` line, `"Build no UI for this change
 (primary_design_surface: none)"`, nothing else — so downstream roles read an explicit no
 instead of a silent gap.
@@ -80,7 +80,7 @@ pipeline declares it as an input; it is organizational memory, reached through
 `knowledge-recall`.
 
 ## Invariants
-- This specialist writes NO files — its output is `ux-ui/handoff` via `mem_save`, nothing else
+- This specialist writes NO files — its output is `ux-ui/handoff` via memory **save**, nothing else
 - Everything it persists ends in the `ux-ui` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none

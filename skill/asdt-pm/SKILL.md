@@ -63,7 +63,7 @@ pipeline declares it as an input; it is organizational memory, reached through
 `knowledge-recall`.
 
 ## Invariants
-- This specialist writes NO files to the host repo — its output is `pm/handoff` via `mem_save`, nothing else
+- This specialist writes NO files to the host repo — its output is `pm/handoff` via memory **save**, nothing else
 - Everything PM persists ends in the `pm` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none

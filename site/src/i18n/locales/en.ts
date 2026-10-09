@@ -488,7 +488,7 @@ export const en: UIStrings = {
     },
     artifactAnatomy: {
       title: { desc: 'The human-readable name of the artifact.' },
-      topicKey: { desc: 'The machine key used to retrieve it automatically, no fuzzy matching involved.' },
+      topicKey: { desc: 'The stable key it is saved under; a later run picks it out of a search by this exact key.' },
       type: { desc: 'The artifact\'s category — architecture, decision, bugfix, etc.' },
       project: { desc: 'The project it belongs to, so results never mix across projects.' },
     },

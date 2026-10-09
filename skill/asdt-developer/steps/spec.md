@@ -80,7 +80,7 @@ and until the human approves building over it, that delivery is still what the r
 
 ## Output
 Produces: `dev-spec` — the plan, persisted AND handed forward (`asdt-core/protocol.md` §1). Persist
-it via `mem_save` under this step's `output_topic_key`, with `stage: spec`, so a plan-only or
+it via memory **save** under this step's `output_topic_key`, with `stage: spec`, so a plan-only or
 interrupted run can be resumed in a later session; then return the same payload — the orchestrator
 shows it to the human for approval and injects it into `implement` as `### INPUT dev-spec`.
 

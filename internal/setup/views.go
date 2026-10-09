@@ -267,6 +267,13 @@ func renderSelectProvider(m Model) string {
 			{Key: "q", Description: s.HintQuit},
 		}},
 	}, m.width)
+	if selected := installer.Providers[m.wizard.provider]; !m.preflight.providersFound[selected.ID] {
+		missing := []installer.ProviderDescriptor{selected}
+		writeProviderRecovery(&b, s, missing)
+		footer = panels.RenderKeyboardFooter([]panels.HintGroup{
+			{Label: s.HintGroupRequired, Hints: providerRequiredHints(s, missing)},
+		}, m.width)
+	}
 	return frame(s.TitleSelectProvider, strings.TrimRight(b.String(), "\n"), footer, true)
 }
 

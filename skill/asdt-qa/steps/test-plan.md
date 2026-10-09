@@ -81,7 +81,7 @@ no measurement behind it is worse than no claim.
 ## Output
 Produces: `qa/handoff`
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`.
 
 ```yaml

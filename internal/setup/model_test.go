@@ -30,7 +30,7 @@ func TestUpdate_EnvironmentCheckMsg_EngramFound_EntersSelectAssistantsOnEnter(t 
 	// Navigate from MainMenu to StateEnvironmentCheck via cursor-0 Enter.
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m2 := next.(setup.Model)
 	m3 := updateKey(t, m2, tea.KeyEnter)
 	if m3.State() != setup.StateSelectAssistants {
@@ -42,11 +42,124 @@ func TestUpdate_EnvironmentCheckMsg_EngramMissing_BlocksContinue(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: false})
+	next, _ := m.Update(envCheckMsg(false))
 	m2 := next.(setup.Model)
 	m3 := updateKey(t, m2, tea.KeyEnter)
 	if m3.State() != setup.StateEnvironmentCheck {
 		t.Errorf("Enter with engram missing should be no-op, state = %v, want StateEnvironmentCheck", m3.State())
+	}
+}
+
+// hostedProvider is a test-only memory provider with no local probe: its
+// preflight row is informational and never blocks.
+var hostedProvider = installer.ProviderDescriptor{
+	ID:          "acme",
+	Name:        "Acme Memory",
+	Description: "Test-only hosted provider.",
+	ConfigValue: "acme",
+	Tools: map[installer.MemoryVerb]installer.MemoryTool{
+		installer.MemorySave:   {Name: "acme_put", Usage: "pass the key as `slot`"},
+		installer.MemorySearch: {Name: "acme_find", Usage: "pass the query as `q`; each match carries its key as `slot`"},
+		installer.MemoryGet:    {Name: "acme_fetch", Usage: "pass the id as `ref`"},
+	},
+	ClaudeToolPrefixes: []string{"mcp__acme__"},
+}
+
+// withHostedProvider appends hostedProvider to installer.Providers for the
+// duration of t.
+func withHostedProvider(t *testing.T) {
+	t.Helper()
+	saved := installer.Providers
+	installer.Providers = append(append([]installer.ProviderDescriptor{}, saved...), hostedProvider)
+	t.Cleanup(func() { installer.Providers = saved })
+}
+
+// envCheckMsg ends the environment check with every provider in
+// installer.Providers found, or none.
+func envCheckMsg(found bool) setup.EnvironmentCheckMsg {
+	providers := make(map[installer.ProviderID]bool, len(installer.Providers))
+	for _, p := range installer.Providers {
+		providers[p.ID] = found
+	}
+	return setup.EnvironmentCheckMsg{ProvidersFound: providers}
+}
+
+// TestEnvironmentCheckCmd_ProbesEveryProvider runs the real probes and asserts
+// every provider gets a row labeled with its Name, and that a provider with no
+// local probe resolves OK, never blocking.
+func TestEnvironmentCheckCmd_ProbesEveryProvider(t *testing.T) {
+	withHostedProvider(t)
+
+	batch, ok := setup.EnvironmentCheckCmd()().(tea.BatchMsg)
+	if !ok {
+		t.Fatal("EnvironmentCheckCmd did not return a batch")
+	}
+	rows := map[string]setup.EnvironmentCheckProgressMsg{}
+	for _, cmd := range batch {
+		if msg, ok := cmd().(setup.EnvironmentCheckProgressMsg); ok {
+			rows[msg.RowLabel] = msg
+		}
+	}
+
+	for _, p := range installer.Providers {
+		if _, ok := rows[p.Name]; !ok {
+			t.Errorf("no preflight row labeled %q", p.Name)
+		}
+	}
+	if got := rows[hostedProvider.Name]; got.Status != components.CheckStatusOK {
+		t.Errorf("unprobed provider row status = %v, want CheckStatusOK (informational)", got.Status)
+	}
+}
+
+// TestUpdate_ProviderGating walks preflight and provider selection with Engram
+// found or missing, alone or beside a provider with no probe. Preflight
+// continues while ANY provider is usable; provider selection continues only on
+// a usable one.
+func TestUpdate_ProviderGating(t *testing.T) {
+	cases := []struct {
+		name           string
+		hosted         bool
+		engramFound    bool
+		wantPreflight  setup.ViewState   // after Enter on the environment check
+		wantOnProvider []setup.ViewState // after Enter on each provider, in order
+	}{
+		{name: "engram found", engramFound: true, wantPreflight: setup.StateSelectAssistants, wantOnProvider: []setup.ViewState{setup.StateModelGate}},
+		{name: "engram missing blocks preflight", wantPreflight: setup.StateEnvironmentCheck},
+		{name: "engram missing beside a hosted provider", hosted: true, wantPreflight: setup.StateSelectAssistants, wantOnProvider: []setup.ViewState{setup.StateSelectProvider, setup.StateModelGate}},
+		{name: "engram found beside a hosted provider", hosted: true, engramFound: true, wantPreflight: setup.StateSelectAssistants, wantOnProvider: []setup.ViewState{setup.StateModelGate, setup.StateModelGate}},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if c.hosted {
+				withHostedProvider(t)
+			}
+			msg := envCheckMsg(true)
+			msg.ProvidersFound[installer.ProviderEngram] = c.engramFound
+
+			m := setup.New(fstest.MapFS{}, "dev")
+			m = updateKey(t, m, tea.KeyEnter) // MainMenu → LanguageSelect
+			m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
+			next, _ := m.Update(msg)
+			m = updateKey(t, next.(setup.Model), tea.KeyEnter)
+			if m.State() != c.wantPreflight {
+				t.Fatalf("Enter on the environment check: state = %v, want %v", m.State(), c.wantPreflight)
+			}
+			if len(c.wantOnProvider) == 0 {
+				return
+			}
+
+			m = updateKey(t, m, tea.KeyEnter) // SelectAssistants → SelectProvider
+			for i, want := range c.wantOnProvider {
+				at := m
+				for range i {
+					at = updateKey(t, at, tea.KeyDown)
+				}
+				if got := updateKey(t, at, tea.KeyEnter).State(); got != want {
+					t.Errorf("Enter on %s: state = %v, want %v", installer.Providers[i].Name, got, want)
+				}
+			}
+		})
 	}
 }
 
@@ -90,7 +203,7 @@ func TestUpdate_SpaceToggleSelectsItem(t *testing.T) {
 	m = advanceToMainMenu(t, m)       // no-op, already at StateMainMenu
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m = updateKey(t, m, tea.KeyEnter) // preflightDone → StateSelectAssistants
 
@@ -113,7 +226,7 @@ func TestUpdate_SelectAssistants_AKeySelectsAll(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = updateKey(t, m, tea.KeyEnter) // MainMenu → LanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m = updateKey(t, m, tea.KeyEnter) // EnvironmentCheck → SelectAssistants (all pre-selected)
 
@@ -132,7 +245,7 @@ func TestUpdate_SelectAssistants_PreSelectsAllOnFirstEntry(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = updateKey(t, m, tea.KeyEnter) // MainMenu → LanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m = updateKey(t, m, tea.KeyEnter) // EnvironmentCheck → SelectAssistants
 	if m.State() != setup.StateSelectAssistants {
@@ -188,7 +301,7 @@ func TestUpdate_ESCAtSelectAssistantsGoesBack(t *testing.T) {
 	m = advanceToMainMenu(t, m)       // no-op
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m2 := updateKey(t, m, tea.KeyEnter) // preflightDone → StateSelectAssistants
 	if m2.State() != setup.StateSelectAssistants {
@@ -361,7 +474,7 @@ func toInstalling(t *testing.T, m setup.Model) setup.Model {
 	m = advanceToMainMenu(t, m)       // no-op
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m2, ok := next.(setup.Model)
 	if !ok {
 		t.Fatalf("toInstalling: EnvironmentCheckMsg Update returned %T, want setup.Model", next)
@@ -1034,7 +1147,7 @@ func advanceToSelectProvider(t *testing.T, m setup.Model) setup.Model {
 	t.Helper()
 	m = updateKey(t, m, tea.KeyEnter) // MainMenu → LanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m = updateKey(t, m, tea.KeyEnter) // EnvironmentCheck → SelectAssistants
 	m = updateKey(t, m, tea.KeyEnter) // SelectAssistants → SelectProvider

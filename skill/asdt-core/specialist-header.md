@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Before starting any step, verify `.asdt/config.yaml` exists with `memory.provider` set and that the provider is reachable. If either fails, output this message and STOP:
+Before starting any step, verify `.asdt/config.yaml` exists with `memory.provider` set to the config value of the provider the memory binding names (`asdt-core/protocol.md` §0), and that the binding's tools are on your tool list. If either fails, output this message and STOP:
 
 > Memory provider not configured. Run `/asdt-init` and set `memory.provider` in `.asdt/config.yaml` before running any specialist.
 
@@ -47,4 +47,4 @@ The report's last line proposes the natural next step as one sentence they can c
 
 ## The contract
 
-Inputs, Engram persistence, injection format, and degradation live in `asdt-core/protocol.md` — read it now if you do not already have it in context. Per-step identity, model, inputs, and outputs live in this directory's `workflow.yaml`.
+The memory interface and the tools it is bound to, inputs, persistence, injection format, and degradation live in `asdt-core/protocol.md` — read it now if you do not already have it in context. Per-step identity, model, inputs, and outputs live in this directory's `workflow.yaml`.

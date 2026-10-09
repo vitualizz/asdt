@@ -18,7 +18,7 @@ const executorHeaderPath = "asdt-core/executor-header.md"
 type agentTypeSpec struct {
 	ID          string   // "analyst" | "builder"; agent file name is "asdt-"+ID
 	Description string   // one-line summary emitted into the frontmatter
-	ClaudeTools []string // exact Claude Code tools allowlist, in emission order
+	ClaudeTools []string // Claude Code tools allowlist before memory and codegraph grants
 	Constraints string   // English constraint prose appended after the executor header
 	Guidance    string   // gated section body appended after constraints; empty by
 	// default, set only by withCodegraphGuidance when CodegraphFound.
@@ -64,31 +64,13 @@ var agentTypeSpecs = []agentTypeSpec{
 	{
 		ID:          "analyst",
 		Description: "Read-only ASDT step executor for analysis steps — inspects the repository with inspection-only Bash and persists one artifact, never writing files.",
-		ClaudeTools: []string{
-			"Read", "Glob", "Grep", "Bash",
-			"mcp__plugin_engram_engram__mem_save",
-			"mcp__plugin_engram_engram__mem_search",
-			"mcp__plugin_engram_engram__mem_get_observation",
-			"mcp__engram__mem_save",
-			"mcp__engram__mem_search",
-			"mcp__engram__mem_get_observation",
-		},
+		ClaudeTools: []string{"Read", "Glob", "Grep", "Bash"},
 		Constraints: analystConstraints,
 	},
 	{
 		ID:          "builder",
 		Description: "Write-capable ASDT step executor for implementation steps — creates and edits files within declared targets and persists one artifact, never delegating.",
-		ClaudeTools: []string{
-			"Read", "Glob", "Grep", "Bash", "Edit", "Write",
-			"mcp__plugin_engram_engram__mem_save",
-			"mcp__plugin_engram_engram__mem_search",
-			"mcp__plugin_engram_engram__mem_get_observation",
-			"mcp__plugin_engram_engram__mem_update",
-			"mcp__engram__mem_save",
-			"mcp__engram__mem_search",
-			"mcp__engram__mem_get_observation",
-			"mcp__engram__mem_update",
-		},
+		ClaudeTools: []string{"Read", "Glob", "Grep", "Bash", "Edit", "Write"},
 		Constraints: builderConstraints,
 	},
 }
@@ -129,6 +111,19 @@ Bash grep and read stay the right tool for text the index does not model:
 schemas like Rails db/schema.rb, configs, locales, generated DSL. Reach for
 them there without hesitation.
 `
+
+// withMemoryTools returns spec extended with the selected memory provider's
+// tool grants (ProviderDescriptor.claudeMemoryTools), which both agent types
+// receive. Same aliasing rule as withCodegraphTools: the extended copy gets a
+// freshly allocated ClaudeTools slice so the shared agentTypeSpecs never grow.
+func withMemoryTools(spec agentTypeSpec, provider ProviderDescriptor) agentTypeSpec {
+	memory := provider.claudeMemoryTools()
+	tools := make([]string, 0, len(spec.ClaudeTools)+len(memory))
+	tools = append(tools, spec.ClaudeTools...)
+	tools = append(tools, memory...)
+	spec.ClaudeTools = tools
+	return spec
+}
 
 // withCodegraphTools returns spec extended with the codegraph tool grants when
 // codegraph was detected, and spec unchanged otherwise. The extended copy gets
@@ -257,7 +252,7 @@ func writeAgentBody(b *strings.Builder, executorHeader, constraints, guidance st
 // for one assistant, on top of the shared skill-tree copy.
 type AgentAdapterDescriptor struct {
 	AssistantID AssistantID
-	Generate    func(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error)
+	Generate    func(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions) ([]string, error)
 }
 
 // AgentAdapters lists assistants that receive generated executor agent
@@ -301,26 +296,31 @@ func agentRootFor(id AssistantID) string {
 	}
 }
 
-func generateClaudeAgents(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error) {
-	return generateAgentFiles(skillsFS, agentRoot, opts, renderClaudeAgent)
+func generateClaudeAgents(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions) ([]string, error) {
+	return generateAgentFiles(skillsFS, agentRoot, provider, opts, renderClaudeAgent)
 }
 
-func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error) {
-	return generateAgentFiles(skillsFS, agentRoot, opts, renderOpenCodeAgent)
+func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions) ([]string, error) {
+	return generateAgentFiles(skillsFS, agentRoot, provider, opts, renderOpenCodeAgent)
 }
 
 // generateAgentFiles writes one agent definition file per agent type spec
-// under agentRoot, baking the shared executor header into every body. A
+// under agentRoot, baking the shared executor header — its memory binding
+// spliced for provider — into every body, and granting provider's memory tools. A
 // skillsFS without the executor header (a partial fixture) generates nothing
 // — the embedded production FS is guaranteed to carry it. Per-file failures
 // are isolated: the first error is reported, the remaining specs still write.
-func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, render func(agentTypeSpec, string) string) ([]string, error) {
-	header, readErr := fs.ReadFile(skillsFS, executorHeaderPath)
+func generateAgentFiles(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions, render func(agentTypeSpec, string) string) ([]string, error) {
+	raw, readErr := fs.ReadFile(skillsFS, executorHeaderPath)
 	if readErr != nil {
 		if os.IsNotExist(readErr) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("read %s: %w", executorHeaderPath, readErr)
+	}
+	header, bindErr := bindMemory(raw, provider)
+	if bindErr != nil {
+		return nil, fmt.Errorf("bind memory provider into %s: %w", executorHeaderPath, bindErr)
 	}
 
 	if mkErr := os.MkdirAll(agentRoot, 0o755); mkErr != nil {
@@ -332,7 +332,7 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, r
 
 	for _, spec := range agentTypeSpecs {
 		target := filepath.Join(agentRoot, "asdt-"+spec.ID+".md")
-		effSpec := withCodegraphGuidance(withCodegraphTools(spec, opts), opts)
+		effSpec := withCodegraphGuidance(withCodegraphTools(withMemoryTools(spec, provider), opts), opts)
 		content := render(effSpec, string(header))
 
 		if writeErr := os.WriteFile(target, []byte(content), 0o644); writeErr != nil {
@@ -350,7 +350,7 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, r
 // generateAgents mirrors generateCommands: resolve the adapter and root for
 // the assistant (absence of either is the no-op), generate, fold written
 // paths into result.WrittenCommands and any error into result.Err.
-func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, opts InstallOptions, result *InstallResult) {
+func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, provider ProviderDescriptor, opts InstallOptions, result *InstallResult) {
 	adapter, ok := agentAdapterFor(assistant.ID)
 	if !ok {
 		return
@@ -361,7 +361,7 @@ func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, opts InstallO
 		return
 	}
 
-	written, genErr := adapter.Generate(skillsFS, agentRoot, opts)
+	written, genErr := adapter.Generate(skillsFS, agentRoot, provider, opts)
 	result.WrittenCommands = append(result.WrittenCommands, written...)
 	if genErr != nil {
 		result.Err = genErr
