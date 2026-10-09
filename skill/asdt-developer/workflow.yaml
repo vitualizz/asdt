@@ -6,6 +6,11 @@ steps:
     description: Query organizational memory for prior decisions relevant to this change before acting
     execution: inline
 
+  - name: platform-analysis
+    skill: ../asdt-core/references/platform-context.md
+    description: Load and inject platform conventions and the design surface from knowledge.yaml and config.yaml
+    execution: inline
+
   - name: explore
     skill: steps/explore.md
     description: Explore the request and the affected area of the codebase before speccing
@@ -14,8 +19,6 @@ steps:
     agent: analyst
     inputs: []
     output: context # retained in the orchestrator's context, injected into spec — never persisted
-    reference_skills:
-      - ../asdt-core/references/platform-context.md
 
   - name: spec
     skill: steps/spec.md
@@ -26,13 +29,20 @@ steps:
     inputs:
       - "{project}/{change}/pm/handoff" # optional — acceptance-criteria authority; degrade gracefully if absent
       - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
-      - "{project}/{change}/ux-ui/handoff" # optional — the flows and component mapping, when UX/UI ran
+      - "{project}/{change}/ux-ui/handoff" # optional — the flows, component mapping, and any visual direction, when UX/UI ran
       - "{project}/{change}/security/handoff" # optional — mitigations the change must carry, when Security ran
-    context_inputs: [dev-exploration]
-    output: context # retained in the orchestrator's context, injected into implement — never persisted
+      - "{project}/{change}/developer/handoff" # optional — the record this plan replaces; any delivery it holds (files_changed, verification) is carried forward
+    context_inputs:
+      - dev-exploration # optional — absent on an adjust in a resumed run
+      - spec-feedback # optional — only when the human chose adjust at approve
+    output_topic_key: "{project}/{change}/developer/handoff" # stage: spec — also retained in context and injected into implement as dev-spec
     reference_skills:
       - ../asdt-core/references/scope-definition.md
       - ../asdt-core/protocol.md
+
+  - name: approve
+    description: Show the human the spec's scope, acceptance criteria, and exact files, and get approve / adjust / stop before any host file is written
+    execution: inline
 
   - name: implement
     skill: steps/implement.md
@@ -42,12 +52,21 @@ steps:
     agent: builder
     inputs:
       - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
-    context_inputs: [dev-spec]
-    output_topic_key: "{project}/{change}/developer/handoff"
+      - "{project}/{change}/developer/handoff" # optional — the persisted spec, injected only on a resumed run that did not produce dev-spec
+    context_inputs:
+      - dev-spec
+      - verification-failures # optional — only on a fix round launched by verify
+    output_topic_key: "{project}/{change}/developer/handoff" # stage: implemented — replaces the spec record
     reference_skills:
       - ../asdt-core/references/conventions.md
-      - ../asdt-core/references/platform-context.md
       - ../asdt-core/protocol.md
+    host_skills:
+      - frontend-design # visual execution of UI files, when the host has it
+
+  - name: verify
+    description: Offer the hand-off's verification commands, run them only on the human's yes, record the outcome, and drive at most two fix rounds through implement
+    execution: inline
+    output_topic_key: "{project}/{change}/developer/handoff" # the implemented record, re-saved with verification added
 
   - name: review
     skill: steps/review.md

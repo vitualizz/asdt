@@ -1,7 +1,7 @@
 # Backlog — PM Specialist
 
 ## Purpose
-Turn the raw request into the requirements hand-off that Architect, Developer, and QA
+Turn the raw request into the requirements hand-off that Architect, Developer, QA, and UX/UI
 consume. One step, one artifact: everything PM has to say about this change lands in
 `pm/handoff`, and nothing else is persisted.
 

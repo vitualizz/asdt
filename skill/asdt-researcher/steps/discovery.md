@@ -2,7 +2,8 @@
 
 ## Purpose
 Turn a fuzzy problem into ONE recommended direction with feasibility behind it. One step,
-one artifact: `researcher/handoff`, which PM reads as the starting point for requirements.
+one artifact: `researcher/handoff`, which PM reads as the starting point for requirements —
+or the Architect, when PM is skipped.
 
 ## Inputs
 - The raw problem or opportunity from the user — always present, injected in this prompt
@@ -46,4 +47,5 @@ schema from `asdt-core/protocol.md`:
 - `risks` — `{risk, mitigation}` for the recommended direction only
 - `open_items` — feasibility calls you could not ground in evidence, `ASSUMED:` prefix
 
-The recommendation is a direction, not a requirement. PM decides what gets built.
+The recommendation is a direction, not a requirement. PM decides what gets built — or, when PM
+is skipped, the Architect designs from it.

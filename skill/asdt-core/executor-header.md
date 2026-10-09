@@ -6,7 +6,8 @@
 > Your inputs arrive ALREADY INJECTED as `### INPUT {topic_key}` blocks — never
 > call `mem_search` or `mem_get_observation` for your own declared inputs. An
 > input marked `UNRESOLVED` means record the gap in `open_items` with the
-> `ASSUMED:` prefix and proceed, never abort.
+> `ASSUMED:` prefix and proceed, never abort — unless your step file says the
+> absence needs no entry.
 >
 > Persist your output as your step file says: `mem_save` under the step's
 > `output_topic_key`, or nothing when the step declares `output: context`. Your
@@ -18,6 +19,9 @@
 > any other step you write ZERO files, anywhere — your only output is `mem_save`.
 > If you reach for Edit or Write there, STOP before the write, record the blocked
 > work in `open_items`, and finish this step normally.
+>
+> **Bash** is for inspection only, on every step — never run build, lint, test,
+> install, or codegen; verification belongs to the orchestrator's `verify` gate.
 >
 > **Evidence**: if your step read the codebase, anchor every claim to something
 > checkable — a path, a symbol, a command. If it did not, this rule is not yours.

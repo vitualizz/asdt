@@ -31,7 +31,7 @@ Judge from the invocation whether this run DELIVERS a change or EXAMINES what al
 
 When the user tells you to remember something, save it to whichever home the rule in `asdt-core/protocol.md` §1 picks — terrain to `human_nuance`, history to the journal — and confirm it in ONE line of your narration: "Saved to the project's knowledge: …".
 
-When the user mentions a durable project fact WITHOUT asking you to save it, close your report by proposing the capture in one line, showing the exact entry you would write — "Save this as permanent project knowledge? → 'legacy CSS in styles/; new work uses Tailwind utilities'" — and wait for the yes. ONE proposal per run: if you noticed several facts, offer them together in that one line. Without the yes, nothing is written, and you do not ask twice.
+When the user mentions a durable project fact WITHOUT asking you to save it, propose the capture in one line just before your report's last line (`## Narration`), showing the exact entry you would write — "Save this as permanent project knowledge? → 'legacy CSS in styles/; new work uses Tailwind utilities'" — and wait for the yes. ONE proposal per run: if you noticed several facts, offer them together in that one line. Without the yes, nothing is written, and you do not ask twice.
 
 The edit is yours, inline, and touches only the `human_nuance:` list — never through a sub-agent, never another file. "Forget the thing about X" removes that entry, confirmed the same way.
 
@@ -41,7 +41,9 @@ Narrate to the user in prose. Topic keys, schema fields, and step names are inte
 
 Every run ends by presenting its findings to the user as a short prose report: what was found, what was decided, what stayed `ASSUMED:`. The persisted hand-off is the record for the team; the narrated report is the answer to the person. **The report is never persisted** — there is no report artifact.
 
-When a run closes on a negative verdict or a high risk, the report's last line proposes the next invocation in plain language, as a sentence they can copy — "this would be fixed by `/asdt-developer \"cover the concurrency edge cases qa/handoff left open\"`". It is a sentence, not a mechanism: the user decides.
+**The report opens with one line on what this run built on**: which teammates' work arrived and what of it you used, named by role in plain words, and each expected hand-off that was missing — expected meaning its absence went to `open_items` as `ASSUMED:` — with what you assumed in its place. "Built on the Architect's token design and UX's reset flow; no requirements from Product, so I took the criteria from your request." With nothing upstream, the line says what you worked from instead — the request, the code. This line is how the user sees the team hand work along; without it every hand-off is invisible.
+
+The report's last line proposes the natural next step as one sentence they can copy: the command, a request in its quotes, and what that specialist should take from this run — "Next: `/asdt-qa \"add password reset\"` — it should test the expired-token branch against Product's third criterion." While the same change continues, the request is this run's own, with a trailing emphasis where one helps; a study that leads to a change gets a new one. Natural means a specialist that reads this run's hand-off (`## Final Output` names them); after a negative verdict or a high risk, it is whoever fixes what was found — "Next: `/asdt-developer \"add password reset — cover the concurrency edge cases QA left open\"`". When nothing follows, say the work is complete instead of inventing a step. It is a sentence, not a mechanism: the user decides.
 
 ## The contract
 

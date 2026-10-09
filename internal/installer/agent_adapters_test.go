@@ -315,6 +315,10 @@ func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 			t.Errorf("builder permission.bash = %v (%T), want scalar %q", fm.Permission.Bash, fm.Permission.Bash, "allow")
 		}
 		assertAgentBody(t, "asdt-builder.md", body, false)
+		// bash is a scalar "allow", so the prose is the only limit on it.
+		if !strings.Contains(body, "Bash is for inspection only") {
+			t.Errorf("builder body does not limit Bash to inspection; verification belongs to the verify gate")
+		}
 	})
 }
 

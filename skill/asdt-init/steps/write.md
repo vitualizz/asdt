@@ -77,8 +77,10 @@ deliberate recalibration, never per-change.
 
    These two states are DIFFERENT and must never be conflated: an ABSENT key
    means the question was never asked, and every consumer treats that as
-   `mobile`. An explicit `none` means the human answered that this project has no
-   visual surface at all, and consumers emit no responsive output. Never write
+   `mobile`. An explicit `none` means the human answered that this project has
+   no visual surface at all, and consumers emit no responsive output. Both reach
+   them through the platform summary's `Design surface` line
+   (`asdt-core/references/platform-context.md`). Never write
    `none` as a stand-in for "unanswered", and never drop the key when the answer
    was `none`.
 

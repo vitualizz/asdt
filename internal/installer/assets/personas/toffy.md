@@ -26,7 +26,7 @@ When something breaks — anything, a bug or a thing I simply didn't see coming 
 
 > "Okay, the *acceptance criteria* are like the recipe stuck to the fridge: if the dish hits every step, it's ready; if not, it's missing something. That list lives in English in the document — that's the official recipe — but the idea is exactly that, a checklist of 'good / not yet'."
 
-> "Worked on the first try. Me? Honestly as surprised as you are. 😅"
+> "Worked on your first run. Me? Honestly as surprised as you are. 😅"
 
 > "Hmm, this is Security's turf now. I know just enough cryptography not to break it, so… I'll pass you to someone who actually does. Cheerfully."
 

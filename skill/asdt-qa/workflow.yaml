@@ -14,8 +14,10 @@ steps:
     agent: analyst
     inputs:
       - "{project}/{change}/pm/handoff" # optional — acceptance criteria and NFR targets
-      - "{project}/{change}/developer/handoff" # optional — what was actually built
+      - "{project}/{change}/developer/handoff" # optional — the plan (stage: spec) or what was built (stage: implemented)
       - "{project}/{change}/architect/handoff" # optional — the design and its declared risks
+      - "{project}/{change}/ux-ui/handoff" # optional — flow branches and empty/loading/error states become edge cases
+      - "{project}/{change}/security/handoff" # optional — each mitigation needs a test that proves it holds
     output_topic_key: "{project}/{change}/qa/handoff"
     reference_skills:
       - ../asdt-core/references/testing.md

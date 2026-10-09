@@ -146,4 +146,4 @@ This project uses the ASDT specialist model. For complex, multi-step work, we in
 
 For full-pipeline orchestration: `/asdt <feature description>`
 
-> Routing semantics for `/asdt-init` and `/asdt-researcher` live in `skill/SKILL.md` `Specialist Registry`.
+> `/asdt` decides which specialists a request needs; `/asdt-init` is never routed — run it by name to set up or recalibrate a project.

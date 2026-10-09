@@ -60,8 +60,8 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 One artifact, and which one depends on the step that ran.
 
 `design` produces `architect/handoff` at `{project}/{change}/architect/handoff` — the
-decision plus the system design that follows from it, in ONE hand-off, consumed by Developer
-and QA.
+decision plus the system design that follows from it, in ONE hand-off, consumed by Developer,
+QA, and Security.
 
 `review` produces `{project}/study/{topic}/architect` — the findings on an existing area. No
 pipeline declares it as an input; it is organizational memory, and later runs meet it through
@@ -71,7 +71,7 @@ pipeline declares it as an input; it is organizational memory, and later runs me
 - This specialist writes NO files — its output is `architect/handoff` via `mem_save`, nothing else
 - Everything it persists ends in the `architect` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
-- A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
+- A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none
 - Every decision carries the alternatives it beat, and why
 - Never design in isolation — the platform constraints are part of the decision
 - A design carries a data model AND an API surface, or says why the change has neither

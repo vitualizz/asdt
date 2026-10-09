@@ -8,12 +8,14 @@ steps:
 
   - name: platform-analysis
     skill: ../asdt-core/references/platform-context.md
-    description: Load and inject the project's detected design system, conventions, and design fingerprint from knowledge.yaml
+    description: Load and inject the project's detected design system, conventions, and design fingerprint from knowledge.yaml, plus the design surface from config.yaml
     execution: inline
 
+  # Under `Design surface: none` the orchestrator never launches ux-spec: it persists a minimal
+  # ux-ui/handoff itself (SKILL.md, "No visual surface").
   - name: ux-spec
     skill: steps/ux-spec.md
-    description: Turn the requirement into user flows mapped to existing design-system components, with the accessibility each one owes
+    description: Turn the requirement into user flows for the project's design surface, mapped to existing design-system components — or, with no design system yet, a proposed visual direction — with the accessibility each one owes
     execution: subagent
     model: sonnet
     agent: analyst
@@ -23,6 +25,8 @@ steps:
     reference_skills:
       - ../asdt-core/references/accessibility.md
       - ../asdt-core/protocol.md
+    host_skills:
+      - frontend-design # raises the visual direction's quality when the host has it
 
   - name: review
     skill: steps/review.md

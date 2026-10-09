@@ -3,6 +3,7 @@ package installer
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -24,9 +25,28 @@ var workflowSpecialistDirs = []string{
 }
 
 type workflowStep struct {
-	Name      string `yaml:"name"`
-	Execution string `yaml:"execution"`
-	Agent     string `yaml:"agent"`
+	Name           string   `yaml:"name"`
+	Skill          string   `yaml:"skill"`
+	Execution      string   `yaml:"execution"`
+	Agent          string   `yaml:"agent"`
+	OutputTopicKey string   `yaml:"output_topic_key"`
+	ContextInputs  []string `yaml:"context_inputs"`
+	HostSkills     []string `yaml:"host_skills"`
+}
+
+// readWorkflowFile reads and parses dir/workflow.yaml under the skill root.
+func readWorkflowFile(t *testing.T, root, dir string) (string, workflowFile) {
+	t.Helper()
+	path := filepath.Join(root, dir, "workflow.yaml")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	var wf workflowFile
+	if err := yaml.Unmarshal(data, &wf); err != nil {
+		t.Fatalf("parse %s: %v", path, err)
+	}
+	return path, wf
 }
 
 type workflowFile struct {
@@ -62,16 +82,7 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 	var builderSteps []string
 
 	for _, dir := range workflowSpecialistDirs {
-		path := filepath.Join(root, dir, "workflow.yaml")
-		data, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatalf("read %s: %v", path, err)
-		}
-
-		var wf workflowFile
-		if err := yaml.Unmarshal(data, &wf); err != nil {
-			t.Fatalf("parse %s: %v", path, err)
-		}
+		path, wf := readWorkflowFile(t, root, dir)
 
 		for _, step := range wf.Steps {
 			if step.Execution != "subagent" {
@@ -117,4 +128,115 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 			t.Errorf("unexpected builder step %q; only asdt-developer implement and test may be builder", step)
 		}
 	}
+}
+
+// TestSubagentStepCeiling guards TEMPLATE.md §3: a specialist declares at most
+// four `execution: subagent` steps. Inline preludes and gates are no sub-agent
+// of their own and do not count. asdt-init is held to the same ceiling.
+func TestSubagentStepCeiling(t *testing.T) {
+	const ceiling = 4
+
+	root := skillDir(t)
+	for _, dir := range append(append([]string{}, workflowSpecialistDirs...), "asdt-init") {
+		path, wf := readWorkflowFile(t, root, dir)
+		var subagents []string
+		for _, s := range wf.Steps {
+			if s.Execution == "subagent" {
+				subagents = append(subagents, s.Name)
+			}
+		}
+		if len(subagents) > ceiling {
+			t.Errorf("%s: %d subagent steps %v, want at most %d; merge two or split the specialist", path, len(subagents), subagents, ceiling)
+		}
+	}
+}
+
+// TestContextInputsMatchProduces guards protocol.md §1 "Intra-run payloads":
+// every name a step lists in `context_inputs:` is the exact string a producer
+// declares on a `Produces:` line — searched only where producers declare it: a
+// step file's `## Output` section, or the SKILL.md section of an inline gate
+// with no step file. The consumer must also name the `### INPUT {name}` block
+// it receives, in its step file or, failing that, in SKILL.md. A renamed
+// producer otherwise leaves the consumer waiting for a payload nothing emits.
+func TestContextInputsMatchProduces(t *testing.T) {
+	root := skillDir(t)
+	for _, dir := range append(append([]string{}, workflowSpecialistDirs...), "asdt-init") {
+		path, wf := readWorkflowFile(t, root, dir)
+		skillPath := filepath.Join(root, dir, "SKILL.md")
+		skillMD := readText(t, skillPath)
+
+		var producers []string
+		stepText := make(map[string]string, len(wf.Steps))
+		for _, s := range wf.Steps {
+			switch {
+			case s.Skill == "" && s.Execution == "inline":
+				if section, ok := markdownSection(skillMD, s.Name); ok {
+					producers = append(producers, section)
+				}
+			case strings.HasPrefix(s.Skill, "steps/"):
+				stepPath := filepath.Join(root, dir, s.Skill)
+				data := readText(t, stepPath)
+				stepText[s.Name] = data
+				_, output, found := strings.Cut(data, "\n## Output")
+				if !found {
+					t.Errorf("%s: no `## Output` section", stepPath)
+					continue
+				}
+				producers = append(producers, output)
+			}
+		}
+
+		for _, s := range wf.Steps {
+			for _, name := range s.ContextInputs {
+				want := "Produces: `" + name + "`"
+				produced := false
+				for _, src := range producers {
+					if strings.Contains(src, want) {
+						produced = true
+						break
+					}
+				}
+				if !produced {
+					t.Errorf("%s: step %q lists context input %q, but no step file `## Output` or inline-gate SKILL.md section declares %s", path, s.Name, name, want)
+				}
+
+				heading := "### INPUT " + name
+				if !strings.Contains(stepText[s.Name], heading) && !strings.Contains(skillMD, heading) {
+					t.Errorf("%s: step %q lists context input %q, but neither its step file nor %s mentions the injected `%s` block", path, s.Name, name, skillPath, heading)
+				}
+			}
+		}
+	}
+}
+
+// readText reads a file the test cannot proceed without.
+func readText(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	return string(data)
+}
+
+// markdownSection returns the body of the level-2 section whose heading is
+// `## {name}` — alone, or followed by a space (`## approve — the plan gate`) —
+// up to the next level-2 heading.
+func markdownSection(doc, name string) (string, bool) {
+	lines := strings.Split(doc, "\n")
+	for i, line := range lines {
+		rest, ok := strings.CutPrefix(line, "## "+name)
+		if !ok || (rest != "" && !strings.HasPrefix(rest, " ")) {
+			continue
+		}
+		end := len(lines)
+		for j := i + 1; j < len(lines); j++ {
+			if strings.HasPrefix(lines[j], "## ") {
+				end = j
+				break
+			}
+		}
+		return strings.Join(lines[i+1:end], "\n"), true
+	}
+	return "", false
 }

@@ -54,11 +54,12 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 `researcher/handoff` — the recommended direction, persisted at
 `{project}/{change}/researcher/handoff`, or `{project}/study/{topic}/researcher` when the run
 explores an existing area rather than a change to come. PM reads it as an optional input: its `what` seeds
-the request, its `rejected:` decisions seed `scope.out`. Researcher never blocks PM — when
-no discovery ran, PM proceeds from the raw request.
+the request, its `rejected:` decisions seed `scope.out`. The Architect reads it too, and when
+PM was skipped, the direction frames the design in PM's place. Researcher never blocks
+either — when no discovery ran, both proceed from the raw request.
 
 ## Invariants
 - Analyst-only — NEVER a builder; it never writes the filesystem
 - Diverge, then converge: exactly ONE recommended direction, with every rejected direction carrying its reason
 - A feasibility verdict with no evidence is an `ASSUMED:` entry in `open_items`, never a colored guess
-- Researcher runs BEFORE PM and never replaces it — it recommends a direction, PM decides what gets built
+- Researcher runs BEFORE PM and never replaces it — it recommends a direction; PM, or the Architect when PM is skipped, decides what gets built
