@@ -13,8 +13,14 @@ All of these arrive ALREADY INJECTED — never self-fetch them.
 - `{project}/{change}/pm/handoff` (optional — AC authority). Extract: ONLY `acceptance_criteria[]`
 - `{project}/{change}/architect/handoff` (optional). Extract: `decisions`, `constraints`,
   `data_model`, `api_surface` — when it arrived the approach is ALREADY DECIDED, do not re-open it
+- `{project}/{change}/ux-ui/handoff` (optional). Extract: `flows`, `components`, `a11y_requirements`
+  — the flows are what the UI code must implement, step by step; every component `gap` is a
+  file to create or an `open_items` entry
+- `{project}/{change}/security/handoff` (optional). Extract: `risks[].mitigation` and
+  `constraints` (the hardening checklist) — each mitigation that lands in this change's files is
+  a `key_constraints` entry
 
-**DEGRADATION**: if `pm/handoff` is UNRESOLVED, author the acceptance criteria from dev-exploration context and note `ASSUMED:` in open_items. If `architect/handoff` is UNRESOLVED, decide the approach here per step 4.
+**DEGRADATION**: if `pm/handoff` is UNRESOLVED, author the acceptance criteria from dev-exploration context and note `ASSUMED:` in open_items. If `architect/handoff` is UNRESOLVED, decide the approach here per step 4. If `ux-ui/handoff` or `security/handoff` is UNRESOLVED, proceed without it — no `open_items` entry needed.
 
 ## Processing
 

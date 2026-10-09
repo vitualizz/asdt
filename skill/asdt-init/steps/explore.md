@@ -98,7 +98,7 @@ ls go.work pnpm-workspace.yaml 2>/dev/null; grep -l '^\[workspace\]' Cargo.toml 
 |---|---|---|---|
 | go | `{lang_root}/Makefile` contains `go test` | `make test` | medium |
 | go | `{lang_root}/go.mod` exists | `go test ./...` | high |
-| node | `package.json` `.scripts.test` is non-empty | that script string | high |
+| node | `{lang_root}/package.json` `.scripts.test` is non-empty AND does not contain `no test specified` (npm's placeholder) | that script string | high |
 | node | `{lang_root}/jest.config.js` exists | `jest` | medium |
 | node | `{lang_root}/vitest.config.ts` exists | `vitest` | medium |
 | python | `{lang_root}/pytest.ini` exists OR `pyproject.toml` contains `[tool.pytest` | `pytest` | high |
@@ -121,24 +121,31 @@ A file **conforms** when it matches the positive regex (`grep -qE`) and does not
 
 | Lang | Extensions | Positive regex | Violation regex | Value when dominant |
 |---|---|---|---|---|
-| go | `.go` | `^(func\|type\|var\|const) [A-Z]` | `^(func\|type\|var\|const) [a-z]` | `snake_case filenames, PascalCase exported symbols` |
-| node | `.ts` `.tsx` | `^export (function\|class\|const\|interface) [A-Z]` | `^export (function\|const) [a-z]` | `PascalCase exported symbols` |
+| go | `.go` | `^(func\|type\|var\|const) [A-Za-z]` | `^(func\|type\|var\|const) [a-z][A-Za-z0-9]*_` | `MixedCaps identifiers (PascalCase exported, camelCase unexported)` |
+| node | `.ts` `.tsx` | `^export (function\|class\|const\|interface\|type) [A-Za-z]` | `^export ((function\|const\|let) [a-z][a-z0-9]*_\|(class\|interface\|type) [a-z])` | `camelCase functions and values, PascalCase classes and types` |
 | python | `.py` | `^(def [a-z_]\|class [A-Z])` | `^def [A-Z]` | `snake_case functions, PascalCase classes` |
 | ruby | `.rb` | `^( *def [a-z_]\|class [A-Z]\|module [A-Z])` | `^ *def [A-Z]` | `snake_case methods, PascalCase classes` |
 | rust | `.rs` | `^(pub )?(fn [a-z_]\|struct [A-Z]\|enum [A-Z])` | `^(pub )?fn [A-Z]` | `snake_case functions, PascalCase types` |
 
 No source files sampled → `unknown`/inferred/low.
 
+The violation regexes flag what breaks the language's OWN idiom — an underscore in a
+Go or TS identifier, a capitalised Python `def` — never the lowercase names the idiom
+itself prescribes. A Go `func helper()` or a TS `export function parseDate()` conforms.
+
 **Probe: `architectural_style`** — list top-level directories with one command (`fd -d 1 -t d . {dir}` or `find {dir} -maxdepth 1 -type d`), first at the repo root; if no row matches there and the primary `{lang_root}` differs from the root, evaluate the same table once more at `{lang_root}`:
 
 | Layout evidence (first match wins) | Value | Source | Confidence |
 |---|---|---|---|
-| `cmd/` AND `internal/` present | `hexagonal` | detected | high |
+| `cmd/` AND `internal/` present | `go-standard-layout` | detected | high |
 | `src/` containing `controllers/`, `models/`, `views/` | `mvc` | detected | high |
 | `src/` containing `features/` or `modules/` | `modular` | detected | medium |
 | `src/` (no sub-pattern matched) | `layered` | detected | medium |
 | `lib/` present (no `src/`) | `layered` | detected | medium |
 | No match at root nor at `{lang_root}` | `unknown` | inferred | low |
+
+`go-standard-layout` names the `cmd/` + `internal/` directory convention only — it says
+nothing about hexagonal, layered, or any other architecture inside those packages.
 
 When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting architectural styles). Here "rows" are the five layout predicates in table order — count how many DISTINCT predicates the same directory listing satisfies; the count is a mechanical row-id count over the one command's output, never a judgment call.
 

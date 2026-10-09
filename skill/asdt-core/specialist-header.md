@@ -10,7 +10,10 @@ Before starting any step, verify `.asdt/config.yaml` exists with `memory.provide
 > calling assistant (Claude Code / OpenCode) is the SOLE orchestrator. For every
 > step marked `subagent` below you MUST launch a dedicated sub-agent via your
 > native delegation primitive (Agent/Task) — do NOT run subagent steps inline in
-> this thread. Steps marked `inline` run in your own context. This specialist file
+> this thread. Launch each one as the `asdt-{agent}` sub-agent its `agent:` field
+> names (`asdt-analyst` / `asdt-builder`); if that definition is missing, prepend
+> `asdt-core/executor-header.md` to the prompt (`asdt-core/protocol.md` §4).
+> Steps marked `inline` run in your own context. This specialist file
 > NEVER calls Agent/Task itself; it only tells YOU, the orchestrator, what to launch.
 > If you run a subagent step inline anyway, that step's write boundary
 > (`asdt-core/protocol.md` §3) binds YOU: unless the step is `developer/implement`

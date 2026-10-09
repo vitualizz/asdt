@@ -31,7 +31,7 @@ steps:
     model: sonnet
     agent: analyst
     inputs: []
-    context_inputs: [assess]
+    context_inputs: [security-assessment]
     output_topic_key: "{project}/{change}/security/handoff"
     reference_skills:
       - ../asdt-core/protocol.md

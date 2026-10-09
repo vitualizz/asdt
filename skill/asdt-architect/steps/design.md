@@ -7,11 +7,16 @@ hand-off Developer and QA consume. One step, one artifact.
 ## Inputs
 - `{project}/{change}/pm/handoff` — OPTIONAL. The requirements this design has to satisfy:
   its `acceptance_criteria`, `constraints` (scope and NFR budgets), and `risks`
+- `{project}/{change}/ux-ui/handoff` — OPTIONAL. Extract: `flows` and `components` — the
+  interactions the API surface has to serve, and every component `gap` the design must cover
+- `{project}/{change}/security/handoff` — OPTIONAL. Extract: `risks` and `constraints` (the
+  hardening checklist) — a finding that reshapes a boundary is a design constraint, not a footnote
 - Platform summary — the stack, conventions, and existing structure, injected inline
 
-Both arrive ALREADY INJECTED. Do NOT self-fetch. If `pm/handoff` is UNRESOLVED, design
+All of these arrive ALREADY INJECTED. Do NOT self-fetch. If `pm/handoff` is UNRESOLVED, design
 against the raw request and note `ASSUMED: no PM hand-off — requirements read from the raw
-request` in `open_items`.
+request` in `open_items`. If `ux-ui/handoff` or `security/handoff` is UNRESOLVED, proceed
+without it — neither ran is the common case, and it needs no `open_items` entry.
 
 ## Processing
 
