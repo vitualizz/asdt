@@ -24,7 +24,7 @@ Cada corrida de un especialista guarda un hand-off. Se almacena en la base de co
 
 Cuando corre el siguiente especialista, consulta la base de conocimiento por clave. Si el artefacto existe, procede normalmente. Si falta, anota la brecha en `open_items` y continúa con lo que tiene disponible — sin errores duros, sin pipelines bloqueados.
 
-Esto significa que el orden de ejecución es flexible. Podés empezar con cualquier especialista. Podés pausar entre pasos — incluso cambiar de asistente — y la base de conocimiento retiene el estado. Un artefacto guardado desde Claude Code puede ser leído por un paso posterior corrido en OpenCode, y viceversa, porque ambos leen y escriben en el mismo almacén de Engram.
+Esto significa que el orden de ejecución es flexible. Podés empezar con cualquier especialista. Podés pausar entre pasos — incluso cambiar de asistente — y la base de conocimiento retiene el estado. Un artefacto guardado desde Claude Code puede ser leído por un paso posterior corrido en OpenCode, y viceversa, porque ambos leen y escriben en el almacén del mismo memory provider (hoy, Engram).
 
 ## Memory providers
 
@@ -33,9 +33,19 @@ ASDT requiere un **memory provider** — un almacén persistente que sobrevive a
 Un memory provider le da a ASDT:
 - **Persistencia entre sesiones** — el output del Arquitecto del lunes está disponible para el Developer del jueves
 - **Scope por proyecto** — los artefactos de proyectos distintos no se mezclan
-- **Recuperación por clave** — búsqueda determinística sin matching difuso
+- **Recuperación por clave** — un especialista elige un registro por su clave exacta, nunca por cuánto se parece
 
 Hoy, **Engram** es el memory provider soportado. Más providers están planificados.
+
+### Cómo habla ASDT con la memoria
+
+Ningún prompt de especialista nombra un provider. Los prompts hablan una pequeña **interfaz de memoria** de tres verbos, definida una sola vez en el protocolo compartido:
+
+- **save** — guarda un registro bajo su clave estable. Guardar en una clave que ya tiene un registro lo reemplaza (un upsert).
+- **search** — encuentra registros por prefijo de clave (`{project}/{change}`) o por texto libre. Cada resultado trae su clave, así que un especialista elige el que necesita por clave exacta.
+- **get** — lee un registro completo por el id que devolvió una búsqueda.
+
+Al instalar, el instalador **vincula** esa interfaz al provider que elegiste: escribe el nombre del provider, su valor de `memory.provider` y la herramienta exacta detrás de cada verbo en el protocolo instalado (y por lo tanto en cada especialista), en las definiciones de los agentes ejecutores, en `/asdt-init` y en el router `/asdt` — y otorga esas mismas herramientas a los agentes `asdt-analyst` y `asdt-builder`. Un especialista nunca adivina el nombre de una herramienta: el binding que tiene delante le dice cuál llamar. Soportar otro provider es un cambio solo en el instalador — ver [Desarrollo](/asdt/es/docs/development#agregar-un-memory-provider).
 
 ### Engram — implementación actual
 
@@ -53,15 +63,15 @@ Seguí la [guía de setup de Engram](https://github.com/Gentleman-Programming/en
 /asdt-init
 ```
 
-El especialista de init verifica la conectividad con el memory provider como parte del setup e informa si el servidor MCP es inalcanzable.
+El especialista de init verifica, antes que nada, que la sesión tenga las herramientas del memory provider; si faltan, explica cómo conectarlo y se detiene sin escribir la configuración.
 
 ## Cómo se almacenan los artefactos
 
-Cada artefacto se guarda con cuatro campos:
+Con Engram, un artefacto guardado lleva estos campos:
 
 <ArtifactAnatomyCard lang="es" />
 
-Cuando un especialista necesita un artefacto previo, llama a `mem_search` — la llamada de búsqueda que un especialista usa para ubicar un artefacto por su `topic_key` (la etiqueta exacta con la que se guardó y con la que se lo vuelve a encontrar) — y luego a `mem_get_observation`, la llamada que trae el contenido completo una vez que la etiqueta coincide. Es una búsqueda de un paso — sin matching difuso, sin escaneo de contexto.
+Cuando un especialista necesita un artefacto previo, hace un memory **search** por la clave del artefacto (la etiqueta exacta con la que se guardó y con la que se lo vuelve a encontrar) — con Engram, `mem_search`, donde la clave viaja como `query` (se guardó como `topic_key`). La búsqueda puede traer resultados parecidos, así que el especialista se queda con el que tiene la clave exacta — Engram la muestra como el `title` del resultado, la clave sin su `{project}/` inicial — y luego hace un memory **get** con el id de ese resultado para traer el contenido completo (`mem_get_observation` con Engram). Decide la clave exacta, nunca el ranking, y no se escanea nada más allá de los registros declarados.
 
 ## Continuidad entre sesiones
 
@@ -85,7 +95,7 @@ Los límites de sesión no importan. El output del Arquitecto del lunes es tan l
 
 ## Scope por proyecto
 
-Cada llamada a `mem_save` — la llamada de guardado que un especialista usa para almacenar su propio artefacto — incluye un campo `project`. ASDT deriva el nombre del proyecto de `.asdt/config.yaml` o del nombre del directorio. Los artefactos son buscables dentro del scope de un proyecto — correr ASDT en dos proyectos distintos no mezcla su memoria.
+Cada clave bajo la que guarda un especialista — mediante el verbo memory **save**, `mem_save` con Engram — empieza con el nombre del proyecto (`{project}/…`). ASDT deriva el nombre del proyecto de `.asdt/config.yaml` o del nombre del directorio. Los artefactos son buscables dentro del scope de un proyecto — correr ASDT en dos proyectos distintos no mezcla su memoria.
 
 ## Qué no es Engram
 

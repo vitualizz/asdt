@@ -98,6 +98,8 @@ Four sections. Nothing else.
 ## Output         Produces `{role}/handoff`, with the canonical schema from protocol.md.
 ```
 
+Reach memory only through the verbs of `asdt-core/protocol.md` §0 — "persist via memory **save** under this step's `output_topic_key`" — and never write a provider's name or tool names into a prompt: the installer binds the verbs to the selected provider, and `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails on a hardcoded one.
+
 No numeric context budgets. No per-input degradation paragraph — one line each. No summary envelope: the return value IS the payload. A step file NEVER contains the EXECUTOR block; those guardrails come from the agent definition (`agent: analyst` / `agent: builder` bake in `asdt-core/executor-header.md`) or from the orchestrator prepending that header.
 
 ## 5. Artifact contract

@@ -2,7 +2,7 @@
 
 Private packages for the `asdt-tui` binary — the installer TUI users run to copy ASDT skills into their AI assistant.
 
-The AI specialist logic lives in `skill/`. This directory is the Go tooling that delivers those skills to the user's machine. All delivery orchestration (running specialists, storing artifacts, recalling context) happens inside the installed skills + Engram — not in Go. The binary's only runtime job is the install wizard.
+The AI specialist logic lives in `skill/`. This directory is the Go tooling that delivers those skills to the user's machine. All delivery orchestration (running specialists, storing artifacts, recalling context) happens inside the installed skills + the memory provider they are bound to at install (Engram today) — not in Go. The binary's only runtime job is the install wizard.
 
 ## Packages
 

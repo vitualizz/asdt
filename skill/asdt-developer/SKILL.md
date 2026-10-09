@@ -116,7 +116,7 @@ commands is its own Tests section.
    once on a resume that entered here with no spec → record `ran: true, passed: false`, plus one
    `open_items` entry per failing command: `verification failing: {command} — {one-line cause}`.
 
-To record, `mem_save` the latest `implement` payload (the loaded record, on a resume) under this
+To record, memory **save** the latest `implement` payload (the loaded record, on a resume) under this
 step's `output_topic_key` with `verification: {ran, passed, summary}` added, `summary` per
 `asdt-core/protocol.md` §5 — your own save, never another `implement` launch.
 

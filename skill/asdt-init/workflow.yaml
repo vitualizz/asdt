@@ -2,7 +2,7 @@ specialist: asdt-init
 routable: false
 steps:
   - name: knowledge-gate
-    description: Orchestrator self-checks its OWN tool list for Engram mem_* tools before any delegation — undelegatable presence gate; nothing downstream runs without it
+    description: Orchestrator self-checks its OWN tool list for the bound memory provider's tools before any delegation — undelegatable presence gate; nothing downstream runs without it
     execution: inline
 
   - name: explore

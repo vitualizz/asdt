@@ -10,9 +10,9 @@ model or session runs it.
 ## Inputs
 - `inputs: []` — there are no upstream artifacts; the raw project tree is the
   only source.
-- **Engram presence arrives as an established fact.** The orchestrator passed
-  the gate (`knowledge-gate`) before launching you. Do NOT re-verify Engram's
-  tool list — that is the orchestrator's job and it already did it.
+- **Memory provider presence arrives as an established fact.** The orchestrator
+  passed the gate (`knowledge-gate`) before launching you. Do NOT re-verify the
+  provider's tool list — that is the orchestrator's job and it already did it.
 
 ## Processing
 
@@ -354,7 +354,7 @@ ambiguities are never `blocking_open_items`.
 ## Output
 Produces: `init/stack-detection`
 
-Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
+Persist via memory **save** under this step's `output_topic_key` in `workflow.yaml`; return the payload above with open_items populated.
 
 ```yaml
 payload:

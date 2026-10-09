@@ -78,12 +78,26 @@ After adding the directory:
 1. Run the sandbox flow to confirm the skill appears under `/tmp/asdt-sandbox/.claude/skills/{name}/`
 2. Run `go test ./skill/...` — the embedded registry test verifies the skill is present
 
+## Adding a memory provider
+
+The prompts never name a memory provider. They speak three verbs — **save** (upsert by key), **search** (by key prefix or free text), and **get** (one full record by id) — defined once in `skill/asdt-core/protocol.md` §0. Every file that reaches memory carries a `<!-- ASDT:GENERATED:memory-binding -->` region committed empty: `protocol.md` (spliced, with it, into every routed `SKILL.md`), `executor-header.md`, `asdt-init/SKILL.md`, and the root `SKILL.md`. At install, the installer renders the selected provider's binding into those regions and grants the provider's tools to `asdt-analyst` and `asdt-builder`.
+
+A new provider is a Go-only change — no prompt edits:
+
+1. Add a `ProviderDescriptor` to `Providers` in `internal/installer/providers.go`:
+   - `ID`, `Name`, `Description` — the TUI's provider screen lists it from these.
+   - `ConfigValue` — what `/asdt-init` writes to `memory.provider`, and what every specialist checks before it runs.
+   - `Tools` — one `MemoryTool` per verb: the bare tool name and a one-line `Usage` telling the model how to call it (for example, which of the tool's parameters carries the key). `Usage` is spliced verbatim into the binding. The search `Usage` must also say where each match shows its key — the protocol has a step pick a result by exact key, so it needs to know which field holds it. Engram's, for example, says a match shows the key as its `title`, without the leading `{project}/`.
+   - `ClaudeToolPrefixes` — the MCP namespaces Claude Code may expose the tools under; at least one. The executor agents' Claude Code allowlist is every prefix × every verb's tool, derived from `Tools`, never a second list.
+   - `Detect` — how the TUI's environment check looks for the provider: `Binary`, looked up on your `PATH`, and `InstallURL`, where a user who lacks it is pointed. Leave `Binary` empty for a provider with nothing to probe locally: its row is informational and never blocks. The check lists every provider; *Continue* needs at least one usable, and the provider screen continues only on a usable one.
+2. Run `go test ./...`. `TestProviders_BindEveryVerb` fails on any gap the descriptor's `Validate` finds — an unbound verb, a missing `Usage`, no prefix; `TestInstall_MemoryBindingReachesInstalledFiles` shows what a binding renders into; `TestPromptsAreProviderNeutral` fails if any prompt, generated agent, or persona names a shipped provider or its tools — the forbidden names come from `Providers`, so yours are covered the moment you add it.
+
 ## Verifying prompt edits
 
 Editing an existing specialist's `SKILL.md` or `steps/*.md` requires no wiring changes at all. Just:
 
 ```sh
-go test ./skill/...
+go test ./skill/... ./internal/installer/...
 ```
 
 `go:embed` re-reads files at build time, so `go test` and `go run` always reflect your latest edits — no caching to worry about.

@@ -78,12 +78,26 @@ Después de agregar el directorio:
 1. Corré el flujo de sandbox para confirmar que la skill aparece en `/tmp/asdt-sandbox/.claude/skills/{name}/`
 2. Corré `go test ./skill/...` — el test del registro embebido verifica que la skill esté presente
 
+## Agregar un memory provider
+
+Los prompts nunca nombran un memory provider. Hablan tres verbos — **save** (upsert por clave), **search** (por prefijo de clave o texto libre) y **get** (un registro completo por id) — definidos una sola vez en `skill/asdt-core/protocol.md` §0. Cada archivo que llega a la memoria lleva una región `<!-- ASDT:GENERATED:memory-binding -->` commiteada vacía: `protocol.md` (que se empalma, con ella, en cada `SKILL.md` enrutado), `executor-header.md`, `asdt-init/SKILL.md` y el `SKILL.md` raíz. Al instalar, el instalador renderiza el binding del provider elegido en esas regiones y otorga sus herramientas a `asdt-analyst` y `asdt-builder`.
+
+Un provider nuevo es un cambio solo en Go — sin editar prompts:
+
+1. Agregá un `ProviderDescriptor` a `Providers` en `internal/installer/providers.go`:
+   - `ID`, `Name`, `Description` — la pantalla de provider de la TUI lo lista a partir de estos.
+   - `ConfigValue` — lo que `/asdt-init` escribe en `memory.provider`, y lo que cada especialista verifica antes de correr.
+   - `Tools` — un `MemoryTool` por verbo: el nombre simple de la herramienta y un `Usage` de una línea que le dice al modelo cómo llamarla (por ejemplo, qué parámetro de la herramienta lleva la clave). `Usage` se empalma tal cual en el binding. El `Usage` de search además tiene que decir dónde muestra cada resultado su clave — el protocolo hace que un paso elija un resultado por clave exacta, así que necesita saber qué campo la lleva. El de Engram, por ejemplo, dice que un resultado muestra la clave como su `title`, sin el `{project}/` inicial.
+   - `ClaudeToolPrefixes` — los namespaces MCP bajo los que Claude Code puede exponer las herramientas; al menos uno. La allowlist de Claude Code de los agentes ejecutores es cada prefijo × la herramienta de cada verbo, derivada de `Tools`, nunca una segunda lista.
+   - `Detect` — cómo lo busca el chequeo de entorno de la TUI: `Binary`, que se busca en tu `PATH`, e `InstallURL`, adonde se envía a quien no lo tiene. Dejá `Binary` vacío para un provider sin nada que chequear localmente: su fila es informativa y nunca bloquea. El chequeo lista todos los providers; *Continue* necesita al menos uno disponible, y la pantalla de provider solo avanza con uno disponible.
+2. Corré `go test ./...`. `TestProviders_BindEveryVerb` falla ante cualquier hueco que encuentre el `Validate` del descriptor — un verbo sin vincular, un `Usage` faltante, ningún prefijo; `TestInstall_MemoryBindingReachesInstalledFiles` muestra lo que renderiza un binding; `TestPromptsAreProviderNeutral` falla si algún prompt, agente generado o persona nombra un provider incluido o sus herramientas — los nombres prohibidos salen de `Providers`, así que los tuyos quedan cubiertos apenas lo agregás.
+
 ## Verificar ediciones de prompts
 
 Editar el `SKILL.md` o los `steps/*.md` de un especialista existente no requiere ningún cambio de cableado. Simplemente:
 
 ```sh
-go test ./skill/...
+go test ./skill/... ./internal/installer/...
 ```
 
 `go:embed` vuelve a leer los archivos en tiempo de compilación, así que `go test` y `go run` siempre reflejan tus últimas ediciones — sin caché de la cual preocuparse.

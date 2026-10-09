@@ -184,3 +184,35 @@ func TestRoutedSpecialistInvariants(t *testing.T) {
 		}
 	}
 }
+
+// Package skill cannot import internal/installer (the installer imports this
+// package), so these two literals are a hand-copy of memoryBindingBeginMarker /
+// memoryBindingEndMarker in internal/installer/providers.go. Change both copies
+// together.
+const (
+	memoryBindingBegin = "<!-- ASDT:GENERATED:memory-binding -->"
+	memoryBindingEnd   = "<!-- /ASDT:GENERATED:memory-binding -->"
+)
+
+// TestMemoryBindingRegions asserts every file that owns a memory-binding region
+// still carries it, committed EMPTY. Dropping a region is silent at install
+// time — bindMemory passes marker-free files through — and the file would then
+// ship telling a model to call a verb with no tool behind it.
+func TestMemoryBindingRegions(t *testing.T) {
+	owners := []string{
+		"asdt-core/protocol.md",        // and, spliced, every routed SKILL.md
+		"asdt-core/executor-header.md", // baked into the generated agents
+		"asdt-init/SKILL.md",           // the knowledge-gate reads it
+		"SKILL.md",                     // the router answers status questions
+	}
+	for _, p := range owners {
+		data, err := fs.ReadFile(FS(), p)
+		if err != nil {
+			t.Errorf("%s missing from embedded FS: %v", p, err)
+			continue
+		}
+		if !strings.Contains(string(data), memoryBindingBegin+"\n"+memoryBindingEnd) {
+			t.Errorf("%s must carry the memory-binding region committed empty (%q immediately followed by %q)", p, memoryBindingBegin, memoryBindingEnd)
+		}
+	}
+}

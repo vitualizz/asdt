@@ -64,11 +64,14 @@ type EnvironmentCheckProgressMsg struct {
 	SoftWarn bool
 }
 
-// EnvironmentCheckMsg is the terminal message sent after ALL three probes in
+// EnvironmentCheckMsg is the terminal message sent after ALL probes in
 // EnvironmentCheckCmd have resolved. Carries the gate flags needed to
 // decide whether Continue is enabled.
 type EnvironmentCheckMsg struct {
-	EngramFound    bool
+	// ProvidersFound maps each installer.Providers ID to whether that memory
+	// provider is usable: its Detect.Binary is on PATH, or it has no probe. A
+	// missing ID reads as not found.
+	ProvidersFound map[installer.ProviderID]bool
 	CodegraphFound bool
 }
 
@@ -192,7 +195,12 @@ const environmentCheckTimeout = 5 * time.Second
 // resolves. Uses context.WithTimeout(5s) for all async probes to prevent
 // TUI hang on slow PATH resolution.
 func EnvironmentCheckCmd() tea.Cmd {
-	return tea.Batch(osProbeCmd(), shellProbeCmd(), engramProbeCmd(), codegraphProbeCmd())
+	cmds := []tea.Cmd{osProbeCmd(), shellProbeCmd()}
+	for _, p := range installer.Providers {
+		cmds = append(cmds, providerProbeCmd(p))
+	}
+	cmds = append(cmds, codegraphProbeCmd())
+	return tea.Batch(cmds...)
 }
 
 func osProbeCmd() tea.Cmd {
@@ -220,20 +228,30 @@ func shellProbeCmd() tea.Cmd {
 	}
 }
 
-func engramProbeCmd() tea.Cmd {
+// providerProbeCmd resolves p's preflight row, labeled p.Name: an error when
+// p.Detect.Binary is not on PATH, OK with its path when it is, and OK with an
+// informational detail when p has no local probe — such a provider never blocks.
+func providerProbeCmd(p installer.ProviderDescriptor) tea.Cmd {
 	return func() tea.Msg {
+		if p.Detect.Binary == "" {
+			return EnvironmentCheckProgressMsg{
+				RowLabel: p.Name,
+				Status:   components.CheckStatusOK,
+				Detail:   "no local check — /asdt-init verifies it is connected",
+			}
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), environmentCheckTimeout)
 		defer cancel()
-		path, err := lookPathCtx(ctx, "engram")
+		path, err := lookPathCtx(ctx, p.Detect.Binary)
 		if err != nil {
 			return EnvironmentCheckProgressMsg{
-				RowLabel: "Engram",
+				RowLabel: p.Name,
 				Status:   components.CheckStatusError,
-				Detail:   "not found — install: https://github.com/Gentleman-Programming/engram",
+				Detail:   "not found — install: " + p.Detect.InstallURL,
 			}
 		}
 		return EnvironmentCheckProgressMsg{
-			RowLabel: "Engram",
+			RowLabel: p.Name,
 			Status:   components.CheckStatusOK,
 			Detail:   path,
 		}

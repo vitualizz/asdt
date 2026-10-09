@@ -24,7 +24,7 @@ Every specialist run saves one hand-off. It is stored in the knowledge base with
 
 When the next specialist runs, it queries the knowledge base by key. If the artifact exists, it proceeds normally. If it's missing, it notes the gap in `open_items` and continues with available context — no hard failures, no blocked pipelines.
 
-This means run order is flexible. You can start with any specialist. You can pause between steps — even switch assistants — and the knowledge base holds the state. An artifact saved from Claude Code is readable by a later step run in OpenCode, and vice versa, because both read and write the same Engram store.
+This means run order is flexible. You can start with any specialist. You can pause between steps — even switch assistants — and the knowledge base holds the state. An artifact saved from Claude Code is readable by a later step run in OpenCode, and vice versa, because both read and write the same memory provider's store (Engram, today).
 
 ## Memory providers
 
@@ -33,9 +33,19 @@ ASDT requires a **memory provider** — a persistent store that survives session
 A memory provider gives ASDT:
 - **Cross-session persistence** — Monday's Architect output is available to Thursday's Developer
 - **Project scoping** — artifacts from different projects don't mix
-- **Key-based retrieval** — deterministic lookup without fuzzy matching
+- **Key-based retrieval** — a specialist picks a record by its exact key, never by how closely it matches
 
 Today, **Engram** is the supported memory provider. More providers are planned.
+
+### How ASDT talks to memory
+
+No specialist prompt names a provider. The prompts speak a small **memory interface** of three verbs, defined once in the shared protocol:
+
+- **save** — store a record under its stable key. Saving to a key that already holds a record replaces it (an upsert).
+- **search** — find records by key prefix (`{project}/{change}`) or by free text. Each match carries its key, so a specialist picks the one it needs by exact key.
+- **get** — read one full record by the id a search returned.
+
+When you install, the installer **binds** that interface to the provider you selected: it writes the provider's name, its `memory.provider` value, and the exact tool behind each verb into the installed protocol (and so into every specialist), the executor-agent definitions, `/asdt-init`, and the `/asdt` router — and grants those same tools to the `asdt-analyst` and `asdt-builder` agents. A specialist never guesses a tool name: the binding in front of it says which one to call. Supporting another provider is a change to the installer alone — see [Development](/asdt/docs/development#adding-a-memory-provider).
 
 ### Engram — current implementation
 
@@ -53,15 +63,15 @@ Follow the [Engram setup guide](https://github.com/Gentleman-Programming/engram)
 /asdt-init
 ```
 
-The init specialist checks for memory provider connectivity as part of setup and reports if the MCP server is unreachable.
+The init specialist checks that the session holds the memory provider's tools before anything else; if they are missing, it explains how to connect the provider and stops without writing config.
 
 ## How artifacts are stored
 
-Each artifact is saved with four fields:
+With Engram, a stored artifact carries these fields:
 
 <ArtifactAnatomyCard lang="en" />
 
-When a specialist needs a prior artifact, it calls `mem_search` — the find call a specialist uses to look up an artifact by its `topic_key` (the exact label used to save and re-find it) — then `mem_get_observation`, the fetch call that pulls the full content once the label matches. This is a one-step lookup — no fuzzy matching, no context scanning.
+When a specialist needs a prior artifact, it runs a memory **search** for the artifact's key (the exact label used to save and re-find it) — with Engram, `mem_search`, where the key travels as `query` (it was saved as `topic_key`). Search can return near misses, so the specialist keeps the match whose key is exact — Engram shows it as the match's `title`, the key without its leading `{project}/` — then runs a memory **get** with that match's id to pull the full content (`mem_get_observation` with Engram). The exact key decides, never the ranking, and nothing beyond the declared records is scanned.
 
 ## Cross-session continuity
 
@@ -85,7 +95,7 @@ Session boundaries don't matter. Monday's Architect output is as readable to Thu
 
 ## Project scoping
 
-Every `mem_save` call — the save call a specialist uses to store its own artifact — includes a `project` field. ASDT derives the project name from `.asdt/config.yaml` or the directory name. Artifacts are searchable within a project scope — running ASDT on two different projects doesn't mix their memory.
+Every key a specialist saves under — through the memory **save** verb, `mem_save` with Engram — starts with the project name (`{project}/…`). ASDT derives the project name from `.asdt/config.yaml` or the directory name. Artifacts are searchable within a project scope — running ASDT on two different projects doesn't mix their memory.
 
 ## What Engram is not
 

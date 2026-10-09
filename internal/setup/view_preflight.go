@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/vitualizz/asdt/internal/i18n"
+	"github.com/vitualizz/asdt/internal/installer"
 	"github.com/vitualizz/asdt/internal/setup/components"
 	"github.com/vitualizz/asdt/internal/setup/styles"
 	"github.com/vitualizz/asdt/internal/tui/panels"
@@ -12,8 +13,13 @@ import (
 
 // initialPreflightSections returns the seed state for the pre-flight check screen.
 // Section titles come from the active catalog; row labels are kept as constants
-// because they also serve as lookup keys in rowHasStatus and in probe messages.
+// — a memory provider's row is its Name — because they also serve as lookup
+// keys in rowHasStatus and in probe messages.
 func initialPreflightSections(s i18n.InstallerStrings) []components.SectionGroup {
+	providerRows := make([]components.CheckRow, len(installer.Providers))
+	for i, p := range installer.Providers {
+		providerRows[i] = components.CheckRow{Label: p.Name, Status: components.CheckStatusPending}
+	}
 	return []components.SectionGroup{
 		{
 			Title: s.SectionYourEnvironment,
@@ -24,9 +30,7 @@ func initialPreflightSections(s i18n.InstallerStrings) []components.SectionGroup
 		},
 		{
 			Title: s.SectionMemoryProvider,
-			Rows: []components.CheckRow{
-				{Label: "Engram", Status: components.CheckStatusPending},
-			},
+			Rows:  providerRows,
 		},
 		{
 			Title: s.SectionAIEnhancements,
@@ -48,10 +52,10 @@ func renderPreflightCheck(m Model) string {
 		b.WriteString("\n")
 	}
 
-	if m.preflight.engramMissing && m.preflight.done {
-		fmt.Fprintf(&b, "\n  %s\n", styles.Default.Warning.Render(s.PrefEngramRequired))
-		fmt.Fprintf(&b, "  %s\n", styles.Default.Dim.Render(s.PrefEngramInstall))
-		fmt.Fprintf(&b, "  %s\n", styles.Default.Dim.Render(s.PrefEngramRestart))
+	missing := m.missingProviders()
+	blocked := m.preflight.done && len(missing) == len(installer.Providers)
+	if blocked {
+		writeProviderRecovery(&b, s, missing)
 	}
 
 	var footer string
@@ -60,12 +64,9 @@ func renderPreflightCheck(m Model) string {
 		footer = panels.RenderKeyboardFooter([]panels.HintGroup{
 			{Label: s.HintGroupStatus, Hints: []panels.Hint{{Key: s.HintChecking, Description: s.HintEnvironment}}},
 		}, m.width)
-	case m.preflight.engramMissing:
+	case blocked:
 		footer = panels.RenderKeyboardFooter([]panels.HintGroup{
-			{Label: s.HintGroupRequired, Hints: []panels.Hint{
-				{Key: "engram", Description: s.HintEngramRequired},
-				{Key: "esc", Description: s.HintBack},
-			}},
+			{Label: s.HintGroupRequired, Hints: providerRequiredHints(s, missing)},
 		}, m.width)
 	default:
 		footer = panels.RenderKeyboardFooter([]panels.HintGroup{
@@ -76,4 +77,25 @@ func renderPreflightCheck(m Model) string {
 		}, m.width)
 	}
 	return frame(s.TitlePreflightCheck, strings.TrimRight(b.String(), "\n"), footer, true)
+}
+
+// writeProviderRecovery writes the recovery block for each memory provider the
+// environment check did not find: why it is required, where to install it,
+// and that the TUI must restart to see it.
+func writeProviderRecovery(b *strings.Builder, s i18n.InstallerStrings, missing []installer.ProviderDescriptor) {
+	for _, p := range missing {
+		fmt.Fprintf(b, "\n  %s\n", styles.Default.Warning.Render(fmt.Sprintf(s.PrefProviderRequired, p.Name)))
+		fmt.Fprintf(b, "  %s\n", styles.Default.Dim.Render(fmt.Sprintf(s.PrefProviderInstall, p.Detect.InstallURL)))
+	}
+	fmt.Fprintf(b, "  %s\n", styles.Default.Dim.Render(s.PrefProviderRestart))
+}
+
+// providerRequiredHints returns the footer hints of a screen blocked on missing
+// memory providers: one per provider, keyed by its probe binary, then back.
+func providerRequiredHints(s i18n.InstallerStrings, missing []installer.ProviderDescriptor) []panels.Hint {
+	hints := make([]panels.Hint, 0, len(missing)+1)
+	for _, p := range missing {
+		hints = append(hints, panels.Hint{Key: p.Detect.Binary, Description: s.HintProviderRequired})
+	}
+	return append(hints, panels.Hint{Key: "esc", Description: s.HintBack})
 }

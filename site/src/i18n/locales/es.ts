@@ -488,7 +488,7 @@ export const es: UIStrings = {
     },
     artifactAnatomy: {
       title: { desc: 'El nombre legible del artefacto.' },
-      topicKey: { desc: 'La clave con la que se recupera automáticamente, sin matching difuso.' },
+      topicKey: { desc: 'La clave estable bajo la que se guarda; una corrida posterior la elige entre los resultados de una búsqueda por esta clave exacta.' },
       type: { desc: 'La categoría del artefacto — architecture, decision, bugfix, etc.' },
       project: { desc: 'El proyecto al que pertenece, para que los resultados no se mezclen entre proyectos.' },
     },

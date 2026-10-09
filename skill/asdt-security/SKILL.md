@@ -56,7 +56,7 @@ Both sub-agent steps run after the inline `knowledge-recall` and `platform-analy
 
 **Intra-run persistence — you, the orchestrator, own this.** `assess` declares `output: context`,
 not an `output_topic_key`. Retain its returned payload in YOUR context and inject it into
-`harden` as `### INPUT security-assessment`. It is NEVER written to Engram.
+`harden` as `### INPUT security-assessment`. It is NEVER written to memory.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
@@ -66,7 +66,7 @@ at `{project}/{change}/security/handoff`, or `{project}/study/{topic}/security` 
 audits what already exists. Consumed by Developer, Architect, and QA.
 
 ## Invariants
-- **Write scope**: this specialist writes NO files. Its output is `security/handoff` via `mem_save` — never `.asdt/artifacts/`, never the host source tree, never any local path
+- **Write scope**: this specialist writes NO files. Its output is `security/handoff` via memory **save** — never `.asdt/artifacts/`, never the host source tree, never any local path
 - **No required predecessor**: run at any stage — fresh project, mid-development, or after launch. Load whatever context exists
 - **Analysis only**: reason over the change and inspect the repository for evidence; never run scanners, dependency audits, or any other command
 - Everything it persists ends in the `security` role slot — never another specialist's

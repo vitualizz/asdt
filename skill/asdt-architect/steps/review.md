@@ -44,7 +44,7 @@ jobs, and mixing them buries the judgment under the proposal.
 Produces: `{project}/study/{topic}/architect`, with `{topic}` derived from the request in
 short kebab-case.
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`:
 
 - `what` — the state of this architecture in one sentence

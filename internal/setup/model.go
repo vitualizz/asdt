@@ -20,8 +20,9 @@ const (
 	// viewing the dashboard, or quitting.
 	StateMainMenu ViewState = iota
 	// StateEnvironmentCheck is shown after the user selects "Install / Update
-	// Skills". It fans out environment probes (OS, Shell, Engram, Codegraph)
-	// concurrently; Continue is gated until all probes resolve and engram is found.
+	// Skills". It fans out environment probes (OS, Shell, every memory
+	// provider in installer.Providers, Codegraph) concurrently; Continue is
+	// gated until all probes resolve and at least one provider is usable.
 	StateEnvironmentCheck
 	// StateDashboard shows the dashboard overview with per-assistant status.
 	StateDashboard
@@ -29,6 +30,7 @@ const (
 	// Shows present/missing status badges alongside checkboxes.
 	StateSelectAssistants
 	// StateSelectProvider allows the user to choose a memory provider.
+	// Continue is gated on the selected provider being usable.
 	StateSelectProvider
 	// StateAgentSetup shows the persona selection step (optional).
 	StateAgentSetup
@@ -71,7 +73,7 @@ const (
 type preflightState struct {
 	sections       []components.SectionGroup
 	done           bool
-	engramMissing  bool
+	providersFound map[installer.ProviderID]bool // see EnvironmentCheckMsg
 	codegraphFound bool
 }
 
@@ -229,17 +231,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.preflight.sections = components.UpdateRow(m.preflight.sections, msg.RowLabel, progress)
 		if allProbesDone(m.preflight.sections) {
-			engramFound := !rowHasStatus(m.preflight.sections, "Engram", components.CheckStatusError)
+			providersFound := make(map[installer.ProviderID]bool, len(installer.Providers))
+			for _, p := range installer.Providers {
+				providersFound[p.ID] = !rowHasStatus(m.preflight.sections, p.Name, components.CheckStatusError)
+			}
 			codegraphFound := !rowHasStatus(m.preflight.sections, "Codegraph", components.CheckStatusWarning)
 			return m, func() tea.Msg {
-				return EnvironmentCheckMsg{EngramFound: engramFound, CodegraphFound: codegraphFound}
+				return EnvironmentCheckMsg{ProvidersFound: providersFound, CodegraphFound: codegraphFound}
 			}
 		}
 		return m, nil
 
 	case EnvironmentCheckMsg:
 		m.preflight.done = true
-		m.preflight.engramMissing = !msg.EngramFound
+		m.preflight.providersFound = msg.ProvidersFound
 		m.preflight.codegraphFound = msg.CodegraphFound
 		return m, nil
 
@@ -380,7 +385,9 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleEnvironmentCheck handles keys for the pre-flight check screen.
-// Enter proceeds to StateSelectAssistants only when preflight is done and engram was found.
+// Enter proceeds to StateSelectAssistants only when preflight is done and at
+// least one memory provider is usable; StateSelectProvider then gates on the
+// one the user picks.
 // All assistants are pre-selected on first entry so the default is visible.
 // Esc returns to StateMainMenu at any point.
 // q and ctrl+c always quit.
@@ -389,7 +396,7 @@ func (m Model) handleEnvironmentCheck(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case tea.KeyCtrlC:
 		return m, tea.Quit
 	case tea.KeyEnter:
-		if m.preflight.done && !m.preflight.engramMissing {
+		if m.preflight.done && len(m.missingProviders()) < len(installer.Providers) {
 			m.state = StateSelectAssistants
 			if len(m.wizard.selected) == 0 {
 				for i := range installer.Descriptors {
@@ -459,7 +466,7 @@ func (m Model) handleLanguageSelect(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case tea.KeyEnter:
 		m.preflight.sections = initialPreflightSections(m.catalog.Installer)
 		m.preflight.done = false
-		m.preflight.engramMissing = false
+		m.preflight.providersFound = nil
 		m.state = StateEnvironmentCheck
 		m.cursor = 0
 		return m, tea.Batch(EnvironmentCheckCmd(), m.spinner.Tick)
@@ -546,6 +553,9 @@ func (m Model) handleSelectProvider(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case tea.KeyEnter:
 		// m.wizard.provider already reflects the live selection; no cursor assignment needed.
+		if !m.preflight.providersFound[installer.Providers[m.wizard.provider].ID] {
+			return m, nil // the recovery block under the list says what to install
+		}
 		return m.enterModelGate(), nil
 	case tea.KeyEsc:
 		m.state = StateSelectAssistants
@@ -1164,6 +1174,19 @@ func allProbesDone(sections []components.SectionGroup) bool {
 		}
 	}
 	return true
+}
+
+// missingProviders returns the memory providers the environment check did not
+// find, in installer.Providers order. A provider with no local probe is never
+// missing.
+func (m Model) missingProviders() []installer.ProviderDescriptor {
+	var missing []installer.ProviderDescriptor
+	for _, p := range installer.Providers {
+		if !m.preflight.providersFound[p.ID] {
+			missing = append(missing, p)
+		}
+	}
+	return missing
 }
 
 func rowHasStatus(sections []components.SectionGroup, label string, status components.CheckStatus) bool {
