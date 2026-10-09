@@ -42,6 +42,7 @@ metadata:
 
 - `## Role` — two or three sentences: what it does, and what it explicitly does not.
 - `## Orchestration Plan` — for a single-step specialist, one sentence naming the step and what depth changes; for a multi-step one, a table mapping what the request asks for to the chain that serves it. Then the pointer: `Step identity, model, inputs, and outputs: workflow.yaml.` Never restate a step's file, model, inputs, or outputs here — that duplication is what `workflow.yaml` exists to prevent.
+- One `## {step} — …` section per `inline` step that has no prompt file, and only for those — that section IS the step's contract, so it says when the step runs, what it shows or asks, and what happens on every answer, including when no human can answer.
 - `## Final Output` — the one key this specialist persists, and who consumes it.
 - `## Invariants` — a handful of lines: write scope, prefix, degradation, and whatever is load-bearing for THIS specialist.
 
@@ -63,11 +64,17 @@ steps:
     reference_skills:
       - ../asdt-core/references/{x}.md
       - ../asdt-core/protocol.md
+    host_skills:                 # optional — subagent steps only
+      - {kebab-case-skill-name}
 ```
 
-A step whose payload feeds the NEXT step of the same run declares `output: context` instead of `output_topic_key`. It persists nothing; the orchestrator retains the payload and injects it into the next step. Only the last step of a specialist persists.
+`host_skills:` names skills the host assistant MAY have installed — a craft ASDT does not ship, such as `frontend-design`. They are never paths and never required: the orchestrator injects each one it finds and skips the rest silently (`asdt-core/protocol.md` §4). Declare one only on a `subagent` step whose step file says when it applies and what outranks it — a host skill sharpens execution inside the step's contract, never replaces it.
 
-**Ceiling: four steps.** A specialist declares AT MOST four steps in its `workflow.yaml`. Needing a fifth means the design is wrong — merge two, or split the specialist.
+A step whose payload feeds the NEXT step of the same run and matters to no one after it declares `output: context` instead of `output_topic_key`: it persists nothing, and the orchestrator retains the payload and injects it into the next step. A step whose payload must ALSO outlive the run — a plan a later session resumes — keeps `output_topic_key` on the role's one key and is still injected from context within the run. Both rules, and the staged record they produce, live in `asdt-core/protocol.md` §1; a second key per stage is never the answer.
+
+An `inline` step with no prompt file — a gate where the orchestrator pauses for the human — declares only `name`, `description`, and `execution: inline`, plus `output_topic_key` when the orchestrator itself persists the step's outcome (a gate that records a result on the role's one key). Its contract is a section of SKILL.md (§2).
+
+**Ceiling: four sub-agent steps.** A specialist declares AT MOST four `execution: subagent` steps in its `workflow.yaml`. Inline steps — the orchestrator's own preludes and gates — do not count: they are no sub-agent of their own, and a gate re-launches only steps already declared. Needing a fifth sub-agent step means the design is wrong — merge two, or split the specialist.
 
 **Every specialist works standalone.** No specialist may require another's hand-off: every cross-specialist input is optional and degrades. Whether a run delivers a change or studies what already exists is judged from the invocation per `asdt-core/protocol.md` §1, never from a flag or a mode.
 

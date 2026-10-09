@@ -36,7 +36,7 @@ Suggested order:
 Proceed with this plan? (yes / modify / no)
 ```
 
-Confirm the plan. ASDT then gives you the exact commands to run, with tailored workflow steps for each specialist. **You run them — ASDT does not execute specialists automatically.**
+Confirm the plan. ASDT then gives you the exact commands to run, in order, each carrying the same sharpened version of your request. **You run them — ASDT does not execute specialists automatically.**
 
 <FlowWalkerBlock flow={fullFeatureFlow} lang="en" />
 
@@ -50,7 +50,7 @@ When you already know what you need, skip `/asdt` and invoke the specialist dire
 /asdt-security Audit the OAuth integration
 ```
 
-Each specialist runs its full workflow (explore → spec → design → implement, depending on complexity) and saves artifacts to the knowledge base.
+Each specialist judges which of its own steps the request needs — the Developer, for example, stops at `explore` for a question, at `spec` for a plan, and only goes on to `approve → implement → verify` when you ask it to build — and saves its one hand-off to the knowledge base. Its report opens with what it built on and closes proposing the next specialist.
 
 ## Picking up mid-pipeline
 
@@ -60,7 +60,9 @@ If you ran some specialists and want to continue later, just invoke the next one
 /asdt-developer Implement based on the Architect's ADR
 ```
 
-The Developer reads the Architect's artifacts from the knowledge base. You don't pass context manually.
+The Developer reads the Architect's hand-off from the knowledge base. You don't pass context manually.
+
+The same goes for a Developer plan. Ask for a plan and it is saved; come back later with `/asdt-developer "implement the plan we approved"` and it resumes at the approval gate instead of starting over.
 
 <FlowWalkerBlock flow={midPipelineFlow} lang="en" />
 

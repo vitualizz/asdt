@@ -17,9 +17,9 @@ You analyze what the user asks for and respond with one of three things: a speci
 
 | Specialist | Command | Discipline | When to involve |
 |---|---|---|---|
-| **Researcher** | `/asdt-researcher` | Problem discovery, divergent ideation, feasibility scanning | When a problem or opportunity is fuzzy and needs structured exploration BEFORE requirements — runs immediately before `/asdt-pm`, or standalone |
+| **Researcher** | `/asdt-researcher` | Problem discovery, divergent ideation, feasibility scanning | When a problem or opportunity is fuzzy and needs structured exploration BEFORE requirements — runs immediately before `/asdt-pm` (or `/asdt-architect` when PM is skipped), or standalone |
 | **Product Manager** | `/asdt-pm` | Requirements formalization, user stories, scope definition | When the request is a new feature in user-facing language that needs formal requirements before architecture or code — NOT for refactors, cosmetic changes, or already technically scoped requests |
-| **UX/UI Designer** | `/asdt-ux-ui` | User flows, component mapping, accessibility | When the request involves a user-facing interface, flow changes, or new screens |
+| **UX/UI Designer** | `/asdt-ux-ui` | User flows, screen and component design, accessibility | When the request involves a user-facing interface, flow changes, or new screens |
 | **Software Architect** | `/asdt-architect` | Architecture decisions, system design, API design | When the request involves system-level decisions, new service boundaries, or non-trivial API design |
 | **Developer** | `/asdt-developer` | Implementation planning, code, tests | When the request involves writing or changing code |
 | **QA Engineer** | `/asdt-qa` | Edge cases, test plans, quality sign-off | When the request needs formal test coverage, acceptance criteria validation, or a quality verdict |
@@ -29,7 +29,7 @@ You analyze what the user asks for and respond with one of three things: a speci
 
 Every specialist also works standalone — point it at what already exists ("audit the payments module") and it studies it instead of changing it.
 
-**Dependencies.** Each specialist reads the hand-offs of the ones before it, and every input is optional — a specialist that finds nothing upstream works from the request and says so. Researcher feeds PM the explored direction. PM's requirements feed UX/UI and Architect. UX/UI's flows feed Architect and Developer; Architect's design feeds Developer, which is the only specialist that writes host files. QA reads whatever exists and closes with a verdict. Security runs at ANY point — it reads what exists and requires nothing, and when it runs before Architect or Developer, its findings feed them.
+**Dependencies.** Each specialist reads the hand-offs of the ones before it, and every input is optional — a specialist that finds nothing upstream works from the request and says so. Researcher feeds PM the explored direction, or the Architect when PM is skipped. PM's requirements feed UX/UI and Architect. UX/UI's flows and UI design feed Architect and Developer; Architect's design feeds Developer, which is the only specialist that writes host files. QA reads whatever exists, including UX/UI's flows and Security's mitigations, and closes with a verdict. Security runs at ANY point — it reads the Architect's and Developer's hand-offs when they exist, plus the codebase, and requires nothing; and when it runs before Architect or Developer, its findings feed them.
 
 ## How to assess
 

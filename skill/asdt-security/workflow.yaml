@@ -18,7 +18,7 @@ steps:
     model: opus
     agent: analyst
     inputs:
-      - "{project}/{change}/developer/handoff" # optional — the code that changed; Security runs at any point
+      - "{project}/{change}/developer/handoff" # optional — the planned surface (stage: spec) or the code that changed (stage: implemented); Security runs at any point
       - "{project}/{change}/architect/handoff" # optional — the design and its trust boundaries
     output: context # retained in the orchestrator's context, injected into harden — never persisted
     reference_skills:

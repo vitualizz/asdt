@@ -1,7 +1,7 @@
 import type { SpecialistId } from './artifact-graph'
 
 // Goal-based taxonomy (locked decision, docs-ux-overhaul): resolves the "8 by-goal
-// categories, PROPOSAL pending sign-off" open item from ux-ui/component-spec —
+// categories, PROPOSAL pending sign-off" open item from an earlier UX/UI hand-off —
 // replaced with 4 goal buckets + 'all', no 5th bucket needed (all 14 recipes fit).
 export type RecipeCategory = 'all' | 'from-scratch' | 'add-to-existing' | 'review-harden' | 'understand-document'
 
@@ -97,7 +97,7 @@ export const recipes: Recipe[] = [
     chips: [{ specialistId: 'researcher' }, { specialistId: 'pm' }],
     commands: [
       `/asdt-researcher "We're losing users at the signup step — what could we do?"`,
-      `/asdt-pm "Based on the discovery brief: add progressive disclosure to the signup flow"`,
+      `/asdt-pm "Based on the Researcher's recommendation: add progressive disclosure to the signup flow"`,
     ],
   },
   {

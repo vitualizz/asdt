@@ -11,18 +11,18 @@ flowchart TD
 
     B["/asdt-architect · /asdt-developer · …\nSpecialist as orchestrator\nskill/asdt-name/SKILL.md"]
 
-    B -->|inline| C["knowledge-recall · platform-analysis\ncontext injection only · no artifact produced"]
+    B -->|inline| C["preludes · gates\nrun in the orchestrator's own context"]
     B -->|subagent| D["steps/step-name.md\nexecutor-only · never delegates"]
 
     D -.->|"output: context\nintermediate payloads stay in the thread"| B
     D <-->|"mem_save / mem_search\ntopic_key: project/change/role/handoff"| E[(Engram)]
 ```
 
-**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Reads the request and answers one of three ways: a specialist chain, a single specialist, or — when the question is about the STATE of the work ("what did we decide about X?") — the answer itself, read inline from memory. It never executes a specialist step and never writes to memory.
+**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Reads the request and answers one of three ways: a specialist chain, a single specialist, or — when the question is about the STATE of the work ("what did we decide about X?") — the answer itself, read inline from memory. It never executes a specialist step; the only thing it writes is knowledge the user dictates to it (`asdt-core/protocol.md` §1).
 
 **Specialist as orchestrator** (`skill/asdt-{name}/SKILL.md`) — reads `workflow.yaml` and drives the steps. Does not do the specialist work itself — it tells the calling assistant which steps to run inline and which to launch as isolated sub-agents.
 
-**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. No specialist requires another's work: every cross-specialist input is optional and degrades, which is what lets any of them run alone. Each step does one thing and returns. Only a specialist's LAST step persists, and what it persists is that specialist's single hand-off; earlier steps hand their payload back to the orchestrator, which injects it into the next step. Steps never delegate further.
+**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. No specialist requires another's work: every cross-specialist input is optional and degrades, which is what lets any of them run alone. Each step does one thing and returns. A specialist persists ONE hand-off key per change; a step whose payload only feeds the next step declares `output: context` and hands it back to the orchestrator, which injects it there. A role that delivers in stages — the Developer's plan, then its build — writes each stage to that same key. Steps never delegate further.
 
 The full contract — what gets persisted, how inputs arrive, how a step degrades when one is missing — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
 
@@ -53,17 +53,18 @@ Every step in `workflow.yaml` has an `execution:` field:
 
 | Mode | What it means | Produces an artifact? |
 |---|---|---|
-| `inline` | Runs in the orchestrator's context — pure context injection | No |
+| `inline` | Runs in the orchestrator's context — a prelude that injects context, or a gate that pauses for the human | Only if it declares `output_topic_key` |
 | `subagent` | Launched as an isolated sub-agent | Only if it declares `output_topic_key` |
 
-**Inline steps** (`knowledge-recall`, `platform-analysis`) inject context into the orchestrator's thread. They have no `inputs:` or `output_topic_key` — they enrich context for the next step.
+**Inline steps** run in the orchestrator's own context, never as a sub-agent. Preludes (`knowledge-recall`, `platform-analysis`) name the reference they follow in `skill:` and enrich the context for the steps after them. Gates (the Developer's `approve` and `verify`) have no `skill:` — their contract is a section of the specialist's `SKILL.md`, and they re-launch only the sub-agent steps that section names — and one that persists its outcome declares `output_topic_key`. No inline step declares `inputs:`.
 
 **Subagent steps** each declare:
 - `inputs:` — topic keys to retrieve from Engram before starting
 - `output_topic_key` — where to save the hand-off in Engram
 - `output: context` — declared *instead of* `output_topic_key`: the step persists nothing, and the orchestrator keeps its payload and injects it into the next step
-- `context_inputs:` — the earlier `output: context` payloads this step expects, injected as `### INPUT {name}` blocks
+- `context_inputs:` — payloads produced earlier in the same run, each named by its producer's `Produces:` line (a step file's `## Output`, or an inline gate's SKILL.md section) and injected as `### INPUT {name}` blocks
 - `reference_skills:` — which shared skill files to load as guidelines
+- `host_skills:` — optional: skills the host assistant may have installed (e.g. `frontend-design`), injected when present and skipped silently when not
 
 ## Artifact Topic Keys
 
@@ -104,4 +105,4 @@ A run that made a non-obvious decision also appends one line to `{project}/journ
 2. Add the ORCHESTRATOR GATE block to `SKILL.md` — copy from any existing specialist
 3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, and either `output_topic_key:` or `output: context`
 4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-core/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-core/protocol.md` for which of the two applies
-5. Register the specialist in the `Specialist Registry` section of `skill/SKILL.md`
+5. Register the specialist in the `Registry` section of `skill/SKILL.md`

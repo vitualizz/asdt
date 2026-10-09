@@ -5,7 +5,11 @@ Map what an attacker can reach, work out what they could do with it, and check t
 the OWASP Top 10. Analysis only — this step produces no persisted artifact.
 
 ## Inputs
-- `{project}/{change}/developer/handoff` — OPTIONAL. The code that changed
+- `{project}/{change}/developer/handoff` — OPTIONAL. Read its `stage` first. `spec` is a plan,
+  nothing built: map the PLANNED surface from its `files_to_create`/`files_to_modify` and
+  `approach`, and record `ASSUMED: planned surface — nothing built yet` in `open_items`.
+  `implemented`: the code that changed, from `files_changed` — or `code_snippets` when it ran
+  plan-only
 - `{project}/{change}/architect/handoff` — OPTIONAL. The design and its trust boundaries
 - Platform summary — stack and conventions, injected inline
 

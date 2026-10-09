@@ -31,10 +31,11 @@ type inputRef struct {
 }
 
 // stepInfo is the minimal shape of one workflow.yaml step needed to build the
-// dependency graph: identity, execution mode, what it produces, and what it
-// declares as inputs.
+// dependency graph: identity, prompt file, execution mode, what it produces,
+// and what it declares as inputs.
 type stepInfo struct {
 	Name           string
+	Skill          string
 	Execution      string
 	OutputTopicKey string
 	Inputs         []inputRef
@@ -91,6 +92,9 @@ func parseSpecialistGraph(dir string, data []byte) (specialistGraph, error) {
 		info := stepInfo{}
 		if n := mappingValue(stepNode, "name"); n != nil {
 			info.Name = n.Value
+		}
+		if n := mappingValue(stepNode, "skill"); n != nil {
+			info.Skill = n.Value
 		}
 		if n := mappingValue(stepNode, "execution"); n != nil {
 			info.Execution = n.Value
@@ -214,10 +218,10 @@ steps:
 	// Re-measured against the final post-refactor tree. asdt-researcher declares
 	// no inputs at all, so it contributes zero and is absent from this map.
 	wantCounts := map[string]int{
-		"asdt-architect": 3,
-		"asdt-developer": 5,
+		"asdt-architect": 4,
+		"asdt-developer": 7,
 		"asdt-pm":        1,
-		"asdt-qa":        3,
+		"asdt-qa":        5,
 		"asdt-security":  2,
 		"asdt-ux-ui":     1,
 	}
@@ -246,7 +250,7 @@ steps:
 		}
 		total += count
 	}
-	if total != 15 {
-		t.Errorf("total optional markers across the tree = %d, want 15", total)
+	if total != 20 {
+		t.Errorf("total optional markers across the tree = %d, want 20", total)
 	}
 }

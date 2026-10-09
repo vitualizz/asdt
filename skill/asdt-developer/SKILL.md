@@ -39,55 +39,107 @@ code. You do NOT produce architecture decisions, UX specs, or test plans.
 
 ## Orchestration Plan
 
-Judge your own chain from what the request asks for:
+Judge your own chain from the request; the inline preludes run first on every chain. Ambiguous
+between a plan and a build → the plan: it is persisted, so building it later is a resume.
 
 | The request is | Chain |
 |---|---|
 | a pure question or a sanity check | `explore` |
-| a plan — "how would you do this?", "propose the approach" | `explore → spec` *(plan only — no code is written)* |
-| a request to build it | `explore → spec → implement` |
+| a plan — "how would you do this?", "propose the approach" | `explore → spec` *(the plan is persisted and the run stops — no code is written)* |
+| a request to build it | `explore → spec → approve → implement → verify` |
+| a resume — "implement the plan we approved" | `approve → implement → verify`, or `verify` alone *(the record is loaded from memory)* |
 | a review of code that already exists — "code review X", "how is this module doing?" | `review` |
 
-When the request is ambiguous between a plan and a build, produce the plan: `spec` declares
-the edit targets, and `implement` without declared targets writes nothing anyway.
+**A resume finds its record by search, not by slug** (`asdt-core/protocol.md` §1). Candidates are
+open `developer/handoff` records: `stage: spec` resumes at `approve`; `stage: implemented` with
+`mode: writing` and `verification` missing or `ran: false` resumes at `verify`. One → name it in
+that gate's question. Several → list them and ask which one; the pick only selects the record — that record's gate then
+runs in full, never inferred from the pick. None → say so in one
+line and stop: there is nothing to resume, and a build needs its own request.
 
-The inline `knowledge-recall` prelude runs first, always.
+Tests are not a step: `implement` writes them in the same pass, under the same mode and edit roots,
+when `strict_tdd: true` in `.asdt/config.yaml` or the user asked for them.
 
-**Intra-run persistence — you, the orchestrator, own this.** `explore` and `spec` declare
-`output: context`, not an `output_topic_key`. Retain each one's returned payload in YOUR
-context and inject it into the next step as `### INPUT dev-exploration` / `### INPUT dev-spec`.
-They are NEVER written to Engram and NEVER re-fetched. Only `implement` persists, and what it
-persists is `developer/handoff`.
+Step identity, model, inputs, and outputs: `workflow.yaml`. `approve` and `verify` have no step
+file — the two sections below are their whole contract.
 
-Tests are not a step. `implement` writes them in the same pass, under the same mode and the
-same edit roots, when `strict_tdd: true` in `.asdt/config.yaml` or the user asked for them.
+## approve — the plan gate (inline)
 
-Step identity, model, inputs, and outputs: `workflow.yaml`.
+A consent gate where the chain puts it, not the run's clarification turn (`asdt-core/protocol.md`
+§2). Show the human, in plain prose and never the YAML, one line on what the plan built on
+(`## Narration`'s opening line), then the plan —
+- what is in scope, and what is explicitly out; the acceptance criteria, one line each;
+- the visual direction in one line, when the plan carries one;
+- the designed screens and the designed components, one line each listing their names, when
+  the plan carries them — never the designs in full;
+- the exact files to create and to modify — or, with none, that nothing will be written and the
+  code comes back as snippets;
+- every `open_items` entry — what the plan assumed, and any conflict it flagged;
+- when the plan carries a prior delivery (`files_changed`), that approving replaces it.
+
+Then ask ONE question: approve, adjust, or stop. Nothing else rides on it — a knowledge-capture
+proposal waits for the final report.
+
+- **Approve** → launch `implement`.
+- **Adjust** → re-launch `spec` ONCE, with `### INPUT spec-feedback` injected; it persists the
+  revision, and you show it the same way and ask again. A second adjust ends the run at the plan:
+  say the last revision is saved, this latest adjustment is NOT in it, and resuming the plan
+  returns here.
+- **Stop**, or **no human can answer** (a non-interactive harness) → the run ends at the plan,
+  already persisted and resumable. Never infer approval: the next step writes host files.
+
+Produces: `spec-feedback`, only on adjust —
+
+```yaml
+spec: {}         # the spec payload the human was shown
+feedback: ""     # their adjustment, verbatim
+```
+
+## verify — run only on a yes (inline)
+
+Runs after a writing-mode `implement` — after a plan-only one the run ends, nothing to check — or
+first, in a resume of a built record never verified. A consent gate like `approve`; what may run is
+the write boundary's command exception (`asdt-core/protocol.md` §3), and why `implement` never runs
+commands is its own Tests section.
+
+1. **Offer.** Show `suggested_verification.commands` exactly as written and `.expected`, and ask
+   ONE question: run them now? A command outside the §3 exception is never offered — tell the
+   human you dropped it and why. Nothing left to offer → say so and record `ran: false`.
+2. **Declined, or no human can answer** → record `ran: false`. Never claim a pass you did not observe.
+3. **Yes** → run exactly those commands, unmodified, and nothing else; the yes covers re-running
+   them in the fix loop, any other command needs its own. All pass → record `ran: true, passed:
+   true`. Anything fails → the fix loop.
+4. **Fix loop — at most 2 rounds.** Re-launch `implement` with `### INPUT verification-failures`
+   and the spec it ran from — `dev-spec`, or the spec record loaded on a resume, never
+   `implement`'s own payload — so its `allowedEditRoots` stay the same (**never widen them**);
+   then re-run the same commands. All pass → record the pass. Still failing after round 2, or at
+   once on a resume that entered here with no spec → record `ran: true, passed: false`, plus one
+   `open_items` entry per failing command: `verification failing: {command} — {one-line cause}`.
+
+To record, `mem_save` the latest `implement` payload (the loaded record, on a resume) under this
+step's `output_topic_key` with `verification: {ran, passed, summary}` added, `summary` per
+`asdt-core/protocol.md` §5 — your own save, never another `implement` launch.
+
+Produces: `verification-failures`, on each failing round —
+
+```yaml
+round: 1 | 2
+failures:
+  - command: ""
+    output: ""           # the failing part of the output, trimmed — not the whole log
+files_changed: []        # everything this run has written so far, from the latest implement payload
+```
 
 ## Final Output
-`developer/handoff` — the implementation hand-off, persisted at
-`{project}/{change}/developer/handoff`, or `{project}/study/{topic}/developer` when the run
-examines existing code rather than changing it. Consumed by QA. It is the only artifact this
-specialist persists.
+`developer/handoff` — one key, `{project}/{change}/developer/handoff`, written in stages: `spec`
+persists the plan (`stage: spec`), `implement` replaces it with what was built (`stage:
+implemented`), `verify` adds the outcome. A study persists `{project}/study/{topic}/developer` from
+`review` instead. Consumed by QA, Security, and this specialist's later resumes and iterations.
 
 ## Invariants
-- **Write scope (MODE-gated)**: the `implement` step runs in one of two modes,
-  gated by whether declared edit roots are resolved:
-  - **plan-only mode** (default): if NO `files_to_create`/`files_to_modify` targets are declared
-    in `dev-spec`, write NOTHING to the host repo. Produce plan-only output — code as
-    `code_snippets[]` in the hand-off.
-  - **writing mode**: if declared file targets ARE present, they resolve into `allowedEditRoots`
-    (the union of declared `files_to_create` + `files_to_modify` paths), validated against the
-    host repo BEFORE `implement` runs. The specialist may then write REAL files to the host
-    source tree, but ONLY to paths under those declared targets.
-  - **STOP-on-out-of-scope**: if any needed edit falls outside the declared targets, STOP, do not
-    write it, and report the unsafe path back to the orchestrator. Never freelance a write.
-  ASDT's OWN state — config, knowledge, prompt overrides — lives only under `.asdt/` and is never
-  written anywhere else. The writing-mode carve-out above covers ONLY the declared host-source
-  targets of the approved `dev-spec`; it grants no access to ASDT's own bookkeeping.
-  This governs host-source writes. ASDT artifact persistence is separate: the hand-off goes to
-  Engram via `mem_save`, never to `.asdt/artifacts/` or any local path.
+- **Write scope**: only `implement` writes host files, inside the spec's edit roots — its modes and
+  STOP rule are `steps/implement.md`, the boundary `asdt-core/protocol.md` §3
 - Everything this specialist persists ends in the `developer` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
-- A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
-- `implement` writes tests, it NEVER runs them — `suggested_verification.commands` is an offer to the user
+- A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none
+- **No host file is written without approval**: `implement` runs only after `approve` returned approve in this same run

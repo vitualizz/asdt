@@ -2,7 +2,7 @@
 
 ## Purpose
 Make the architectural decision, design the system that follows from it, and emit the
-hand-off Developer and QA consume. One step, one artifact.
+hand-off Developer, QA, and Security consume. One step, one artifact.
 
 ## Inputs
 - `{project}/{change}/pm/handoff` — OPTIONAL. The requirements this design has to satisfy:
@@ -11,12 +11,19 @@ hand-off Developer and QA consume. One step, one artifact.
   interactions the API surface has to serve, and every component `gap` the design must cover
 - `{project}/{change}/security/handoff` — OPTIONAL. Extract: `risks` and `constraints` (the
   hardening checklist) — a finding that reshapes a boundary is a design constraint, not a footnote
+- `{project}/{change}/researcher/handoff` — OPTIONAL. Extract: `what` (the recommended
+  direction) and every `rejected:` decision. **When `pm/handoff` is UNRESOLVED, the
+  researcher's direction frames the problem** and its rejections are out of scope; when PM
+  ran, PM wins — PM already folded discovery into the requirements, and a conflict between
+  them is PM's decision, not yours
 - Platform summary — the stack, conventions, and existing structure, injected inline
 
 All of these arrive ALREADY INJECTED. Do NOT self-fetch. If `pm/handoff` is UNRESOLVED, design
-against the raw request and note `ASSUMED: no PM hand-off — requirements read from the raw
-request` in `open_items`. If `ux-ui/handoff` or `security/handoff` is UNRESOLVED, proceed
-without it — neither ran is the common case, and it needs no `open_items` entry.
+against the raw request, framed by the researcher's direction when it arrived, and note
+`ASSUMED: no PM hand-off — requirements read from the raw request` (or `… from the raw
+request and the researcher's direction`) in `open_items`. If `ux-ui/handoff`,
+`security/handoff`, or `researcher/handoff` is UNRESOLVED, proceed without it — none of them
+running is the common case, and it needs no `open_items` entry.
 
 ## Processing
 

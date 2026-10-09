@@ -41,7 +41,7 @@ export const en: UIStrings = {
       { id: 'developer', name: 'Developer', desc: 'Turns specs and designs into production code, with an implementation plan.', command: '/asdt-developer' },
       { id: 'qa', name: 'QA Engineer', desc: 'Builds the safety net: test plans, acceptance criteria, quality reports.', command: '/asdt-qa' },
       { id: 'security', name: 'Security', desc: 'Finds the gaps an attacker would see first: threat models and hardening.', command: '/asdt-security' },
-      { id: 'ux-ui', name: 'UX/UI Design', desc: 'Shapes the experience: flows, components, and accessibility.', command: '/asdt-ux-ui' },
+      { id: 'ux-ui', name: 'UX/UI Design', desc: 'Designs the experience: flows, screens, components, and accessibility.', command: '/asdt-ux-ui' },
     ],
     orchestrator: {
       id: 'orchestrator',
@@ -189,6 +189,7 @@ export const en: UIStrings = {
     chains: {
       question: 'a question',
       plan: 'a plan',
+      resume: 'resuming a plan',
       build: 'build it',
     },
     specialistSteps: {
@@ -213,11 +214,15 @@ export const en: UIStrings = {
         produces: 'context (inline)',
       },
       'ux-ui:platform-analysis': {
-        purpose: "Load the project's detected design system, conventions and fingerprint",
+        purpose: "Load the project's detected design system, conventions and fingerprint, plus the design surface from config.yaml",
         produces: 'context (inline)',
       },
       'ux-ui:ux-spec': {
-        purpose: 'Turn the requirement into user flows mapped to existing components, with the accessibility each one owes',
+        purpose: "Turn the requirement into user flows for the project's design surface — branches, states, and copy — mapped to existing components, with the accessibility each one owes",
+        produces: 'context — stays in the run',
+      },
+      'ux-ui:ui-design': {
+        purpose: "Design the UI the flows need — every screen's layout, hierarchy, typography, and states, every missing component part by part, and the visual foundation when there is no design system",
         produces: 'ux-ui/handoff',
       },
       'architect:knowledge-recall': {
@@ -236,17 +241,29 @@ export const en: UIStrings = {
         purpose: 'Recall prior decisions relevant to this change',
         produces: 'context (inline)',
       },
+      'developer:platform-analysis': {
+        purpose: 'Load platform conventions and the design surface from knowledge.yaml and config.yaml',
+        produces: 'context (inline)',
+      },
       'developer:explore': {
         purpose: 'Read the area of the codebase that will change, and name the open questions',
         produces: 'context — stays in the run',
       },
       'developer:spec': {
         purpose: 'Define scope, acceptance criteria, the technical approach, and the files implement may touch',
-        produces: 'context — stays in the run',
+        produces: 'developer/handoff (stage: spec) — saved, resumable, and handed to implement',
+      },
+      'developer:approve': {
+        purpose: 'Show you the scope, the acceptance criteria and the exact files, then wait for approve, adjust or stop before any file is written',
+        produces: 'your go-ahead (inline)',
       },
       'developer:implement': {
-        purpose: 'Write the code — and its tests under strict TDD — within the edit roots the spec declared',
-        produces: 'developer/handoff',
+        purpose: 'Write the code — and its tests under strict TDD — within the edit roots the approved spec declared; it never runs them',
+        produces: 'developer/handoff (stage: implemented)',
+      },
+      'developer:verify': {
+        purpose: 'Offer the check commands, run them only on your yes, and drive at most two fix rounds within the same files',
+        produces: 'the verification outcome, added to developer/handoff',
       },
       'security:knowledge-recall': {
         purpose: 'Recall prior findings, threat models and mitigations',
@@ -284,13 +301,13 @@ export const en: UIStrings = {
             description: 'PM defines scope, writes user stories with acceptance criteria, saves pm/handoff to the knowledge base.',
           },
           architect: {
-            description: 'Architect reads the backlog entry, designs the token flow and API contracts, saves architectural-decision + system-design-final.',
+            description: 'Architect reads pm/handoff, designs the token flow and API contracts, saves architect/handoff.',
           },
           developer: {
-            description: 'Developer reads the ADR and system design, implements the magic link handler, saves dev-implementation.',
+            description: 'Developer reads pm/handoff and architect/handoff, specs the magic link handler, waits for your approval, implements it and saves developer/handoff.',
           },
           security: {
-            description: 'Security reviews the auth mechanism, runs STRIDE and OWASP analysis, saves security-findings + hardening-checklist.',
+            description: 'Security reviews the auth mechanism, runs STRIDE and OWASP analysis, saves security/handoff — findings with mitigations and a hardening checklist.',
           },
         },
       },
@@ -301,7 +318,7 @@ export const en: UIStrings = {
             description: 'Developer reads prior artifacts from the knowledge base automatically — even from a previous session. No manual context passing.',
           },
           qa: {
-            description: 'QA loads dev-implementation and runs its full workflow: AC validation, edge-case analysis, and test case generation.',
+            description: 'QA loads developer/handoff and plans the tests: acceptance-criteria gaps, edge cases, Given/When/Then cases and a go/no-go verdict.',
           },
         },
       },
@@ -327,7 +344,7 @@ export const en: UIStrings = {
       'explore-before-planning': {
         title: 'Explore before planning (fuzzy problem)',
         note: 'When the problem is unclear and you need discovery before requirements.',
-        kbNote: 'Researcher produces a discovery brief with a recommended direction — hand it to PM next.',
+        kbNote: 'Researcher saves researcher/handoff with one recommended direction — PM picks it up next (or the Architect, when PM is skipped).',
       },
       'lock-scope-user-stories': {
         title: 'Lock scope and write user stories',
@@ -347,11 +364,11 @@ export const en: UIStrings = {
       },
       'design-new-ui-component': {
         title: 'Design a new UI component',
-        note: 'When you need a component spec before the developer starts coding.',
+        note: 'When you need flows, screens and components designed, and accessibility, before the developer starts coding.',
       },
       'validate-test-coverage': {
         title: 'Validate test coverage before shipping',
-        note: 'Run after Developer — QA reads the implementation artifact automatically.',
+        note: 'Run after Developer — QA reads developer/handoff automatically.',
       },
       'pickup-developer-existing-adr': {
         title: 'Pick up at Developer after an existing ADR',
@@ -361,7 +378,7 @@ export const en: UIStrings = {
       'add-security-review-inflight': {
         title: 'Add a security review to an in-flight pipeline',
         note: 'Run Security at any point without restarting the pipeline.',
-        kbNote: 'Security reads system-design-final and dev-implementation from the knowledge base.',
+        kbNote: 'Security reads architect/handoff and developer/handoff from the knowledge base.',
       },
       'qa-completed-feature-no-pipeline': {
         title: 'QA a completed feature without a full pipeline',
@@ -382,7 +399,7 @@ export const en: UIStrings = {
       },
       'asdt-init': {
         title: 'Initialize ASDT',
-        oneLiner: 'Detects your stack and creates .asdt/config.yaml and .asdt/knowledge/platform.yaml.',
+        oneLiner: 'Detects your stack and creates .asdt/config.yaml and .asdt/knowledge/knowledge.yaml.',
       },
       asdt: {
         title: 'Pipeline routing suggestion',
@@ -427,31 +444,31 @@ export const en: UIStrings = {
       architect: {
         teaser: 'Decides how the pieces fit together before anyone writes code.',
         invokeWhen: 'The solution touches service boundaries, data models, or API contracts, or has two viable technical approaches worth documenting',
-        produces: 'architectural-decision (ADR) + system-design-final — data model, API surface, service boundaries',
+        produces: 'architect/handoff — the decision with the alternatives it beat, data model, API surface',
         doNotUseWhen: 'You need implementation code, test plans, or UX specs — Architect produces decisions, not code',
       },
       developer: {
-        teaser: 'Turns a settled design into an ordered implementation plan or real code.',
-        invokeWhen: 'The shape of the solution is settled and you need an ordered implementation plan or production code written to the repo',
-        produces: 'developer/dev-implementation — ordered file manifest and code plan',
+        teaser: 'Turns a settled design into a plan you approve, then real code.',
+        invokeWhen: 'The shape of the solution is settled and you need an implementation plan or production code written to the repo',
+        produces: 'developer/handoff — the approved plan (stage: spec), then the files written and the verification outcome',
         doNotUseWhen: "You haven't locked scope or architecture yet — Developer will implement against ambiguous requirements",
       },
       qa: {
         teaser: 'Turns acceptance criteria into a systematic test plan with a go/no-go verdict.',
         invokeWhen: "Code is ready for review, AC exists but hasn't been validated, or you need systematic edge case and boundary coverage",
-        produces: 'test-plan — AC coverage %, uncovered gaps, full Given/When/Then test case list, quality verdict',
+        produces: 'qa/handoff — acceptance-criteria gaps, edge cases, Given/When/Then test cases, go/no-go verdict',
         doNotUseWhen: 'You want executable test code written — QA produces test specifications, not runnable code',
       },
       security: {
         teaser: 'Hunts for auth, data, and integration risks before they ship.',
         invokeWhen: 'The feature touches auth, sessions, PII, external integrations, webhooks, or new public API endpoints',
-        produces: 'security-findings (severity-rated, CWE-referenced) + hardening-checklist — must-fix vs can-defer',
+        produces: 'security/handoff — findings rated high/medium/low, each with a concrete mitigation, plus a hardening checklist',
         doNotUseWhen: 'You want implementation code or architectural decisions — Security produces findings and checklists only',
       },
       'ux-ui': {
-        teaser: 'Maps flows and components before implementation starts.',
+        teaser: 'Designs the flows, screens, and components before implementation starts.',
         invokeWhen: 'A new screen or feature-level UI needs design before implementation begins, or user flows need mapping',
-        produces: 'ux-brief (flows, IA, success criteria) + component-spec — inventory of reused/extended/new components',
+        produces: 'ux-ui/handoff — flows with their states and copy, every screen and missing component designed, accessibility, and a visual direction when there is no design system',
         doNotUseWhen: 'The screen has already been built — a UX spec delivered after implementation is too late to shape it',
       },
       researcher: {

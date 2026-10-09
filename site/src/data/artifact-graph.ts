@@ -19,42 +19,54 @@ export interface SpecialistArtifacts {
 export const artifactGraph: Record<SpecialistId, SpecialistArtifacts> = {
   researcher: {
     reads: [{ key: 'Problem (raw)', sentinel: true }],
-    writes: [{ key: 'researcher/handoff', consumedBy: ['pm'] }],
+    writes: [{ key: 'researcher/handoff', consumedBy: ['pm', 'architect'] }],
   },
   pm: {
     reads: [
       { key: 'Request (raw)', sentinel: true },
       { key: 'researcher/handoff', optional: true },
     ],
-    writes: [{ key: 'pm/handoff', consumedBy: ['architect', 'developer', 'qa', 'ux-ui'] }],
+    writes: [{ key: 'pm/handoff', consumedBy: ['ux-ui', 'architect', 'developer', 'qa'] }],
   },
   'ux-ui': {
     reads: [{ key: 'pm/handoff', optional: true }],
-    writes: [{ key: 'ux-ui/handoff' }],
+    writes: [{ key: 'ux-ui/handoff', consumedBy: ['architect', 'developer', 'qa'] }],
   },
   architect: {
-    reads: [{ key: 'pm/handoff', optional: true }],
+    reads: [
+      { key: 'pm/handoff', optional: true },
+      { key: 'ux-ui/handoff', optional: true },
+      { key: 'security/handoff', optional: true },
+      { key: 'researcher/handoff', optional: true },
+    ],
     writes: [{ key: 'architect/handoff', consumedBy: ['developer', 'qa', 'security'] }],
   },
   developer: {
+    // developer/handoff is also read back by the Developer itself when a later
+    // run resumes the persisted plan ("implement the plan we approved").
     reads: [
       { key: 'pm/handoff', optional: true },
       { key: 'architect/handoff', optional: true },
+      { key: 'ux-ui/handoff', optional: true },
+      { key: 'security/handoff', optional: true },
+      { key: 'developer/handoff', optional: true },
     ],
-    writes: [{ key: 'developer/handoff', consumedBy: ['qa', 'security'] }],
+    writes: [{ key: 'developer/handoff', consumedBy: ['qa', 'security', 'developer'] }],
   },
   security: {
     reads: [
       { key: 'developer/handoff', optional: true },
       { key: 'architect/handoff', optional: true },
     ],
-    writes: [{ key: 'security/handoff' }],
+    writes: [{ key: 'security/handoff', consumedBy: ['architect', 'developer', 'qa'] }],
   },
   qa: {
     reads: [
       { key: 'pm/handoff', optional: true },
       { key: 'developer/handoff', optional: true },
       { key: 'architect/handoff', optional: true },
+      { key: 'ux-ui/handoff', optional: true },
+      { key: 'security/handoff', optional: true },
     ],
     writes: [{ key: 'qa/handoff' }],
   },

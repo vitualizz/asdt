@@ -25,7 +25,9 @@ const rows: Row[] = PIPELINE_ORDER.map((id) => {
   const config = specialistSteps[id]
   const chain = config.chains[config.chains.length - 1]
   const stepIds: string[] = chain.steps
-  const lastStep = config.steps[stepIds[stepIds.length - 1]]
+  // The overview line describes the specialist's last sub-agent step — the one that
+  // delivers — not a trailing inline gate such as the Developer's `verify`.
+  const lastStep = [...stepIds].reverse().map((sid) => config.steps[sid]).find((s) => s?.execution === 'subagent')
   const purpose = (lastStep ? t.data.specialistSteps[`${id}:${lastStep.id}`]?.purpose : undefined) ?? ''
   const href = getLocalePath(`/docs/specialists/${id}`, lang)
 

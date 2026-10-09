@@ -51,7 +51,7 @@ A single hand-off at `{project}/{change}/researcher/handoff`:
 
 `decisions` is where the exploration survives: not just what it picked, but what it looked at and set down.
 
-Consumed by **PM** as an optional input: the recommended direction becomes its starting point, and the rejected ones seed its out-of-scope list.
+Consumed by **PM** as an optional input: the recommended direction becomes its starting point, and the rejected ones seed its out-of-scope list. The **Architect** reads it too — and when PM is skipped, the direction frames the design in PM's place, with the rejected directions out of scope.
 
 ## On its own
 
@@ -64,7 +64,7 @@ Nothing has to be waiting to be built:
 
 ## Where it sits
 
-The only **pre-requirements** specialist. It runs before PM and never replaces it: it recommends a direction, PM decides what gets built. It also works standalone, when structured exploration is all you want.
+The only **pre-requirements** specialist. It runs before PM and never replaces it: it recommends a direction, and PM — or the Architect, when PM is skipped — decides what gets built. It also works standalone, when structured exploration is all you want.
 
 ## Boundaries
 

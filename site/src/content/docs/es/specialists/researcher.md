@@ -51,7 +51,7 @@ Un único hand-off en `{project}/{change}/researcher/handoff`:
 
 En `decisions` es donde sobrevive la exploración: no solo qué eligió, sino qué miró y descartó.
 
-Lo consume el **PM**, como entrada opcional: la dirección recomendada le da el punto de partida y las descartadas alimentan su alcance fuera.
+Lo consume el **PM**, como entrada opcional: la dirección recomendada le da el punto de partida y las descartadas alimentan su alcance fuera. También lo lee el **Arquitecto** — y cuando se saltea el PM, la dirección enmarca el diseño en lugar del PM, con las direcciones descartadas fuera de alcance.
 
 ## Por su cuenta
 
@@ -64,7 +64,7 @@ No hace falta que haya nada que construir todavía:
 
 ## Su lugar en el pipeline
 
-Es el único especialista **pre-requisitos**. Corre antes que el PM y nunca lo reemplaza: recomienda una dirección, el PM decide qué se construye. También funciona solo, cuando lo único que querés es exploración estructurada.
+Es el único especialista **pre-requisitos**. Corre antes que el PM y nunca lo reemplaza: recomienda una dirección, y el PM — o el Arquitecto, cuando se saltea el PM — decide qué se construye. También funciona solo, cuando lo único que querés es exploración estructurada.
 
 ## Límites
 

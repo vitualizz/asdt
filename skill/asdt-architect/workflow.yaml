@@ -13,7 +13,7 @@ steps:
 
   - name: design
     skill: steps/design.md
-    description: Make the architectural decision, design the data model and API surface, and emit the hand-off Developer and QA consume
+    description: Make the architectural decision, design the data model and API surface, and emit the hand-off Developer, QA, and Security consume
     execution: subagent
     model: opus
     agent: analyst
@@ -21,6 +21,7 @@ steps:
       - "{project}/{change}/pm/handoff" # optional — the requirements this design satisfies; degrade gracefully if absent
       - "{project}/{change}/ux-ui/handoff" # optional — the flows and components the design has to serve
       - "{project}/{change}/security/handoff" # optional — findings and checklist the design has to absorb
+      - "{project}/{change}/researcher/handoff" # optional — the explored direction; frames the problem only when PM was skipped
     output_topic_key: "{project}/{change}/architect/handoff"
     reference_skills:
       - ../asdt-core/references/api-design.md

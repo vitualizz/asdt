@@ -63,7 +63,7 @@ Step identity, model, inputs, and outputs: `workflow.yaml`.
 ## Final Output
 `security/handoff` — findings and hardening checklist as sections of ONE artifact, persisted
 at `{project}/{change}/security/handoff`, or `{project}/study/{topic}/security` when the run
-audits what already exists. Consumed by Developer and Architect.
+audits what already exists. Consumed by Developer, Architect, and QA.
 
 ## Invariants
 - **Write scope**: this specialist writes NO files. Its output is `security/handoff` via `mem_save` — never `.asdt/artifacts/`, never the host source tree, never any local path
@@ -71,6 +71,6 @@ audits what already exists. Consumed by Developer and Architect.
 - **Analysis only**: reason over the change and inspect the repository for evidence; never run scanners, dependency audits, or any other command
 - Everything it persists ends in the `security` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
-- A missing input degrades to an `ASSUMED:` entry in `open_items` — never a failed step
+- A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none
 - Every finding MUST have a concrete mitigation
 - Severity is one word — `high`, `medium`, or `low`. No CVSS, no numeric scores

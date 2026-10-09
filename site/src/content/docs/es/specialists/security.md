@@ -15,7 +15,7 @@ El especialista de Seguridad realiza modelado de amenazas y análisis de segurid
 
 El invariante crítico: **Seguridad no tiene predecesor requerido.** Puede correr en cualquier etapa — en un proyecto nuevo sin artefactos previos, a mitad del desarrollo o después del lanzamiento. Si existen artefactos previos (decisiones de arquitectura, implementación), los lee. Si no, trabaja desde el contexto de plataforma y la petición sola, notando las brechas en `open_items` y continuando.
 
-La profundidad está controlada por `risk_surface`, no por complejidad. Este es el único especialista donde la pregunta no es "¿qué tan compleja es la feature?" sino "¿qué tan grande es la superficie de ataque?"
+La profundidad está controlada por la superficie de riesgo, no por complejidad — el especialista la juzga según lo que toca el cambio: autenticación, secretos, manejo de datos, integraciones externas. Este es el único especialista donde la pregunta no es "¿qué tan compleja es la feature?" sino "¿qué tan grande es la superficie de ataque?" La superficie de riesgo define qué tan profundo va el análisis; los dos pasos, `assess` y `harden`, corren siempre.
 
 ## Cuándo invocarlo
 
@@ -39,18 +39,18 @@ Mapea la superficie, la evalúa y te deja hallazgos priorizados con mitigación 
 
 ## Posición en el pipeline
 
-**Sin predecesor requerido** — invocalo en cualquier punto. Para máximo impacto, correlo después de que el Arquitecto produce `system-design` (Seguridad puede analizar la superficie de API y los límites de servicios). Para un modelo de amenazas temprano en el diseño, correlo antes de que la arquitectura esté finalizada para exponer riesgos a nivel de diseño antes de que queden incorporados.
+**Sin predecesor requerido** — invocalo en cualquier punto. Para máximo impacto, correlo después del Arquitecto (lee `architect/handoff` para la superficie de API y los límites de confianza, y `developer/handoff` para el código que cambió, cuando existen). Si recibe un plan del Developer todavía sin construir, mapea la superficie planificada a partir de los archivos que declara el plan y registra que todavía no hay nada construido. Para un modelo de amenazas temprano en el diseño, correlo antes de que la arquitectura esté finalizada para exponer riesgos a nivel de diseño antes de que queden incorporados.
 
-Sus outputs (`security-findings` + `hardening-checklist`) son consumidos por Developer y Arquitecto para abordar las mitigaciones.
+Su hand-off lo leen el Arquitecto, el Developer y QA.
 
 ## Qué produce
 
-Dos artefactos finales:
+`security/handoff` — hallazgos y checklist de hardening como secciones de UN solo artefacto (`{project}/study/{topic}/security` cuando la corrida audita algo que ya existe):
 
-- **`security-findings`** — todos los hallazgos con ratings de severidad (Crítico/Alto/Medio/Bajo siguiendo CVSS-lite), referencias CWE y recomendaciones concretas
-- **`hardening-checklist`** — ítems accionables agrupados por esfuerzo, con separación de debe-corregirse-antes-del-lanzamiento vs. puede-diferirse
+- **Hallazgos** — de mayor a menor severidad, cada uno con una severidad de una palabra (`high`, `medium`, `low`), qué gana un atacante, la evidencia que lo respalda y la mitigación concreta que lo cierra
+- **Checklist de hardening** — ítems ordenados, cada uno verificable como hecho, más dónde caen las mitigaciones
 
-Consumido por: **Developer** (para implementar mitigaciones), **Arquitecto** (para ajustar decisiones de diseño que introdujeron riesgos estructurales).
+Consumido por: **Arquitecto** (un hallazgo que redefine un límite es una restricción de diseño), **Developer** (cada mitigación que cae en los archivos del cambio se vuelve una restricción del spec), **QA** (cada hallazgo recibe un caso de prueba que demuestra que su mitigación se sostiene; un `high` cuya mitigación no deja rastro en los archivos cambiados o planificados del Developer es un `no-go`).
 
 ## Patrones comunes
 
@@ -75,4 +75,5 @@ Consumido por: **Developer** (para implementar mitigaciones), **Arquitecto** (pa
 - No produce decisiones de arquitectura ni specs de UX
 - No produce planes de prueba (aunque sus hallazgos informan qué debería cubrir QA)
 - Cada hallazgo debe tener una mitigación concreta — "agregar monitoring" no es una mitigación
-- La severidad siempre sigue CVSS-lite: Crítico / Alto / Medio / Bajo — sin otra escala
+- La severidad es una palabra — `high`, `medium` o `low`. Sin CVSS, sin puntajes numéricos
+- Nunca corre scanners, auditorías de dependencias ni ningún otro comando — razona sobre el cambio y lee el repositorio

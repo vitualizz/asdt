@@ -11,7 +11,7 @@ import AllSpecialistsOverview from '@components/AllSpecialistsOverview.astro'
 
 ## The execution model
 
-ASDT gives you structure without removing control. When you run a specialist, it orchestrates a focused sequence of steps — each one producing a single artifact, each one reading only what the previous step produced.
+ASDT gives you structure without removing control. When you run a specialist, it orchestrates a short, focused sequence of steps — each one receiving only what it needs from the steps before it — and the run ends by saving one hand-off for the rest of the team.
 
 You invoke the specialists. ASDT never runs them automatically. That is intentional: every step where a human confirms a plan is a step where wrong assumptions get caught before they compound.
 
@@ -19,27 +19,29 @@ The `/asdt` advisor analyzes your request and suggests which specialists to invo
 
 ## Knowledge flows forward automatically
 
-Every specialist step produces one artifact — a structured document saved to the knowledge base with a stable key. The next specialist retrieves it by key. No manual context-passing. No copy-pasting between commands.
+Every specialist run that produces something for the team saves one hand-off (a question-only Developer run saves none) — a structured document stored in the knowledge base at a stable key, `{project}/{change}/{role}/handoff`. What its steps pass to each other along the way stays inside the run. The next specialist retrieves the hand-off by key. No manual context-passing. No copy-pasting between commands.
 
 This means:
 
 - **Specialists are decoupled.** The Developer reads the Architect's decision record as a document — not a shared variable, not a file import.
 - **Artifacts survive sessions.** Run PM on Monday, continue with Architect on Thursday. The knowledge base holds the context.
-- **Missing inputs degrade gracefully.** If an artifact is missing, the next specialist notes it in a running list of gaps called `open_items` and proceeds with whatever is available.
+- **Missing inputs degrade gracefully.** If a hand-off is missing, the next specialist notes it in a running list of gaps called `open_items` (prefixed `ASSUMED:`) and proceeds with whatever is available.
+- **You see the hand-offs happen.** Every specialist's report opens with one line on what it built on — which teammates' work arrived and what was missing — and closes proposing the next specialist as a command you can copy.
 
-## Specialists adapt to complexity
+## Specialists judge their own depth
 
-Every specialist runs the right depth of steps for the complexity of the request. A quick bugfix runs fewer steps than a new authentication system. The overview below shows the full step sequence at moderate complexity:
+Every specialist judges how deep to go from the request — a quick bugfix gets a lighter pass than a new authentication system. Depth changes how thorough each step's output is; which steps run follows from what you asked for. The overview below shows each specialist's steps — for the Developer, its full build chain:
 
 <AllSpecialistsOverview lang="en" />
 
-Steps run as isolated sub-agents (separate single-task AI runs that don't see each other's reasoning) — they don't share context with each other, which prevents earlier reasoning from leaking into later steps. Each step reads only its declared inputs, writes one artifact, and hands off.
+The main steps run as isolated sub-agents (separate single-task AI runs that don't see each other's reasoning) — they don't share context with each other, which prevents earlier reasoning from leaking into later steps. Each one receives only its declared inputs, does its one job, and hands back. The short `inline` steps — recalling memory, loading the platform summary, and the Developer's approval and verification gates — run in your assistant's own context.
 
 ## The human is always in the loop
 
-ASDT enforces a soft gate at two points:
+ASDT enforces a gate at three points:
 
 1. **After `/asdt`** — the pipeline advisor presents a routing plan and waits for confirmation before telling you which commands to run.
 2. **Between specialists** — you choose when to run the next one. Nothing is automated.
+3. **Before the Developer writes or runs anything** — it shows you its spec (scope, acceptance criteria, the exact files) and waits for approve, adjust, or stop before writing a single file. After implementing, it offers the check commands — never one that would rewrite files — and runs them only on your yes.
 
 This isn't a limitation. It's the design. AI-generated architecture decisions benefit from human review before a developer acts on them. QA plans benefit from human review before they define what "done" means. ASDT gives you the structure; you apply the judgment.

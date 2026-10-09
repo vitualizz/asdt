@@ -124,7 +124,7 @@ Invoke any of these from inside your AI assistant:
 | `/asdt-developer` | Implementation plan with production code and tests | Step-by-step plan |
 | `/asdt-qa` | Test plan and acceptance criteria | Test cases, quality report |
 | `/asdt-security` | Threat model and hardening checklist | Security findings |
-| `/asdt-ux-ui` | User flows, component specs, responsive strategy | UX brief, component spec |
+| `/asdt-ux-ui` | User flows, screen and component design, accessibility | UX/UI hand-off: flows, screens, component designs |
 | `/asdt-researcher` | Discovery and feasibility before requirements exist | Discovery brief |
 
 **Unsure which one to use? Start with `/asdt`** — it points you to the right specialists for the job.

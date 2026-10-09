@@ -13,7 +13,7 @@ locale: en
 
 The Architect Specialist makes the technical decisions that everything else is built on. It evaluates competing approaches, documents the chosen path as an Architecture Decision Record (ADR), and produces a concrete system design with data models, API surfaces, and service boundaries — all before a single line of implementation code is written.
 
-Every decision produced by the Architect comes with alternatives considered and consequences documented — including negative consequences. A decision record with only positive consequences is incomplete. This forces honest trade-off analysis instead of post-hoc justification.
+Every decision names two or three viable approaches and records, in the same block, why the chosen one won and why each alternative lost — that block is the decision record; there is no separate ADR artifact. It defaults to the simplest approach that satisfies the acceptance criteria, and spends extra rigor only where a choice is hard to reverse or visible to others. This forces honest trade-off analysis instead of post-hoc justification.
 
 The Architect Specialist never writes implementation code, UX specs, or test plans. Its one job is to make the structural decision that the Developer can build against without ambiguity.
 
@@ -38,16 +38,18 @@ What it finds is kept, so the next run over that area starts already knowing it.
 
 ## Pipeline position
 
-Typically runs **after PM** (reads `pm/handoff`) and **before Developer** (Developer reads `architect/handoff`). On simple changes it is not called at all — the Developer handles those directly. When it does run, it runs one step, `design`, and how deep that step goes is its own call.
+Typically runs **after PM** and **before Developer** (Developer reads `architect/handoff`). It reads whatever exists upstream: `pm/handoff` (the requirements the design satisfies), `ux-ui/handoff` (the flows and component gaps the API surface has to serve), `security/handoff` (findings that reshape a boundary become design constraints), and `researcher/handoff` — which frames the problem only when PM was skipped; when PM ran, PM wins. All are optional. On simple changes it is not called at all — the Developer handles those directly. When it does run, it runs one step, `design`, and how deep that step goes is its own call.
 
 ## What it produces
 
-Two final artifacts consumed by downstream specialists:
+`architect/handoff` — the decision and the system design that follows from it, in ONE hand-off:
 
-- **`architectural-decision`** — the ADR with full context, decision, alternatives, consequences, and key constraints the Developer must not violate
-- **`system-design-final`** — data model, API surface, service boundaries, key sequence, and top risks. This is the consolidated handoff artifact; the intermediate `architect/system-design` it is built from is a `complex`-only step output, not the thing downstream specialists read
+- **The decision** — the chosen approach first, then each rejected alternative with why it lost
+- **The design** — the data model and the API surface (or why the change has neither), the constraints the implementation has to respect, where in the codebase it lands, and the risks with their mitigations
 
-Consumed by: **Developer** (reads both), **QA** (reads `architectural-decision` to understand design context).
+Judging what already exists runs `review` instead and saves `{project}/study/{topic}/architect`.
+
+Consumed by: **Developer** (the decision is settled — its spec restates it at implementation granularity), **QA** (the design and its declared risks), **Security** (the API surface and trust boundaries).
 
 NFR budgets, when PM set any, arrive inside `pm/handoff.constraints` and the design has to live within them. When PM never ran, the design proceeds and records the gap rather than inventing a budget.
 

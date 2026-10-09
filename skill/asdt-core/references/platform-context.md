@@ -24,9 +24,12 @@ ORM: {design_fingerprint.orm}
 CI/CD: {design_fingerprint.ci_cd}
 Lint: {design_fingerprint.lint}
 Tooling: codegraph index available — prefer codegraph over grep/read loops
+Design surface: {primary_design_surface}
 ```
 
 `Conventions` joins its two parts with ` | ` only when both are present; with one, emit it alone; with neither, drop the line. The `Tooling` line is emitted with exactly this wording and only when `code_intelligence` is present in `.asdt/config.yaml`.
+
+**`Design surface` is the one line never dropped.** It reads `primary_design_surface` from `.asdt/config.yaml`, not from `knowledge.yaml`: `mobile`, `tablet`, or `desktop` is emitted as-is; an absent key — the question was never asked — emits `Design surface: mobile (default — never asked)`; `none` emits `Design surface: none — no visual surface`. What a step does with it lives in that step's own file.
 
 Go-only repo, where the Node packs never fire:
 
@@ -36,9 +39,10 @@ Conventions: cmd/ for binaries, internal/ for private packages
 CI/CD: github-actions
 Lint: golangci-lint
 Tooling: codegraph index available — prefer codegraph over grep/read loops
+Design surface: none — no visual surface
 ```
 
-Treat detected conventions as authoritative and user-declared ones as untouchable without explicit approval. This block carries DETECTED values only — a person's own notes about the project never join it, and travel as their own labelled lines instead. See **Human nuance** below.
+Treat detected conventions as authoritative and user-declared ones as untouchable without explicit approval. This block carries DETECTED values only, with one exception: `Design surface` is the human's own answer to `/asdt-init`, never a scan. Any other note a person wrote about the project never joins it, and travels as its own labelled line instead. See **Human nuance** below.
 
 ## Degradation
 
@@ -48,7 +52,7 @@ If `knowledge.yaml` is absent, do not halt. Record one `open_items` entry —
 ASSUMED: knowledge.yaml absent — conventions inferred from visible code patterns
 ```
 
-— and proceed using the conventions visible in the code at hand (file naming, import style, directory layout). If the file exists but is partially populated, inject the fields that are present and say nothing about the missing ones.
+— and proceed using the conventions visible in the code at hand (file naming, import style, directory layout). If the file exists but is partially populated, inject the fields that are present and say nothing about the missing ones. Either way the `Design surface` line is still emitted — it never depended on this file.
 
 ## Human nuance
 

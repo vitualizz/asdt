@@ -17,10 +17,10 @@ ASDT resuelve esto con una base de conocimiento. Cada artefacto que produce un e
 
 ## Cómo fluye el conocimiento
 
-Cada paso de cada especialista produce un artefacto. Ese artefacto se guarda en la base de conocimiento con dos identificadores:
+Cada corrida de un especialista guarda un hand-off. Se almacena en la base de conocimiento con dos identificadores:
 
-- Un **título legible por humanos** — ej. `"add-auth/developer/dev-implementation"`
-- Una **clave estable** para recuperación automática — usada por los especialistas siguientes para obtener exactamente el artefacto que necesitan
+- Un **título legible por humanos** — ej. `"add-auth/developer/handoff"`
+- Una **clave estable** para recuperación automática — `{project}/{change}/{role}/handoff`, usada por los especialistas siguientes para obtener exactamente el hand-off que necesitan
 
 Cuando corre el siguiente especialista, consulta la base de conocimiento por clave. Si el artefacto existe, procede normalmente. Si falta, anota la brecha en `open_items` y continúa con lo que tiene disponible — sin errores duros, sin pipelines bloqueados.
 
@@ -71,7 +71,15 @@ Retomar un pipeline después de cerrar una sesión es igual que continuarlo en m
 /asdt-developer Implementar basándose en el ADR del Arquitecto
 ```
 
-El Developer busca el artefacto del Arquitecto en la base de conocimiento por clave. Si lo encuentra, procede normalmente. Si no, anota el input faltante y continúa con el contexto disponible.
+El Developer busca el hand-off del Arquitecto en la base de conocimiento por clave. Si lo encuentra, procede normalmente. Si no, anota el input faltante y continúa con el contexto disponible.
+
+Lo mismo vale para el propio plan del Developer. El plan se guarda bajo la clave del Developer antes de escribir nada, así que una sesión posterior puede retomarlo donde quedó:
+
+```
+/asdt-developer "implementá el plan que aprobamos"
+```
+
+Encuentra el spec guardado y va directo a la compuerta de aprobación — o, si el plan ya se construyó pero nunca se chequeó, directo a la verificación. Una vez construido, la misma clave guarda qué se escribió y cómo salió la verificación.
 
 Los límites de sesión no importan. El output del Arquitecto del lunes es tan legible para el Developer del jueves como si hubieran corrido uno tras el otro.
 
@@ -81,6 +89,6 @@ Cada llamada a `mem_save` — la llamada de guardado que un especialista usa par
 
 ## Qué no es Engram
 
-Engram no es un sistema de archivos. Los artefactos son documentos, no archivos de código. Cuando el Developer produce snippets de código como parte de su artefacto de implementación, esos snippets viven dentro del documento de Engram — son especificaciones de qué escribir, no archivos en disco. El humano (o el asistente de IA en un paso posterior) los aplica al codebase real.
+Engram no es un sistema de archivos. Los artefactos son documentos, no archivos de código. Cuando el Developer escribe código, escribe archivos reales en tu repositorio — solo los que aprobaste — y su hand-off registra qué archivos cambiaron y por qué. Cuando no tiene archivos que escribir (un plan sin destinos declarados), el código vuelve como snippets dentro del documento de Engram — especificaciones de qué escribir, no archivos en disco.
 
 Esta separación es intencional. Los archivos de código tienen historial de git. Los artefactos tienen la base de conocimiento. Cada uno vive donde corresponde.

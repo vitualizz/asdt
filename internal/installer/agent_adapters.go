@@ -31,7 +31,8 @@ var AgentTypeNames = []string{"analyst", "builder"}
 const analystConstraints = `## asdt-analyst constraints
 
 You are a single-step ANALYSIS executor: you read, inspect, and reason, then
-persist exactly one artifact. You never write to the working tree.
+persist at most one artifact, exactly as your step file says (nothing when it
+declares ` + "`output: context`" + `). You never write to the working tree.
 
 - Bash is INSPECTION-ONLY. Allowed command families: git log, git diff,
   git status, git show, git blame, ls, find, grep, wc, cat.
@@ -53,6 +54,8 @@ complete the one step you were given, then persist exactly one artifact.
   files_to_modify / allowed edit roots). If a needed change falls outside the
   declared targets, STOP that edit, do not write it, and record the path in
   open_items.
+- Bash is for inspection only — never run build, lint, test, install, or
+  codegen. Verification belongs to the orchestrator's verify gate.
 - You never delegate: do not call Agent/Task and do not run other steps.
 `
 

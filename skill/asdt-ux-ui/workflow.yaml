@@ -8,21 +8,38 @@ steps:
 
   - name: platform-analysis
     skill: ../asdt-core/references/platform-context.md
-    description: Load and inject the project's detected design system, conventions, and design fingerprint from knowledge.yaml
+    description: Load and inject the project's detected design system, conventions, and design fingerprint from knowledge.yaml, plus the design surface from config.yaml
     execution: inline
 
+  # Under `Design surface: none` the orchestrator launches neither ux-spec nor ui-design: it
+  # persists a minimal ux-ui/handoff itself (SKILL.md, "No visual surface").
   - name: ux-spec
     skill: steps/ux-spec.md
-    description: Turn the requirement into user flows mapped to existing design-system components, with the accessibility each one owes
+    description: Turn the requirement into user flows for the project's design surface — branches, states, and copy — mapped to existing components, with the accessibility each one owes
     execution: subagent
     model: sonnet
     agent: analyst
     inputs:
       - "{project}/{change}/pm/handoff" # optional — the requirement and its acceptance criteria
-    output_topic_key: "{project}/{change}/ux-ui/handoff"
+    output: context # retained in the orchestrator's context, injected into ui-design — never persisted
     reference_skills:
       - ../asdt-core/references/accessibility.md
+
+  - name: ui-design
+    skill: steps/ui-design.md
+    description: Design the UI the flows need — every screen's layout, hierarchy, typography, and states, every missing component's anatomy and states, and the visual foundation when there is no design system — and persist the one hand-off
+    execution: subagent
+    model: opus
+    agent: analyst
+    inputs: []
+    context_inputs: [ux-flows]
+    output_topic_key: "{project}/{change}/ux-ui/handoff"
+    reference_skills:
+      - ../asdt-core/references/visual-design.md
+      - ../asdt-core/references/accessibility.md
       - ../asdt-core/protocol.md
+    host_skills:
+      - frontend-design # raises the craft of the design when the host has it
 
   - name: review
     skill: steps/review.md

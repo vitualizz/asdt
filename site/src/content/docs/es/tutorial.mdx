@@ -62,7 +62,7 @@ Abrí tu asistente (Claude Code u OpenCode) en el directorio de tu proyecto y ej
 /asdt-init
 ```
 
-Esto crea `.asdt/config.yaml` (configuración del memory provider) y `.asdt/knowledge/platform.yaml` (stack detectado), para que cada especialista adapte su output a tu proyecto.
+Esto crea `.asdt/config.yaml` (configuración del memory provider) y `.asdt/knowledge/knowledge.yaml` (stack y convenciones detectados), para que cada especialista adapte su output a tu proyecto. En el camino te pregunta para qué superficie diseña primero el proyecto — mobile, tablet, desktop, o none si no tiene UI.
 
 ## Paso 3 — Preguntale algo a un especialista
 
@@ -138,10 +138,10 @@ Artefacto guardado en la base de conocimiento.
 ## Paso 6 — Correr el Arquitecto
 
 ```text
-/asdt-architect
+/asdt-architect "Agregar un formulario de contacto con validación"
 ```
 
-El Arquitecto lee el backlog del PM automáticamente, evalúa enfoques técnicos y produce un Registro de Decisión de Arquitectura (ADR) y el diseño del sistema.
+El Arquitecto lee el hand-off del PM automáticamente, compara los enfoques técnicos entre sí y guarda un único hand-off: la decisión, las alternativas que descartó, y el modelo de datos y la superficie de API que se desprenden.
 
 ```text
 # Output de ejemplo — tus resultados variarán según tu proyecto
@@ -149,10 +149,8 @@ El Arquitecto lee el backlog del PM automáticamente, evalúa enfoques técnicos
 Corriendo especialista Arquitecto...
 Cargando: pm/handoff ✓
 
-Producido: architectural-decision + system-design
+Producido: architect/handoff
 
-  ADR: Usar la Constraint Validation API nativa de HTML5 con mejora progresiva
-  
   Decisión: Usar la Constraint Validation API nativa del navegador para la validación de campos,
   complementada con una capa delgada de JS para mensajes de error personalizados y manejo del evento blur.
   
@@ -160,47 +158,49 @@ Producido: architectural-decision + system-design
     - Validación con schema de Zod (rechazada: sobreingeniería para un formulario de contacto)
     - React Hook Form (rechazada: introduce una dependencia innecesaria)
   
-  Diseño del sistema:
+  Superficie de API:
     - POST /api/contact — acepta { name, email, message }, devuelve 200 o 422
     - Notificación por email vía nodemailer (dependencia existente)
     - Sin escritura en base de datos — los datos del formulario se reenvían directamente por email
 
-Artefactos guardados en la base de conocimiento.
+Hand-off guardado en la base de conocimiento.
+Siguiente: /asdt-developer "Agregar un formulario de contacto con validación"
 ```
 
 ## Paso 7 — Correr el Developer
 
 ```text
-/asdt-developer
+/asdt-developer "Agregar un formulario de contacto con validación"
 ```
 
-El Developer lee el ADR y el diseño del sistema, divide el trabajo en tareas ordenadas y produce un plan de implementación (o escribe código en modo escritura).
+El Developer lee los hand-offs del PM y del Arquitecto, explora el código y escribe un spec — alcance, criterios de aceptación y los archivos exactos que va a tocar. El spec se guarda y se te muestra: **no se escribe nada hasta que lo apruebes.** Si aprobás, implementa dentro de esos archivos y ningún otro; si pedís un ajuste, revisa el spec; si lo frenás, el plan queda guardado y `/asdt-developer "implementá el plan que aprobamos"` lo retoma más adelante.
 
 ```text
 # Output de ejemplo — tus resultados variarán según tu proyecto
 
 Corriendo especialista Developer...
-Cargando: architectural-decision ✓
-Cargando: system-design ✓
+Cargando: pm/handoff ✓
+Cargando: architect/handoff ✓
 
-Producido: developer/dev-implementation
+Plan (guardado): developer/handoff — stage: spec
 
-  Plan de implementación:
+  Va a crear:     src/components/ContactForm.astro
+                  src/pages/api/contact.ts
+                  src/styles/contact-form.css
+  Va a modificar: src/pages/contact.astro
 
-  T-01  Crear src/components/ContactForm.astro
-        — Markup del formulario con atributos de validación nativa
-        
-  T-02  Crear src/pages/api/contact.ts
-        — Handler POST: validar, enviar email vía nodemailer, devolver 200/422
-        
-  T-03  Crear src/styles/contact-form.css
-        — Estilos de estado de error para campos inválidos
-        
-  T-04  Actualizar src/pages/contact.astro
-        — Importar y renderizar el componente ContactForm
+¿Aprobar, ajustar o frenar?  › aprobar
 
-Artefacto guardado en la base de conocimiento.
+Producido: developer/handoff — stage: implemented
+
+¿Correr los chequeos ahora?  npm run lint · npm test  › sí
+  ✓ todo pasó
+
+Hand-off guardado en la base de conocimiento.
+Siguiente: /asdt-qa "Agregar un formulario de contacto con validación"
 ```
+
+Los comandos de chequeo corren solo si decís que sí, y solo esos comandos — nunca se ofrece uno que reescriba archivos (un flag `--fix`, una actualización de snapshots). Si alguno falla, el Developer tiene hasta dos rondas para arreglarlo, dentro de los mismos archivos que aprobaste.
 
 ## Qué sigue
 
