@@ -15,7 +15,7 @@ Hoy ASDT admite dos asistentes: **Claude Code** y **OpenCode**. Ambos reciben el
 
 Independientemente del asistente, una instalación produce las mismas piezas lógicas:
 
-- **Skills de especialistas** — el árbol de skills de ASDT (Architect, Developer, QA, Security, UX/UI y los fragmentos compartidos), copiado en el directorio de skills del asistente.
+- **Skills de especialistas** — el árbol de skills de ASDT (Researcher, PM, UX/UI, Architect, Developer, Security, QA, `/asdt-init` y los fragmentos compartidos), copiado en el directorio de skills del asistente.
 - **Agentes ejecutores** — dos definiciones de agente generadas, `asdt-analyst` (solo lectura) y `asdt-builder` (con capacidad de escritura), que llevan a cabo los pasos individuales del pipeline.
 - **Configuración del agente** — tus preferencias de persona e idioma, escritas en la configuración global nativa del asistente.
 - **Un manifiesto de instalación** — un archivo `.install-meta.json` que registra lo que escribió la última instalación, para que volver a ejecutar pueda actualizar de forma limpia y eliminar archivos obsoletos.
@@ -39,7 +39,7 @@ Se escribe de forma segura: se guarda una copia de respaldo previa, la escritura
 Ambos asistentes reciben los mismos dos *tipos* de agente ejecutor, generados en el formato de cada herramienta:
 
 - **`asdt-analyst`** — solo lectura. Inspecciona el repositorio y persiste un artefacto, sin escribir nunca en el árbol de trabajo. En Claude Code su línea `tools:` es una lista explícita de permitidos; en OpenCode es `edit: deny`, `task: deny` y una lista de Bash permitida (`git log`, `git diff`, `ls`, `grep`, ...) con un `deny` general.
-- **`asdt-builder`** — con capacidad de escritura. Crea y edita archivos dentro de sus objetivos declarados y luego persiste un artefacto. En OpenCode eso es `edit: allow`, `task: deny`, `bash: allow`.
+- **`asdt-builder`** — con capacidad de escritura. Crea y edita archivos dentro de sus objetivos declarados y luego persiste un artefacto. Su Bash es solo para inspeccionar — nunca corre build, lint, tests, instalaciones ni codegen; los chequeos corren en la compuerta de verificación del Developer. En OpenCode eso es `edit: allow`, `task: deny`, `bash: allow`.
 
 Ambos agentes también reciben las herramientas de memoria que necesitan para guardar y recuperar artefactos (ver más abajo).
 

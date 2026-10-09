@@ -62,7 +62,7 @@ Open your assistant (Claude Code or OpenCode) in your project directory and run:
 /asdt-init
 ```
 
-This creates `.asdt/config.yaml` (memory provider settings) and `.asdt/knowledge/platform.yaml` (detected stack), so every specialist tailors its output to your project.
+This creates `.asdt/config.yaml` (memory provider settings) and `.asdt/knowledge/knowledge.yaml` (detected stack and conventions), so every specialist tailors its output to your project. Along the way it asks which surface the project designs for first — mobile, tablet, desktop, or none for a project with no UI.
 
 ## Step 3 — Ask a specialist something
 
@@ -138,10 +138,10 @@ Artifact saved to knowledge base.
 ## Step 6 — Run the Architect
 
 ```text
-/asdt-architect
+/asdt-architect "Add a contact form with validation"
 ```
 
-Architect reads the PM backlog entry automatically, evaluates technical approaches, and produces an Architecture Decision Record (ADR) and system design.
+Architect reads PM's hand-off automatically, weighs the technical approaches against each other, and saves one hand-off: the decision, the alternatives it beat, and the data model and API surface that follow.
 
 ```text
 # Example output — your results will vary based on your project
@@ -149,10 +149,8 @@ Architect reads the PM backlog entry automatically, evaluates technical approach
 Running Architect specialist...
 Loading: pm/handoff ✓
 
-Produced: architectural-decision + system-design
+Produced: architect/handoff
 
-  ADR: Use native HTML5 Constraint Validation API with progressive enhancement
-  
   Decision: Use the browser's native Constraint Validation API for field validation,
   augmented with a thin JS layer for custom error messages and blur-event handling.
   
@@ -160,47 +158,49 @@ Produced: architectural-decision + system-design
     - Zod schema validation (rejected: over-engineered for a contact form)
     - React Hook Form (rejected: introduces unnecessary dependency)
   
-  System design:
+  API surface:
     - POST /api/contact — accepts { name, email, message }, returns 200 or 422
     - Email notification via nodemailer (existing dep)
     - No database write — form data forwarded directly to email
 
-Artifacts saved to knowledge base.
+Hand-off saved to knowledge base.
+Next: /asdt-developer "Add a contact form with validation"
 ```
 
 ## Step 7 — Run the Developer
 
 ```text
-/asdt-developer
+/asdt-developer "Add a contact form with validation"
 ```
 
-Developer reads the ADR and system design, breaks work into ordered tasks, and produces an implementation plan (or writes code in writing mode).
+Developer reads PM's and Architect's hand-offs, explores the code, and writes a spec — scope, acceptance criteria, and the exact files it will touch. The spec is saved, then shown to you: **nothing is written until you approve it.** Approve and it implements within exactly those files; adjust and it revises the spec; stop and the plan stays saved, so `/asdt-developer "implement the plan we approved"` picks it up later.
 
 ```text
 # Example output — your results will vary based on your project
 
 Running Developer specialist...
-Loading: architectural-decision ✓
-Loading: system-design ✓
+Loading: pm/handoff ✓
+Loading: architect/handoff ✓
 
-Produced: developer/dev-implementation
+Plan (saved): developer/handoff — stage: spec
 
-  Implementation plan:
+  Will create:  src/components/ContactForm.astro
+                src/pages/api/contact.ts
+                src/styles/contact-form.css
+  Will modify:  src/pages/contact.astro
 
-  T-01  Create src/components/ContactForm.astro
-        — Form markup with native constraint validation attributes
-        
-  T-02  Create src/pages/api/contact.ts
-        — POST handler: validate, send email via nodemailer, return 200/422
-        
-  T-03  Create src/styles/contact-form.css
-        — Error state styles for invalid fields
-        
-  T-04  Update src/pages/contact.astro
-        — Import and render ContactForm component
+Approve, adjust, or stop?  › approve
 
-Artifact saved to knowledge base.
+Produced: developer/handoff — stage: implemented
+
+Run the checks now?  npm run lint · npm test  › yes
+  ✓ all passed
+
+Hand-off saved to knowledge base.
+Next: /asdt-qa "Add a contact form with validation"
 ```
+
+The check commands run only on your yes, and only those commands — a command that would rewrite files (a `--fix` flag, a snapshot update) is never offered. If one fails, the Developer gets up to two rounds to fix it, inside the same files you approved.
 
 ## What's next
 

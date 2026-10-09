@@ -15,7 +15,7 @@ Today ASDT supports two assistants: **Claude Code** and **OpenCode**. Both get t
 
 Regardless of assistant, an install produces the same logical pieces:
 
-- **Specialist skills** — the ASDT skill tree (Architect, Developer, QA, Security, UX/UI, and the shared fragments), copied into the assistant's skills directory.
+- **Specialist skills** — the ASDT skill tree (Researcher, PM, UX/UI, Architect, Developer, Security, QA, `/asdt-init`, and the shared fragments), copied into the assistant's skills directory.
 - **Executor agents** — two generated agent definitions, `asdt-analyst` (read-only) and `asdt-builder` (write-capable), that carry out individual pipeline steps.
 - **Agent config** — your persona and language preferences, written into the assistant's native global config.
 - **An install manifest** — a `.install-meta.json` file recording what the last install wrote, so re-running can update cleanly and prune stale files.
@@ -39,7 +39,7 @@ It is written safely: a pre-write backup is kept, the write is atomic (temp file
 Both assistants receive the same two executor agent *types*, rendered into each tool's format:
 
 - **`asdt-analyst`** — read-only. It inspects the repo and persists one artifact, never writing to the working tree. In Claude Code its `tools:` line is an explicit allowlist; in OpenCode it's `edit: deny`, `task: deny`, and a Bash allowlist (`git log`, `git diff`, `ls`, `grep`, ...) with a catch-all `deny`.
-- **`asdt-builder`** — write-capable. It creates and edits files within its declared targets, then persists one artifact. In OpenCode that's `edit: allow`, `task: deny`, `bash: allow`.
+- **`asdt-builder`** — write-capable. It creates and edits files within its declared targets, then persists one artifact. Its Bash is for inspection only — it never runs build, lint, test, install, or codegen; checks run at the Developer's verify gate. In OpenCode that's `edit: allow`, `task: deny`, `bash: allow`.
 
 Both agents also get the memory tools they need to save and retrieve artifacts (see below).
 

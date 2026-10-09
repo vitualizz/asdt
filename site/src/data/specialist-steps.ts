@@ -12,7 +12,8 @@ export interface Chain {
 export interface SpecialistConfig {
   color: string
   /** Every specialist runs one fixed chain. Only the Developer picks between chains,
-   *  and it picks from what the request asks for — not from a level anyone passes in. */
+   *  and it picks from what the request asks for — not from a level anyone passes in.
+   *  The last chain must be the fullest one: components render its steps as the full list. */
   chains: Chain[]
   steps: Record<string, Step>
 }
@@ -59,16 +60,23 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
 
   developer: {
     color: '--c-dev',
+    // `build` stays last: StepFlow and AllSpecialistsOverview read the last chain
+    // as the full step list.
     chains: [
-      { when: 'question', steps: ['knowledge-recall', 'explore'] },
-      { when: 'plan', steps: ['knowledge-recall', 'explore', 'spec'] },
-      { when: 'build', steps: ['knowledge-recall', 'explore', 'spec', 'implement'] },
+      { when: 'question', steps: ['knowledge-recall', 'platform-analysis', 'explore'] },
+      { when: 'plan', steps: ['knowledge-recall', 'platform-analysis', 'explore', 'spec'] },
+      // A resume of a plan built but never verified runs `verify` alone.
+      { when: 'resume', steps: ['knowledge-recall', 'platform-analysis', 'approve', 'implement', 'verify'] },
+      { when: 'build', steps: ['knowledge-recall', 'platform-analysis', 'explore', 'spec', 'approve', 'implement', 'verify'] },
     ],
     steps: {
       'knowledge-recall': { id: 'knowledge-recall', execution: 'inline' },
+      'platform-analysis': { id: 'platform-analysis', execution: 'inline' },
       explore: { id: 'explore', execution: 'subagent' },
       spec: { id: 'spec', execution: 'subagent' },
+      approve: { id: 'approve', execution: 'inline' },
       implement: { id: 'implement', execution: 'subagent' },
+      verify: { id: 'verify', execution: 'inline' },
     },
   },
 

@@ -30,7 +30,7 @@ Orden sugerido:
 ¿Continuar con este plan? (yes / modify / no)
 ```
 
-Confirmá el plan. ASDT te da los comandos exactos a ejecutar, con pasos de workflow adaptados para cada especialista. **Los ejecutas tú — ASDT no corre los especialistas automáticamente.**
+Confirmá el plan. ASDT te da los comandos exactos a ejecutar, en orden, cada uno con la misma versión afinada de tu pedido. **Los ejecutas tú — ASDT no corre los especialistas automáticamente.**
 
 ## Ejecutar especialistas directamente
 
@@ -42,7 +42,7 @@ Cuando ya sabes lo que necesitas, salteate `/asdt` e invocá el especialista dir
 /asdt-security Auditar la integración OAuth
 ```
 
-Cada especialista ejecuta su workflow completo (explore → spec → design → implement, según la complejidad) y guarda los artefactos en la base de conocimiento.
+Cada especialista juzga qué pasos propios necesita el pedido — el Developer, por ejemplo, se queda en `explore` ante una pregunta, en `spec` ante un plan, y solo sigue a `approve → implement → verify` cuando le pedís construir — y guarda su único hand-off en la base de conocimiento. Su reporte arranca contando sobre qué trabajó y cierra proponiendo el siguiente especialista.
 
 ## Retomar en mitad del pipeline
 
@@ -52,7 +52,9 @@ Si ejecutaste algunos especialistas y quieres continuar después, invocá el sig
 /asdt-developer Implementar basándose en el ADR del Arquitecto
 ```
 
-El Developer lee los artefactos del Arquitecto desde la base de conocimiento. No pasas contexto manualmente.
+El Developer lee el hand-off del Arquitecto desde la base de conocimiento. No pasas contexto manualmente.
+
+Lo mismo vale para un plan del Developer. Si le pedís un plan, queda guardado; volvé más tarde con `/asdt-developer "implementá el plan que aprobamos"` y retoma en la compuerta de aprobación en lugar de empezar de cero.
 
 ## Memoria y continuidad
 

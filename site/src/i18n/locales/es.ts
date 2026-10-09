@@ -189,6 +189,7 @@ export const es: UIStrings = {
     chains: {
       question: 'una pregunta',
       plan: 'un plan',
+      resume: 'retomar un plan',
       build: 'construirlo',
     },
     specialistSteps: {
@@ -213,11 +214,11 @@ export const es: UIStrings = {
         produces: 'contexto (inline)',
       },
       'ux-ui:platform-analysis': {
-        purpose: 'Carga el design system detectado del proyecto, sus convenciones y su huella',
+        purpose: 'Carga el design system detectado del proyecto, sus convenciones y su huella, más la superficie de diseño desde config.yaml',
         produces: 'contexto (inline)',
       },
       'ux-ui:ux-spec': {
-        purpose: 'Convierte el requisito en flujos mapeados a componentes existentes, con la accesibilidad que cada uno debe cumplir',
+        purpose: 'Convierte el requisito en flujos para la superficie de diseño del proyecto, mapeados a componentes existentes — o en una dirección visual propuesta cuando no hay design system — con la accesibilidad que cada uno debe cumplir',
         produces: 'ux-ui/handoff',
       },
       'architect:knowledge-recall': {
@@ -236,17 +237,29 @@ export const es: UIStrings = {
         purpose: 'Recuerda decisiones previas relevantes a este cambio',
         produces: 'contexto (inline)',
       },
+      'developer:platform-analysis': {
+        purpose: 'Carga convenciones de plataforma y la superficie de diseño desde knowledge.yaml y config.yaml',
+        produces: 'contexto (inline)',
+      },
       'developer:explore': {
         purpose: 'Lee la zona del código que va a cambiar y nombra las preguntas abiertas',
         produces: 'contexto — vive dentro de la corrida',
       },
       'developer:spec': {
         purpose: 'Define alcance, criterios de aceptación, el enfoque técnico y los ficheros que implement puede tocar',
-        produces: 'contexto — vive dentro de la corrida',
+        produces: 'developer/handoff (stage: spec) — guardado, retomable y pasado a implement',
+      },
+      'developer:approve': {
+        purpose: 'Te muestra el alcance, los criterios de aceptación y los ficheros exactos, y espera aprobar, ajustar o parar antes de escribir nada',
+        produces: 'tu visto bueno (inline)',
       },
       'developer:implement': {
-        purpose: 'Escribe el código — y sus tests bajo TDD estricto — dentro de los límites de edición que declaró el spec',
-        produces: 'developer/handoff',
+        purpose: 'Escribe el código — y sus tests bajo TDD estricto — dentro de los límites de edición que declaró el spec aprobado; nunca los ejecuta',
+        produces: 'developer/handoff (stage: implemented)',
+      },
+      'developer:verify': {
+        purpose: 'Ofrece los comandos de verificación, los corre solo si decís que sí y hace como mucho dos rondas de arreglo sobre los mismos ficheros',
+        produces: 'el resultado de la verificación, sumado a developer/handoff',
       },
       'security:knowledge-recall': {
         purpose: 'Recuerda hallazgos, modelos de amenaza y mitigaciones previas',
@@ -284,13 +297,13 @@ export const es: UIStrings = {
             description: 'El PM define el alcance, escribe historias con criterios de aceptación y guarda pm/handoff en la base de conocimientos.',
           },
           architect: {
-            description: 'Architect lee el backlog entry, diseña el flujo de tokens y los contratos de API, guarda architectural-decision + system-design-final.',
+            description: 'Architect lee pm/handoff, diseña el flujo de tokens y los contratos de API y guarda architect/handoff.',
           },
           developer: {
-            description: 'Developer lee el ADR y el system design, implementa el magic link handler y guarda dev-implementation.',
+            description: 'Developer lee pm/handoff y architect/handoff, especifica el magic link handler, espera tu aprobación, lo implementa y guarda developer/handoff.',
           },
           security: {
-            description: 'Security revisa el mecanismo de autenticación, ejecuta análisis STRIDE y OWASP, guarda security-findings + hardening-checklist.',
+            description: 'Security revisa el mecanismo de autenticación, ejecuta análisis STRIDE y OWASP y guarda security/handoff — hallazgos con sus mitigaciones y un checklist de hardening.',
           },
         },
       },
@@ -301,7 +314,7 @@ export const es: UIStrings = {
             description: 'Developer lee los artefactos previos de la base de conocimientos automáticamente, incluso de sesiones anteriores. Sin pasar contexto manualmente.',
           },
           qa: {
-            description: 'QA carga dev-implementation y ejecuta su flujo completo: validación de ACs, análisis de edge cases y generación de tests.',
+            description: 'QA carga developer/handoff y planifica las pruebas: huecos en los criterios de aceptación, edge cases, casos Given/When/Then y un veredicto go/no-go.',
           },
         },
       },
@@ -327,7 +340,7 @@ export const es: UIStrings = {
       'explore-before-planning': {
         title: 'Explorar antes de planificar (problema difuso)',
         note: 'Cuando el problema no está claro y necesitás descubrimiento antes de definir requisitos.',
-        kbNote: 'Researcher produce un discovery brief con una dirección recomendada — pasáselo al PM después.',
+        kbNote: 'Researcher guarda researcher/handoff con una dirección recomendada — la toma el PM después (o el Architect, si se salta el PM).',
       },
       'lock-scope-user-stories': {
         title: 'Fijar el alcance y escribir historias de usuario',
@@ -347,11 +360,11 @@ export const es: UIStrings = {
       },
       'design-new-ui-component': {
         title: 'Diseñar un nuevo componente de UI',
-        note: 'Cuando necesitás una spec de componente antes de que el developer empiece a codear.',
+        note: 'Cuando necesitás flujos, mapeo de componentes y accesibilidad antes de que el developer empiece a codear.',
       },
       'validate-test-coverage': {
         title: 'Validar la cobertura de tests antes de publicar',
-        note: 'Corré después de Developer — QA lee la implementación automáticamente.',
+        note: 'Corré después de Developer — QA lee developer/handoff automáticamente.',
       },
       'pickup-developer-existing-adr': {
         title: 'Retomar en Developer después de un ADR existente',
@@ -361,7 +374,7 @@ export const es: UIStrings = {
       'add-security-review-inflight': {
         title: 'Agregar una revisión de seguridad a un pipeline en curso',
         note: 'Corré Security en cualquier momento sin reiniciar el pipeline.',
-        kbNote: 'Security lee system-design-final y dev-implementation de la base de conocimiento.',
+        kbNote: 'Security lee architect/handoff y developer/handoff de la base de conocimiento.',
       },
       'qa-completed-feature-no-pipeline': {
         title: 'Hacer QA de una feature terminada sin pipeline completo',
@@ -382,7 +395,7 @@ export const es: UIStrings = {
       },
       'asdt-init': {
         title: 'Inicializar ASDT',
-        oneLiner: 'Detecta tu stack y crea .asdt/config.yaml y .asdt/knowledge/platform.yaml.',
+        oneLiner: 'Detecta tu stack y crea .asdt/config.yaml y .asdt/knowledge/knowledge.yaml.',
       },
       asdt: {
         title: 'Sugerencia de ruteo del pipeline',
@@ -427,31 +440,31 @@ export const es: UIStrings = {
       architect: {
         teaser: 'Decide cómo encajan las piezas antes de escribir código.',
         invokeWhen: 'La solución toca límites de servicios, modelos de datos o contratos de API, o tiene dos enfoques técnicos viables que vale la pena documentar',
-        produces: 'architectural-decision (ADR) + system-design-final — modelo de datos, superficie de API, límites de servicios',
+        produces: 'architect/handoff — la decisión con las alternativas que descartó, modelo de datos, superficie de API',
         doNotUseWhen: 'Necesitás código de implementación, planes de pruebas o specs de UX — Architect produce decisiones, no código',
       },
       developer: {
-        teaser: 'Convierte un diseño ya definido en un plan de implementación ordenado o código real.',
-        invokeWhen: 'La forma de la solución está definida y necesitás un plan de implementación ordenado o código de producción escrito en el repo',
-        produces: 'developer/dev-implementation — manifiesto de archivos ordenado y plan de código',
+        teaser: 'Convierte un diseño ya definido en un plan que aprobás y después en código real.',
+        invokeWhen: 'La forma de la solución está definida y necesitás un plan de implementación o código de producción escrito en el repo',
+        produces: 'developer/handoff — el plan aprobado (stage: spec) y después los archivos escritos y el resultado de la verificación',
         doNotUseWhen: 'Todavía no fijaste el alcance ni la arquitectura — Developer va a implementar contra requisitos ambiguos',
       },
       qa: {
         teaser: 'Convierte los criterios de aceptación en un plan de pruebas sistemático con un veredicto de go/no-go.',
         invokeWhen: 'El código está listo para revisión, existen AC pero no fueron validados, o necesitás cobertura sistemática de edge cases y límites',
-        produces: 'test-plan — % de cobertura de AC, gaps sin cubrir, lista completa de test cases Given/When/Then, veredicto de calidad',
+        produces: 'qa/handoff — huecos en los criterios de aceptación, edge cases, test cases Given/When/Then, veredicto go/no-go',
         doNotUseWhen: 'Querés código de test ejecutable — QA produce especificaciones de test, no código que corra',
       },
       security: {
         teaser: 'Busca riesgos de auth, datos e integraciones antes de que se publiquen.',
         invokeWhen: 'La feature toca auth, sesiones, PII, integraciones externas, webhooks, o nuevos endpoints públicos de API',
-        produces: 'security-findings (con severidad y CWE) + hardening-checklist — qué arreglar sí o sí vs qué se puede postergar',
+        produces: 'security/handoff — hallazgos con severidad high/medium/low, cada uno con su mitigación concreta, más un checklist de hardening',
         doNotUseWhen: 'Querés código de implementación o decisiones arquitectónicas — Security solo produce findings y checklists',
       },
       'ux-ui': {
         teaser: 'Mapea flujos y componentes antes de que arranque la implementación.',
         invokeWhen: 'Una pantalla nueva o una UI a nivel de feature necesita diseño antes de implementar, o hay que mapear flujos de usuario',
-        produces: 'ux-brief (flujos, IA, criterios de éxito) + component-spec — inventario de componentes reusados/extendidos/nuevos',
+        produces: 'ux-ui/handoff — flujos con sus estados y textos, mapeo de componentes, accesibilidad y una dirección visual cuando no hay design system',
         doNotUseWhen: 'La pantalla ya está construida — una spec de UX entregada después de implementar llega demasiado tarde para darle forma',
       },
       researcher: {

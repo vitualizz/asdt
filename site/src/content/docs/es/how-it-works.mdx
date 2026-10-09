@@ -11,7 +11,7 @@ import AllSpecialistsOverview from '@components/AllSpecialistsOverview.astro'
 
 ## El modelo de ejecución
 
-ASDT te da estructura sin quitarte el control. Cuando ejecutás un especialista, orquesta una secuencia de pasos enfocados — cada uno produce un único artefacto y solo lee lo que produjo el paso anterior.
+ASDT te da estructura sin quitarte el control. Cuando ejecutás un especialista, orquesta una secuencia corta de pasos enfocados — cada uno recibe solo lo que necesita de los anteriores — y la corrida termina guardando un único hand-off para el resto del equipo.
 
 Vos invocás a los especialistas. ASDT nunca los ejecuta automáticamente. Eso es intencional: cada paso donde un humano confirma un plan es un paso donde los supuestos incorrectos se detectan antes de que se acumulen.
 
@@ -19,27 +19,29 @@ El asesor `/asdt` analiza tu petición y sugiere qué especialistas involucrar y
 
 ## El conocimiento fluye hacia adelante automáticamente
 
-Cada paso de cada especialista produce un artefacto — un documento estructurado guardado en la base de conocimiento con una clave estable. El siguiente especialista lo recupera por clave. Sin pasar contexto manualmente. Sin copiar y pegar entre comandos.
+Cada corrida de un especialista que produce algo para el equipo guarda un hand-off (una corrida del Developer que solo responde una pregunta no guarda ninguno) — un documento estructurado en la base de conocimiento, con una clave estable: `{project}/{change}/{role}/handoff`. Lo que sus pasos se pasan entre sí queda dentro de la corrida. El siguiente especialista recupera el hand-off por clave. Sin pasar contexto manualmente. Sin copiar y pegar entre comandos.
 
 Esto significa:
 
 - **Los especialistas están desacoplados.** El Developer lee el registro de decisión del Arquitecto como un documento — no como una variable compartida ni un import de archivo.
 - **Los artefactos sobreviven a las sesiones.** Ejecutás PM el lunes, continuás con el Arquitecto el jueves. La base de conocimiento retiene el contexto.
-- **Los inputs faltantes se degradan sin errores.** Si falta un artefacto, el siguiente especialista lo anota en una lista de pendientes llamada `open_items` y continúa con lo que tiene disponible.
+- **Los inputs faltantes se degradan sin errores.** Si falta un hand-off, el siguiente especialista lo anota en una lista de pendientes llamada `open_items` (con el prefijo `ASSUMED:`) y continúa con lo que tiene disponible.
+- **Ves cómo pasa el trabajo de mano en mano.** El reporte de cada especialista arranca con una línea sobre qué usó — qué trabajo de sus compañeros llegó y qué faltó — y cierra proponiendo el siguiente especialista como un comando listo para copiar.
 
-## Los especialistas se adaptan a la complejidad
+## Los especialistas juzgan su propia profundidad
 
-Cada especialista ejecuta la profundidad de pasos adecuada para la complejidad de la petición. Un bugfix rápido corre menos pasos que un nuevo sistema de autenticación. La descripción a continuación muestra la secuencia completa a complejidad moderada:
+Cada especialista decide qué tan a fondo ir según la petición — un bugfix rápido recibe una pasada más liviana que un nuevo sistema de autenticación. La profundidad cambia qué tan exhaustivo es el output de cada paso; qué pasos corren depende de lo que pediste. La descripción a continuación muestra los pasos de cada especialista — para el Developer, su cadena completa de construcción:
 
 <AllSpecialistsOverview lang="es" />
 
-Los pasos se ejecutan como sub-agentes aislados (ejecuciones de IA independientes y de una sola tarea que no ven el razonamiento de las demás) — no comparten contexto entre sí, lo que evita que el razonamiento temprano contamine los pasos posteriores. Cada paso lee solo sus inputs declarados, escribe un artefacto y pasa el control.
+Los pasos principales se ejecutan como sub-agentes aislados (ejecuciones de IA independientes y de una sola tarea que no ven el razonamiento de las demás) — no comparten contexto entre sí, lo que evita que el razonamiento temprano contamine los pasos posteriores. Cada uno recibe solo sus inputs declarados, hace su único trabajo y devuelve el resultado. Los pasos `inline` cortos — recordar la memoria, cargar el resumen de plataforma y las compuertas de aprobación y verificación del Developer — corren en el contexto de tu propio asistente.
 
 ## El humano siempre está en el circuito
 
-ASDT aplica una compuerta suave en dos momentos:
+ASDT aplica una compuerta en tres momentos:
 
 1. **Después de `/asdt`** — el asesor de pipeline presenta un plan de routing y espera confirmación antes de darte los comandos a ejecutar.
 2. **Entre especialistas** — vos decidís cuándo correr el siguiente. Nada se automatiza.
+3. **Antes de que el Developer escriba o ejecute algo** — te muestra su spec (alcance, criterios de aceptación, los archivos exactos) y espera que apruebes, ajustes o frenes antes de escribir un solo archivo. Después de implementar, te ofrece los comandos de chequeo — nunca uno que reescriba archivos — y los corre solo si decís que sí.
 
 Esto no es una limitación. Es el diseño. Las decisiones de arquitectura generadas por IA se benefician de la revisión humana antes de que un developer actúe sobre ellas. Los planes de QA se benefician de la revisión humana antes de que definan qué significa "listo". ASDT te da la estructura; vos aplicás el criterio.

@@ -1,27 +1,36 @@
 ---
 title: UX/UI Designer
-description: Shapes how people actually experience the product — user flows, information architecture, component specs, responsive and accessibility strategy — the specialist to bring in before a single screen gets built.
+description: Shapes how people actually experience the product — user flows with their states and copy, designed for the project's primary surface and mapped to its existing components, with the accessibility each one owes — the specialist to bring in before a single screen gets built.
 order: 25
 locale: en
 ---
 
 # UX/UI Designer (`/asdt-ux-ui`)
 
-> Shapes how people actually experience the product — user flows, information architecture, component specs, responsive and accessibility strategy — the specialist to bring in before a single screen gets built.
+> Shapes how people actually experience the product — user flows with their states and copy, designed for the project's primary surface and mapped to its existing components, with the accessibility each one owes — the specialist to bring in before a single screen gets built.
 
 ## What it does
 
-The UX/UI Specialist transforms a feature brief into a structured UX specification that the Developer can implement without ambiguity. It identifies the primary actor and core problem first, then organizes content into an information architecture, maps the full interaction sequences (happy path + error paths + edge cases), and catalogs which components to reuse, extend, or create from scratch. Responsive behavior is not a separate step — it's a per-component field inside `component-spec`, recorded alongside each component's props and events.
+The UX/UI Specialist turns a requirement into flows a developer can build without guessing. It runs one step, `ux-spec`, and hands back one artifact, `ux-ui/handoff`, with these sections:
 
-One step, `ux-spec`, closes every run and produces the single `ux-ui/handoff` that Developer and Architect read. Depth changes how many flows are written out and how much branching each one carries — never which steps run.
+- **Brief** — four lines: the actor, their problem, what success looks like for them, and the one quality the experience should feel like.
+- **Information architecture** — the entry point as a full path from the app's front door, the content hierarchy, and the primary actions.
+- **User flows** — the deliverable. Numbered steps with every branch, the empty, loading, and error states named as steps, and the exact copy written inline wherever the wording carries the interaction.
+- **Component mapping** — every flow step mapped to a component that already exists in the project, by its real name. Where nothing fits, it says so: that gap is a decision for the Developer, never a component quietly invented.
+- **Accessibility** — per component: focus, keyboard, labelling, and the contrast pair it owes. What can't be verified from the values at hand is recorded as advisory, never asserted as a pass.
 
-One hard dependency: `information-architecture` must run before `user-flows`. You cannot map interaction sequences before you know the content hierarchy and navigation path.
+**Design system first.** When the project already has one — its own tokens, theme, or component library — that is the source of every token and component, and the specialist never invents a palette, type scale, or spacing unit against it. When it has none (a styling tool with no project-specific theme doesn't count), it adds a **visual direction**: a type pairing and scale, palette roles (`surface`, `text`, `accent`, `danger`, …) each with its contrast pair, a spacing scale, a density, and a motion stance. Every item is a proposal, which the Developer builds as the project's first tokens.
+
+**Designed for your surface.** `/asdt-init` asks for the project's primary design surface — `mobile`, `tablet`, `desktop`, or `none`. Flows are designed for that surface first, with one line on what changes on the others; if it was never asked, mobile is assumed. When the answer is `none` — a CLI, a library, a backend service — there are no screens to specify: the specialist skips `ux-spec` and saves a short hand-off that says so, so downstream roles read an explicit "no UI" instead of a silent gap.
+
+If the host assistant has a `frontend-design` skill installed, it is used to raise the quality of the visual direction and the layout choices. It never overrides the project's design system, and its absence changes nothing.
 
 ## When to invoke it
 
 - A new screen, dialog, or feature-level UI needs to be designed
 - User flows need to be mapped before architecture or implementation begins
-- Component reuse strategy needs to be decided (extend existing vs. create new)
+- You need to know which existing components cover a change and where the gaps are
+- The project has no design system yet and the first screens need a coherent direction
 - Accessibility requirements need to be specified explicitly
 - You want the Developer to receive a spec rather than infer the UX from the requirements
 
@@ -34,41 +43,39 @@ Point it at a screen or a flow that already exists:
 /asdt-ux-ui "which design-system components are we not using in onboarding?"
 ```
 
+That runs `review` instead: friction, missing states, design-system drift, and accessibility in what already ships.
+
 ## Pipeline position
 
-Works best **before Developer** — the `ux-brief` and `component-spec` are inputs the Developer reads to implement the UI correctly. Can run in parallel with Architect, since UX design and architecture decisions are largely independent. Running it after the Developer has already built a screen means the spec arrives too late to guide the implementation.
+Works best **after PM** (reads `pm/handoff` for the requirement and its acceptance criteria) and **before Architect and Developer**. The Architect reads the flows to shape the API surface it has to serve; the Developer builds them step by step. Running it after a screen is already built means the spec arrives too late to guide it.
 
 ## What it produces
 
-Two final artifacts:
+`ux-ui/handoff` — brief, surface, information architecture, flows, visual direction (only when there is no design system), component mapping, and accessibility, as sections of ONE artifact.
 
-- **`ux-brief`** — feature summary, primary actor, success criteria, user flows (happy path + decision points), information architecture
-- **`component-spec`** — full component inventory: reused (with use case), extended (with changes needed), new (with reason, props, events, responsive behavior)
-
-Consumed by: **Developer** (reads both to implement the UI), **Architect** (reads `ux-brief` to understand user flows when designing API contracts).
+Consumed by: **Architect** (the flows and component gaps the design has to serve), **Developer** (implements the flows, fills the gaps, builds the visual direction as first tokens), **QA** (every flow branch and every empty, loading, and error state becomes a candidate edge case, and the inline copy becomes exact-wording assertions).
 
 ## Common patterns
 
 ```
 /asdt-ux-ui Design the onboarding flow for new users
-# → New multi-step UI — needs full IA + flows before any component work
+# → New multi-step UI — IA and flows before any component work
 ```
 
 ```
 /asdt-ux-ui Map the notification preferences screen
-# → Existing UI pattern to extend — component-mapping will identify reuse opportunities
+# → Existing UI to extend — the mapping names what can be reused and what is missing
 ```
 
 ```
-/asdt-ux-ui Spec the mobile layout for the dashboard
-# → Breakpoint behavior is recorded per component in the mapping
+/asdt-ux-ui Design the first screens of the admin panel
+# → No design system yet — the hand-off carries a proposed visual direction
 ```
 
 ## Limits — what it does NOT do
 
-- Does not write implementation code — only specifications and structure
+- Does not write implementation code or any file — only the hand-off
 - Does not produce architecture decisions or test plans
-- Never proposes components inconsistent with the existing design system
-- The generated UI must feel like it belongs to the existing application
-- `information-architecture` cannot be skipped before `user-flows`
-- `ux-handoff` always runs — consolidation is non-negotiable
+- Never invents tokens or components against an existing design system — an unmet need is a named gap
+- Never writes a second set of flows per surface — one design for the primary surface, one adaptation line for the rest
+- Never asserts an accessibility pass it can't verify from the tokens or the proposed palette

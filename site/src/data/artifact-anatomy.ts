@@ -8,12 +8,12 @@ export const artifactAnatomy: ArtifactAnatomyField[] = [
   {
     id: 'title',
     label: 'Title',
-    value: 'add-auth/developer/dev-spec',
+    value: 'add-auth/developer/handoff',
   },
   {
     id: 'topicKey',
     label: 'Topic Key',
-    value: 'asdt/add-auth/developer/dev-spec',
+    value: 'asdt/add-auth/developer/handoff',
   },
   {
     id: 'type',

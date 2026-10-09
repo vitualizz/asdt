@@ -17,10 +17,10 @@ ASDT solves this with a knowledge base. Every artifact a specialist produces is 
 
 ## How knowledge flows
 
-Every specialist step produces one artifact. That artifact is saved to the knowledge base with two identifiers:
+Every specialist run saves one hand-off. It is stored in the knowledge base with two identifiers:
 
-- A **human-readable title** — e.g. `"add-auth/developer/dev-implementation"`
-- A **stable key** for machine retrieval — used by subsequent specialists to fetch exactly the artifact they need
+- A **human-readable title** — e.g. `"add-auth/developer/handoff"`
+- A **stable key** for machine retrieval — `{project}/{change}/{role}/handoff`, used by subsequent specialists to fetch exactly the hand-off they need
 
 When the next specialist runs, it queries the knowledge base by key. If the artifact exists, it proceeds normally. If it's missing, it notes the gap in `open_items` and continues with available context — no hard failures, no blocked pipelines.
 
@@ -71,7 +71,15 @@ Picking up a pipeline after a session ends is the same as continuing it mid-sess
 /asdt-developer Implement based on the Architect's ADR
 ```
 
-The Developer searches the knowledge base for the Architect's artifact by key. If found, it proceeds normally. If not found, it notes the missing input and proceeds with available context.
+The Developer searches the knowledge base for the Architect's hand-off by key. If found, it proceeds normally. If not found, it notes the missing input and proceeds with available context.
+
+The same holds for the Developer's own plan. A plan is saved under the Developer's key before anything is written, so a later session can pick it up where it stopped:
+
+```
+/asdt-developer "implement the plan we approved"
+```
+
+It finds the saved spec and goes straight to the approval gate — or, when the plan was already built but never checked, straight to verification. Once built, the same key holds what was written and how verification went.
 
 Session boundaries don't matter. Monday's Architect output is as readable to Thursday's Developer as if they'd run back to back.
 
@@ -81,6 +89,6 @@ Every `mem_save` call — the save call a specialist uses to store its own artif
 
 ## What Engram is not
 
-Engram is not a file system. Artifacts are documents, not code files. When the Developer produces code snippets as part of its implementation artifact, those snippets live inside the Engram document — they're specifications for what to write, not files on disk. The human (or the AI assistant in a later step) applies them to the actual codebase.
+Engram is not a file system. Artifacts are documents, not code files. When the Developer writes code, it writes real files to your repository — only the ones you approved — and its hand-off records which files changed and why. When it has no files to write (a plan with no declared targets), the code comes back as snippets inside the Engram document — specifications for what to write, not files on disk.
 
 This separation is intentional. Code files have git history. Artifacts have the knowledge base. Both live where they belong.
