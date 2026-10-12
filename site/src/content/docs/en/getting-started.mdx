@@ -15,6 +15,7 @@ Before using ASDT, you need:
 
 - **Claude Code** or **OpenCode** — installed and authenticated (these are the only assistants ASDT targets today)
 - **A memory provider** (optional, recommended) — carries key project knowledge (decisions, conventions, lessons) across sessions. The installer offers [Engram](https://github.com/Gentleman-Programming/engram). Without one, ASDT still works within each session
+- **A code-intelligence provider** (optional) — an index of your code that answers symbol and structure questions in one call instead of grep-and-read loops. The installer offers [Codegraph](https://github.com/Gentleman-Programming/codegraph). Without one, specialists grep and read
 - A terminal (bash or zsh)
 
 > **Building from source?** Go 1.22+ is required. Running the one-line installer downloads a pre-built binary — no compiler needed.
@@ -38,9 +39,9 @@ asdt-tui
 `asdt-tui` is an interactive terminal UI. From the main menu, choose **Install / Update Skills** and it walks you through a short guided flow:
 
 1. **Language** — pick the language ASDT speaks in: `en` (English), `es-419` (Latin American Spanish), or `es-ES` (peninsular Spanish). Your choice drives both the installer UI and the installed specialists.
-2. **Environment check** — probes your OS, shell, Engram, and Codegraph (an optional code-search index). Nothing here blocks you: a missing Engram or Codegraph is a warning with its install link.
+2. **Environment check** — probes your OS, shell, every memory provider (Engram), and every code-intelligence provider (Codegraph). Nothing here blocks you: a missing provider is a warning with its install link.
 3. **Assistants** — choose which to target: **Claude Code**, **OpenCode**, or both. Each shows a present/missing badge.
-4. **Memory provider** — pick Engram or **No memory**. The default is Engram when it is on your `PATH`, otherwise No memory. You can pick Engram before installing it: the installer warns and shows the install link, and memory works once Engram is connected. A provider is recommended because it keeps key project knowledge between sessions.
+4. **Providers** — one screen, two choices. **Memory**: pick Engram or **No memory**. The default is Engram when it is on your `PATH`, otherwise No memory. You can pick Engram before installing it: the installer warns and shows the install link, and memory works once Engram is connected. A provider is recommended because it keeps key project knowledge between sessions. **Code intelligence**: pick Codegraph or **No code intelligence**, defaulting the same way. Specialists query the index only in a project it has indexed; everywhere else they grep and read.
 5. **Model preset** — pick how much model horsepower each specialist step uses (see below).
 6. **Persona** — optionally pick a persona for the installed assistants, and whether they should use emojis. You can skip this entirely.
 7. **Permissions** — an opt-in gate for the Claude Code permission overlay. Declining is the safe default and writes nothing.

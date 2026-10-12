@@ -29,3 +29,20 @@
 >
 > **Evidence**: if your step read the codebase, anchor every claim to something
 > checkable — a path, a symbol, a command. If it did not, this rule is not yours.
+
+## Code intelligence
+
+A code-intelligence provider answers symbol and structure questions from an index of the project: one call in place of a grep-and-read loop. Use it only on an indexed project: your platform block carries the `Tooling:` line the binding below names, or, when your prompt carries no platform block, the index marker the binding names exists at the repository root — AND the tool the binding names for the verb is on your own tool list (after any host prefix). Otherwise, and whenever the binding names no provider, use grep and read.
+
+On an indexed project, reach for it first on anything symbol- or structure-shaped:
+
+- **explore** (a question → the relevant source, grouped by file): start here for a symbol, architecture, or "how does this work" question.
+- **search** (a symbol → where it is defined), then **read** (a symbol → its full definition).
+- **callers** / **callees** (a symbol → what calls it / what it calls).
+- **impact** (a symbol → what breaks if it changes).
+
+Call only the verbs the binding lists, through the tools it names. Grep and read stay right, indexed or not, for text the index does not model: configs, schemas (`db/schema.rb`), locales, generated DSL.
+
+<!-- code-intel-binding: spliced at install from the selected provider; never hand-edit between the markers. -->
+<!-- ASDT:GENERATED:code-intel-binding -->
+<!-- /ASDT:GENERATED:code-intel-binding -->

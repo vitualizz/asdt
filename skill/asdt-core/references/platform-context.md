@@ -37,11 +37,11 @@ State: {design_fingerprint.state_management}
 ORM: {design_fingerprint.orm}
 CI/CD: {design_fingerprint.ci_cd}
 Lint: {design_fingerprint.lint}
-Tooling: codegraph index available — prefer codegraph over grep/read loops
+Tooling: {code_intelligence} index available — prefer code intelligence over grep/read loops
 Design surface: {primary_design_surface}
 ```
 
-`Conventions` joins its two parts with ` | ` only when both are present. With one part, emit it alone; with neither, drop the line. `Monorepo: yes` is emitted only when `is_monorepo` is true. The `Tooling` line is emitted with exactly this wording, and only when `code_intelligence` is present.
+`Conventions` joins its two parts with ` | ` only when both are present. With one part, emit it alone; with neither, drop the line. `Monorepo: yes` is emitted only when `is_monorepo` is true. The `Tooling` line is emitted with exactly this wording, and only when `code_intelligence` is present: it is how a step learns this project is indexed (`asdt-core/executor-header.md`, Code intelligence).
 
 **`Design surface` is the one line that is never dropped.** `mobile`, `tablet`, or `desktop` is emitted as-is. An absent key (the question was never asked) emits `Design surface: mobile (default — never asked)`. `none` emits `Design surface: none — no visual surface`. What a step does with this line lives in that step's own file.
 
@@ -53,7 +53,6 @@ Conventions: cmd/ for binaries, internal/ for private packages
 Tests: go test
 CI/CD: github-actions
 Lint: golangci-lint
-Tooling: codegraph index available — prefer codegraph over grep/read loops
 Design surface: none — no visual surface
 ```
 

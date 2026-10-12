@@ -26,7 +26,7 @@ Each arrives as a path to read. Both are required: see Processing step 1.
 
    The plain keys:
    - `stack`, `file_structure`: the answer when there is one, else the detection. `stack` is always written, `[]` when empty. `file_structure` is omitted when neither has a value.
-   - `code_intelligence`: `codegraph` when detected, otherwise the key is removed. Never `none`, never `unknown`.
+   - `code_intelligence`: the detected value when the detection carries the row, otherwise the key is removed. Never `none`, never `unknown`. Unlike `memory`, nothing is kept here: the key states a fact about this project's index, so a run that does not detect one removes it.
    - `primary_design_surface`: the answer (`mobile`, `tablet`, `desktop`, or `none`), else the prior value, else omitted. An omitted key means "never asked" and consumers default it to `mobile`; `none` is the human's answer that there is no visual surface. Never write one in place of the other.
    - `memory.provider`: the payload's `memory_provider`, even over an existing value. When it is `none` or absent, keep the existing `memory` block as-is, or omit the block when there is none: `none` is never written.
    - `strict_tdd`: carried forward byte-for-byte when present, never added.
@@ -38,7 +38,7 @@ Each arrives as a path to read. Both are required: see Processing step 1.
    memory:
      provider: {memory_provider}
    strict_tdd: false
-   code_intelligence: codegraph
+   code_intelligence: {code_intelligence}
    primary_design_surface: desktop
    stack: [go, node]
    file_structure: "cmd/ for binaries, internal/ for private packages"

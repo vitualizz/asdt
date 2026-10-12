@@ -21,18 +21,20 @@ const (
 	StateMainMenu ViewState = iota
 	// StateEnvironmentCheck is shown after the user selects "Install / Update
 	// Skills". It fans out environment probes (OS, Shell, every memory
-	// provider in installer.Providers, Codegraph) concurrently; Continue is
-	// gated only until all probes resolve. A missing memory provider is a
-	// warning, never a block: memory is optional.
+	// provider in installer.Providers, every code-intelligence provider in
+	// installer.CodeIntelProviders) concurrently; Continue is gated only until
+	// all probes resolve. A missing provider is a warning, never a block:
+	// memory and code intelligence are both optional.
 	StateEnvironmentCheck
 	// StateDashboard shows the dashboard overview with per-assistant status.
 	StateDashboard
 	// StateSelectAssistants allows the user to choose assistants to install.
 	// Shows present/missing status badges alongside checkboxes.
 	StateSelectAssistants
-	// StateSelectProvider allows the user to choose a memory provider, or "No
-	// memory" (the last row). It never gates Continue: an undetected provider
-	// shows its install hint as a warning.
+	// StateSelectProvider allows the user to choose a memory provider (or "No
+	// memory") and a code-intelligence provider (or "No code intelligence"):
+	// two radio groups on one screen. It never gates Continue: an undetected
+	// provider shows its install hint as a warning.
 	StateSelectProvider
 	// StateAgentSetup shows the persona selection step (optional).
 	StateAgentSetup
@@ -76,7 +78,7 @@ type preflightState struct {
 	sections       []components.SectionGroup
 	done           bool
 	providersFound map[installer.ProviderID]bool // see EnvironmentCheckMsg
-	codegraphFound bool
+	codeIntelFound map[installer.ProviderID]bool // see EnvironmentCheckMsg
 }
 
 // wizardState holds install-wizard state across SelectAssistants → Installing → Done.
@@ -86,8 +88,11 @@ type wizardState struct {
 	// last provider) is "No memory". The environment check sets it to the
 	// first provider found, else "No memory".
 	provider int
+	// codeIntel indexes installer.CodeIntelProviders; noCodeIntelChoice() is
+	// "No code intelligence". Defaulted like provider.
+	codeIntel int
 	// providerChosen is set once the user reaches the provider screen; a
-	// late EnvironmentCheckMsg then leaves provider alone.
+	// late EnvironmentCheckMsg then leaves provider and codeIntel alone.
 	providerChosen  bool
 	results         []installer.InstallResult
 	agentResults    []installer.AgentConfigResult
@@ -243,9 +248,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for _, p := range installer.Providers {
 				providersFound[p.ID] = !rowHasStatus(m.preflight.sections, p.Name, components.CheckStatusWarning)
 			}
-			codegraphFound := !rowHasStatus(m.preflight.sections, "Codegraph", components.CheckStatusWarning)
+			codeIntelFound := make(map[installer.ProviderID]bool, len(installer.CodeIntelProviders))
+			for _, p := range installer.CodeIntelProviders {
+				codeIntelFound[p.ID] = !rowHasStatus(m.preflight.sections, p.Name, components.CheckStatusWarning)
+			}
 			return m, func() tea.Msg {
-				return EnvironmentCheckMsg{ProvidersFound: providersFound, CodegraphFound: codegraphFound}
+				return EnvironmentCheckMsg{ProvidersFound: providersFound, CodeIntelFound: codeIntelFound}
 			}
 		}
 		return m, nil
@@ -253,9 +261,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case EnvironmentCheckMsg:
 		m.preflight.done = true
 		m.preflight.providersFound = msg.ProvidersFound
-		m.preflight.codegraphFound = msg.CodegraphFound
+		m.preflight.codeIntelFound = msg.CodeIntelFound
 		if !m.wizard.providerChosen {
 			m.wizard.provider = m.defaultProviderChoice()
+			m.wizard.codeIntel = m.defaultCodeIntelChoice()
 		}
 		return m, nil
 
@@ -477,6 +486,7 @@ func (m Model) handleLanguageSelect(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.preflight.sections = initialPreflightSections(m.catalog.Installer)
 		m.preflight.done = false
 		m.preflight.providersFound = nil
+		m.preflight.codeIntelFound = nil
 		m.state = StateEnvironmentCheck
 		m.cursor = 0
 		return m, tea.Batch(EnvironmentCheckCmd(m.catalog.Installer), m.spinner.Tick)
@@ -545,15 +555,17 @@ func (m Model) handleSelectAssistants(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleSelectProvider handles keys for the memory provider screen: one radio
-// row per installer.Providers entry, then "No memory", then the confirm
-// button. Up/Down move only the cursor — the selection changes on Space or
-// Enter on a row (SelectAssistants / ModelSetup idiom), so walking past "No
-// memory" to the button never silently replaces the chosen provider. Enter on
-// a row selects it and continues; Enter on the button continues with the
-// current selection. An undetected provider is a warning, never a block.
+// handleSelectProvider handles keys for the provider screen: the memory group
+// (one radio row per installer.Providers entry, then "No memory"), the
+// code-intelligence group (one row per installer.CodeIntelProviders entry,
+// then "No code intelligence"), then the confirm button. Up/Down move only the
+// cursor — the selection changes on Space or Enter on a row (SelectAssistants
+// / ModelSetup idiom), so walking past a "No …" row to the button never
+// silently replaces a chosen provider. Space or Enter on a row selects it in
+// its own group; Enter then continues, and Enter on the button continues with
+// both current selections. An undetected provider is a warning, never a block.
 func (m Model) handleSelectProvider(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	count := noMemoryChoice() + 1 // every provider plus "No memory"
+	count := providerButtonRow() // every row of both groups
 	switch msg.Type {
 	case tea.KeyUp:
 		if m.cursor > 0 {
@@ -564,19 +576,26 @@ func (m Model) handleSelectProvider(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursor++
 		}
 	case tea.KeySpace:
-		if m.cursor < count {
-			m.wizard.provider = m.cursor
-		}
+		m = m.selectProviderRow()
 	case tea.KeyEnter:
-		if m.cursor < count {
-			m.wizard.provider = m.cursor
-		}
-		return m.enterModelGate(), nil
+		return m.selectProviderRow().enterModelGate(), nil
 	case tea.KeyEsc:
 		m.state = StateSelectAssistants
 		m.cursor = 0
 	}
 	return m, nil
+}
+
+// selectProviderRow selects the provider-screen row under the cursor in its
+// own group; the button selects nothing.
+func (m Model) selectProviderRow() Model {
+	switch {
+	case m.cursor <= noMemoryChoice():
+		m.wizard.provider = m.cursor
+	case m.cursor < providerButtonRow():
+		m.wizard.codeIntel = m.cursor - codeIntelFirstRow()
+	}
+	return m
 }
 
 // enterModelGate transitions into StateModelGate, detecting available AI
@@ -1061,7 +1080,7 @@ func (m Model) buildInstallCmd() tea.Cmd {
 	assistants := m.selectedAssistants()
 	provider := m.SelectedProvider()
 	lang := languageOptions[m.language.selected].Code
-	opts := installer.InstallOptions{CodegraphFound: m.preflight.codegraphFound}
+	opts := installer.InstallOptions{CodeIntel: m.SelectedCodeIntel()}
 
 	var installCmd tea.Cmd
 	if m.wizard.modelGateChoice == installer.PresetChameleon {
@@ -1215,6 +1234,39 @@ func (m Model) SelectedProvider() installer.ProviderDescriptor {
 		return installer.Providers[m.wizard.provider]
 	}
 	return installer.ProviderDescriptor{}
+}
+
+// codeIntelFirstRow is the provider-screen index of the first
+// code-intelligence row: just below the memory group's "No memory".
+func codeIntelFirstRow() int { return noMemoryChoice() + 1 }
+
+// noCodeIntelChoice is the code-intelligence group index of "No code
+// intelligence": one past the last installer.CodeIntelProviders entry.
+func noCodeIntelChoice() int { return len(installer.CodeIntelProviders) }
+
+// providerButtonRow is the provider-screen index of the confirm button: one
+// past the code-intelligence group's "No code intelligence".
+func providerButtonRow() int { return codeIntelFirstRow() + noCodeIntelChoice() + 1 }
+
+// defaultCodeIntelChoice is the code-intelligence default: the first provider
+// the environment check found, else "No code intelligence".
+func (m Model) defaultCodeIntelChoice() int {
+	for i, p := range installer.CodeIntelProviders {
+		if m.preflight.codeIntelFound[p.ID] {
+			return i
+		}
+	}
+	return noCodeIntelChoice()
+}
+
+// SelectedCodeIntel returns the chosen code-intelligence provider, or the zero
+// CodeIntelDescriptor — the installer's "no code intelligence" selection.
+// Exported for tests.
+func (m Model) SelectedCodeIntel() installer.CodeIntelDescriptor {
+	if m.wizard.codeIntel < noCodeIntelChoice() {
+		return installer.CodeIntelProviders[m.wizard.codeIntel]
+	}
+	return installer.CodeIntelDescriptor{}
 }
 
 func rowHasStatus(sections []components.SectionGroup, label string, status components.CheckStatus) bool {

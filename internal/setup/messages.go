@@ -73,7 +73,9 @@ type EnvironmentCheckMsg struct {
 	// missing ID reads as not found. It picks the provider screen's default
 	// and its warnings; it never gates Continue.
 	ProvidersFound map[installer.ProviderID]bool
-	CodegraphFound bool
+	// CodeIntelFound is ProvidersFound for each installer.CodeIntelProviders
+	// ID: it picks the code-intelligence default and its warnings.
+	CodeIntelFound map[installer.ProviderID]bool
 }
 
 // UpdateCheckMsg carries the result of the GitHub latest-release lookup.
@@ -198,9 +200,11 @@ const environmentCheckTimeout = 5 * time.Second
 func EnvironmentCheckCmd(s i18n.InstallerStrings) tea.Cmd {
 	cmds := []tea.Cmd{osProbeCmd(), shellProbeCmd()}
 	for _, p := range installer.Providers {
-		cmds = append(cmds, providerProbeCmd(p, s))
+		cmds = append(cmds, providerProbeCmd(p.Name, p.Detect, s.DetailProviderNotFound))
 	}
-	cmds = append(cmds, codegraphProbeCmd())
+	for _, p := range installer.CodeIntelProviders {
+		cmds = append(cmds, providerProbeCmd(p.Name, p.Detect, s.DetailCodeIntelNotFound))
+	}
 	return tea.Batch(cmds...)
 }
 
@@ -229,53 +233,33 @@ func shellProbeCmd() tea.Cmd {
 	}
 }
 
-// providerProbeCmd resolves p's preflight row, labeled p.Name: a soft warning
-// with its install hint when p.Detect.Binary is not on PATH, OK with its path
-// when it is, and OK with an informational detail when p has no local probe.
-// No outcome blocks: a memory provider is optional but recommended.
-func providerProbeCmd(p installer.ProviderDescriptor, s i18n.InstallerStrings) tea.Cmd {
+// providerProbeCmd resolves a provider's preflight row, labeled label: a soft
+// warning carrying notFound (a printf format taking detect.InstallURL) when
+// detect.Binary is not on PATH, OK with its path when it is, and OK with an
+// informational detail when the provider has no local probe. No outcome
+// blocks: every provider — memory or code intelligence — is optional.
+func providerProbeCmd(label string, detect installer.ProviderDetect, notFound string) tea.Cmd {
 	return func() tea.Msg {
-		if p.Detect.Binary == "" {
+		if detect.Binary == "" {
 			return EnvironmentCheckProgressMsg{
-				RowLabel: p.Name,
+				RowLabel: label,
 				Status:   components.CheckStatusOK,
 				Detail:   "no local check — /asdt-init verifies it is connected",
 			}
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), environmentCheckTimeout)
 		defer cancel()
-		path, err := lookPathCtx(ctx, p.Detect.Binary)
+		path, err := lookPathCtx(ctx, detect.Binary)
 		if err != nil {
 			return EnvironmentCheckProgressMsg{
-				RowLabel: p.Name,
+				RowLabel: label,
 				Status:   components.CheckStatusWarning,
-				Detail:   fmt.Sprintf(s.DetailProviderNotFound, p.Detect.InstallURL),
+				Detail:   fmt.Sprintf(notFound, detect.InstallURL),
 				SoftWarn: true,
 			}
 		}
 		return EnvironmentCheckProgressMsg{
-			RowLabel: p.Name,
-			Status:   components.CheckStatusOK,
-			Detail:   path,
-		}
-	}
-}
-
-func codegraphProbeCmd() tea.Cmd {
-	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), environmentCheckTimeout)
-		defer cancel()
-		path, err := lookPathCtx(ctx, "codegraph")
-		if err != nil {
-			return EnvironmentCheckProgressMsg{
-				RowLabel: "Codegraph",
-				Status:   components.CheckStatusWarning,
-				Detail:   "not found — optional: https://github.com/Gentleman-Programming/codegraph",
-				SoftWarn: true,
-			}
-		}
-		return EnvironmentCheckProgressMsg{
-			RowLabel: "Codegraph",
+			RowLabel: label,
 			Status:   components.CheckStatusOK,
 			Detail:   path,
 		}

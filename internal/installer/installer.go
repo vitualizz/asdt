@@ -17,15 +17,19 @@ type InstallResult struct {
 	Err             error
 }
 
-// InstallOptions carries install-time environment detection results into agent
-// generation. Zero value = nothing detected = output identical to prior behavior.
+// InstallOptions carries install-time choices beyond the memory provider.
+// The zero value binds no code-intelligence provider.
 type InstallOptions struct {
-	CodegraphFound bool
+	// CodeIntel is the code-intelligence provider every code-intel-binding
+	// region is bound to and whose tools the executor agents are granted. The
+	// zero CodeIntelDescriptor binds none: steps use grep and read.
+	CodeIntel CodeIntelDescriptor
 }
 
 // InstallWithModels copies skill files from skillsFS into each assistant's
 // SkillsDir, binds every memory-binding region to provider (the zero
-// ProviderDescriptor binds none: a "no memory" install), and returns one
+// ProviderDescriptor binds none: a "no memory" install) and every
+// code-intel-binding region to opts.CodeIntel, and returns one
 // result per assistant. A failure for one assistant does not abort
 // the others. lang is the language code chosen in the TUI; it is recorded in
 // each assistant's install metadata (an empty lang preserves the existing
@@ -116,7 +120,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 			destDir = filepath.Join(assistant.SkillsDir, SiblingDestName("."))
 		}
 
-		written, copyErr := copyEntry(skillsFS, entry, srcRoot, destDir, provider, models, removeModels)
+		written, copyErr := copyEntry(skillsFS, entry, srcRoot, destDir, provider, opts.CodeIntel, models, removeModels)
 		if copyErr != nil {
 			result.Err = copyErr
 			return result
@@ -147,6 +151,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 			Emojis:      existing.Emojis,
 			Language:    lang,
 			Memory:      provider.MetaValue(),
+			CodeIntel:   opts.CodeIntel.MetaValue(),
 			AgentTypes:  AgentTypeNames,
 			Files:       relWritten,
 		})
@@ -187,13 +192,13 @@ func commandRootFor(id AssistantID) string {
 // srcRoot is "." for loose root-level files (so the file's own name is used
 // as the relative path) or the directory entry's own name (so its subtree is
 // walked and copied beneath destDir).
-func copyEntry(skillsFS fs.FS, entry fs.DirEntry, srcRoot, destDir string, provider ProviderDescriptor, models map[string]string, removeModels bool) ([]string, error) {
+func copyEntry(skillsFS fs.FS, entry fs.DirEntry, srcRoot, destDir string, provider ProviderDescriptor, codeIntel CodeIntelDescriptor, models map[string]string, removeModels bool) ([]string, error) {
 	var written []string
 
 	if !entry.IsDir() {
 		rel := entry.Name()
 		target := filepath.Join(destDir, filepath.FromSlash(rel))
-		if err := writeSkillFile(skillsFS, entry.Name(), target, provider, models, removeModels); err != nil {
+		if err := writeSkillFile(skillsFS, entry.Name(), target, provider, codeIntel, models, removeModels); err != nil {
 			return nil, err
 		}
 		return []string{target}, nil
@@ -213,7 +218,7 @@ func copyEntry(skillsFS fs.FS, entry fs.DirEntry, srcRoot, destDir string, provi
 		}
 		target := filepath.Join(destDir, rel)
 
-		if err := writeSkillFile(skillsFS, path, target, provider, models, removeModels); err != nil {
+		if err := writeSkillFile(skillsFS, path, target, provider, codeIntel, models, removeModels); err != nil {
 			return err
 		}
 		written = append(written, target)
@@ -228,9 +233,9 @@ func copyEntry(skillsFS fs.FS, entry fs.DirEntry, srcRoot, destDir string, provi
 
 // writeSkillFile reads srcPath from skillsFS, splices its generated regions —
 // plus per-step model injection for workflow.yaml files — binds its memory
-// interface to provider, and writes the result to target, creating any needed
-// parent directories.
-func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDescriptor, models map[string]string, removeModels bool) error {
+// interface to provider and its code-intelligence interface to codeIntel, and
+// writes the result to target, creating any needed parent directories.
+func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDescriptor, codeIntel CodeIntelDescriptor, models map[string]string, removeModels bool) error {
 	data, readErr := fs.ReadFile(skillsFS, srcPath)
 	if readErr != nil {
 		return fmt.Errorf("read %s: %w", srcPath, readErr)
@@ -279,13 +284,18 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 		data = headed
 	}
 
-	// The memory binding runs LAST, over every file: the specialist-header
-	// splice above copies protocol.md's still-empty binding region into each
-	// routed SKILL.md, and this one pass binds that copy and every standalone
-	// region (protocol.md, asdt-init/SKILL.md, the root SKILL.md) alike. Marker-free files pass through unchanged.
+	// The provider bindings run LAST, over every file: the specialist-header
+	// splice above copies protocol.md's still-empty memory-binding region into
+	// each routed SKILL.md, and this one pass binds that copy and every
+	// standalone region (protocol.md, asdt-init/SKILL.md, the root SKILL.md,
+	// executor-header.md) alike. Marker-free files pass through unchanged.
 	bound, bindErr := bindMemory(data, provider)
 	if bindErr != nil {
 		return fmt.Errorf("bind memory provider into %s: %w", srcPath, bindErr)
+	}
+	bound, bindErr = bindCodeIntel(bound, codeIntel)
+	if bindErr != nil {
+		return fmt.Errorf("bind code-intelligence provider into %s: %w", srcPath, bindErr)
 	}
 
 	if mkErr := os.MkdirAll(filepath.Dir(target), 0o755); mkErr != nil {

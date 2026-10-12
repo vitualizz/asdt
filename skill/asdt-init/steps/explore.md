@@ -138,7 +138,8 @@ When the command output spans libraries from ≥ 2 distinct rows above, emit the
 The fingerprint records _how_ the codebase is built: its i18n, CSS, ORM, state management, CI/CD, lint, and code-intelligence tooling. Each concern is a **pack** with the same discipline as the probes above, and each fired pack emits one value with its source and confidence.
 
 **Fire gate.** Decide which packs run from the stack scan's `detected_stack`
-alone — a pure lookup, no file reads. A pack that does not fire emits **NO key
+and, for `code_intelligence`, the code-intelligence binding in your executor
+header — a pure lookup, no file reads. A pack that does not fire emits **NO key
 and NO ambiguity** (it is silent, never `none`). `{node_root}`, `{go_root}`, and
 `{py_root}` are the stack scan's `{lang_root}`s for `node`, `go`, and `python`.
 
@@ -150,7 +151,7 @@ and NO ambiguity** (it is silent, never `none`). `{node_root}`, `{go_root}`, and
 | `state_management` | `node` ∈ `detected_stack` | `{node_root}` |
 | `ci_cd` | always | repo root |
 | `lint` | `node`, `go`, or `python` ∈ `detected_stack` | first such lang in `detected_stack` order (first-lang-wins) |
-| `code_intelligence` | always | repo root |
+| `code_intelligence` | the binding names a provider | repo root |
 
 **Firing outcome rules** (uniform across packs):
 
@@ -288,15 +289,15 @@ Config-file checks are fixed-path `ls` at `{lang_root}`; dep checks grep the man
 
 Every row is `source: detected`.
 
-**Pack: `code_intelligence`** *(fires: always — repo root; modeled on `is_monorepo`, positive-evidence-only)*:
+**Pack: `code_intelligence`** *(fires: the binding names a provider — repo root; modeled on `is_monorepo`, positive-evidence-only)*. Probe the index marker the binding names:
 
 ```
-ls -d .codegraph 2>/dev/null | head -1
+ls -d {index marker} 2>/dev/null | head -1
 ```
 
 | Evidence | Value | Source | Confidence |
 |---|---|---|---|
-| `.codegraph` present | `codegraph` | detected | high |
+| the index marker present | the config value the binding names | detected | high |
 | absent | *(emit NO key — never `none`, never `unknown`, never an ambiguity)* |
 
 ### Confidence and source rules
@@ -343,7 +344,7 @@ file_structure: {the architectural_style row's file_structure; line omitted when
 | naming_style | ... | ... | ... |
 | architectural_style | ... | ... | ... |
 | design_fingerprint.{concern} | ... | ... | ... |
-| code_intelligence | codegraph | detected | high |
+| code_intelligence | {config value} | detected | high |
 
 ## Ambiguities
 1. `{field}`: {the question} | options: {a / b, or "free-form"} | default: {value} | confidence: {medium|low} | {skippable|blocking}
@@ -351,4 +352,4 @@ file_structure: {the architectural_style row's file_structure; line omitted when
 ## Open items
 ```
 
-The table carries one `design_fingerprint.{concern}` row per FIRED pack in pack order (`i18n`, `css_approach`, `orm`, `state_management`, `ci_cd`, `lint`), a `none` result included, and the `code_intelligence` row only when `.codegraph` exists. Write `none` under `## Ambiguities` when there are none.
+The table carries one `design_fingerprint.{concern}` row per FIRED pack in pack order (`i18n`, `css_approach`, `orm`, `state_management`, `ci_cd`, `lint`), a `none` result included, and the `code_intelligence` row only when the index marker exists. Write `none` under `## Ambiguities` when there are none.

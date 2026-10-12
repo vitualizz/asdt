@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// ProviderID identifies a known memory provider.
+// ProviderID identifies a known provider: memory or code intelligence.
 type ProviderID = string
 
 // ProviderEngram identifies the Engram memory provider.
@@ -30,8 +30,9 @@ const (
 // memoryVerbs is the canonical verb order: the order the binding lists them.
 var memoryVerbs = []MemoryVerb{MemoryRemember, MemoryRecall}
 
-// MemoryTool is one provider tool call in a verb's recipe.
-type MemoryTool struct {
+// ProviderTool is one provider tool call bound to a verb: a memory verb's
+// recipe step, or a code-intelligence verb's tool.
+type ProviderTool struct {
 	Name  string // bare tool name, without any host prefix (e.g. "mem_save")
 	Usage string // how to call it for this verb, in prompt prose; spliced verbatim
 }
@@ -54,7 +55,7 @@ type ProviderDescriptor struct {
 	ConfigValue string
 	// Tools binds every verb in memoryVerbs to its recipe: one or more tool
 	// calls, made in order (recall may need a search, then a full read).
-	Tools map[MemoryVerb][]MemoryTool
+	Tools map[MemoryVerb][]ProviderTool
 	// ClaudeToolPrefixes are the MCP namespaces Claude Code may expose the
 	// tools under (plugin install and plain MCP install). The binding names
 	// them so the orchestrator matches its own tool list; optional — a
@@ -65,7 +66,7 @@ type ProviderDescriptor struct {
 }
 
 // ProviderDetect is how the setup TUI's environment check looks for a provider
-// before installing.
+// — memory or code intelligence — before installing.
 type ProviderDetect struct {
 	// Binary is the executable looked up on PATH. Empty means the provider has
 	// nothing to probe locally: its row is informational and never blocks.
@@ -82,7 +83,7 @@ var Providers = []ProviderDescriptor{
 		Name:        "Engram",
 		Description: "Persistent cross-session memory via the Engram MCP server.",
 		ConfigValue: "engram",
-		Tools: map[MemoryVerb][]MemoryTool{
+		Tools: map[MemoryVerb][]ProviderTool{
 			MemoryRemember: {{
 				Name:  "mem_save",
 				Usage: "pass `project: {project}`, `topic_key: {project}/notes/{subject}` (saving to an existing `topic_key` replaces that note, which is how a newer note supersedes the older), `title: {subject}`, `type` (`decision` for a decision, `pattern` for a convention, `learning` for a lesson, `discovery` for a finding), and the note as `content`",
@@ -106,10 +107,14 @@ var Providers = []ProviderDescriptor{
 	},
 }
 
+// providerNone is the value that stands for "no provider" of either kind. No
+// provider's ConfigValue may equal it.
+const providerNone = "none"
+
 // MemoryNone is the value that stands for "no memory provider": it is what
 // /asdt-init passes as `memory_provider` when the binding names none (and then
 // writes no `memory.provider` key), and what install metadata records.
-const MemoryNone = "none"
+const MemoryNone = providerNone
 
 // IsNone reports whether p is the "no memory" selection: the zero
 // ProviderDescriptor. A descriptor with any identity or tool set is a provider,
@@ -148,33 +153,53 @@ const (
 // tool with no Name or Usage, an empty Claude Code prefix, or a probe Binary
 // with nowhere to point a user who lacks it.
 func (p ProviderDescriptor) Validate() error {
-	if p.ID == "" || p.Name == "" || p.ConfigValue == "" {
-		return fmt.Errorf("memory provider %q has no ID, Name or ConfigValue", p.ID)
-	}
-	if p.ConfigValue == MemoryNone {
-		return fmt.Errorf("memory provider %q has ConfigValue %q, which means no provider", p.ID, MemoryNone)
+	const kind = "memory provider"
+	if err := validateProviderIdentity(kind, p.ID, p.Name, p.ConfigValue, p.ClaudeToolPrefixes, p.Detect); err != nil {
+		return err
 	}
 	for _, verb := range memoryVerbs {
 		tools := p.Tools[verb]
 		if len(tools) == 0 {
-			return fmt.Errorf("memory provider %q binds no tool to verb %q", p.ID, verb)
+			return fmt.Errorf("%s %q binds no tool to verb %q", kind, p.ID, verb)
 		}
 		for _, tool := range tools {
-			if tool.Name == "" {
-				return fmt.Errorf("memory provider %q binds a tool with no Name to verb %q", p.ID, verb)
-			}
-			if tool.Usage == "" {
-				return fmt.Errorf("memory provider %q gives verb %q tool %q no Usage", p.ID, verb, tool.Name)
+			if err := validateProviderTool(kind, p.ID, string(verb), tool); err != nil {
+				return err
 			}
 		}
 	}
-	for _, prefix := range p.ClaudeToolPrefixes {
+	return nil
+}
+
+// validateProviderIdentity holds the checks every provider kind shares: an ID,
+// Name and ConfigValue, a ConfigValue that is not the "none" selection, no empty
+// Claude Code prefix, and an install URL for any probed binary. kind names the
+// provider kind in the error ("memory provider").
+func validateProviderIdentity(kind, id, name, configValue string, prefixes []string, detect ProviderDetect) error {
+	if id == "" || name == "" || configValue == "" {
+		return fmt.Errorf("%s %q has no ID, Name or ConfigValue", kind, id)
+	}
+	if configValue == providerNone {
+		return fmt.Errorf("%s %q has ConfigValue %q, which means no provider", kind, id, providerNone)
+	}
+	for _, prefix := range prefixes {
 		if prefix == "" {
-			return fmt.Errorf("memory provider %q has an empty ClaudeToolPrefixes entry", p.ID)
+			return fmt.Errorf("%s %q has an empty ClaudeToolPrefixes entry", kind, id)
 		}
 	}
-	if p.Detect.Binary != "" && p.Detect.InstallURL == "" {
-		return fmt.Errorf("memory provider %q probes %q but has no Detect.InstallURL", p.ID, p.Detect.Binary)
+	if detect.Binary != "" && detect.InstallURL == "" {
+		return fmt.Errorf("%s %q probes %q but has no Detect.InstallURL", kind, id, detect.Binary)
+	}
+	return nil
+}
+
+// validateProviderTool reports a tool bound to verb with no Name or Usage.
+func validateProviderTool(kind, id, verb string, tool ProviderTool) error {
+	if tool.Name == "" {
+		return fmt.Errorf("%s %q binds a tool with no Name to verb %q", kind, id, verb)
+	}
+	if tool.Usage == "" {
+		return fmt.Errorf("%s %q gives verb %q tool %q no Usage", kind, id, verb, tool.Name)
 	}
 	return nil
 }
@@ -201,35 +226,50 @@ func renderMemoryBinding(p ProviderDescriptor) (string, error) {
 		fmt.Fprintf(&b, "- **%s** → %s.\n", verb, strings.Join(calls, "; then "))
 	}
 
-	if len(p.ClaudeToolPrefixes) > 0 {
-		example := p.Tools[MemoryRemember][0].Name
-		exposed := make([]string, len(p.ClaudeToolPrefixes))
-		for i, prefix := range p.ClaudeToolPrefixes {
-			exposed[i] = "`" + prefix + example + "`"
-		}
-		fmt.Fprintf(&b, "\nA host may prefix these names: Claude Code exposes `%s` as %s, and another host may use a different prefix or none. Match the name after the prefix.\n", example, strings.Join(exposed, " or "))
-	}
+	b.WriteString(hostPrefixNote(p.Tools[MemoryRemember][0].Name, p.ClaudeToolPrefixes))
 	return b.String(), nil
 }
 
-// bindMemory splices p's binding into content's memory-binding region. Content
-// without the markers passes through unchanged, so it is safe to run over every
-// file the installer writes; partial or duplicated markers fail loudly in
-// replaceMarkerRegion. The marker check runs before rendering so a marker-free
-// file never depends on the provider being complete.
+// hostPrefixNote is the binding's closing paragraph naming how Claude Code
+// exposes example under each of prefixes, so the reader matches its own tool
+// list; empty when the provider declares no prefix.
+func hostPrefixNote(example string, prefixes []string) string {
+	if len(prefixes) == 0 {
+		return ""
+	}
+	exposed := make([]string, len(prefixes))
+	for i, prefix := range prefixes {
+		exposed[i] = "`" + prefix + example + "`"
+	}
+	return fmt.Sprintf("\nA host may prefix these names: Claude Code exposes `%s` as %s, and another host may use a different prefix or none. Match the name after the prefix.\n", example, strings.Join(exposed, " or "))
+}
+
+// bindMemory splices p's binding into content's memory-binding region (see
+// bindRegion).
 func bindMemory(content []byte, p ProviderDescriptor) ([]byte, error) {
-	if !bytes.Contains(content, []byte(memoryBindingBeginMarker)) &&
-		!bytes.Contains(content, []byte(memoryBindingEndMarker)) {
+	return bindRegion(content, memoryBindingBeginMarker, memoryBindingEndMarker, "memory-binding", func() (string, error) {
+		return renderMemoryBinding(p)
+	})
+}
+
+// bindRegion splices render's body into content's begin/end marker region.
+// Content without the markers passes through unchanged, so it is safe to run
+// over every file the installer writes; partial or duplicated markers fail
+// loudly in replaceMarkerRegion. The marker check runs before rendering so a
+// marker-free file never depends on the provider being complete. region names
+// the region in errors.
+func bindRegion(content []byte, begin, end, region string, render func() (string, error)) ([]byte, error) {
+	if !bytes.Contains(content, []byte(begin)) && !bytes.Contains(content, []byte(end)) {
 		return content, nil
 	}
 
-	body, err := renderMemoryBinding(p)
+	body, err := render()
 	if err != nil {
 		return nil, err
 	}
-	bound, err := replaceMarkerRegion(content, memoryBindingBeginMarker, memoryBindingEndMarker, body)
+	bound, err := replaceMarkerRegion(content, begin, end, body)
 	if err != nil {
-		return nil, fmt.Errorf("regenerate memory-binding region: %w", err)
+		return nil, fmt.Errorf("regenerate %s region: %w", region, err)
 	}
 	return bound, nil
 }
