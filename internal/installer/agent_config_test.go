@@ -16,7 +16,7 @@ func TestRenderAgentConfig_SubstitutesAllPlaceholders(t *testing.T) {
 				t.Fatalf("renderAgentConfig(%q): %v", preset.ID, err)
 			}
 			// No placeholders should remain.
-			for _, placeholder := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{language_directive}}", "{{stack}}", "{{architectural_style}}"} {
+			for _, placeholder := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{language_directive}}"} {
 				if contains(out, placeholder) {
 					t.Errorf("output still contains placeholder %q", placeholder)
 				}
@@ -27,10 +27,6 @@ func TestRenderAgentConfig_SubstitutesAllPlaceholders(t *testing.T) {
 			}
 			if !contains(out, preset.Description) {
 				t.Errorf("output missing preset description %q", preset.Description)
-			}
-			// Stack and architectural_style should use the sentinel.
-			if !contains(out, agentConfigPlaceholder) {
-				t.Errorf("output missing sentinel %q for stack/architectural_style", agentConfigPlaceholder)
 			}
 		})
 	}
@@ -185,9 +181,12 @@ func TestAllAssistantsError_PropagatesToEveryAssistant(t *testing.T) {
 }
 
 func TestInstallAgentConfig_SkipMode_SkipsAllAssistants(t *testing.T) {
-	a1 := AssistantDescriptor{ID: AssistantClaudeCode, Name: "Claude Code"}
-	a2 := AssistantDescriptor{ID: AssistantOpenCode, Name: "OpenCode"}
-	results := InstallAgentConfig([]AssistantDescriptor{a1, a2}, PersonaPresets[0], true, "en", map[string]AgentWriteMode{
+	home := agentHome(t)
+	const original = "# Mine\n\nKeep me."
+	for _, a := range AgentConfigAdapters {
+		seedAgentFile(t, a.ConfigPath(), original)
+	}
+	results := InstallAgentConfig(testAgentAssistants(t, home), PersonaPresets[0], true, "en", map[string]AgentWriteMode{
 		string(AssistantClaudeCode): AgentModeSkip,
 		string(AssistantOpenCode):   AgentModeSkip,
 	})
@@ -200,6 +199,11 @@ func TestInstallAgentConfig_SkipMode_SkipsAllAssistants(t *testing.T) {
 		}
 		if r.Err != nil {
 			t.Errorf("results[%d]: expected no error for AgentModeSkip, got %v", i, r.Err)
+		}
+	}
+	for _, a := range AgentConfigAdapters {
+		if got := readAgentFile(t, a.ConfigPath()); got != original {
+			t.Errorf("%s changed under AgentModeSkip:\n got %q\nwant %q", a.AssistantID, got, original)
 		}
 	}
 }

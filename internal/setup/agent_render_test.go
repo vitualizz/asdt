@@ -66,7 +66,7 @@ func TestRenderAgentConfig_NoPlaceholdersRemain(t *testing.T) {
 	}
 	content := string(data)
 
-	for _, ph := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{language_directive}}", "{{stack}}", "{{architectural_style}}"} {
+	for _, ph := range []string{"{{agent_name}}", "{{agent_description}}", "{{persona_block}}", "{{emoji_preference}}", "{{language_directive}}"} {
 		if strings.Contains(content, ph) {
 			t.Errorf("AGENTS.md still contains placeholder %q", ph)
 		}
@@ -79,8 +79,5 @@ func TestRenderAgentConfig_NoPlaceholdersRemain(t *testing.T) {
 	}
 	if !strings.Contains(content, preset.Description) {
 		t.Errorf("AGENTS.md missing preset description, got:\n%s", content)
-	}
-	if !strings.Contains(content, "detected at project init") {
-		t.Errorf("AGENTS.md missing sentinel for stack/arch, got:\n%s", content)
 	}
 }

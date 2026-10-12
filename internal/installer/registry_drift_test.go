@@ -14,7 +14,7 @@ import (
 // TestRegistryDrift is the structural defense against the `Tailored Workflow
 // Generation` "Parity check" prose drifting out of sync (which it already
 // did). The canonical roster is DERIVED from the 8 workflow.yaml via
-// parseRegistry; each of the 3 mirror sites is parsed for its specialist rows,
+// parseRegistry; each mirror site is parsed for its specialist rows,
 // normalized to canonical directory names, and asserted against the roster the
 // site is expected to carry. It also asserts the `Tailored Workflow
 // Generation` inline-steps list is byte-equal to renderInlineStepsRegion's
@@ -45,9 +45,9 @@ func TestRegistryDrift(t *testing.T) {
 	}
 
 	// Per-site expected membership = routable roster MINUS the deliberate
-	// per-site omissions. agents-template.md has no Product Manager row; all
-	// sites omit asdt-init (non-routable / setup-class). The row list is never
-	// hardcoded — it is derived, then the explicit policy is subtracted.
+	// per-site omissions. All sites omit asdt-init (non-routable /
+	// setup-class). The row list is never hardcoded — it is derived, then the
+	// explicit policy is subtracted.
 	sites := []struct {
 		name        string
 		path        string
@@ -59,14 +59,6 @@ func TestRegistryDrift(t *testing.T) {
 			path:        filepath.Join(root, "SKILL.md"),
 			excludeDirs: map[string]bool{},
 			rows:        registrySectionRows,
-		},
-		{
-			name: "agents-template",
-			// agents-template.md lives in this package's assets/ dir; tests run
-			// from internal/installer, so the path is package-relative.
-			path:        filepath.Join("assets", "agents-template.md"),
-			excludeDirs: map[string]bool{"asdt-pm": true},
-			rows:        agentsTemplateRows,
 		},
 	}
 
@@ -123,12 +115,6 @@ func firstCommandDir(row string) string {
 // registrySectionRows extracts the canonical dirs of the `## Registry` table.
 func registrySectionRows(content string) []string {
 	return commandRowsBetween(content, "## Registry", "| Specialist | Command |")
-}
-
-// agentsTemplateRows extracts the canonical dirs of the agents-template.md
-// ASDT Specialists table.
-func agentsTemplateRows(content string) []string {
-	return commandRowsBetween(content, "ASDT Specialists", "| Specialist")
 }
 
 // commandRowsBetween walks the table that begins after the first header line

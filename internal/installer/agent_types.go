@@ -13,7 +13,7 @@ var PersonaPresets = []PersonaPreset{
 	{
 		ID:          "sky",
 		Name:        "Sky",
-		Description: "Sharp and thorough. Roasts bad practices with wit, then explains everything.",
+		Description: "Sharp and precise. Roasts bad practices with wit, then explains what matters.",
 		File:        "assets/personas/sky.md",
 	},
 	{
@@ -42,30 +42,30 @@ var PersonaPresets = []PersonaPreset{
 	},
 }
 
-// AgentWriteMode controls how an existing global agent config is handled.
+// AgentWriteMode controls what the installer does with ASDT's block in an
+// assistant's global config file.
 type AgentWriteMode int
 
 const (
-	// AgentModeOverwrite replaces any existing config entirely.
-	AgentModeOverwrite AgentWriteMode = iota
-	// AgentModeAppend adds the new config at the end of the existing file.
-	AgentModeAppend
-	// AgentModeSkip leaves the existing config untouched.
+	// AgentModeUpdate writes ASDT's block: it replaces the block when present,
+	// else adds it at the end. Text outside the block is never touched.
+	AgentModeUpdate AgentWriteMode = iota
+	// AgentModeSkip leaves the file untouched.
 	AgentModeSkip
 )
 
-// AgentConfigResult is the per-assistant outcome of writing agent config.
+// AgentConfigResult is the per-assistant outcome of writing or removing the
+// agent config block.
 type AgentConfigResult struct {
 	AssistantID AssistantID
-	Written     []string // files written/updated (AGENTS.md, CLAUDE.md)
-	Skipped     bool     // true when a pre-existing file was kept (overwrite declined)
+	Written     []string // config files written (CLAUDE.md, AGENTS.md)
+	Skipped     bool     // true when nothing was written (skip chosen, no adapter, or no block to remove)
 	Err         error
 }
 
-// AgentConfigAdapterDescriptor declares how one assistant persists agent config.
+// AgentConfigAdapterDescriptor declares where one assistant keeps its global
+// config file, the file that carries ASDT's marker block.
 type AgentConfigAdapterDescriptor struct {
-	AssistantID       AssistantID
-	ConfigPath        func() string // display path shown in the TUI (e.g. "~/.claude/CLAUDE.md")
-	AgentConfigExists func() bool
-	Write             func(rendered string, mode AgentWriteMode) (AgentConfigResult, error)
+	AssistantID AssistantID
+	ConfigPath  func() string // absolute path, also shown in the TUI
 }

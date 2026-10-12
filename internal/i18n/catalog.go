@@ -81,7 +81,6 @@ type InstallerStrings struct {
 	HintAllNone      string
 	HintBack         string
 	HintBackToMenu   string
-	HintCycleMode    string
 	HintCycleModel   string
 	HintExpand       string
 	HintResetDefault string
@@ -146,10 +145,10 @@ type InstallerStrings struct {
 	LabelConfig     string
 	LabelSkipped    string
 
-	// Agent write mode labels (Keep / Overwrite / Append)
-	LabelModeKeep      string
-	LabelModeOverwrite string
-	LabelModeAppend    string
+	// Agent write mode labels for an existing global config file: update
+	// ASDT's marked block, or leave the file untouched.
+	LabelModeUpdate string
+	LabelModeSkip   string
 
 	// Done screen
 	LabelAgentConfig      string
@@ -202,4 +201,14 @@ type DashboardStrings struct {
 	// ValueNoCodeIntel follows it for an install with none.
 	LabelCodeIntel   string
 	ValueNoCodeIntel string
+
+	// Agent config block: the badge on an assistant whose global config file
+	// carries ASDT's block, and the remove action.
+	BadgeAgentConfig         string
+	HintRemoveAgentConfig    string
+	ConfirmRemoveAgentConfig string // printf format: %s = config file paths, joined by ", "
+	HintConfirm              string
+	HintCancel               string
+	MsgAgentConfigRemoved    string // printf format: %s = assistant name
+	MsgAgentConfigNoBlock    string // printf format: %s = assistant name
 }

@@ -17,7 +17,7 @@ Regardless of assistant, an install produces the same logical pieces:
 
 - **Specialist skills** — the ASDT skill tree (Researcher, PM, UX/UI, Architect, Developer, Security, QA, `/asdt-init`, and the shared fragments), copied into the assistant's skills directory.
 - **Executor agents** — two generated agent definitions, `asdt-analyst` (read-only) and `asdt-builder` (write-capable), that carry out individual pipeline steps.
-- **Agent config** — your persona and language preferences, written into the assistant's native global config.
+- **Agent config** — your persona, emoji, and language preferences, written as one marked block into the assistant's global config file (see [The agent config](#the-agent-config-both)).
 - **An install manifest** — a `.install-meta.json` file recording what the last install wrote, so re-running can update cleanly and prune stale files.
 
 The details of each piece differ per assistant. Here is the full comparison — a couple of terms in the table are worth a plain-language note before you hit them: **`XDG_CONFIG_HOME`** is just the standard folder-location variable Linux/macOS tools check before falling back to a default config path, and the **permission overlay** row (Claude Code only, more on it below) is an optional **structural JSON merge** — combining ASDT's settings into your existing config file without overwriting the rest of it — that turns on **bypass mode**, a Claude Code setting that stops asking for permission on every action, behind a **deny-net**: the fixed list of files and settings the installer refuses to touch even when those permission prompts are skipped.
@@ -33,6 +33,25 @@ Claude Code discovers and activates skills natively, so it needs no extra entry 
 As introduced above, the overlay is an **optional** structural JSON merge into your global `~/.claude/settings.json`: it turns on bypass mode (`permissions.defaultMode = "bypassPermissions"`) behind a curated deny-net — the deny list is the real control under bypass, and it protects its own settings file and the rest of `~/.claude` from being edited.
 
 It is written safely: a pre-write backup is kept, the write is atomic (temp file + fsync + rename), and the result is validated after writing — if validation fails, ASDT rolls back to the backup so Claude Code always launches. Re-running is idempotent: it unions to the same deny set with no duplicates, and stale rules from prior installs are pruned first. OpenCode has no equivalent because its executor agents carry their permissions inline (the analyst denies edits and restricts Bash to an inspection-only allowlist; the builder allows edits but denies delegation and the scratchpad; both deny the memory tools).
+
+### The agent config (both)
+
+If you pick a persona, the installer writes it into each assistant's global config file: `~/.claude/CLAUDE.md` for Claude Code, and `~/.config/opencode/AGENTS.md` for OpenCode (`$XDG_CONFIG_HOME/opencode/AGENTS.md` when that variable is set). Both get the same block, between `<!-- asdt:agent-config -->` and `<!-- /asdt:agent-config -->`.
+
+ASDT owns only the text between those markers:
+
+- **No file yet**: the installer creates it with just the block.
+- **Your own content, no block**: the block goes at the end, after a blank line. Your text stays byte for byte as it was.
+- **A block already there**: it is replaced in place, and nothing outside it changes. Re-running with the same choices writes the same bytes.
+- **Damaged markers** (one marker without the other, a marker twice, or the end before the start): the installer writes nothing and reports the error, so you can fix the markers by hand. It never adds a second block.
+
+A marker counts only when it sits alone on its own line, so mentioning one inside a sentence of your own text is harmless. Writes are atomic (temp file + fsync + rename), keep the file's mode, and follow a symlinked `CLAUDE.md` / `AGENTS.md`: the link stays and the file it points to is updated.
+
+When the file already exists, the installer asks per assistant: **Update ASDT block** (the default) or **Skip**, which leaves the file untouched.
+
+The block loads in every session, including projects that don't use ASDT, so it holds only user-level preferences: the persona's voice, your emoji and language choices, and a few rules that apply anywhere (short answers by default, confirm before irreversible actions, push back once and then defer to you, no `Co-Authored-By` lines). One line points to `/asdt` and its specialists for projects with an `.asdt/` directory. The specialists carry their own rules.
+
+To take it out, open **Dashboard** from the main menu, where assistants with a block show an `agent config` badge, and press `r`, then `enter` to confirm. That removes the block and the blank line before it. The rest of the file is byte for byte what it was before the install, except that a missing final newline is added. The file itself stays, even if nothing is left in it.
 
 ### Executor agents on both
 
@@ -63,7 +82,7 @@ Support for each assistant is expressed as a set of small **adapters** — that'
 
 - **`Descriptors`** — the assistant's identity and its skills root directory.
 - **`AgentAdapters`** — how to render the executor agents into the assistant's native agent format.
-- **`AgentConfigAdapters`** — where and how to persist the agent config (persona/language).
+- **`AgentConfigAdapters`** — the path of the assistant's global config file. The shared marker-block logic writes and removes the agent config there.
 - **`CommandAdapters`** — optional; only assistants that need generated command wrappers carry an entry (Claude Code carries none).
 
 Anything assistant-specific — like Claude Code's permission overlay — lives in its own file behind its own guard. Because each concern is a separate adapter list, a new assistant is additive: you implement its rendering and paths, register it, and the shared skill-copy, manifest, and prune logic apply to it unchanged.

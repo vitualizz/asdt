@@ -51,9 +51,8 @@ const (
 // PermissionOverlayResult is the outcome of writing the permission overlay.
 // It mirrors AgentConfigResult so the TUI can report it the same way.
 type PermissionOverlayResult struct {
-	Written    []string // settings.json paths written (empty when skipped/failed)
+	Written    []string // settings.json paths written (empty on failure)
 	BackupPath string   // pre-write backup path (empty when none kept, or after rollback restore)
-	Skipped    bool     // true when the user declined or chose AgentModeSkip
 	Err        error    // non-nil on refusal, merge failure, or rollback
 }
 
@@ -172,14 +171,13 @@ func injectSelfProtection(overlay map[string]any, home string) {
 //     in prevManaged — the user's own deny rules — always survives. This makes the
 //     overlay self-healing: stale entries (rules the current set does not ship) are
 //     cleaned and the current rules re-placed on every run.
-//   - defaultMode / skipDangerousModePermissionPrompt: forced under Overwrite;
-//     set only-if-absent under Append (preserving the user's existing value).
+//   - defaultMode / skipDangerousModePermissionPrompt: set when the file is
+//     fresh or has no permissions block (a clean write); otherwise set only if
+//     absent, preserving the user's existing value.
 //
-// The effective mode is Overwrite when the file is fresh or has no permissions
-// block (a clean write), otherwise the caller's mode (default Append). An
-// existing file that is not valid JSON is REFUSED — never clobbered — so the
+// An existing file that is not valid JSON is REFUSED — never clobbered — so the
 // user can fix it first.
-func mergePermissionOverlay(existing []byte, overlay map[string]any, mode AgentWriteMode, prevManaged []string) ([]byte, error) {
+func mergePermissionOverlay(existing []byte, overlay map[string]any, prevManaged []string) ([]byte, error) {
 	settings := map[string]any{}
 	fresh := len(bytes.TrimSpace(existing)) == 0
 	if !fresh {
@@ -191,10 +189,7 @@ func mergePermissionOverlay(existing []byte, overlay map[string]any, mode AgentW
 	overlayPerms, _ := overlay[keyPermissions].(map[string]any)
 
 	_, hasPerms := settings[keyPermissions]
-	effMode := mode
-	if fresh || !hasPerms {
-		effMode = AgentModeOverwrite
-	}
+	force := fresh || !hasPerms
 
 	perms, _ := settings[keyPermissions].(map[string]any)
 	if perms == nil {
@@ -202,7 +197,7 @@ func mergePermissionOverlay(existing []byte, overlay map[string]any, mode AgentW
 	}
 
 	if overlayDefault, ok := overlayPerms[keyDefaultMode]; ok {
-		if _, exists := perms[keyDefaultMode]; effMode == AgentModeOverwrite || !exists {
+		if _, exists := perms[keyDefaultMode]; force || !exists {
 			perms[keyDefaultMode] = overlayDefault
 		}
 	}
@@ -212,7 +207,7 @@ func mergePermissionOverlay(existing []byte, overlay map[string]any, mode AgentW
 	settings[keyPermissions] = perms
 
 	if overlaySkip, ok := overlay[keySkipDangerous]; ok {
-		if _, exists := settings[keySkipDangerous]; effMode == AgentModeOverwrite || !exists {
+		if _, exists := settings[keySkipDangerous]; force || !exists {
 			settings[keySkipDangerous] = overlaySkip
 		}
 	}
@@ -233,8 +228,8 @@ func mergePermissionOverlay(existing []byte, overlay map[string]any, mode AgentW
 // or corrupted output (which would otherwise break Claude Code at launch): the
 // bytes must be valid JSON carrying a permissions block with a non-empty deny
 // array and both overlay keys present. It deliberately checks PRESENCE, not
-// equality, so Append-mode preservation of a user's pre-existing scalar values
-// is not flagged as invalid.
+// equality, so preserving a user's pre-existing scalar values is not flagged as
+// invalid.
 func validateOverlay(data []byte) error {
 	if !json.Valid(data) {
 		return errors.New("merged settings.json is not valid JSON")
@@ -264,13 +259,8 @@ func validateOverlay(data []byte) error {
 // backup, atomic temp+fsync+rename, post-write validation, and rollback to the
 // backup if the written file fails validation (so Claude Code always launches).
 // It is idempotent: re-running unions to an identical deny set with no dupes.
-func WritePermissionOverlay(mode AgentWriteMode) (PermissionOverlayResult, error) {
+func WritePermissionOverlay() (PermissionOverlayResult, error) {
 	var result PermissionOverlayResult
-
-	if mode == AgentModeSkip {
-		result.Skipped = true
-		return result, nil
-	}
 
 	home, err := realUserHome()
 	if err != nil {
@@ -298,7 +288,7 @@ func WritePermissionOverlay(mode AgentWriteMode) (PermissionOverlayResult, error
 		return result, err
 	}
 
-	merged, err := mergePermissionOverlay(existing, overlay, mode, prevManaged)
+	merged, err := mergePermissionOverlay(existing, overlay, prevManaged)
 	if err != nil {
 		result.Err = err
 		return result, err
@@ -390,36 +380,6 @@ func PermissionOverlayExists() bool {
 		}
 	}
 	return true
-}
-
-// atomicWriteFile writes data to a sibling temp file, fsyncs it, then renames
-// over the target so a concurrent reader never sees a half-written file.
-func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
-	dir := filepath.Dir(path)
-	tmp := filepath.Join(dir, fmt.Sprintf("%s.asdt-tmp-%d", settingsFileName, os.Getpid()))
-	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
-	if err != nil {
-		return err
-	}
-	if _, err := f.Write(data); err != nil {
-		_ = f.Close()
-		_ = os.Remove(tmp)
-		return err
-	}
-	if err := f.Sync(); err != nil {
-		_ = f.Close()
-		_ = os.Remove(tmp)
-		return err
-	}
-	if err := f.Close(); err != nil {
-		_ = os.Remove(tmp)
-		return err
-	}
-	if err := os.Rename(tmp, path); err != nil {
-		_ = os.Remove(tmp)
-		return err
-	}
-	return nil
 }
 
 // writeOverlayLog persists the audit record. Best-effort: errors are swallowed
