@@ -56,10 +56,11 @@ var registryRenderOrder = []string{
 //   - specialist-header.md first: the Prerequisites gate and the ORCHESTRATOR
 //     GATE must be the very first thing a specialist reads, before it can act
 //     on anything else in the document.
-//   - protocol.md second: the memory interface and its binding, the intake
-//     contract, the injection format, the persistence rules, and the
-//     degradation contract govern how every step treats its inputs, so they
-//     must be settled before any step content arrives. Its memory-binding
+//   - protocol.md second: ownership and authority, the scratchpad contract,
+//     the memory interface and its binding, the intake contract, the write
+//     boundary, the injection format, and the summary schema govern how every
+//     step treats its inputs, so they must be settled before any step content
+//     arrives. Its memory-binding
 //     region is folded in EMPTY here and bound afterwards, by writeSkillFile's
 //     bindMemory pass over the finished file. It absorbed the former parallel-retrieval.md and
 //     intake-contract.md fragments.

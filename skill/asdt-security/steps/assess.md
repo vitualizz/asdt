@@ -2,20 +2,21 @@
 
 ## Purpose
 Map what an attacker can reach, work out what they could do with it, and check that against
-the OWASP Top 10. Analysis only — this step produces no persisted artifact.
+the OWASP Top 10. Analysis only — `harden` turns it into findings.
 
 ## Inputs
-- `{project}/{change}/developer/handoff` — OPTIONAL. Read its `stage` first. `spec` is a plan,
-  nothing built: map the PLANNED surface from its `files_to_create`/`files_to_modify` and
-  `approach`, and record `ASSUMED: planned surface — nothing built yet` in `open_items`.
-  `implemented`: the code that changed, from `files_changed` — or `code_snippets` when it ran
-  plan-only
-- `{project}/{change}/architect/handoff` — OPTIONAL. The design and its trust boundaries
-- Platform summary — stack and conventions, injected inline
+- `### INPUT developer` — OPTIONAL. Developer's summary. Read its `**Stage:**` line first.
+  `spec` is a plan, nothing built: map the PLANNED surface from its `Edit targets` and
+  `Approach`, and record `ASSUMED: planned surface — nothing built yet` in `Open items`.
+  `implemented`: the code that changed, the change's files (`asdt-core/protocol.md` §6: git,
+  with `Files changed` and `Prior delivery` as hints) — or `Code snippets` when `Edit roots`
+  reads `Mode: plan-only`
+- `### INPUT architect` — OPTIONAL. The Architect's summary: the design and its trust boundaries
 
-Security runs at ANY point in a pipeline, so BOTH hand-offs are optional and frequently
-absent. When neither arrived, assess the repository directly and note `ASSUMED: no upstream
-hand-off — surface mapped from the codebase alone` in `open_items`. Never block.
+Each arrives as a path to read — never look for anything else. The platform block (stack and
+conventions) is in this prompt.
+
+**DEGRADATION**: both UNRESOLVED — common, since Security runs at ANY point → assess the repository directly and record `ASSUMED: no upstream summary — surface mapped from the codebase alone` in `Open items`. Never block.
 
 ## Processing
 
@@ -40,24 +41,24 @@ OWASP categories are only worth checking where the surface actually reaches them
    the findings that matter.
 
 Reason over the change and inspect the repository for evidence. NEVER run scanners,
-dependency audits, or any other command.
+dependency audits, or any command beyond the read-only git inspection of protocol §6.
 
 ## Output
-Produces: `security-assessment` — retained in the orchestrator's context, NOT persisted.
-This step declares `output: context` in `workflow.yaml`: do NOT call memory **save**. Return the
-payload below; the orchestrator injects it into `harden`.
+Return this summary (`asdt-core/protocol.md` §6):
 
-```yaml
-payload:
-  attack_surface:
-    - entry_point: ""         # endpoint, input, boundary — with a real path or symbol
-      crosses: ""             # what data, in which direction
-      validation: ""          # what stands at the boundary today
-  threats:
-    - category: ""            # the STRIDE letter this falls under
-      entry_point: ""         # which surface entry admits it
-      scenario: ""            # what the attacker actually does
-      owasp_ref: ""           # applicable Top 10 category, or "" when none applies
-      evidence: ""            # the path, symbol, or absence that grounds this
-  open_items: []              # ASSUMED: prefix for anything unverified
+```markdown
+# Security: {change}
+
+{What this change exposes to an attacker, in one sentence.}
+
+## Attack surface
+| Entry point | Crosses | Validation today |
+|---|---|---|
+| `{path or symbol}` | {what data, in which direction} | {what stands at the boundary} |
+
+## Threats
+- {S | T | R | I | D | E} at `{entry point}`: {what the attacker actually does} — OWASP: {category, or —} — evidence: `{path, symbol, or absence}`
+
+## Open items
+- ASSUMED: {what was assumed} — {what would confirm or refute it}
 ```

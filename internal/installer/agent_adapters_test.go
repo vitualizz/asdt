@@ -38,14 +38,11 @@ var headerlessFS = fstest.MapFS{
 // so any drift in the production var is caught here.
 const codegraphToolsSuffix = ", mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_callers, mcp__codegraph__codegraph_callees, mcp__codegraph__codegraph_impact, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_files, mcp__codegraph__codegraph_status"
 
-// The base tools lines pin the Engram binding's grants (Providers[0]), hardcoded
-// rather than derived from claudeMemoryTools so drift in the descriptor is caught
-// here. Both agent types get the same three verbs per namespace — the builder no
-// longer holds mem_update: no prompt ever called it, and the memory interface
-// (protocol.md §0) has no update verb.
-const analystBaseToolsLine = "tools: Read, Glob, Grep, Bash, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation"
+// The base tools lines are exact and carry no memory tool: executors never
+// reach memory — the orchestrator alone remembers and recalls (protocol.md §2).
+const analystBaseToolsLine = "tools: Read, Glob, Grep, Bash"
 
-const builderBaseToolsLine = "tools: Read, Glob, Grep, Bash, Edit, Write, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation"
+const builderBaseToolsLine = "tools: Read, Glob, Grep, Bash, Edit, Write"
 
 // codeIntelligenceHeading is the H2 that marks the gated codegraph guidance
 // section. Hardcoded (NOT derived from codeIntelligenceGuidance) so any drift
@@ -110,7 +107,7 @@ func TestGenerateClaudeAgents_ExactFrontmatterAndBody(t *testing.T) {
 			}
 
 			agentRoot := filepath.Join(t.TempDir(), "agents")
-			written, err := generateClaudeAgents(agentFixtureFS, agentRoot, Providers[0], branch.opts)
+			written, err := generateClaudeAgents(agentFixtureFS, agentRoot, branch.opts)
 			if err != nil {
 				t.Fatalf("generateClaudeAgents returned error: %v", err)
 			}
@@ -145,12 +142,12 @@ func TestGenerateClaudeAgents_ExactFrontmatterAndBody(t *testing.T) {
 // appended grants into a later codegraph-absent generation.
 func TestGenerateClaudeAgents_CodegraphDoesNotMutateSpecs(t *testing.T) {
 	withRoot := filepath.Join(t.TempDir(), "agents-with")
-	if _, err := generateClaudeAgents(agentFixtureFS, withRoot, Providers[0], InstallOptions{CodegraphFound: true}); err != nil {
+	if _, err := generateClaudeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true}); err != nil {
 		t.Fatalf("codegraph-enabled run: %v", err)
 	}
 
 	withoutRoot := filepath.Join(t.TempDir(), "agents-without")
-	if _, err := generateClaudeAgents(agentFixtureFS, withoutRoot, Providers[0], InstallOptions{}); err != nil {
+	if _, err := generateClaudeAgents(agentFixtureFS, withoutRoot, InstallOptions{}); err != nil {
 		t.Fatalf("codegraph-absent run: %v", err)
 	}
 
@@ -223,15 +220,18 @@ func assertNoDelegationTools(t *testing.T, file, toolsLine string) {
 }
 
 // openCodeAgentFrontmatter is the structural shape asserted for generated
-// OpenCode agent definitions. Bash is `any` because it is a scalar ("allow")
-// for builder and a glob->verdict map for analyst.
+// OpenCode agent definitions. Edit and Bash are `any` because each is a scalar
+// for one agent type and a glob->verdict map for the other. Tools holds every
+// remaining permission key: the per-tool rules (the memory-tool denies).
 type openCodeAgentFrontmatter struct {
 	Description string `yaml:"description"`
 	Mode        string `yaml:"mode"`
 	Permission  struct {
-		Edit string `yaml:"edit"`
-		Task string `yaml:"task"`
-		Bash any    `yaml:"bash"`
+		Edit              any               `yaml:"edit"`
+		Task              string            `yaml:"task"`
+		Bash              any               `yaml:"bash"`
+		ExternalDirectory map[string]string `yaml:"external_directory"`
+		Tools             map[string]any    `yaml:",inline"`
 	} `yaml:"permission"`
 }
 
@@ -263,8 +263,9 @@ func parseOpenCodeAgentFile(t *testing.T, path string) (openCodeAgentFrontmatter
 }
 
 func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
+	wantScratch := []string{"/tmp/asdt-*/**", "/private/tmp/asdt-*/**"}
 	agentRoot := filepath.Join(t.TempDir(), "agents")
-	written, err := generateOpenCodeAgents(agentFixtureFS, agentRoot, Providers[0], InstallOptions{})
+	written, err := generateOpenCodeAgents(agentFixtureFS, agentRoot, InstallOptions{})
 	if err != nil {
 		t.Fatalf("generateOpenCodeAgents returned error: %v", err)
 	}
@@ -302,6 +303,7 @@ func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 		if len(bashMap) != len(analystBashAllowlist)+1 {
 			t.Errorf("analyst permission.bash has %d entries, want %d (whitelist + catch-all deny)", len(bashMap), len(analystBashAllowlist)+1)
 		}
+		assertScratchpadReadable(t, "analyst", fm.Permission.ExternalDirectory, wantScratch)
 		assertAgentBody(t, "asdt-analyst.md", body, false)
 	})
 
@@ -310,9 +312,20 @@ func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 		if fm.Mode != "subagent" {
 			t.Errorf("builder mode = %q, want %q", fm.Mode, "subagent")
 		}
-		if fm.Permission.Edit != "allow" {
-			t.Errorf("builder permission.edit = %q, want %q", fm.Permission.Edit, "allow")
+		editMap, ok := fm.Permission.Edit.(map[string]any)
+		if !ok {
+			t.Fatalf("builder permission.edit = %T (%v), want a glob->verdict map", fm.Permission.Edit, fm.Permission.Edit)
 		}
+		if got := editMap["*"]; got != "allow" {
+			t.Errorf("builder permission.edit[%q] = %v, want %q", "*", got, "allow")
+		}
+		// The orchestrator alone writes the scratchpad (protocol.md §1).
+		for _, glob := range wantScratch {
+			if got := editMap[glob]; got != "deny" {
+				t.Errorf("builder permission.edit[%q] = %v, want %q", glob, got, "deny")
+			}
+		}
+		assertScratchpadReadable(t, "builder", fm.Permission.ExternalDirectory, wantScratch)
 		if fm.Permission.Task != "deny" {
 			t.Errorf("builder permission.task = %q, want %q", fm.Permission.Task, "deny")
 		}
@@ -327,16 +340,53 @@ func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 	})
 }
 
+// assertScratchpadReadable verifies an OpenCode agent may read the temp
+// scratchpad root, which lies outside the worktree, and nothing more broadly.
+func assertScratchpadReadable(t *testing.T, agent string, external map[string]string, want []string) {
+	t.Helper()
+	for _, glob := range want {
+		if got := external[glob]; got != "allow" {
+			t.Errorf("%s permission.external_directory[%q] = %q, want %q", agent, glob, got, "allow")
+		}
+	}
+	if len(external) != len(want) {
+		t.Errorf("%s permission.external_directory = %v, want exactly %v", agent, external, want)
+	}
+}
+
+// TestOpenCodeScratchpadGlobs guards the protocol.md §1 temp fallback grant: it
+// is always /tmp (and macOS's /private/tmp), never the installer's $TMPDIR,
+// which a later run need not share.
+func TestOpenCodeScratchpadGlobs(t *testing.T) {
+	want := []string{"/tmp/asdt-*/**", "/private/tmp/asdt-*/**"}
+	if !reflect.DeepEqual(openCodeScratchpadGlobs, want) {
+		t.Errorf("openCodeScratchpadGlobs = %v, want %v", openCodeScratchpadGlobs, want)
+	}
+
+	tmpDir := t.TempDir()
+	agentRoot := filepath.Join(t.TempDir(), "agents")
+	t.Setenv("TMPDIR", tmpDir)
+	written, err := generateOpenCodeAgents(agentFixtureFS, agentRoot, InstallOptions{})
+	if err != nil {
+		t.Fatalf("generateOpenCodeAgents returned error: %v", err)
+	}
+	for path, content := range readWrapperContents(t, written) {
+		if strings.Contains(content, tmpDir) {
+			t.Errorf("agent file %q grants the installer's $TMPDIR %q; the scratchpad fallback is /tmp only", path, tmpDir)
+		}
+	}
+}
+
 func TestGenerateAgents_IdempotentDoubleGenerate(t *testing.T) {
 	generators := []struct {
 		name     string
 		generate func(skillsFS fstest.MapFS, agentRoot string) ([]string, error)
 	}{
 		{name: "claude", generate: func(fsys fstest.MapFS, root string) ([]string, error) {
-			return generateClaudeAgents(fsys, root, Providers[0], InstallOptions{})
+			return generateClaudeAgents(fsys, root, InstallOptions{})
 		}},
 		{name: "opencode", generate: func(fsys fstest.MapFS, root string) ([]string, error) {
-			return generateOpenCodeAgents(fsys, root, Providers[0], InstallOptions{})
+			return generateOpenCodeAgents(fsys, root, InstallOptions{})
 		}},
 	}
 
@@ -377,12 +427,12 @@ func TestGenerateAgents_IdempotentDoubleGenerate(t *testing.T) {
 // (the sole difference is the appended "## Code intelligence" section).
 func TestGenerateOpenCodeAgents_CodegraphStructuralNeutrality(t *testing.T) {
 	withoutRoot := filepath.Join(t.TempDir(), "agents-without")
-	if _, err := generateOpenCodeAgents(agentFixtureFS, withoutRoot, Providers[0], InstallOptions{CodegraphFound: false}); err != nil {
+	if _, err := generateOpenCodeAgents(agentFixtureFS, withoutRoot, InstallOptions{CodegraphFound: false}); err != nil {
 		t.Fatalf("codegraph-absent run: %v", err)
 	}
 
 	withRoot := filepath.Join(t.TempDir(), "agents-with")
-	if _, err := generateOpenCodeAgents(agentFixtureFS, withRoot, Providers[0], InstallOptions{CodegraphFound: true}); err != nil {
+	if _, err := generateOpenCodeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true}); err != nil {
 		t.Fatalf("codegraph-enabled run: %v", err)
 	}
 
@@ -417,7 +467,7 @@ func TestGenerateOpenCodeAgents_CodegraphStructuralNeutrality(t *testing.T) {
 func TestGenerateAgentFiles_MissingExecutorHeaderIsNoOp(t *testing.T) {
 	agentRoot := filepath.Join(t.TempDir(), "agents")
 
-	written, err := generateClaudeAgents(headerlessFS, agentRoot, Providers[0], InstallOptions{})
+	written, err := generateClaudeAgents(headerlessFS, agentRoot, InstallOptions{})
 	if err != nil {
 		t.Fatalf("expected nil error for a fixture FS without the executor header, got: %v", err)
 	}
@@ -434,9 +484,8 @@ func TestGenerateAgentFiles_MissingExecutorHeaderIsNoOp(t *testing.T) {
 // asserted verbatim so any reword that widens or narrows the exemption fails
 // loudly here instead of shipping silently baked into both agent definitions.
 //
-// The condition was rekeyed by the refactor: it used to exempt steps without an
-// `output_topic_key`, which stopped being the right axis once steps could
-// declare `output: context`. It now turns on whether the step read the codebase.
+// The condition turns on whether the step read the codebase — never on what
+// the step outputs.
 func TestExecutorHeaderCarriesEvidenceCondition(t *testing.T) {
 	data, err := fs.ReadFile(skill.FS(), "asdt-core/executor-header.md")
 	if err != nil {

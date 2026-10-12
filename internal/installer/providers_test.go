@@ -44,7 +44,7 @@ func TestProviders_BindEveryVerb(t *testing.T) {
 // TestProviders_UniqueIdentity guards the keys the TUI and /asdt-init look
 // providers up by: two providers sharing an ID, Name, or ConfigValue would
 // collide in preflight rows, in the selection screen, or in the
-// Prerequisites check that matches memory.provider against the binding.
+// protocol.md §2 rule that matches memory.provider against the binding.
 func TestProviders_UniqueIdentity(t *testing.T) {
 	fields := []struct {
 		name string

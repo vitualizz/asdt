@@ -14,7 +14,7 @@ import (
 var kebabCaseName = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 
 // TestHostSkillsDeclaredOnSubagentSteps guards the `host_skills:` field
-// (asdt-core/protocol.md §4). A host skill is injected by the orchestrator into
+// (asdt-core/protocol.md §5). A host skill is injected by the orchestrator into
 // a launched sub-agent's prompt, so it is only meaningful on a `subagent` step;
 // on an inline step there is no prompt to inject it into. Every entry is a
 // skill NAME looked up in the host's live skill list — never a path — so it
@@ -68,17 +68,14 @@ func TestHostSkillsDeclaredOnSubagentSteps(t *testing.T) {
 }
 
 // TestUXUIDesignCraftIsBuiltIn guards the split of asdt-ux-ui into ux-spec →
-// ui-design. ux-spec hands its flows forward in context and persists nothing;
-// ui-design receives them as `ux-flows`, persists the specialist's ONE
-// hand-off, and declares the shipped visual-design reference. The reference
+// ui-design. ux-spec hands its flows forward as a step payload and writes no
+// role summary; ui-design reads them as `ux-ui/ux-spec`, writes the
+// specialist's role summary, and declares the shipped visual-design reference. The reference
 // is what makes the design craft independent of any host skill: dropping it
 // would leave ui-design designing on frontend-design alone, which a host may
 // not have, with no other test noticing.
 func TestUXUIDesignCraftIsBuiltIn(t *testing.T) {
-	const (
-		handoffKey = "{project}/{change}/ux-ui/handoff"
-		craftRef   = "../asdt-core/references/visual-design.md"
-	)
+	const craftRef = "../asdt-core/references/visual-design.md"
 
 	root := skillDir(t)
 	path, wf := readWorkflowFile(t, root, "asdt-ux-ui")
@@ -91,19 +88,19 @@ func TestUXUIDesignCraftIsBuiltIn(t *testing.T) {
 	if !ok {
 		t.Fatalf("%s: step %q is missing", path, "ux-spec")
 	}
-	if spec.Output != "context" || spec.OutputTopicKey != "" {
-		t.Errorf("%s: ux-spec output = %q, output_topic_key = %q; want output: context and no key, ui-design persists the one hand-off", path, spec.Output, spec.OutputTopicKey)
+	if spec.Output != "" {
+		t.Errorf("%s: ux-spec output = %q; want none, ui-design writes the role summary", path, spec.Output)
 	}
 
 	design, ok := steps["ui-design"]
 	if !ok {
 		t.Fatalf("%s: step %q is missing", path, "ui-design")
 	}
-	if design.OutputTopicKey != handoffKey {
-		t.Errorf("%s: ui-design output_topic_key = %q, want %q", path, design.OutputTopicKey, handoffKey)
+	if design.Output != "summary" {
+		t.Errorf("%s: ui-design output = %q, want %q", path, design.Output, "summary")
 	}
-	if !slices.Contains(design.ContextInputs, "ux-flows") {
-		t.Errorf("%s: ui-design context_inputs = %v, want it to include %q", path, design.ContextInputs, "ux-flows")
+	if !slices.Contains(design.Inputs, "ux-ui/ux-spec") {
+		t.Errorf("%s: ui-design inputs = %v, want it to include %q", path, design.Inputs, "ux-ui/ux-spec")
 	}
 	if !slices.Contains(design.ReferenceSkills, craftRef) {
 		t.Errorf("%s: ui-design reference_skills = %v, want it to include %q", path, design.ReferenceSkills, craftRef)

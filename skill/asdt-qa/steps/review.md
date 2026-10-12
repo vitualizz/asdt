@@ -5,12 +5,9 @@ This step EXAMINES the test suite that already exists for an area; `test-plan` p
 for a change. The product is a verdict on the suite's health plus the gaps behind it.
 
 ## Inputs
-- Platform summary — the project's test framework and conventions, injected inline
-- The area named in the request
-
-No declared input from another specialist: this step runs standalone, and anything prior
-about the area was already surfaced by the `knowledge-recall` prelude. Everything arrives
-ALREADY INJECTED — never self-fetch.
+No `### INPUT` line: this step runs standalone, on the area the request names, the codebase,
+the platform block (test framework and conventions), and any `### PROJECT NOTE` lines. Look
+for nothing else.
 
 ## Processing
 
@@ -44,14 +41,25 @@ ALREADY INJECTED — never self-fetch.
 execute them. If measuring would settle a question, name the command the USER can run.
 
 ## Output
-Produces: `{project}/study/{topic}/qa`, with `{topic}` derived from the request in short
-kebab-case.
+Return this summary (`asdt-core/protocol.md` §6):
 
-Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
-schema from `asdt-core/protocol.md`:
+```markdown
+# QA: {change}
 
-- `what` — the health of this area's suite in one sentence
-- `decisions` — the verdict and the judgments behind it, strengths among them
-- `risks` — `{risk, mitigation}` per gap, highest severity first
-- `files_hint` — the test files and the code they should be covering
-- `open_items` — anything you could not ground in evidence, `ASSUMED:` prefix
+{The health of this area's suite, in one sentence.}
+
+## Decisions
+- {The verdict on the suite, and what would change it}
+- {Judgment behind it — strengths among them}
+
+## Files hint
+- `{test file}` — covers `{code path}`
+
+## Risks
+- [{high|medium|low}] {gap} (`{evidence}`) → {fix}
+
+## Open items
+- ASSUMED: {what you could not ground in evidence}
+```
+
+`Risks` holds one line per gap, highest severity first.

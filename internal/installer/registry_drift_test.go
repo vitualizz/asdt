@@ -177,7 +177,7 @@ func commandRowsBetween(content, sectionHint, headerHint string) []string {
 
 // TestInitEnrichmentInlineStep asserts the asdt-init workflow classifies its
 // steps as the enrichment redesign requires: enrichment is a NEW inline step
-// sitting between knowledge-gate and clarify, explore and write remain the only
+// sitting between memory-check and clarify, explore and write remain the only
 // subagent steps, and because asdt-init is non-routable it never leaks into
 // the `Tailored Workflow Generation` inline-steps render.
 func TestInitEnrichmentInlineStep(t *testing.T) {
@@ -201,7 +201,7 @@ func TestInitEnrichmentInlineStep(t *testing.T) {
 		t.Fatalf("asdt-init not found in parsed registry")
 	}
 
-	wantInline := []string{"knowledge-gate", "enrichment", "clarify"}
+	wantInline := []string{"memory-check", "enrichment", "clarify"}
 	if !reflect.DeepEqual(initReg.InlineSteps, wantInline) {
 		t.Errorf("asdt-init InlineSteps = %v, want %v", initReg.InlineSteps, wantInline)
 	}
@@ -245,7 +245,7 @@ func TestInitPlanTableMatchesWorkflow(t *testing.T) {
 	}
 	tableSteps := initPlanTableSteps(string(mdData))
 
-	want := []string{"knowledge-gate", "explore", "enrichment", "clarify", "write"}
+	want := []string{"memory-check", "explore", "enrichment", "clarify", "write"}
 	if !reflect.DeepEqual(wfSteps, want) {
 		t.Errorf("workflow.yaml step order = %v, want %v", wfSteps, want)
 	}
@@ -257,63 +257,51 @@ func TestInitPlanTableMatchesWorkflow(t *testing.T) {
 	}
 }
 
-// TestNuanceIsolatedFromProvenance defends the deliberate separation of the
-// human_nuance region: it belongs to knowledge.yaml (write step 2) ONLY,
-// never to provenance.yaml (write step 3), and platform-context.md's
-// auto-injection paths (Reuse Guard, What to Inject) must never pull it in — a
-// user-authored note is read directly, never auto-injected.
-func TestNuanceIsolatedFromProvenance(t *testing.T) {
+// TestHumanNotesRoutedToMemory defends where a person's words about the
+// project go: to memory, through the orchestrator's remember, never into a
+// file. write.md is the only step that writes `.asdt/`, so it must never route
+// an enrichment `nuance.*` answer or a legacy `human_nuance` entry into
+// config.yaml; SKILL.md must remember each answer instead; and
+// platform-context.md's injection path (Reuse Guard, Injection Format) must
+// never pull a note in among the detected facts, where it would read as
+// something the scan found.
+func TestHumanNotesRoutedToMemory(t *testing.T) {
 	root := skillDir(t)
 
-	writeMD, err := os.ReadFile(filepath.Join(root, "asdt-init", "steps", "write.md"))
-	if err != nil {
-		t.Fatalf("read asdt-init/steps/write.md: %v", err)
+	writeMD := readText(t, filepath.Join(root, "asdt-init", "steps", "write.md"))
+	processing, ok := markdownSection(writeMD, "Processing")
+	if !ok {
+		t.Fatalf("asdt-init/steps/write.md has no ## Processing section")
 	}
-	content := string(writeMD)
-
-	step2 := lineSliceBetween(content, "**`.asdt/knowledge/knowledge.yaml`**", "**`.asdt/knowledge/provenance.yaml`**")
-	if step2 == "" {
-		t.Fatalf("could not isolate write.md step-2 knowledge section")
-	}
-	if !strings.Contains(step2, "human_nuance") {
-		t.Errorf("write.md step-2 (knowledge) must reference human_nuance")
-	}
-
-	step3 := lineSliceBetween(content, "**`.asdt/knowledge/provenance.yaml`**", "## Halt contract")
-	if step3 == "" {
-		t.Fatalf("could not isolate write.md step-3 provenance section")
-	}
-	for _, forbidden := range []string{"human_nuance", "NUANCE"} {
-		if strings.Contains(step3, forbidden) {
-			t.Errorf("write.md step-3 (provenance) must not reference %q", forbidden)
+	for _, forbidden := range []string{"nuance.", "NUANCE", "Notes to remember"} {
+		if strings.Contains(processing, forbidden) {
+			t.Errorf("write.md Processing references %q; human notes never reach a file", forbidden)
 		}
 	}
-
-	pcMD, err := os.ReadFile(filepath.Join(root, "asdt-core", "references", "platform-context.md"))
-	if err != nil {
-		t.Fatalf("read asdt-core/references/platform-context.md: %v", err)
-	}
-	pc := string(pcMD)
-
-	// Section anchors follow the post-refactor platform-context.md, which
-	// collapsed "How to Find" + "What to Inject" + the injection format into a
-	// single "## Injection Format" section. The invariant is unchanged:
-	// human_nuance is user-authored and carries no confidence rating, so it
-	// must never appear in the automatic injection path.
-	reuseGuard := lineSliceBetween(pc, "## Reuse Guard", "## Injection Format")
-	if reuseGuard == "" {
-		t.Fatalf("could not isolate platform-context.md Reuse Guard section")
-	}
-	if strings.Contains(reuseGuard, "human_nuance") {
-		t.Errorf("platform-context.md Reuse Guard must not reference human_nuance")
+	if !strings.Contains(writeMD, "Ignore `## Notes to remember`") {
+		t.Errorf("write.md must tell the writer to ignore the clarify payload's `## Notes to remember`")
 	}
 
-	whatToInject := lineSliceBetween(pc, "## Injection Format", "## Degradation")
-	if whatToInject == "" {
-		t.Fatalf("could not isolate platform-context.md Injection Format section")
+	skillMD := readText(t, filepath.Join(root, "asdt-init", "SKILL.md"))
+	after, ok := markdownSection(skillMD, "After write")
+	if !ok {
+		t.Fatalf("asdt-init/SKILL.md has no ## After write section")
 	}
-	if strings.Contains(whatToInject, "human_nuance") {
-		t.Errorf("platform-context.md Injection Format must not reference human_nuance")
+	if !strings.Contains(after, "Notes to remember") || !strings.Contains(after, "memory **remember**") {
+		t.Errorf("asdt-init/SKILL.md ## After write must remember each `Notes to remember` entry through memory **remember**")
+	}
+
+	pc := readText(t, filepath.Join(root, "asdt-core", "references", "platform-context.md"))
+	for _, section := range []string{"Reuse Guard", "Injection Format"} {
+		body, ok := markdownSection(pc, section)
+		if !ok {
+			t.Fatalf("platform-context.md has no ## %s section", section)
+		}
+		for _, forbidden := range []string{"human_nuance", "PROJECT NOTE"} {
+			if strings.Contains(body, forbidden) {
+				t.Errorf("platform-context.md ## %s references %q; notes never join the detected-facts block", section, forbidden)
+			}
+		}
 	}
 }
 
@@ -332,7 +320,7 @@ func initPlanTableSteps(content string) []string {
 			continue
 		}
 		if !inTable {
-			if strings.Contains(line, "| Step | File | Execution | Reads | Writes |") {
+			if strings.Contains(line, "| Step | Execution | Does |") {
 				inTable = true
 			}
 			continue
@@ -356,32 +344,4 @@ func initPlanTableSteps(content string) []string {
 		}
 	}
 	return steps
-}
-
-// lineSliceBetween returns the lines of content from the first line containing
-// startHint (inclusive) up to but excluding the first line containing endHint
-// after it. When endHint is "" or is not found, the slice runs to EOF. Returns
-// "" when startHint itself is not found.
-func lineSliceBetween(content, startHint, endHint string) string {
-	lines := strings.Split(content, "\n")
-	start := -1
-	for i, line := range lines {
-		if strings.Contains(line, startHint) {
-			start = i
-			break
-		}
-	}
-	if start < 0 {
-		return ""
-	}
-	end := len(lines)
-	if endHint != "" {
-		for i := start + 1; i < len(lines); i++ {
-			if strings.Contains(lines[i], endHint) {
-				end = i
-				break
-			}
-		}
-	}
-	return strings.Join(lines[start:end], "\n")
 }

@@ -1,29 +1,16 @@
 # Explore — Init Specialist
 
 ## Purpose
-Detect the project stack and structural context deterministically, and surface
-every low-confidence or genuinely ambiguous field as a question for the clarify
-step. This is init's first sub-agent step — it READS the project, it never
-writes. The same project must produce the same `stack-detection` no matter which
-model or session runs it.
+Detect the project's stack, context fields, and design fingerprint with bounded, deterministic probes, and turn every low-confidence or genuinely ambiguous field into a question for `clarify`. The same project must yield the same detection in any session, with any model.
 
 ## Inputs
-- `inputs: []` — there are no upstream artifacts; the raw project tree is the
-  only source.
-- **Memory provider presence arrives as an established fact.** The orchestrator
-  passed the gate (`knowledge-gate`) before launching you. Do NOT re-verify the
-  provider's tool list — that is the orchestrator's job and it already did it.
+None. The project tree is the only source, and no `### INPUT` line arrives.
 
 ## Processing
 
-The analyst is **read-only**: it runs detection commands and returns a
-structured result. It writes NO files here — the `write` step owns all
-filesystem writes.
+Read-only: run the probes below and return what they found. Every probe is one bounded shell command with an exact mapping table: first matching row wins, no model judgment. A probe that errors is non-fatal: record that field as `unknown` / `inferred` / `low` and continue.
 
-**explore NEVER guesses.** No markers matched → `detected_stack=[]`. A probe
-that errors is non-fatal: record `value="unknown"`, `source=inferred`,
-`confidence=low` for that field and continue. Never infer a stack from
-incidental files.
+**Never guess.** No marker matched means an empty stack, never one inferred from incidental files.
 
 ### Detect project stack
 
@@ -69,12 +56,7 @@ If nothing matches, record an empty stack — do not guess a stack from other fi
 
 ### Detect project context
 
-Every probe has the same shape: **one bounded command, one exact mapping table,
-first matching row wins, no model judgment**. The tables are uniform across
-languages — supporting a new language means adding rows, never adding logic. If
-no row matches, the field is `value="unknown"`, `source=inferred`,
-`confidence=low`. A probe error is non-fatal — record the fallback for that
-field and continue.
+The tables are uniform across languages: a new language adds rows, never logic. No row matches → `unknown` / `inferred` / `low`.
 
 Inputs from the stack scan: `detected_stack`, the primary language, and each language's `{lang_root}`. Probes that inspect language evidence run against the primary language's `{lang_root}` — not blindly against the repo root.
 
@@ -135,14 +117,16 @@ itself prescribes. A Go `func helper()` or a TS `export function parseDate()` co
 
 **Probe: `architectural_style`** — list top-level directories with one command (`fd -d 1 -t d . {dir}` or `find {dir} -maxdepth 1 -type d`), first at the repo root; if no row matches there and the primary `{lang_root}` differs from the root, evaluate the same table once more at `{lang_root}`:
 
-| Layout evidence (first match wins) | Value | Source | Confidence |
-|---|---|---|---|
-| `cmd/` AND `internal/` present | `go-standard-layout` | detected | high |
-| `src/` containing `controllers/`, `models/`, `views/` | `mvc` | detected | high |
-| `src/` containing `features/` or `modules/` | `modular` | detected | medium |
-| `src/` (no sub-pattern matched) | `layered` | detected | medium |
-| `lib/` present (no `src/`) | `layered` | detected | medium |
-| No match at root nor at `{lang_root}` | `unknown` | inferred | low |
+| Layout evidence (first match wins) | Value | Source | Confidence | `file_structure` |
+|---|---|---|---|---|
+| `cmd/` AND `internal/` present | `go-standard-layout` | detected | high | `cmd/ for binaries, internal/ for private packages` |
+| `src/` containing `controllers/`, `models/`, `views/` | `mvc` | detected | high | `src/ split into controllers/, models/, views/` |
+| `src/` containing `features/` or `modules/` | `modular` | detected | medium | `src/ organized by feature modules` |
+| `src/` (no sub-pattern matched) | `layered` | detected | medium | `source under src/` |
+| `lib/` present (no `src/`) | `layered` | detected | medium | `source under lib/` |
+| No match at root nor at `{lang_root}` | `unknown` | inferred | low | *(none — omit the field)* |
+
+The matching row also fixes `file_structure`, a plain value with no source or confidence, prefixed with `{lang_root}/` when the row matched at `{lang_root}` rather than the root. It never produces an ambiguity.
 
 `go-standard-layout` names the `cmd/` + `internal/` directory convention only — it says
 nothing about hexagonal, layered, or any other architecture inside those packages.
@@ -151,12 +135,7 @@ When the command output spans libraries from ≥ 2 distinct rows above, emit the
 
 ### Detect design fingerprint
 
-The `design_fingerprint` records _how_ the codebase is built — its i18n, CSS,
-ORM, state-management, CI/CD, lint, and code-intelligence tooling. Each concern
-is a **pack** with the same discipline as the context probes above: one bounded command,
-one exact mapping table, first matching row wins, no model judgment. Each fired
-pack emits a `FieldValue` recorded in `provenance.yaml` (the write-only sidecar);
-its flat value surfaces in `knowledge.yaml`'s `design_fingerprint`.
+The fingerprint records _how_ the codebase is built: its i18n, CSS, ORM, state management, CI/CD, lint, and code-intelligence tooling. Each concern is a **pack** with the same discipline as the probes above, and each fired pack emits one value with its source and confidence.
 
 **Fire gate.** Decide which packs run from the stack scan's `detected_stack`
 alone — a pure lookup, no file reads. A pack that does not fire emits **NO key
@@ -178,7 +157,7 @@ and NO ambiguity** (it is silent, never `none`). `{node_root}`, `{go_root}`, and
 - Fired, command matches a row → that row's value / `detected` / that row's confidence.
 - Fired, command runs clean with no match → the table's terminal `none` / `detected` / `medium` row.
 - Fired, command errors → `unknown` / `inferred` / `low` (non-fatal — record and continue).
-- `code_intelligence` is positive-evidence-only: absent → emit **no key** (never `none`, never `unknown`, never an Ambiguity).
+- `code_intelligence` is positive-evidence-only: absent → emit **no key** (never `none`, never `unknown`, never an ambiguity).
 - Did not fire → no key, no ambiguity.
 
 **Pack: `i18n`** *(fires: node)* — grep the node manifest dependency block:
@@ -318,15 +297,16 @@ ls -d .codegraph 2>/dev/null | head -1
 | Evidence | Value | Source | Confidence |
 |---|---|---|---|
 | `.codegraph` present | `codegraph` | detected | high |
-| absent | *(emit NO key — never `none`, never `unknown`, never an Ambiguity)* |
+| absent | *(emit NO key — never `none`, never `unknown`, never an ambiguity)* |
 
 ### Confidence and source rules
 
 | Source | When to assign |
 |---|---|
 | `detected` | Value determined by a bounded command with direct file evidence |
-| `inferred` | Pattern matched without direct file evidence (fallback / best-effort) |
-| `manual` | User explicitly set this value during a recalibration review (set by clarify/write, never here) |
+| `inferred` | Fallback when no row matched or the probe errored |
+
+(`manual` marks a value the human set; only `write` assigns it, never this step.)
 
 | Confidence | Meaning |
 |---|---|
@@ -338,59 +318,37 @@ ls -d .codegraph 2>/dev/null | head -1
 
 ### Emit ambiguities
 
-Emit ONE `Ambiguity` per field that is low/medium-confidence OR genuinely
-ambiguous (e.g. two stacks detected and the primary is unclear). Each ambiguity
-is the question the clarify step will ask the human. Do NOT resolve them here —
-explore detects and flags; clarify asks; write applies.
+Emit ONE ambiguity per field that is `medium` or `low` confidence, or genuinely ambiguous (two stacks detected and the primary unclear). Each is a question `clarify` asks the human; never resolve one here. Its default is the detected value. It is skippable unless no defensible default exists.
 
-**design_fingerprint ambiguities.** For every FIRED pack whose result is
-`medium` or `low` confidence — including a clean `none` result — emit exactly one
-`Ambiguity` whose `field` is the dotted name `design_fingerprint.<concern>` (e.g.
-`design_fingerprint.css_approach`), with `default` set to the detected value and
-`skippable: true` ALWAYS. A pack that did not fire emits NO ambiguity, and
-`code_intelligence` NEVER produces one (positive-evidence-only). design_fingerprint
-ambiguities are never `blocking_open_items`.
+**Fingerprint ambiguities.** Every FIRED pack with a `medium` or `low` result, a clean `none` included, emits one ambiguity named `design_fingerprint.{concern}` (e.g. `design_fingerprint.css_approach`), always skippable. A pack that did not fire emits none, and `code_intelligence` never does.
+
 
 ## Output
-Produces: `init/stack-detection`
+Return this summary (protocol §6), filling `Open items` and the two sections below, which `write` and `clarify` read, so keep their shape exact:
 
-Persist via memory **save** under this step's `output_topic_key` in `workflow.yaml`; return the payload above with open_items populated.
+```markdown
+# Init detection: init
 
-```yaml
-payload:
-  detected_stack: []          # language ids in scan order, deduplicated; [] when no markers matched
-  lang_roots:                 # language id -> directory of its first marker
-    - lang: ""
-      root: ""
-  fields:                     # FieldValue per detected context field
-    is_monorepo: { value: "", source: "", confidence: "" }
-    test_runner: { value: "", source: "", confidence: "" }
-    naming_style: { value: "", source: "", confidence: "" }
-    architectural_style: { value: "", source: "", confidence: "" }
-    design_fingerprint:       # one FieldValue per FIRED pack; OMIT non-firing packs entirely (no key)
-      i18n: { value: "", source: "", confidence: "" }
-      css_approach: { value: "", source: "", confidence: "" }
-      orm: { value: "", source: "", confidence: "" }
-      state_management: { value: "", source: "", confidence: "" }
-      ci_cd: { value: "", source: "", confidence: "" }
-      lint: { value: "", source: "", confidence: "" }
-      code_intelligence: { value: "", source: "", confidence: "" }  # present only when .codegraph exists
-  ambiguities: []             # one Ambiguity per low/medium-confidence or genuinely ambiguous field; design_fingerprint ambiguities use dotted field names and are always skippable
-  open_items: []
+{The stack in one sentence.}
+
+## Detection
+stack: {language ids in scan order, comma-separated; empty when no marker matched}
+lang_roots: {lang}={root}, ...
+file_structure: {the architectural_style row's file_structure; line omitted when none}
+
+| key | value | source | confidence |
+|---|---|---|---|
+| is_monorepo | ... | ... | ... |
+| test_runner | ... | ... | ... |
+| naming_style | ... | ... | ... |
+| architectural_style | ... | ... | ... |
+| design_fingerprint.{concern} | ... | ... | ... |
+| code_intelligence | codegraph | detected | high |
+
+## Ambiguities
+1. `{field}`: {the question} | options: {a / b, or "free-form"} | default: {value} | confidence: {medium|low} | {skippable|blocking}
+
+## Open items
 ```
 
-**FieldValue** (value-object):
-```yaml
-value: ""        # the detected value, or "unknown"
-source: ""       # detected | inferred  (manual is set later by clarify/write, never here)
-confidence: ""   # high | medium | low
-```
-
-**Ambiguity** (value-object):
-```yaml
-field: ""        # the field name this question resolves (e.g. "test_runner")
-question: ""     # the prose question clarify asks the human, one at a time
-options: []      # optional — concrete choices to offer; omit when free-form
-default: ""      # the value applied when the harness is non-interactive and skippable=true
-skippable: true  # true → SKIP with default when non-interactive; false → open_item when non-interactive
-```
+The table carries one `design_fingerprint.{concern}` row per FIRED pack in pack order (`i18n`, `css_approach`, `orm`, `state_management`, `ci_cd`, `lint`), a `none` result included, and the `code_intelligence` row only when `.codegraph` exists. Write `none` under `## Ambiguities` when there are none.

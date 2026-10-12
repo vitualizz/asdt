@@ -1,21 +1,22 @@
 # Harden — Security Specialist
 
 ## Purpose
-Turn the assessment into prioritized findings and an actionable hardening checklist. One
-step, one artifact.
+Turn the assessment into prioritized findings and an actionable hardening checklist, in the
+one summary Developer, Architect, and QA consume.
 
 ## Inputs
-- `security-assessment` — injected from the orchestrator's context as
-  `### INPUT security-assessment`. Extract: `attack_surface`, `threats`, `open_items`
+- `### INPUT security/assess` — the assessment: `Attack surface`, `Threats`, and `Open items`
 
-**DEGRADATION**: if the assessment is UNRESOLVED, produce no findings rather than invented ones — record `ASSUMED: assessment unavailable — no findings produced` in open_items.
+It arrives as a path to read — never look for anything else.
+
+**DEGRADATION**: `security/assess` UNRESOLVED → produce no findings rather than invented ones, and record `ASSUMED: assessment unavailable — no findings produced` in `Open items`.
 
 ## Processing
 
 1. **Prioritize.** Give every threat a severity in ONE word — `high`, `medium`, or `low` —
    and nothing else. No CVSS vectors, no numeric scores, no composite ratings. Severity is a
    judgment about what an attacker gets and how easily; write that judgment as the finding's
-   `why`, and let the reader disagree with it.
+   why, and let the reader disagree with it.
 
    Rank by what an attacker actually gains. A `high` is something that reaches real data or
    real identity. Everything cannot be `high` — an inflated severity list gets skimmed, and
@@ -33,23 +34,28 @@ Carry any `ASSUMED:` entries from the assessment forward — a threat you could 
 stays visible.
 
 ## Output
-Produces: `security/handoff`
+Return this summary (`asdt-core/protocol.md` §6):
 
-Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
-schema from `asdt-core/protocol.md`. Findings and checklist are SECTIONS of this one
-hand-off — there is no second artifact and no second key.
+```markdown
+# Security: {change}
 
-```yaml
-payload:
-  what: ""                    # the security posture of this change, one sentence
-  risks:                      # the findings, highest severity first
-    - risk: ""                # what an attacker can do
-      severity: "high | medium | low"
-      why: ""                 # what they gain, and how easily
-      evidence: ""            # the path, symbol, or absence that grounds it
-      mitigation: ""          # the concrete change that closes it
-  decisions: []               # hardening choices worth carrying forward
-  constraints: []             # the checklist — ordered, each item verifiable as done
-  files_hint: []              # where the mitigations land
-  open_items: []              # ASSUMED: prefix for anything unverified
+{The security posture of this change, in one sentence.}
+
+## Decisions
+- {Hardening choice worth carrying forward}
+
+## Constraints
+1. {Checklist item — small enough to close in one sitting, verifiable as done}
+
+## Files hint
+- `{path}` — {which mitigation lands there}
+
+## Risks
+- [{high|medium|low}] {what an attacker can do} → {the concrete change that closes it} — why: {what they gain, and how easily}; evidence: `{path, symbol, or absence}`
+
+## Open items
+- ASSUMED: {threat you could not verify} — {what would confirm or refute it}
 ```
+
+`Risks` holds the findings, highest severity first; `Constraints` is the checklist, in the
+order to do it. Both are sections of this one summary — there is no second one.

@@ -1,35 +1,45 @@
 # Explore — Developer Specialist
 
 ## Purpose
-Understand the area of the codebase that will change before writing a single line.
+Understand the area of the codebase that will change before a single line is specified.
 
 ## Inputs
-- Request: the feature/change description from the user
-- `platform-summary`: stack, naming conventions, key patterns
+No `### INPUT` line: this step works from the raw request, the codebase, the platform block
+(stack, naming conventions, key patterns), and any `### PROJECT NOTE` lines. Look for nothing
+else.
 
-Note: This step has no prior step artifacts. It operates purely on the request and platform context.
-Both the request and `platform-summary` arrive INJECTED in this prompt (this step's `inputs:` list in `workflow.yaml` is empty — it reads only the raw request and platform-summary, not a prior artifact). Do NOT fetch either yourself; if `platform-summary` is marked UNRESOLVED, record it in `open_items` and proceed.
-
-**Soft reference (optional)**: if `researcher/handoff` was recalled by the inline knowledge-recall prelude, use it as framing context; when absent, proceed normally.
+**DEGRADATION**: no platform block → take the conventions from the code around the change, and record `ASSUMED: no platform block — conventions read from the code` in `Open items`.
 
 ## Processing
-1. Identify which existing files/modules are likely affected by this change.
-2. Identify naming patterns and conventions from platform-summary relevant to this change.
-3. List known risks or constraints (e.g. "this touches the auth layer which has rate limiting").
-4. List open questions that need answering before speccing (e.g. "does this need migrations?").
+1. Identify which existing files and modules this change is likely to touch.
+2. Identify the naming patterns and conventions, from the platform block and the code, that
+   this change has to follow.
+3. List the known risks and constraints ("this touches the auth layer, which has rate
+   limiting").
+4. List the open questions `spec` has to answer ("does this need a migration?").
 
 Do NOT design the solution. Do NOT write code. Only explore and understand.
 
 ## Output
-Produces: `dev-exploration` — retained in the orchestrator's context, NOT persisted.
-This step declares `output: context` in `workflow.yaml`: do NOT call memory **save**. Return the
-payload below; the orchestrator injects it into `spec` as `### INPUT dev-exploration`.
+Return this summary (`asdt-core/protocol.md` §6):
 
-```yaml
-payload:
-  files_to_understand: []     # existing files/modules relevant to this change
-  patterns_to_follow: []      # naming/structural conventions from platform-summary
-  risks: []                   # known constraints or risks
-  open_questions: []          # questions that will be answered in the spec step
-  open_items: []
+```markdown
+# Developer: {change}
+
+{What this change touches, in one sentence.}
+
+## Constraints
+- {Naming or structural convention to follow} (`{where it shows}`)
+
+## Files hint
+- `{path}` — {why it matters to this change}
+
+## Risks
+- {Known constraint or risk} → {how the spec should handle it}
+
+## Open questions
+- {Question spec must answer}
+
+## Open items
+- ASSUMED: {what was assumed} — {what would confirm or refute it}
 ```

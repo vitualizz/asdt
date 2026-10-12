@@ -3,7 +3,7 @@ routable: true
 steps:
   - name: knowledge-recall
     skill: ../asdt-core/references/knowledge-recall.md
-    description: Query organizational memory for prior discovery, similar problem framings, and decisions relevant to this exploration
+    description: Recall the project's notes on prior discovery, similar problem framings, and decisions relevant to this exploration
     execution: inline
 
   - name: discovery
@@ -12,8 +12,7 @@ steps:
     execution: subagent
     model: sonnet
     agent: analyst
-    inputs: []
-    output_topic_key: "{project}/{change}/researcher/handoff"
+    output: summary
     reference_skills:
       - ../asdt-core/references/platform-context.md
       - ../asdt-core/protocol.md

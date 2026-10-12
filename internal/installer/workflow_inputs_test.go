@@ -23,22 +23,22 @@ import (
 // and the tier tables with it, so the Go reimplementation had nothing left to
 // validate.
 
-// inputRef is one entry of a step's `inputs:` list: the topic_key it declares
-// and whether that entry's line carries a trailing `# optional` marker.
+// inputRef is one entry of a step's `inputs:` list: the scratchpad name it
+// declares and whether that entry's line carries a trailing `# optional` marker.
 type inputRef struct {
-	TopicKey string
+	Name     string
 	Optional bool
 }
 
 // stepInfo is the minimal shape of one workflow.yaml step needed to build the
-// dependency graph: identity, prompt file, execution mode, what it produces,
-// and what it declares as inputs.
+// dependency graph: identity, prompt file, execution mode, whether it writes
+// the role summary, and what it declares as inputs.
 type stepInfo struct {
-	Name           string
-	Skill          string
-	Execution      string
-	OutputTopicKey string
-	Inputs         []inputRef
+	Name      string
+	Skill     string
+	Execution string
+	Output    string
+	Inputs    []inputRef
 }
 
 // specialistGraph is one specialist's workflow.yaml, parsed independently of
@@ -99,8 +99,8 @@ func parseSpecialistGraph(dir string, data []byte) (specialistGraph, error) {
 		if n := mappingValue(stepNode, "execution"); n != nil {
 			info.Execution = n.Value
 		}
-		if n := mappingValue(stepNode, "output_topic_key"); n != nil {
-			info.OutputTopicKey = n.Value
+		if n := mappingValue(stepNode, "output"); n != nil {
+			info.Output = n.Value
 		}
 		if inputsNode := mappingValue(stepNode, "inputs"); inputsNode != nil && inputsNode.Kind == yaml.SequenceNode {
 			for _, item := range inputsNode.Content {
@@ -108,7 +108,7 @@ func parseSpecialistGraph(dir string, data []byte) (specialistGraph, error) {
 					continue
 				}
 				info.Inputs = append(info.Inputs, inputRef{
-					TopicKey: item.Value,
+					Name:     item.Value,
 					Optional: lineHasOptionalMarker(lines, item.Line),
 				})
 			}
@@ -121,8 +121,8 @@ func parseSpecialistGraph(dir string, data []byte) (specialistGraph, error) {
 
 // lineHasOptionalMarker reports whether the raw source line addressed by an
 // input scalar's Node.Line (1-based) carries a trailing `# optional` marker.
-// Topic keys never contain `#`, so the first `#` on the line is always the
-// start of a comment, never inside the quoted string.
+// Input names never contain `#`, so the first `#` on the line is always the
+// start of a comment, never inside the name.
 func lineHasOptionalMarker(lines []string, nodeLine int) bool {
 	idx := nodeLine - 1
 	if idx < 0 || idx >= len(lines) {
@@ -148,28 +148,28 @@ steps:
   - name: sample
     execution: subagent
     inputs:
-      - "fixture/a"
-      - "fixture/b"  # optional
-    output_topic_key: "fixture/out"
+      - fixture-a
+      - fixture-b  # optional
+    output: summary
 `)
 	fixtureB := []byte(`specialist: fixture
 steps:
   - name: sample
     execution: subagent
     inputs:
-      - "fixture/a"
-      - "fixture/b"  # optional
+      - fixture-a
+      - fixture-b  # optional
       # trailing comment block before the next key
-    output_topic_key: "fixture/out"
+    output: summary
 `)
 	fixtureC := []byte(`specialist: fixture
 steps:
   - name: sample
     execution: subagent
     inputs:
-      - "fixture/a"  # optional
-      - "fixture/b"
-    output_topic_key: "fixture/out"
+      - fixture-a  # optional
+      - fixture-b
+    output: summary
 `)
 	fixtureD := []byte(`specialist: fixture
 steps:
@@ -177,9 +177,9 @@ steps:
     execution: subagent
     model: sonnet  # favor throughput, not an optional marker
     inputs:
-      - "fixture/a"
-      - "fixture/b"
-    output_topic_key: "fixture/out"
+      - fixture-a
+      - fixture-b
+    output: summary
 `)
 
 	cases := []struct {
@@ -187,10 +187,10 @@ steps:
 		data       []byte
 		wantMarked map[string]bool
 	}{
-		{"A", fixtureA, map[string]bool{"fixture/a": false, "fixture/b": true}},
-		{"B", fixtureB, map[string]bool{"fixture/a": false, "fixture/b": true}},
-		{"C", fixtureC, map[string]bool{"fixture/a": true, "fixture/b": false}},
-		{"D", fixtureD, map[string]bool{"fixture/a": false, "fixture/b": false}},
+		{"A", fixtureA, map[string]bool{"fixture-a": false, "fixture-b": true}},
+		{"B", fixtureB, map[string]bool{"fixture-a": false, "fixture-b": true}},
+		{"C", fixtureC, map[string]bool{"fixture-a": true, "fixture-b": false}},
+		{"D", fixtureD, map[string]bool{"fixture-a": false, "fixture-b": false}},
 	}
 
 	for _, tc := range cases {
@@ -206,7 +206,7 @@ steps:
 			}
 			got := map[string]bool{}
 			for _, in := range step.Inputs {
-				got[in.TopicKey] = in.Optional
+				got[in.Name] = in.Optional
 			}
 			if !reflect.DeepEqual(got, tc.wantMarked) {
 				t.Errorf("optional flags = %v, want %v", got, tc.wantMarked)
@@ -219,7 +219,7 @@ steps:
 	// no inputs at all, so it contributes zero and is absent from this map.
 	wantCounts := map[string]int{
 		"asdt-architect": 4,
-		"asdt-developer": 7,
+		"asdt-developer": 9,
 		"asdt-pm":        1,
 		"asdt-qa":        5,
 		"asdt-security":  2,
@@ -250,7 +250,7 @@ steps:
 		}
 		total += count
 	}
-	if total != 20 {
-		t.Errorf("total optional markers across the tree = %d, want 20", total)
+	if total != 22 {
+		t.Errorf("total optional markers across the tree = %d, want 22", total)
 	}
 }

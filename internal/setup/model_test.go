@@ -57,10 +57,9 @@ var hostedProvider = installer.ProviderDescriptor{
 	Name:        "Acme Memory",
 	Description: "Test-only hosted provider.",
 	ConfigValue: "acme",
-	Tools: map[installer.MemoryVerb]installer.MemoryTool{
-		installer.MemorySave:   {Name: "acme_put", Usage: "pass the key as `slot`"},
-		installer.MemorySearch: {Name: "acme_find", Usage: "pass the query as `q`; each match carries its key as `slot`"},
-		installer.MemoryGet:    {Name: "acme_fetch", Usage: "pass the id as `ref`"},
+	Tools: map[installer.MemoryVerb][]installer.MemoryTool{
+		installer.MemoryRemember: {{Name: "acme_put", Usage: "pass the subject as `slot` and the note as `body`"}},
+		installer.MemoryRecall:   {{Name: "acme_ask", Usage: "pass the query as `q`; each answer is a full note"}},
 	},
 	ClaudeToolPrefixes: []string{"mcp__acme__"},
 }

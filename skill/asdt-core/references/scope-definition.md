@@ -2,7 +2,7 @@
 
 Guidelines for defining explicit, unambiguous scope. Optional reference, loaded by any role that must establish or validate boundaries for a change — typically Architect and Developer.
 
-Apply it when producing the `constraints`, `decisions`, and `open_items` of a hand-off.
+Apply it when writing a summary's `Constraints`, `Decisions`, `Acceptance criteria`, and `Open items` (`asdt-core/protocol.md` §6).
 
 ---
 
@@ -10,28 +10,28 @@ Apply it when producing the `constraints`, `decisions`, and `open_items` of a ha
 
 Scope creep begins with ambiguity. Every scope statement carries both sides:
 
-- **in**: features, interactions, states, and behaviors explicitly within this change. Each item must be concrete enough that someone can decide whether a given task belongs here.
-- **out**: features adjacent to this change but explicitly excluded. Listing something as "out" prevents implicit assumption during development.
+- **In**: features, interactions, states, and behaviors explicitly within this change. Each item must be concrete enough that someone can decide whether a given task belongs here.
+- **Out**: features adjacent to this change but explicitly excluded. Listing something as out prevents implicit assumption during development.
 
-**Rule**: If a feature is not listed as in, it is not in scope — even if it seems obviously related. If there is ambiguity about whether a feature is included, list it as out explicitly, or move it to an open item.
+**Rule**: If a feature is not listed as In, it is not in scope — even if it seems obviously related. If there is ambiguity about whether a feature is included, list it as Out explicitly, or record it in `Open items`.
 
 **Example — password reset feature**:
 
-```yaml
-scope:
-  in:
-    - Requesting a password reset via registered email address
-    - Receiving a time-limited reset link by email
-    - Setting a new password via the reset link
-    - Invalidating the reset link after use or expiry
-    - Error handling for unregistered email addresses
-  out:
-    - Two-factor authentication during reset
-    - SMS-based password reset
-    - Admin-initiated password reset on behalf of a user
-    - Password strength enforcement (tracked separately)
-    - Social login account recovery
+```markdown
+## Scope
+- In: requesting a password reset via a registered email address
+- In: receiving a time-limited reset link by email
+- In: setting a new password via the reset link
+- In: invalidating the reset link after use or expiry
+- In: error handling for unregistered email addresses
+- Out: two-factor authentication during reset
+- Out: SMS-based password reset
+- Out: admin-initiated password reset on behalf of a user
+- Out: password strength enforcement (tracked separately)
+- Out: social login account recovery
 ```
+
+A role whose summary has no `Scope` section states its boundary in `Constraints` instead (`- Out of scope: SMS-based password reset`).
 
 ---
 
@@ -43,7 +43,7 @@ Before finalizing scope, scan for dependencies the feature implicitly relies on:
 - **Upstream features**: does this require another feature to exist first (e.g. user registration before password reset)?
 - **External systems**: does this integrate with a third party (payment gateway, identity provider)?
 
-Unresolved dependencies go to `open_items`; settled ones go to the in/out lists.
+An unresolved dependency is an `Open items` entry; a settled one joins the In or Out list.
 
 ---
 
@@ -65,34 +65,34 @@ Non-functional requirements are constraints on quality attributes. Check each ca
 - Do not invent NFRs for features with no evident quality constraints.
 - NFRs must be testable or measurable (not "it should be fast").
 
-They belong in `constraints` when settled, in `acceptance_criteria` when the consumer must verify them.
+A settled NFR is a `Constraints` entry; one the consumer must verify is also an `Acceptance criteria` entry, in Given/When/Then.
 
 ---
 
 ## Open Questions
 
-Open questions are unresolved decisions that materially affect the design. Surface them rather than assume them.
+Open questions are unresolved decisions that materially affect the design. Make each one visible: never bury an assumption in prose.
 
-**When something is an open question, not an assumption**:
+**When something is an open question, not settled by convention**:
 - The idea implies multiple valid approaches with different tradeoffs.
 - A business rule is unclear (e.g. "how long should reset tokens be valid?").
 - An actor's permission level is ambiguous (e.g. "can guests trigger this flow?").
 - A dependency is uncertain (e.g. "which email provider will be used?").
 
-**Format**: write each as a full interrogative sentence someone could answer directly.
+**Format**: a step never asks (protocol §3), so each open question becomes one `Open items` line: the `ASSUMED:` prefix, the assumption it proceeds on, then what would confirm or refute it.
 
-```yaml
-open_items:
-  - "ASSUMED: reset tokens expire in 15 min — confirm the intended duration (15 min, 1 hour, 24 hours?)"
-  - "ASSUMED: the response never reveals whether the email is registered — confirm with product"
-  - "ASSUMED: rate-limiting on reset requests is out of scope for this iteration"
+```markdown
+## Open items
+- ASSUMED: reset tokens expire in 15 minutes — confirm the intended duration (15 minutes, 1 hour, 24 hours?)
+- ASSUMED: the response never reveals whether the email is registered — confirm with Product
+- ASSUMED: rate-limiting on reset requests is out of scope for this iteration — confirm it is tracked elsewhere
 ```
 
-**Do not** include questions already answered by the original request or by obvious convention. Do not add open items just to appear thorough — only genuinely unresolved ones.
+**Do not** include questions already answered by the original request or by obvious convention. Do not add `Open items` entries just to appear thorough — only genuinely unresolved ones.
 
 ---
 
 ## Applying it by role
 
-- **Architect**: the in list covers architectural boundaries, service contracts, and API surface area; the out list excludes implementation detail owned by Developer. NFRs here are scalability, reliability, and security contracts.
-- **Developer**: the in list names files to create or modify and the steps included in this change; the out list names adjacent refactors explicitly deferred. NFRs here are performance budgets, error-handling contracts, and test coverage.
+- **Architect**: the In list covers architectural boundaries, service contracts, and API surface area; the Out list excludes implementation detail owned by Developer. NFRs here are scalability, reliability, and security contracts.
+- **Developer**: the In list names the behavior and the steps included in this change (the files themselves are `Edit targets`); the Out list names adjacent refactors explicitly deferred. NFRs here are performance budgets, error-handling contracts, and test coverage.

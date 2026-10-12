@@ -124,7 +124,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 	}
 
 	generateCommands(assistant, skillsFS, &result)
-	generateAgents(assistant, skillsFS, provider, opts, &result)
+	generateAgents(assistant, skillsFS, opts, &result)
 
 	if result.Err == nil {
 		// Preserve existing persona, emoji preference, and language so a
@@ -280,8 +280,7 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 	// The memory binding runs LAST, over every file: the specialist-header
 	// splice above copies protocol.md's still-empty binding region into each
 	// routed SKILL.md, and this one pass binds that copy and every standalone
-	// region (protocol.md, executor-header.md, asdt-init/SKILL.md, the root
-	// SKILL.md) alike. Marker-free files pass through unchanged.
+	// region (protocol.md, asdt-init/SKILL.md, the root SKILL.md) alike. Marker-free files pass through unchanged.
 	bound, bindErr := bindMemory(data, provider)
 	if bindErr != nil {
 		return fmt.Errorf("bind memory provider into %s: %w", srcPath, bindErr)

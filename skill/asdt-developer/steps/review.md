@@ -5,12 +5,9 @@ This step EXAMINES the quality of code that already exists; `explore` orients yo
 a change, and `implement` delivers one. The product is judgments with fixes, not a change.
 
 ## Inputs
-- Platform summary — the project's conventions and structure, injected inline
-- The area named in the request
-
-No declared input from another specialist: this step runs standalone, and anything prior
-about the area was already surfaced by the `knowledge-recall` prelude. Everything arrives
-ALREADY INJECTED — never self-fetch.
+No `### INPUT` line: this step runs standalone, on the area the request names, the codebase,
+the platform block (the project's conventions and structure), and any `### PROJECT NOTE`
+lines. Look for nothing else.
 
 ## Processing
 
@@ -18,7 +15,7 @@ ALREADY INJECTED — never self-fetch.
    into them. Anchor every observation to a real path and symbol: this step reads the
    codebase, so the evidence rule applies in full.
 
-2. **Judge against the project's own conventions** — the platform summary first, then
+2. **Judge against the project's own conventions** — the platform block first, then
    `asdt-core/references/conventions.md` where the project is silent. Look for:
    - **Complexity hotspots** — the function or module nobody wants to touch, and why
    - **Duplication that has earned extraction** — the third occurrence, not the second
@@ -39,17 +36,27 @@ ALREADY INJECTED — never self-fetch.
    solid with rough edges or genuinely in trouble.
 
 **This step writes NOT ONE BYTE.** It is `agent: analyst`, not builder. Every fix is a
-proposal in the hand-off; turning any of them into code is a separate, explicit request.
+proposal in the summary; turning any of them into code is a separate, explicit request.
 
 ## Output
-Produces: `{project}/study/{topic}/developer`, with `{topic}` derived from the request in
-short kebab-case.
+Return this summary (`asdt-core/protocol.md` §6):
 
-Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
-schema from `asdt-core/protocol.md`:
+```markdown
+# Developer: {change}
 
-- `what` — the state of this code in one sentence
-- `decisions` — the judgments, strongest first, with the strengths among them
-- `risks` — `{risk, mitigation}` per finding, highest severity first
-- `files_hint` — where a reader should look first
-- `open_items` — anything you could not ground in evidence, `ASSUMED:` prefix
+{The state of this code, in one sentence.}
+
+## Decisions
+- {Judgment, strongest first — strengths among them}
+
+## Files hint
+- `{path}` — {why a reader should look there first}
+
+## Risks
+- [{high|medium|low}] {finding} (`{path}`, `{symbol}`) → {fix}
+
+## Open items
+- ASSUMED: {what you could not ground in evidence}
+```
+
+`Risks` holds one line per finding, highest severity first.

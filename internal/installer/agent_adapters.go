@@ -18,7 +18,7 @@ const executorHeaderPath = "asdt-core/executor-header.md"
 type agentTypeSpec struct {
 	ID          string   // "analyst" | "builder"; agent file name is "asdt-"+ID
 	Description string   // one-line summary emitted into the frontmatter
-	ClaudeTools []string // Claude Code tools allowlist before memory and codegraph grants
+	ClaudeTools []string // Claude Code tools allowlist before codegraph grants
 	Constraints string   // English constraint prose appended after the executor header
 	Guidance    string   // gated section body appended after constraints; empty by
 	// default, set only by withCodegraphGuidance when CodegraphFound.
@@ -31,8 +31,7 @@ var AgentTypeNames = []string{"analyst", "builder"}
 const analystConstraints = `## asdt-analyst constraints
 
 You are a single-step ANALYSIS executor: you read, inspect, and reason, then
-persist at most one artifact, exactly as your step file says (nothing when it
-declares ` + "`output: context`" + `). You never write to the working tree.
+return one summary to the orchestrator. You never write a file, anywhere.
 
 - Bash is INSPECTION-ONLY. Allowed command families: git log, git diff,
   git status, git show, git blame, ls, find, grep, wc, cat.
@@ -41,21 +40,24 @@ declares ` + "`output: context`" + `). You never write to the working tree.
   build or codegen output; redirections that write to disk.
 - If the step you were given appears to require creating or editing files,
   STOP: do not attempt the write. Record the blocked work and its target paths
-  in open_items — that work belongs to asdt-builder.
+  in Open items — that work belongs to asdt-builder.
 - You never delegate: do not call Agent/Task and do not run other steps.
 `
 
 const builderConstraints = `## asdt-builder constraints
 
 You are a single-step IMPLEMENTATION executor: you create and edit files to
-complete the one step you were given, then persist exactly one artifact.
+complete the one step you were given, then return one summary to the
+orchestrator.
 
-- Create or edit files ONLY within the targets your step declares (its
-  files_to_modify / allowed edit roots). If a needed change falls outside the
-  declared targets, STOP that edit, do not write it, and record the path in
-  open_items.
+- Create or edit files ONLY within your step's targets: the Edit targets your
+  spec declares (or, for asdt-init/write, .asdt/ and the legacy-store
+  exception below). If a needed change falls outside them, STOP that edit, do
+  not write it, and record the path in Open items.
 - Bash is for inspection only — never run build, lint, test, install, or
-  codegen. Verification belongs to the orchestrator's verify gate.
+  codegen. Verification belongs to the orchestrator's verify gate. Its one
+  mutation is the exception the executor header names: asdt-init/write
+  removing the legacy .asdt/knowledge/ files on recorded consent.
 - You never delegate: do not call Agent/Task and do not run other steps.
 `
 
@@ -63,13 +65,13 @@ complete the one step you were given, then persist exactly one artifact.
 var agentTypeSpecs = []agentTypeSpec{
 	{
 		ID:          "analyst",
-		Description: "Read-only ASDT step executor for analysis steps — inspects the repository with inspection-only Bash and persists one artifact, never writing files.",
+		Description: "Read-only ASDT step executor for analysis steps — inspects the repository with inspection-only Bash and returns one summary, never writing files.",
 		ClaudeTools: []string{"Read", "Glob", "Grep", "Bash"},
 		Constraints: analystConstraints,
 	},
 	{
 		ID:          "builder",
-		Description: "Write-capable ASDT step executor for implementation steps — creates and edits files within declared targets and persists one artifact, never delegating.",
+		Description: "Write-capable ASDT step executor for implementation steps — creates and edits files within declared targets and returns one summary, never delegating.",
 		ClaudeTools: []string{"Read", "Glob", "Grep", "Bash", "Edit", "Write"},
 		Constraints: builderConstraints,
 	},
@@ -111,19 +113,6 @@ Bash grep and read stay the right tool for text the index does not model:
 schemas like Rails db/schema.rb, configs, locales, generated DSL. Reach for
 them there without hesitation.
 `
-
-// withMemoryTools returns spec extended with the selected memory provider's
-// tool grants (ProviderDescriptor.claudeMemoryTools), which both agent types
-// receive. Same aliasing rule as withCodegraphTools: the extended copy gets a
-// freshly allocated ClaudeTools slice so the shared agentTypeSpecs never grow.
-func withMemoryTools(spec agentTypeSpec, provider ProviderDescriptor) agentTypeSpec {
-	memory := provider.claudeMemoryTools()
-	tools := make([]string, 0, len(spec.ClaudeTools)+len(memory))
-	tools = append(tools, spec.ClaudeTools...)
-	tools = append(tools, memory...)
-	spec.ClaudeTools = tools
-	return spec
-}
 
 // withCodegraphTools returns spec extended with the codegraph tool grants when
 // codegraph was detected, and spec unchanged otherwise. The extended copy gets
@@ -188,7 +177,7 @@ func renderClaudeAgent(spec agentTypeSpec, executorHeader string) string {
 // renderOpenCodeAgent renders one agent type as an OpenCode subagent
 // definition with a structural permission block. It ignores ClaudeTools by
 // design: the codegraph grant is Claude-only; OpenCode subagents receive MCP
-// tools implicitly.
+// tools implicitly, except the memory tools writeOpenCodePermissions denies.
 func renderOpenCodeAgent(spec agentTypeSpec, executorHeader string) string {
 	var b strings.Builder
 
@@ -205,25 +194,73 @@ func renderOpenCodeAgent(spec agentTypeSpec, executorHeader string) string {
 	return b.String()
 }
 
+// writeOpenCodePermissions emits an agent's permission block. Beyond the
+// edit/task/bash rules, every agent gets read access to the temp scratchpad
+// root (external_directory) — on OpenCode the host has no session scratchpad,
+// so step inputs live under the protocol.md §1 temp fallback, outside the
+// worktree — and a deny for every known memory provider's tools, since OpenCode
+// hands MCP tools to subagents implicitly and executors never reach memory.
+// The builder's edit rule denies the scratchpad root: the orchestrator alone
+// writes it.
 func writeOpenCodePermissions(b *strings.Builder, id string) {
+	scratch := openCodeScratchpadGlobs
+
 	if id == "builder" {
-		b.WriteString("  edit: allow\n")
+		b.WriteString("  edit:\n")
+		b.WriteString("    \"*\": allow\n")
+		for _, glob := range scratch {
+			fmt.Fprintf(b, "    %q: deny\n", glob)
+		}
 		b.WriteString("  task: deny\n")
 		b.WriteString("  bash: allow\n")
-		return
+	} else {
+		// analyst (and any future read-only type): deny everything except the
+		// inspection-only bash whitelist.
+		b.WriteString("  edit: deny\n")
+		b.WriteString("  task: deny\n")
+		b.WriteString("  bash:\n")
+		for _, glob := range analystBashAllowlist {
+			fmt.Fprintf(b, "    %q: allow\n", glob)
+		}
+		b.WriteString("    \"*\": deny\n")
 	}
 
-	// analyst (and any future read-only type): deny everything except the
-	// inspection-only bash whitelist.
-	b.WriteString("  edit: deny\n")
-	b.WriteString("  task: deny\n")
-	b.WriteString("  bash:\n")
-	for _, glob := range analystBashAllowlist {
-		b.WriteString("    \"")
-		b.WriteString(glob)
-		b.WriteString("\": allow\n")
+	b.WriteString("  external_directory:\n")
+	for _, glob := range scratch {
+		fmt.Fprintf(b, "    %q: allow\n", glob)
 	}
-	b.WriteString("    \"*\": deny\n")
+	for _, pattern := range openCodeMemoryToolPatterns() {
+		fmt.Fprintf(b, "  %q: deny\n", pattern)
+	}
+}
+
+// openCodeScratchpadGlobs are the external_directory patterns covering the
+// protocol.md §1 temp scratchpad fallback `/tmp/asdt-{project}/{session}`. The
+// fallback is always /tmp, never $TMPDIR, so a grant baked in at install time
+// matches the path a run resolves later; /private/tmp covers macOS, where /tmp
+// is a symlink to it.
+var openCodeScratchpadGlobs = []string{"/tmp/asdt-*/**", "/private/tmp/asdt-*/**"}
+
+// openCodeMemoryToolPatterns returns one OpenCode permission key per tool of
+// every known provider, in Providers and verb order, without duplicates.
+// OpenCode registers an MCP tool as `{server}_{tool}` and matches permission
+// keys as wildcards against that name; the server name is the user's choice,
+// so the pattern wildcards it.
+func openCodeMemoryToolPatterns() []string {
+	var patterns []string
+	seen := map[string]bool{}
+	for _, p := range Providers {
+		for _, verb := range memoryVerbs {
+			for _, tool := range p.Tools[verb] {
+				pattern := "*_" + tool.Name
+				if !seen[pattern] {
+					seen[pattern] = true
+					patterns = append(patterns, pattern)
+				}
+			}
+		}
+	}
+	return patterns
 }
 
 // writeAgentBody emits the shared agent body in fixed order: the executor
@@ -252,7 +289,7 @@ func writeAgentBody(b *strings.Builder, executorHeader, constraints, guidance st
 // for one assistant, on top of the shared skill-tree copy.
 type AgentAdapterDescriptor struct {
 	AssistantID AssistantID
-	Generate    func(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions) ([]string, error)
+	Generate    func(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error)
 }
 
 // AgentAdapters lists assistants that receive generated executor agent
@@ -296,31 +333,29 @@ func agentRootFor(id AssistantID) string {
 	}
 }
 
-func generateClaudeAgents(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions) ([]string, error) {
-	return generateAgentFiles(skillsFS, agentRoot, provider, opts, renderClaudeAgent)
+func generateClaudeAgents(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error) {
+	return generateAgentFiles(skillsFS, agentRoot, opts, renderClaudeAgent)
 }
 
-func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions) ([]string, error) {
-	return generateAgentFiles(skillsFS, agentRoot, provider, opts, renderOpenCodeAgent)
+func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string, opts InstallOptions) ([]string, error) {
+	return generateAgentFiles(skillsFS, agentRoot, opts, renderOpenCodeAgent)
 }
 
 // generateAgentFiles writes one agent definition file per agent type spec
-// under agentRoot, baking the shared executor header — its memory binding
-// spliced for provider — into every body, and granting provider's memory tools. A
+// under agentRoot, baking the shared executor header into every body. Executors
+// never reach memory — the orchestrator alone does — so no binding is spliced,
+// the Claude Code allowlist grants no memory tool, and the OpenCode permission
+// block denies every known provider's memory tools. A
 // skillsFS without the executor header (a partial fixture) generates nothing
 // — the embedded production FS is guaranteed to carry it. Per-file failures
 // are isolated: the first error is reported, the remaining specs still write.
-func generateAgentFiles(skillsFS fs.FS, agentRoot string, provider ProviderDescriptor, opts InstallOptions, render func(agentTypeSpec, string) string) ([]string, error) {
-	raw, readErr := fs.ReadFile(skillsFS, executorHeaderPath)
+func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, render func(agentTypeSpec, string) string) ([]string, error) {
+	header, readErr := fs.ReadFile(skillsFS, executorHeaderPath)
 	if readErr != nil {
 		if os.IsNotExist(readErr) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("read %s: %w", executorHeaderPath, readErr)
-	}
-	header, bindErr := bindMemory(raw, provider)
-	if bindErr != nil {
-		return nil, fmt.Errorf("bind memory provider into %s: %w", executorHeaderPath, bindErr)
 	}
 
 	if mkErr := os.MkdirAll(agentRoot, 0o755); mkErr != nil {
@@ -332,7 +367,7 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, provider ProviderDescr
 
 	for _, spec := range agentTypeSpecs {
 		target := filepath.Join(agentRoot, "asdt-"+spec.ID+".md")
-		effSpec := withCodegraphGuidance(withCodegraphTools(withMemoryTools(spec, provider), opts), opts)
+		effSpec := withCodegraphGuidance(withCodegraphTools(spec, opts), opts)
 		content := render(effSpec, string(header))
 
 		if writeErr := os.WriteFile(target, []byte(content), 0o644); writeErr != nil {
@@ -350,7 +385,7 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, provider ProviderDescr
 // generateAgents mirrors generateCommands: resolve the adapter and root for
 // the assistant (absence of either is the no-op), generate, fold written
 // paths into result.WrittenCommands and any error into result.Err.
-func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, provider ProviderDescriptor, opts InstallOptions, result *InstallResult) {
+func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, opts InstallOptions, result *InstallResult) {
 	adapter, ok := agentAdapterFor(assistant.ID)
 	if !ok {
 		return
@@ -361,7 +396,7 @@ func generateAgents(assistant AssistantDescriptor, skillsFS fs.FS, provider Prov
 		return
 	}
 
-	written, genErr := adapter.Generate(skillsFS, agentRoot, provider, opts)
+	written, genErr := adapter.Generate(skillsFS, agentRoot, opts)
 	result.WrittenCommands = append(result.WrittenCommands, written...)
 	if genErr != nil {
 		result.Err = genErr

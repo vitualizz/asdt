@@ -2,47 +2,23 @@
 
 ## Purpose
 
-Before complex reasoning, query organizational memory for prior decisions so this
-step builds on — and does not contradict — past work. Accumulating knowledge across
-changes is what makes ASDT a knowledge system rather than a stateless code generator.
-
-## When to Use
-
-Any step that makes an architectural, UX, security, or quality **decision**:
-
-- First step of any specialist (organizational context sets the baseline)
-- Steps named `evaluate-approaches`, `decision-record`, `threat-modeling`, `quality-report`
-- Any step whose output will influence other specialists downstream
+Before any step runs, recall what the project already knows, so this run builds on past decisions, conventions, and lessons instead of contradicting them. The orchestrator runs this prelude inline. Memory's rules are `asdt-core/protocol.md` §2.
 
 ## Protocol
 
-1. **Formulate a query** from the step's topic — use 3-5 words from the change
-   name and specialist role (e.g. `"auth session strategy"`, `"ux payment flow"`).
-2. Run two memory **search**es yourself (`asdt-core/protocol.md` §0): the query,
-   and the journal prefix `{project}/journal` narrowed by the same query terms (the
-   decision log, protocol §1 — the bare prefix outgrows any result cap). Memory
-   **get** the records among them that bear on this step and treat them as the
-   Organizational Context for this step.
-3. **If Organizational Context is present**:
-   - Treat prior decisions as defaults — deviate only with explicit rationale.
-   - If your current direction **conflicts** with a prior decision, surface it
-     in `open_items` as: `"conflicts with prior decision: {key}"`.
-   - Do not blindly repeat prior decisions — evaluate whether they still apply.
-4. **If absent**, proceed normally — memory recall is best-effort and non-blocking.
+1. **Legacy notes.** Only on a project not yet migrated (protocol §0), when `.asdt/knowledge/knowledge.yaml` exists, each of its `human_nuance` entries is a note a person wrote: take it as `{topic} ({type}): {note}`, even when memory is unavailable. A file that does not parse contributes nothing. These notes join the recalled ones from step 4 on, and a recalled note on the same subject wins.
+2. **Skip the recall when memory is unavailable** (protocol §2). The Prerequisites notice already told the user, so proceed with the legacy notes alone, or none.
+3. **Query once.** Run ONE memory **recall**, with 3 to 6 words drawn from the request and this role (e.g. `"password reset token expiry"`, `"payments module security audit"`). A chain run by `/asdt` may reuse the notes it already recalled for the same `{change}` instead of querying again.
+4. **Keep what bears on this run**, up to 5 notes and about 300 tokens. When two notes share a subject, keep the one with the later `Source` date.
+5. **Check `{change}`.** A note whose `Source` names earlier work that this request may continue feeds the confirmation in protocol §0.
+6. **Carry the notes to the steps.** Each step's prompt gets the notes that bear on its area, one line each: `### PROJECT NOTE: {note}`. Relevance is a judgment: a note about CSS reaches a step that touches styles, not a backlog. A note that bears on nothing in a step is not carried.
 
-Organizational memory includes the `{project}/study/` namespace: a past audit or review of this area is exactly the kind of prior knowledge this prelude exists to surface.
+## How a note binds
 
-**Soft recall hint**: a prior `researcher/handoff` (key
-`{project}/{change}/researcher/handoff`) MAY be recalled when a Researcher
-handoff preceded this run — it gives richer context, but it is NOT a required
-input.
-
-## Context Budget
-
-Organizational Context block: **max 300 tokens** (top 3 records only).
-
-Keep the injected context within this budget yourself.
+- **A default, not an instruction.** Follow it unless the current request or code gives a reason not to, and say what that reason is.
+- **A conflict is surfaced.** When the run's direction contradicts a note, the step records `conflicts with recalled note: {subject}` in `Open items`, and the report names it, so the user can confirm which one holds.
+- **Authority wins.** A note that git or `.asdt/config.yaml` contradicts is stale (protocol §0). Say so in one line. If the note is key, remember the correction.
 
 ## Output
 
-No artifact produced by this skill. It only enriches context for the step it precedes.
+This prelude produces no file. It only enriches the prompts of the steps after it.
