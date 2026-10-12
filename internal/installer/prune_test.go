@@ -122,7 +122,7 @@ func TestPruneStale_FallbackScan(t *testing.T) {
 	seedFile(t, skillsDir, "asdt/stale.md")
 	seedFile(t, skillsDir, "asdt/.install-meta.json")
 
-	// Legacy meta: no manifest (prev nil) → fallback walk of managed roots.
+	// No recorded manifest (prev nil) → fallback walk of managed roots.
 	removed := pruneStale(skillsDir, []string{"asdt"}, nil, []string{"asdt/SKILL.md"})
 
 	if !slices.Equal(removed, []string{"asdt/stale.md"}) {

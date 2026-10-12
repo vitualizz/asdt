@@ -20,7 +20,7 @@ Neither one is ever the authority on anything. What was built is whatever **git*
 
 The **orchestrator** is your main assistant while it runs a specialist, whether you typed the specialist's command or `/asdt` is running a chain. It alone talks to you, decides, runs the consent gates, launches the sub-agents, writes the scratchpad, and remembers and recalls.
 
-A **sub-agent** does one step and **returns its summary**, a short Markdown document, and nothing else. It reads the codebase and the scratchpad paths it was handed. It never touches memory and writes no file, the scratchpad included. The two exceptions are the Developer's `implement` (your source, inside the files you approved, never under `.asdt/`) and `/asdt-init`'s `write` (`.asdt/config.yaml`, plus removing the legacy `.asdt/knowledge/` files when you agree to it).
+A **sub-agent** does one step and **returns its summary**, a short Markdown document, and nothing else. It reads the codebase and the scratchpad paths it was handed. It never touches memory and writes no file, the scratchpad included. The two exceptions are the Developer's `implement` (your source, inside the files you approved, never under `.asdt/`) and `/asdt-init`'s `write` (`.asdt/config.yaml` alone).
 
 ## The scratchpad: working summaries
 
@@ -44,8 +44,6 @@ Examples:
 - **Paths, not content.** The next step gets each summary as a path (`### INPUT pm: /…/add-auth/pm.md`) and reads the file itself. Summaries are never pasted into prompts, which keeps the orchestrator's context small and lets the work survive a context compaction.
 
 A missing summary never blocks anything. The step records what it assumed in its place (an `ASSUMED:` entry), and the report tells you.
-
-> **Upgrading from an earlier ASDT?** Earlier versions scoped memory by the plain directory name (`asdt`, not `asdt-1a2b3c4d`). Notes saved under that older scope are not recalled under the new one. If a later session is missing a decision you remember making, tell the specialist again, or say "remember that…" to save it under the current scope.
 
 ### The scratchpad is disposable
 
@@ -109,7 +107,7 @@ Follow the [Engram setup guide](https://github.com/Gentleman-Programming/engram)
 Memory is optional. If no provider is connected, or `memory.provider` in `.asdt/config.yaml` names a different provider than your install is bound to, ASDT still works:
 
 - Each specialist starts with a one-line notice: "Memory isn't connected, so this session works from its scratchpad and nothing carries over to the next one."
-- Within the session, everything flows through the scratchpad as usual. Nothing is recalled or remembered. The one exception is a project an earlier `/asdt-init` left with the legacy `.asdt/knowledge/knowledge.yaml`: its notes still reach the steps as project notes until the project is migrated, that is, until `/asdt-init` writes a `.asdt/config.yaml` with a top-level `stack` key. After that nothing reads the legacy file, and its notes count only once they're remembered (see [Configuration](/asdt/docs/configuration#migrating-from-asdtknowledge)).
+- Within the session, everything flows through the scratchpad as usual. Nothing is recalled or remembered.
 - In a later session, the orchestrator asks you to restate the context a recall would have supplied.
 - `/asdt-init` still detects your stack and writes the config. It only skips its optional note questions.
 

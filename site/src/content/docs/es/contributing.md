@@ -56,7 +56,7 @@ Entre el frontmatter y `## Role` van tres bloques textuales de los que depende e
 
 `metadata` (`author` + `version`) es obligatorio en todos los `SKILL.md`. `trigger_phrases` es la única key opcional — una lista de descubribilidad que consume el host.
 
-`shared-skills` está **prohibida**. La key está retirada: ningún loader la resolvió nunca, así que declararla no documenta nada ni carga nada. Ver [Cómo se cargan realmente las shared skills](#cómo-se-cargan-realmente-las-shared-skills) para los tres mecanismos reales.
+`shared-skills` está **prohibida**: ningún loader la resuelve, así que declararla no documenta nada ni carga nada. Ver [Cómo se cargan realmente las shared skills](#cómo-se-cargan-realmente-las-shared-skills) para los tres mecanismos reales.
 
 ### 3. Escribí workflow.yaml
 
@@ -147,7 +147,7 @@ Las shared skills son fragmentos de capacidad reutilizados entre múltiples spec
 
 Tres mecanismos, y solo tres. Los paths siempre se resuelven desde el directorio propio del specialist.
 
-**1. Splice en tiempo de instalación.** El instalador injerta `asdt-core/specialist-header.md` en una región generada de cada `SKILL.md` routado, así el orquestador lee el header inline en lugar de ir a buscar un archivo aparte. Esto aplica solo a ese archivo. El blockquote de FIRST ACTION ya no indica leer `specialist-header.md` — el único archivo al que te manda es `./workflow.yaml`. Nunca edites a mano entre los marcadores de la región; el splice sobrescribe lo que haya ahí.
+**1. Splice en tiempo de instalación.** El instalador injerta `asdt-core/specialist-header.md` en una región generada de cada `SKILL.md` routado, así el orquestador lee el header inline en lugar de ir a buscar un archivo aparte. Esto aplica solo a ese archivo. El blockquote de FIRST ACTION apunta al header injertado justo debajo, nunca a `specialist-header.md` como archivo — el único archivo al que te manda es `./workflow.yaml`. Nunca edites a mano entre los marcadores de la región; el splice sobrescribe lo que haya ahí.
 
 **2. Inline step.** Un step de `workflow.yaml` con `execution: inline` cuyo `skill:` nombra un archivo compartido — `knowledge-recall.md`, `platform-context.md` (declarado como el step `platform-analysis`). El orquestador lee ese archivo y lo sigue en su propio contexto; no se lanza ningún sub-agente. Lo que produce el preludio — el bloque de plataforma, las notas del proyecto recordadas — le llega a cada step posterior como líneas en su prompt.
 

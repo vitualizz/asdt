@@ -97,7 +97,7 @@ If typing `/asdt-pm` (or any specialist) shows no autocomplete, the skill files 
 
 This is expected for working files: each specialist's summary lives in the session scratchpad, and the scratchpad belongs to the session. A new session rebuilds what it needs from git, from the notes memory recalls, and from you, and every gate (like the Developer's plan approval) asks again.
 
-What should carry over is the key knowledge: decisions, debate conclusions, conventions, lessons, audit findings. If a new session recalls none of it, memory wasn't connected when it would have been remembered, or the notes predate your upgrade: earlier versions of ASDT scoped notes by the plain directory name, and those aren't recalled under the current `{name}-{hash}` scope (see [Scratchpad & Memory](/asdt/docs/memory-and-engram#the-scratchpad-working-summaries)).
+What should carry over is the key knowledge: decisions, debate conclusions, conventions, lessons, audit findings. If a new session recalls none of it, memory wasn't connected when it would have been remembered.
 
 **Fix:** Ensure Engram (via MCP) is running before invoking a specialist; each specialist warns in one line when it isn't. Notes are only remembered while memory is connected. For anything lost, tell the specialist again, or say "remember that…" to keep it.
 

@@ -20,7 +20,7 @@ Ninguno de los dos es la autoridad sobre nada. Lo que se construyó es lo que mu
 
 El **orquestador** es tu asistente principal mientras corre un especialista, ya sea porque escribiste el comando del especialista o porque `/asdt` está corriendo una cadena. Solo él habla con vos, decide, corre los gates de consentimiento, lanza los sub-agentes, escribe el scratchpad, y recuerda y consulta la memoria.
 
-Un **sub-agente** hace un paso y **devuelve su resumen**, un documento Markdown corto, y nada más. Lee el código y las rutas del scratchpad que le pasaron. Nunca toca la memoria y no escribe ningún archivo, tampoco en el scratchpad. Las dos excepciones son el `implement` del Developer (tu código, dentro de los archivos que aprobaste, nunca bajo `.asdt/`) y el `write` de `/asdt-init` (`.asdt/config.yaml`, más el borrado de los archivos legacy de `.asdt/knowledge/` cuando lo aceptás).
+Un **sub-agente** hace un paso y **devuelve su resumen**, un documento Markdown corto, y nada más. Lee el código y las rutas del scratchpad que le pasaron. Nunca toca la memoria y no escribe ningún archivo, tampoco en el scratchpad. Las dos excepciones son el `implement` del Developer (tu código, dentro de los archivos que aprobaste, nunca bajo `.asdt/`) y el `write` de `/asdt-init` (solo `.asdt/config.yaml`).
 
 ## El scratchpad: resúmenes de trabajo
 
@@ -44,8 +44,6 @@ Ejemplos:
 - **Rutas, no contenido.** El paso siguiente recibe cada resumen como una ruta (`### INPUT pm: /…/add-auth/pm.md`) y lee el archivo él mismo. Los resúmenes nunca se pegan en los prompts: así el contexto del orquestador queda chico y el trabajo sobrevive a una compactación del contexto.
 
 Un resumen que falta nunca bloquea nada. El paso anota qué asumió en su lugar (una entrada `ASSUMED:`) y el reporte te lo cuenta.
-
-> **¿Venís de una versión anterior de ASDT?** Las versiones anteriores usaban como alcance de memoria solo el nombre del directorio (`asdt`, no `asdt-1a2b3c4d`). Las notas guardadas bajo ese alcance viejo no se recuperan con el nuevo. Si a una sesión posterior le falta una decisión que recordás haber tomado, volvé a contársela al especialista, o decí "acordate de que…" para guardarla bajo el alcance actual.
 
 ### El scratchpad es descartable
 
@@ -109,7 +107,7 @@ Seguí la [guía de instalación de Engram](https://github.com/Gentleman-Program
 La memoria es opcional. Si no hay ningún provider conectado, o si `memory.provider` en `.asdt/config.yaml` nombra un provider distinto al de tu instalación, ASDT igual funciona:
 
 - Cada especialista arranca con un aviso de una línea: la memoria no está conectada, así que esta sesión trabaja desde su scratchpad y nada pasa a la siguiente.
-- Dentro de la sesión, todo fluye por el scratchpad como siempre. No se consulta ni se recuerda nada. La única excepción es un proyecto al que un `/asdt-init` anterior le dejó el `.asdt/knowledge/knowledge.yaml` legacy: sus notas siguen llegando a los pasos como notas del proyecto hasta que el proyecto queda migrado, es decir, hasta que `/asdt-init` escribe un `.asdt/config.yaml` con una clave `stack` de primer nivel. Desde ahí nada lee el archivo legacy, y sus notas cuentan solo una vez que se recuerdan (ver [Configuración](/asdt/es/docs/configuration#migrar-desde-asdtknowledge)).
+- Dentro de la sesión, todo fluye por el scratchpad como siempre. No se consulta ni se recuerda nada.
 - En una sesión posterior, el orquestador te pide que repitas el contexto que habría aportado una consulta a la memoria.
 - `/asdt-init` igual detecta tu stack y escribe la configuración. Solo se saltea sus preguntas opcionales de notas.
 

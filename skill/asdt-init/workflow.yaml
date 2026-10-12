@@ -24,7 +24,7 @@ steps:
 
   - name: write
     skill: steps/write.md
-    description: Writes .asdt/config.yaml from the detection and the answers, preserving manual values; deletes the legacy knowledge files on consent
+    description: Writes .asdt/config.yaml from the detection and the answers, preserving manual values
     execution: subagent
     model: sonnet
     agent: builder

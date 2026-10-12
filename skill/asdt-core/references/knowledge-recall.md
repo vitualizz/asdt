@@ -6,12 +6,11 @@ Before any step runs, recall what the project already knows, so this run builds 
 
 ## Protocol
 
-1. **Legacy notes.** Only on a project not yet migrated (protocol §0), when `.asdt/knowledge/knowledge.yaml` exists, each of its `human_nuance` entries is a note a person wrote: take it as `{topic} ({type}): {note}`, even when memory is unavailable. A file that does not parse contributes nothing. These notes join the recalled ones from step 4 on, and a recalled note on the same subject wins.
-2. **Skip the recall when memory is unavailable** (protocol §2). The Prerequisites notice already told the user, so proceed with the legacy notes alone, or none.
-3. **Query once.** Run ONE memory **recall**, with 3 to 6 words drawn from the request and this role (e.g. `"password reset token expiry"`, `"payments module security audit"`). A chain run by `/asdt` may reuse the notes it already recalled for the same `{change}` instead of querying again.
-4. **Keep what bears on this run**, up to 5 notes and about 300 tokens. When two notes share a subject, keep the one with the later `Source` date.
-5. **Check `{change}`.** A note whose `Source` names earlier work that this request may continue feeds the confirmation in protocol §0.
-6. **Carry the notes to the steps.** Each step's prompt gets the notes that bear on its area, one line each: `### PROJECT NOTE: {note}`. Relevance is a judgment: a note about CSS reaches a step that touches styles, not a backlog. A note that bears on nothing in a step is not carried.
+1. **Skip the recall when memory is unavailable** (protocol §2). The Prerequisites notice already told the user; proceed with no notes.
+2. **Query once.** Run ONE memory **recall**, with 3 to 6 words drawn from the request and this role (e.g. `"password reset token expiry"`, `"payments module security audit"`). A chain run by `/asdt` may reuse the notes it already recalled for the same `{change}` instead of querying again.
+3. **Keep what bears on this run**, up to 5 notes and about 300 tokens. When two notes share a subject, keep the one with the later `Source` date.
+4. **Check `{change}`.** A note whose `Source` names earlier work that this request may continue feeds the confirmation in protocol §0.
+5. **Carry the notes to the steps.** Each step's prompt gets the notes that bear on its area, one line each: `### PROJECT NOTE: {note}`. Relevance is a judgment: a note about CSS reaches a step that touches styles, not a backlog. A note that bears on nothing in a step is not carried.
 
 ## How a note binds
 

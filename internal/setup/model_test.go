@@ -323,7 +323,7 @@ func TestUpdate_ESCAtMainMenuIsNoop(t *testing.T) {
 
 func TestUpdate_InstallDoneMsgTransitionsToDone(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
-	// Force state to Installing directly via the message (backward-compat path).
+	// Drive the Installing → Done transition directly via the message.
 	next, _ := m.Update(setup.InstallDoneMsg{Results: []installer.InstallResult{}})
 	m2 := next.(setup.Model)
 	if m2.State() != setup.StateDone {

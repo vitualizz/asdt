@@ -56,7 +56,7 @@ Between the frontmatter and `## Role` go three verbatim blocks the installer dep
 
 `metadata` (`author` + `version`) is required in every `SKILL.md`. `trigger_phrases` is the one optional key — a host-facing discoverability list.
 
-`shared-skills` is **forbidden**. The key is retired: no loader ever resolved it, so declaring it documents nothing and loads nothing. See [How shared skills actually load](#how-shared-skills-actually-load) for the three real mechanisms.
+`shared-skills` is **forbidden**: no loader resolves it, so declaring it documents nothing and loads nothing. See [How shared skills actually load](#how-shared-skills-actually-load) for the three real mechanisms.
 
 ### 3. Write workflow.yaml
 
@@ -147,7 +147,7 @@ Shared skills are capability fragments reused across multiple specialists — pl
 
 Three mechanisms, and only three. Paths always resolve from the specialist's own directory.
 
-**1. Install-time splice.** The installer splices `asdt-core/specialist-header.md` into a generated region of every routed `SKILL.md`, so the orchestrator reads the header inline instead of chasing a separate file. This applies to that one file only. The FIRST ACTION blockquote no longer instructs reading `specialist-header.md` — the only file it sends you to is `./workflow.yaml`. Never hand-edit between the region markers; the splice overwrites whatever is there.
+**1. Install-time splice.** The installer splices `asdt-core/specialist-header.md` into a generated region of every routed `SKILL.md`, so the orchestrator reads the header inline instead of chasing a separate file. This applies to that one file only. The FIRST ACTION blockquote points at the spliced header right below it, never at `specialist-header.md` as a file — the only file it sends you to is `./workflow.yaml`. Never hand-edit between the region markers; the splice overwrites whatever is there.
 
 **2. Inline step.** A `workflow.yaml` step with `execution: inline` whose `skill:` names a shared file — `knowledge-recall.md`, `platform-context.md` (declared as the `platform-analysis` step). The orchestrator reads that file and follows it in its own context; no sub-agent is launched. What the prelude produces — the platform block, the recalled project notes — reaches each later step as lines in its prompt.
 

@@ -2,12 +2,9 @@
 
 ## Prerequisites
 
-Nothing here stops a run. Before the first step, check three things and give a one-line notice for each that holds:
+Nothing here stops a run. Before the first step, check two things and give a one-line notice for each that holds:
 
 - **`.asdt/config.yaml` is missing**: "No ASDT config here. Run `/asdt-init` to record the project's facts; until then I work from the code." The platform block degrades on its own (`asdt-core/references/platform-context.md`).
-- **`.asdt/knowledge/knowledge.yaml` exists** (an earlier init's store, now legacy; `asdt-core/protocol.md` §0 defines migrated):
-  - not migrated: "Found the legacy ASDT store; I'm reading it as a fallback. Run `/asdt-init` to migrate it." This one line replaces the missing-config notice when both hold.
-  - migrated: "Legacy ASDT files kept in `.asdt/knowledge/`; nothing reads them now. Delete them via `/asdt-init`."
 - **Memory is unavailable** (`asdt-core/protocol.md` §2): "Memory isn't connected, so this session works from its scratchpad and nothing carries over to the next one."
 
 > **ORCHESTRATOR GATE**: This file is a PLAN, not an executable pipeline. The
@@ -36,7 +33,7 @@ Judge from the invocation whether this run DELIVERS a change or EXAMINES what al
 
 Memory's rules are `asdt-core/protocol.md` §2. This section covers only what the user hears.
 
-- **The user states something to keep** ("remember that…", "for the future:", or a convention they lay down in passing): remember it now and confirm in one line, "Remembered: legacy CSS lives in styles/; new work uses Tailwind utilities."
+- **The user states something to keep** ("remember that…", "for the future:", or a convention they lay down in passing): remember it now and confirm in one line, "Remembered: new work uses Tailwind utilities, not the CSS files in styles/."
 - **The run closes**: just before the report's last line, list in one line what you remembered from this run. Say nothing when you remembered nothing.
 - **"Forget X"**: remember the withdrawal and confirm in one line.
 - **Memory is unavailable**: say in one line that it can't be kept beyond this session.

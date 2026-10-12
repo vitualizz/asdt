@@ -255,8 +255,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.language.touched {
 			return m, nil
 		}
-		// msg.Code may be a legacy bare "es"; map it to a full locale row. The
-		// full code feeds i18n.ForCode directly — normalize() handles legacy
+		// msg.Code may be a bare "es"; map it to a full locale row. The full
+		// code feeds i18n.ForCode directly — normalize() handles non-canonical
 		// shapes inside the i18n package.
 		loc := installer.LocaleByCode(msg.Code)
 		if idx := languageIndex(loc.Code); idx >= 0 {
@@ -450,7 +450,7 @@ func (m Model) handleMainMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 // handleLanguageSelect handles keys for the language selection screen.
 // Up/Down move the radio selection and re-resolve the catalog live so the
 // whole TUI switches language immediately. Enter triggers the preflight
-// bootstrap (previously fired straight from MainMenu); Esc returns to MainMenu.
+// bootstrap; Esc returns to MainMenu.
 func (m Model) handleLanguageSelect(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.Type {
 	case tea.KeyUp:

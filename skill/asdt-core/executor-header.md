@@ -26,10 +26,6 @@
 >
 > **Bash** is for inspection only, on every step. Never run build, lint, test,
 > install, or codegen: verification belongs to the orchestrator's `verify` gate.
-> One named exception: `asdt-init/write`, and only when its `asdt-init/clarify`
-> input records `delete_legacy: yes`, may `rm` exactly
-> `.asdt/knowledge/knowledge.yaml` and `.asdt/knowledge/provenance.yaml`, then
-> `rmdir` `.asdt/knowledge/` once it is empty. Nothing else, on any step.
 >
 > **Evidence**: if your step read the codebase, anchor every claim to something
 > checkable — a path, a symbol, a command. If it did not, this rule is not yours.

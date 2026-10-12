@@ -105,12 +105,6 @@ func TestRegistryDrift(t *testing.T) {
 			}
 		}
 	}
-
-	// The inline-steps parity assertion was dropped with the router rewrite:
-	// the `Tailored Workflow Generation` region it compared against no longer
-	// exists in skill/SKILL.md. renderInlineStepsRegion still exists and is
-	// still exercised by its own unit test; it simply has no committed mirror
-	// left to drift from.
 }
 
 // asdtCommandRe matches an /asdt-<name> slash command token.
@@ -260,11 +254,10 @@ func TestInitPlanTableMatchesWorkflow(t *testing.T) {
 // TestHumanNotesRoutedToMemory defends where a person's words about the
 // project go: to memory, through the orchestrator's remember, never into a
 // file. write.md is the only step that writes `.asdt/`, so it must never route
-// an enrichment `nuance.*` answer or a legacy `human_nuance` entry into
-// config.yaml; SKILL.md must remember each answer instead; and
-// platform-context.md's injection path (Reuse Guard, Injection Format) must
-// never pull a note in among the detected facts, where it would read as
-// something the scan found.
+// an enrichment `nuance.*` answer into config.yaml; SKILL.md must remember
+// each answer instead; and platform-context.md's injection path (Reuse Guard,
+// Injection Format) must never pull a note in among the detected facts, where
+// it would read as something the scan found.
 func TestHumanNotesRoutedToMemory(t *testing.T) {
 	root := skillDir(t)
 
@@ -273,7 +266,7 @@ func TestHumanNotesRoutedToMemory(t *testing.T) {
 	if !ok {
 		t.Fatalf("asdt-init/steps/write.md has no ## Processing section")
 	}
-	for _, forbidden := range []string{"nuance.", "NUANCE", "Notes to remember"} {
+	for _, forbidden := range []string{"nuance.", "Notes to remember"} {
 		if strings.Contains(processing, forbidden) {
 			t.Errorf("write.md Processing references %q; human notes never reach a file", forbidden)
 		}
@@ -297,7 +290,7 @@ func TestHumanNotesRoutedToMemory(t *testing.T) {
 		if !ok {
 			t.Fatalf("platform-context.md has no ## %s section", section)
 		}
-		for _, forbidden := range []string{"human_nuance", "PROJECT NOTE"} {
+		for _, forbidden := range []string{"PROJECT NOTE", "Notes to remember", "memory **recall**"} {
 			if strings.Contains(body, forbidden) {
 				t.Errorf("platform-context.md ## %s references %q; notes never join the detected-facts block", section, forbidden)
 			}

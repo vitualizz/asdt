@@ -122,14 +122,14 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 	if builderCount != 1 {
 		t.Errorf("builder subagent steps = %d, want 1 (got %v)", builderCount, builderSteps)
 	}
-	// Only implement writes host files. The former `test` step was absorbed
-	// into implement, which now writes tests under the same mode and roots.
+	// Only implement writes host files, tests included, under one mode and one
+	// set of roots.
 	wantBuilder := map[string]bool{
 		"asdt-developer/implement": true,
 	}
 	for _, step := range builderSteps {
 		if !wantBuilder[step] {
-			t.Errorf("unexpected builder step %q; only asdt-developer implement and test may be builder", step)
+			t.Errorf("unexpected builder step %q; only asdt-developer/implement may be builder", step)
 		}
 	}
 }

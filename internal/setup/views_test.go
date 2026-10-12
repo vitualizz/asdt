@@ -530,7 +530,7 @@ func TestView_ReviewShowsModelsRow(t *testing.T) {
 		t.Errorf("review view should show 'Chameleon preset' on the default path, got:\n%s", view)
 	}
 	if strings.Contains(view, "recommended defaults") {
-		t.Errorf("review view must not show the retired 'recommended defaults' string, got:\n%s", view)
+		t.Errorf("review view must not show a 'recommended defaults' string, got:\n%s", view)
 	}
 }
 
@@ -605,7 +605,7 @@ func TestView_PreflightCheckShowsEngramRecovery(t *testing.T) {
 }
 
 // TestView_ProviderRecoveryFollowsSelection asserts that beside a usable
-// provider, a missing Engram no longer blocks preflight — its row still
+// provider, a missing Engram does not block preflight — its row still
 // reports it — and its recovery block moves to provider selection, shown only
 // while Engram is the selected provider.
 func TestView_ProviderRecoveryFollowsSelection(t *testing.T) {

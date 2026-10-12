@@ -15,9 +15,9 @@ var catalogs = map[string]Catalog{
 	"es-ES":  SpanishSpain,
 }
 
-// normalize funnels any locale code (canonical, legacy, or partial) into one of
+// normalize funnels any locale code (canonical, bare, or partial) into one of
 // the three registered catalog keys: "en", "es-419", or "es-ES". It is the
-// SINGLE backward-compat boundary: every legacy shape (bare "es", generic
+// SINGLE normalization boundary: every non-canonical shape (bare "es", generic
 // es-<region>, "und", unknown, unparsable) collapses here.
 //
 //   - base != "es"                         → "en"
@@ -27,7 +27,7 @@ var catalogs = map[string]Catalog{
 //
 // The region-confidence check distinguishes an explicit "es-ES" (Exact) from a
 // bare "es" whose ES region is merely inferred (Low) — the latter must resolve
-// to neutral es-419 for backward compatibility, never peninsular.
+// to neutral es-419, never peninsular.
 func normalize(code string) string {
 	tag, err := language.Parse(code)
 	if err != nil {
@@ -57,7 +57,7 @@ func normalizeTag(tag language.Tag) string {
 // The override returns the PARSED tag verbatim (not supported.Match'd): the
 // matcher's region-distance heuristic would canonicalize a bare "es" into an
 // es-ES tag with an EXACT region, erasing the inferred-region signal that
-// normalize() relies on to route legacy "es" to neutral es-419. Normalization
+// normalize() relies on to route a bare "es" to neutral es-419. Normalization
 // happens downstream at the catalogFor/ActiveCode boundary, consistent with
 // detect()'s region pre-switch.
 func resolve() language.Tag {
@@ -83,7 +83,7 @@ func ActiveCode() string {
 
 // ForCode returns the Catalog registered for the given locale code, falling back
 // to English for unknown codes. The code is funneled through normalize, so
-// legacy shapes (bare "es", generic es-<region>) resolve correctly. Useful when
+// non-canonical shapes (bare "es", generic es-<region>) resolve correctly. Useful when
 // the language choice comes from persisted state or UI selection instead of env
 // detection.
 func ForCode(code string) Catalog {

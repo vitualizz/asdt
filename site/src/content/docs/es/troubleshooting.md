@@ -97,7 +97,7 @@ Si al escribir `/asdt-pm` (o cualquier especialista) no aparece el autocompletad
 
 Es lo esperable para los archivos de trabajo: el resumen de cada especialista vive en el scratchpad de la sesión, y el scratchpad pertenece a la sesión. Una sesión nueva reconstruye lo que necesita a partir de git, de las notas que recuerda la memoria y de vos, y cada gate (como la aprobación del plan del Developer) vuelve a preguntar.
 
-Lo que sí debería pasar de una sesión a otra es el conocimiento clave: decisiones, conclusiones de debates, convenciones, lecciones, hallazgos de auditorías. Si una sesión nueva no recuerda nada de eso, la memoria no estaba conectada cuando se lo habría recordado, o las notas son de antes de que actualizaras: las versiones anteriores de ASDT usaban como alcance solo el nombre del directorio, y esas notas no se recuperan con el alcance actual `{nombre}-{hash}` (ver [Scratchpad y memoria](/asdt/es/docs/memory-and-engram#el-scratchpad-resúmenes-de-trabajo)).
+Lo que sí debería pasar de una sesión a otra es el conocimiento clave: decisiones, conclusiones de debates, convenciones, lecciones, hallazgos de auditorías. Si una sesión nueva no recuerda nada de eso, la memoria no estaba conectada cuando se lo habría recordado.
 
 **Solución:** Asegurate de que Engram (vía MCP) esté corriendo antes de invocar un especialista; cada especialista avisa en una línea cuando no lo está. Las notas solo se recuerdan mientras la memoria está conectada. Para lo que se perdió, volvé a contárselo al especialista, o decí "acordate de que…" para guardarlo.
 

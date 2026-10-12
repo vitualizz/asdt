@@ -1,11 +1,11 @@
 # Write — Init Specialist
 
 ## Purpose
-Write `.asdt/config.yaml` from the detection and the human's answers, never silently overwriting a manual value, and delete the legacy `.asdt/knowledge/` files when the human consented. This is one of the two steps that write files (protocol §4), and it writes only these.
+Write `.asdt/config.yaml` from the detection and the human's answers, never silently overwriting a manual value. This is one of the two steps that write files (protocol §4), and it writes only this one.
 
 ## Inputs
 - `### INPUT asdt-init/explore`: the detection. Read its `## Detection` section (stack, lang roots, file structure, the key table) and nothing else.
-- `### INPUT asdt-init/clarify`: the answers. Read `skipped`, `delete_legacy`, `memory_provider`, `## Answers`, and `## Blocking open items`. Ignore `## Notes to remember`: notes go to memory, through the orchestrator, never into a file.
+- `### INPUT asdt-init/clarify`: the answers. Read `skipped`, `memory_provider`, `## Answers`, and `## Blocking open items`. Ignore `## Notes to remember`: notes go to memory, through the orchestrator, never into a file.
 
 Each arrives as a path to read. Both are required: see Processing step 1.
 
@@ -16,10 +16,7 @@ Each arrives as a path to read. Both are required: see Processing step 1.
    - (b) `## Blocking open items` lists anything: a non-skippable question went unanswered, and writing over it would bake in a wrong value;
    - (c) an existing `.asdt/config.yaml` does not parse as a YAML mapping. A damaged config is reported, never written over.
 
-2. **Prior values.** Resolve each config key's prior value, its source included where it has one:
-   - from `.asdt/config.yaml` when the key is present there;
-   - otherwise, only while the project is not migrated (protocol §0), from `.asdt/knowledge/knowledge.yaml`: `stack`, `file_structure`, and the four decision fields with their `{value, source, confidence}`. Each `design_fingerprint` concern comes from `.asdt/knowledge/provenance.yaml` with its full `{value, source, confidence}`, else from `knowledge.yaml`'s flat scalar as `source: detected`. A legacy file that does not parse contributes nothing: add an `Open items` line naming it and continue. Everything else in the legacy files (timestamps, `schema_version`, `human_nuance`) is not configuration and is ignored here.
-   - otherwise there is none.
+2. **Prior values.** Resolve each config key's prior value, its source included where it has one, from the existing `.asdt/config.yaml`; a key it omits, or a config that does not exist, has none.
 
 3. **Resolve each key.** The four decision fields (`is_monorepo`, `test_runner`, `naming_style`, `architectural_style`) and each `design_fingerprint.{concern}` take the form `{value, source, confidence}`, decided in this order:
    - an answer with origin `user` → `{value: answer, source: manual, confidence: high}`;
@@ -28,7 +25,7 @@ Each arrives as a path to read. Both are required: see Processing step 1.
    - otherwise → the detected entry. A concern with no detected entry and no `manual` prior is dropped.
 
    The plain keys:
-   - `stack`, `file_structure`: the answer when there is one, else the detection. `stack` is always written, `[]` when empty: its presence is what marks the project migrated (protocol §0). `file_structure` is omitted when neither has a value.
+   - `stack`, `file_structure`: the answer when there is one, else the detection. `stack` is always written, `[]` when empty. `file_structure` is omitted when neither has a value.
    - `code_intelligence`: `codegraph` when detected, otherwise the key is removed. Never `none`, never `unknown`.
    - `primary_design_surface`: the answer (`mobile`, `tablet`, `desktop`, or `none`), else the prior value, else omitted. An omitted key means "never asked" and consumers default it to `mobile`; `none` is the human's answer that there is no visual surface. Never write one in place of the other.
    - `memory.provider`: the payload's `memory_provider`, even over an existing value. When it is `none` or absent, keep the existing `memory` block as-is.
@@ -62,8 +59,6 @@ Each arrives as a path to read. Both are required: see Processing step 1.
 
 6. **Self-check.** Re-read the file: it parses, and its keys follow the canonical order. Re-reading what this step wrote is a read, and it is required. Record any mismatch in `Open items` and report the file as written anyway: the bytes on disk are authoritative, so never halt or roll back here.
 
-7. **Legacy files.** Only when `delete_legacy: yes`, the config is written or unchanged, and the self-check passed, use the executor header's one Bash exception: `rm` exactly `.asdt/knowledge/knowledge.yaml` and `.asdt/knowledge/provenance.yaml` (each only if it exists), then `rmdir .asdt/knowledge` (which refuses a directory that still holds anything). Run nothing else that mutates. Otherwise leave them in place, and report `kept`.
-
 ## Output
 Return this summary (protocol §6), with `Open items` and these role sections:
 
@@ -74,7 +69,6 @@ Return this summary (protocol §6), with `Open items` and these role sections:
 
 ## Files changed
 - .asdt/config.yaml: {written | unchanged | not written}
-- .asdt/knowledge/: {deleted | kept | absent}
 
 ## Settings preserved
 - {key}: {value} (manual)

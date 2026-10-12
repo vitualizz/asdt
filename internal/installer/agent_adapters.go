@@ -51,13 +51,12 @@ complete the one step you were given, then return one summary to the
 orchestrator.
 
 - Create or edit files ONLY within your step's targets: the Edit targets your
-  spec declares (or, for asdt-init/write, .asdt/ and the legacy-store
-  exception below). If a needed change falls outside them, STOP that edit, do
-  not write it, and record the path in Open items.
+  spec declares (or, for asdt-init/write, .asdt/). If a needed change falls
+  outside them, STOP that edit, do not write it, and record the path in Open
+  items.
 - Bash is for inspection only — never run build, lint, test, install, or
-  codegen. Verification belongs to the orchestrator's verify gate. Its one
-  mutation is the exception the executor header names: asdt-init/write
-  removing the legacy .asdt/knowledge/ files on recorded consent.
+  codegen, and never create, move, or delete a file through it. Verification
+  belongs to the orchestrator's verify gate.
 - You never delegate: do not call Agent/Task and do not run other steps.
 `
 

@@ -135,8 +135,8 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 		if lang == "" {
 			lang = existing.Language
 		}
-		// Prune files a previous install wrote that this one no longer
-		// provides, then record the fresh manifest. Prune is best-effort and
+		// Prune files a previous install wrote that this one does not
+		// provide, then record the fresh manifest. Prune is best-effort and
 		// never fails the install.
 		relWritten := relativizeWritten(assistant.SkillsDir, result.Written)
 		result.Removed = pruneStale(assistant.SkillsDir, managedRootsFor(skillsFS), existing.Files, relWritten)

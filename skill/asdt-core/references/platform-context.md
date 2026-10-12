@@ -4,7 +4,7 @@ Grounds a run in the project's actual conventions instead of generic defaults. T
 
 ## Reuse Guard
 
-Project facts come from `.asdt/config.yaml`, and, on a project not yet migrated (protocol §0), from the legacy store as a fallback (**Degradation**). Find `.asdt/` by walking up from the working directory to the nearest ancestor that holds it. **When either file exists, do NOT re-analyze the project.** `/asdt-init` detected its facts with bounded probes. Re-deriving them with an LLM costs tokens and gives a different answer every time.
+Project facts come from `.asdt/config.yaml` alone (protocol §0). Find `.asdt/` by walking up from the working directory to the nearest ancestor that holds it. **When the config exists, do NOT re-analyze the project.** `/asdt-init` detected its facts with bounded probes. Re-deriving them with an LLM costs tokens and gives a different answer every time.
 
 Read these keys, values only, and nothing else in the file. A key stored as `{value, source, confidence}` contributes its `value` alone, and that value counts as absent when it is `unknown` or `none`:
 
@@ -19,7 +19,7 @@ Read these keys, values only, and nothing else in the file. A key stored as `{va
 | `code_intelligence` | `Tooling` |
 | `primary_design_surface` | `Design surface` |
 
-Never inject provenance, confidence, scan timestamps, raw config, or full file listings. Keep the whole block under ~500 tokens. If it runs longer, cut each line to its single most important fact.
+Never inject a value's source or confidence, scan timestamps, raw config, or full file listings. Keep the whole block under ~500 tokens. If it runs longer, cut each line to its single most important fact.
 
 ## Injection Format
 
@@ -61,20 +61,14 @@ Treat detected values as authoritative. `Design surface` is the one exception: i
 
 ## Degradation
 
-If neither `.asdt/config.yaml` nor an unmigrated legacy store (below) exists, do not halt. Record one `Open items` entry:
+If `.asdt/config.yaml` does not exist, do not halt. Record one `Open items` entry:
 
 ```
 ASSUMED: .asdt/config.yaml absent — conventions inferred from visible code patterns
 ```
 
-Then proceed with the conventions visible in the code at hand: file naming, import style, directory layout. If a key is missing from every source, inject the lines that are present and say nothing about the rest. Either way, the `Design surface` line is still emitted, with its default when the key is absent.
-
-**Legacy store.** Applies only while the project is not migrated (protocol §0); once it is, never open `.asdt/knowledge/`, and a key the config lacks is absent. Until then:
-
-- **Facts.** For each key in the table above that `.asdt/config.yaml` lacks (or all of them, when the config is absent), read it from `knowledge.yaml` under the same name and the same value rules, and inject it in the same block. When both files carry a key, the config wins. A legacy file that does not parse contributes nothing.
-- **Notes.** Its `human_nuance` entries are notes, not facts: the `knowledge-recall` prelude carries them (`asdt-core/references/knowledge-recall.md`, step 1). Never fold one into this block.
-- Record no `Open items` entry for it: the Prerequisites notice already told the user.
+Then proceed with the conventions visible in the code at hand: file naming, import style, directory layout. When the config exists but lacks a key, inject the lines that are present and say nothing about the rest. Either way, the `Design surface` line is still emitted, with its default when the key is absent.
 
 ## Project notes
 
-What the user has said about the project (the thing a newcomer would misread and no scan can detect) does not live in this file. It comes from memory (and, on an unmigrated project, from the legacy store's `human_nuance`), through the `knowledge-recall` prelude, and reaches a step as its own `### PROJECT NOTE:` lines (`asdt-core/references/knowledge-recall.md`). Never fold a note into the block above, and never rewrite one in the voice of a detected fact: placing a person's note among detected values makes it look like something the scan found.
+What the user has said about the project (the thing a newcomer would misread and no scan can detect) does not live in this file. It comes from memory, through the `knowledge-recall` prelude, and reaches a step as its own `### PROJECT NOTE:` lines (`asdt-core/references/knowledge-recall.md`). Never fold a note into the block above, and never rewrite one in the voice of a detected fact: placing a person's note among detected values makes it look like something the scan found.

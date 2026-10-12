@@ -83,7 +83,7 @@ func TestActiveCode_ResolvesFullCode(t *testing.T) {
 }
 
 func TestForCode_KnownAndUnknown(t *testing.T) {
-	// Legacy bare "es" and generic Spanish funnel to es-419 (SpanishNeutral).
+	// Bare "es" and generic Spanish funnel to es-419 (SpanishNeutral).
 	if got := i18n.ForCode("es"); got.Installer.BodyEmojiPrefSubtitle != i18n.SpanishNeutral.Installer.BodyEmojiPrefSubtitle {
 		t.Errorf("ForCode(\"es\"): expected SpanishNeutral (es-419), got BodyEmojiPrefSubtitle=%q", got.Installer.BodyEmojiPrefSubtitle)
 	}
