@@ -1,6 +1,12 @@
 package setup
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	"github.com/vitualizz/asdt/internal/i18n"
+	"github.com/vitualizz/asdt/internal/installer"
+)
 
 // TestNewerAvailable exercises the unexported newerAvailable comparison
 // helper directly (white-box) since it must remain unexported per design.
@@ -26,5 +32,39 @@ func TestNewerAvailable(t *testing.T) {
 				t.Errorf("newerAvailable(%q, %q) = %v, want %v", tt.current, tt.latest, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestMemoryMetaName covers the dashboard's Memory value: a known provider's
+// Name, the localized "none" for a "no memory" install, and the raw value for
+// an ID no known provider has.
+func TestMemoryMetaName(t *testing.T) {
+	s := i18n.English.Dashboard
+	for _, tt := range []struct{ value, want string }{
+		{installer.ProviderEngram, "Engram"},
+		{installer.MemoryNone, s.ValueNoMemory},
+		{"retired", "retired"},
+	} {
+		if got := memoryMetaName(tt.value, s); got != tt.want {
+			t.Errorf("memoryMetaName(%q) = %q, want %q", tt.value, got, tt.want)
+		}
+	}
+}
+
+// TestProviderProbeCmd_LocalizedNotFound asserts the not-found preflight
+// detail comes from the catalog, so it follows the chosen language.
+func TestProviderProbeCmd_LocalizedNotFound(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	p := installer.ProviderDescriptor{Name: "Ghost", Detect: installer.ProviderDetect{Binary: "asdt-no-such-binary", InstallURL: "https://example.invalid/ghost"}}
+	for _, code := range []string{"en", "es", "es-ES"} {
+		s := i18n.ForCode(code).Installer
+		msg, ok := providerProbeCmd(p, s)().(EnvironmentCheckProgressMsg)
+		if !ok {
+			t.Fatalf("%s: providerProbeCmd returned %T", code, msg)
+		}
+		want := fmt.Sprintf(s.DetailProviderNotFound, p.Detect.InstallURL)
+		if msg.Detail != want || !msg.SoftWarn {
+			t.Errorf("%s: detail %q (softWarn %v), want %q (soft warning)", code, msg.Detail, msg.SoftWarn, want)
+		}
 	}
 }

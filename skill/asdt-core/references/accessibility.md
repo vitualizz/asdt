@@ -1,6 +1,6 @@
 # Accessibility — Reference
 
-WCAG 2.1 AA baseline. Optional reference for UX/UI and for anyone building an interface. Target AA on every new component; treat AAA as aspirational and record AAA-relevant decisions in `open_items`.
+WCAG 2.1 AA baseline. Optional reference for UX/UI and for anyone building an interface. Target AA on every new component; treat AAA as aspirational and record an AAA-relevant decision in `Decisions`.
 
 ## Semantics
 
@@ -31,9 +31,9 @@ WCAG 2.1 AA baseline. Optional reference for UX/UI and for anyone building an in
 | Normal text (< 18pt / < 14pt bold) | 4.5:1 |
 | Large text (≥ 18pt / ≥ 14pt bold) | 3:1 |
 | UI components and graphical objects | 3:1 |
-| Disabled states | No requirement — note it in `open_items` |
+| Disabled states | No requirement — say so in the component's `Contrast` cell |
 
-Any color pair you cannot verify against the project's tokens is an `open_items` entry, never an asserted pass.
+Any color pair you cannot verify against the project's tokens is an `Open items` entry prefixed `ASSUMED:`, never an asserted pass.
 
 ## Focus
 
@@ -59,4 +59,4 @@ Any color pair you cannot verify against the project's tokens is an `open_items`
 - [ ] State changes are announced to screen readers
 - [ ] No meaning conveyed by color alone
 
-Record what you verified — `aria_role`, `keyboard_interaction`, `focus_management`, `contrast_token_ref` — on the component itself. Anything you could not verify from text alone goes to `open_items` as advisory, never into a field as an assertion.
+Record what you verified in the summary's `Accessibility` table, one row per component, under its columns: `Focus` (the focus behavior and indicator), `Keyboard` (the interaction pattern, naming its ARIA APG role when it has no native one), `Labelling` (the label source and any `aria-*` it relies on), and `Contrast` (the token pair and the ratio it reaches). Anything you could not verify from text alone is an `Open items` entry prefixed `ASSUMED:`, never a cell asserted as a pass.

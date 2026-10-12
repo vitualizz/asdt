@@ -14,7 +14,7 @@ import ModelPresetTierCard from '@components/ModelPresetTierCard.astro'
 Antes de usar ASDT necesitás:
 
 - **Claude Code** u **OpenCode** — instalado y autenticado (son los únicos asistentes que ASDT soporta hoy)
-- **[Engram](https://github.com/Gentleman-Programming/engram)** — el memory provider, requerido para la persistencia entre sesiones. Tiene que estar en tu `PATH` antes de instalar
+- **Un memory provider** (opcional, recomendado) — lleva el conocimiento clave del proyecto (decisiones, convenciones, lecciones) de una sesión a otra. El instalador ofrece [Engram](https://github.com/Gentleman-Programming/engram). Sin uno, ASDT igual funciona dentro de cada sesión
 - Una terminal (bash o zsh)
 
 > **¿Compilando desde el código fuente?** Se requiere Go 1.22+. El instalador de una línea descarga un binario precompilado — no necesitás compilador.
@@ -38,9 +38,9 @@ asdt-tui
 `asdt-tui` es una interfaz interactiva de terminal. Desde el menú principal, elegí **Install / Update Skills** y te guía por un flujo corto:
 
 1. **Idioma** — elegí el idioma en el que habla ASDT: `en` (inglés), `es-419` (español latinoamericano) o `es-ES` (español de España). Tu elección aplica tanto a la interfaz del instalador como a los especialistas instalados.
-2. **Chequeo del entorno** — verifica tu sistema operativo, shell, Engram y Codegraph (un índice de búsqueda de código opcional). **Engram es una barrera obligatoria**: *Continue* permanece deshabilitado hasta que Engram esté en tu `PATH`. Que falte Codegraph es solo una advertencia leve y nunca te bloquea.
+2. **Chequeo del entorno** — verifica tu sistema operativo, shell, Engram y Codegraph (un índice de búsqueda de código opcional). Nada acá te bloquea: si falta Engram o Codegraph, ves una advertencia con su link de instalación.
 3. **Asistentes** — elegí a cuál apuntar: **Claude Code**, **OpenCode** o ambos. Cada uno muestra una insignia de presente/faltante.
-4. **Memory provider** — Engram es el proveedor contra el que instala ASDT.
+4. **Memory provider** — elegí Engram o **Sin memoria**. Por defecto queda Engram si está en tu `PATH`, y si no, Sin memoria. Podés elegir Engram antes de instalarlo: el instalador te avisa y muestra el link de instalación, y la memoria funciona en cuanto Engram esté conectado. Se recomienda un provider porque conserva el conocimiento clave del proyecto entre sesiones.
 5. **Preset de modelo** — elegí cuánta potencia de modelo usa cada paso de los especialistas (ver abajo).
 6. **Persona** — opcionalmente elegí una persona para los asistentes instalados, y si deben usar emojis. Podés saltar este paso por completo.
 7. **Permisos** — una barrera opt-in para el overlay de permisos de Claude Code. Rechazar es el valor por defecto seguro y no escribe nada.
@@ -68,7 +68,7 @@ Detecta tu stack, hace un par de preguntas, y escribe `.asdt/config.yaml` con va
 /asdt Agregar autenticación de usuario con email y contraseña
 ```
 
-ASDT analiza la petición y recomienda una secuencia de especialistas — por ejemplo: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Confirmá el plan y ejecutá cada comando. Cada especialista guarda su output en la base de conocimiento para que el siguiente retome donde dejó el anterior.
+ASDT analiza la petición y recomienda una secuencia de especialistas — por ejemplo: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Si decís que sí, corre esa cadena de a un especialista por vez y hace una pausa después de cada uno para que puedas discutir; o ejecutás vos cada comando. El resumen de cada especialista va al scratchpad de la sesión, así el siguiente retoma donde dejó el anterior.
 
 ## Ejecutar especialistas individuales
 
@@ -80,6 +80,6 @@ ASDT analiza la petición y recomienda una secuencia de especialistas — por ej
 
 ## Próximos pasos
 
-- Aprendé cómo persiste la memoria entre sesiones en [Memory & Engram](/asdt/docs/memory-and-engram).
+- Aprendé dónde viven los resúmenes de trabajo y qué guarda la memoria entre sesiones en [Scratchpad y memoria](/asdt/es/docs/memory-and-engram).
 - Entendé el modelo por dentro en [How It Works](/asdt/docs/how-it-works).
 - Conocé cada especialista en [Especialistas](/asdt/es/docs/specialists).

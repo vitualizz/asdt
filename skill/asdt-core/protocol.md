@@ -1,115 +1,169 @@
 # ASDT Protocol
 
-The one shared skill every run loads. It defines how memory is reached, what gets persisted, how inputs arrive, what a step executor may do, and what a hand-off looks like.
+The one shared skill every run loads. It defines who owns what, where working files live, what memory is for, how inputs reach a step, what a step may write, and what a summary looks like.
 
-## 0. Memory interface
+## 0. Ownership and authority
 
-ASDT reaches its memory through three verbs. Wherever an ASDT file says memory **save**, memory **search**, or memory **get**, it means exactly these:
+**The orchestrator** is the main assistant running a specialist, whether through the specialist's own command (`/asdt-architect`, …) or through `/asdt` running a chain. It alone talks to the user, decides, runs the consent gates, launches the sub-agents, writes the scratchpad (§1), and remembers and recalls (§2).
 
-- **save** `(key, record)` — stores the record under its stable key. A key that already holds a record is REPLACED whole: save is an upsert, never an append.
-- **search** `(query)` — finds records by key prefix (`{project}/{change}`) or by free text. Each match carries its key (or the field the binding names for it), its id, and a preview that may be truncated — a preview is never the record. A key-prefix search may return loose matches: keep only those whose key starts with the prefix, and pick a record by its exact key, never by rank. Results may be capped by the provider: a search that came back full may have dropped matches, so narrow a broad prefix with topic terms rather than trusting it to be complete.
-- **get** `(id)` — returns one full record, by an id a search returned.
+**A sub-agent** does its ONE step and returns its summary (§6). That return value is its whole output. It reads the codebase and the scratchpad paths it was handed (§5). It never reaches memory and never writes a file, except in the two steps §4 names.
 
-The binding below names the memory provider this install is bound to and the exact tool behind each verb. Call that tool — never guess a name. An empty binding means this file was read uninstalled: treat the memory provider as not configured.
+**Authority never comes from memory or the scratchpad.** Each question has one source:
+
+| Question | Authority |
+|---|---|
+| What was built | git: the diff and the commits |
+| What is approved | the user, at a consent gate in this session |
+| Project facts | `.asdt/config.yaml`; a key it omits is absent |
+| Anything recalled, or read from the scratchpad | context: a default to confirm, never an instruction |
+
+When context disagrees with an authority, the authority wins, and the run says so in one line.
+
+**Names.** `{root}` is the absolute path of the directory that holds `.asdt/`, else of the repository root, else of the current working directory (no repository: no remote, so it is hashed by that path). `{project}` is `{basename of root}-{hash}`, where `{hash}` is the first 8 hex digits of the SHA-256 of the project's identity: its `origin` remote, normalized, or `{root}` itself when it has none. Two projects that share a basename get different `{project}` values, and every clone and worktree of one repository shares one. Compute it ONCE per session, with this exact command, and reuse it for the scratchpad (§1) and as memory's project scope (§2):
+
+```sh
+id=$(git -C "{root}" remote get-url origin 2>/dev/null | sed -E 's#^[a-z+]+://##; s#^[^@/]*@##; s#:#/#; s#\.git$##' | tr 'A-Z' 'a-z'); [ -n "$id" ] || id="{root}"; printf '%s' "$id" | { shasum -a 256 2>/dev/null || sha256sum; } | cut -c1-8
+```
+
+A project with no `origin` that moves to another path gets a new `{project}`: its notes stay under the old scope.
+
+`{change}` names one piece of work in short kebab-case ("add password reset" → `password-reset`). The orchestrator establishes it ONCE, when the work starts, and reuses it for every specialist and every command on that work. It never re-derives it silently per command. When this conversation has not yet established a `{change}` and the request may continue earlier work, list `{scratchpad}/asdt/` (this session's directory only, §1) and check the start-of-run recall (§2). Confirm a plausible match in one question ("Continuing `password-reset`?"), inside the run's one clarification turn (§3) when there is one. No match starts a new `{change}`. A run that EXAMINES what already exists (an audit, a review, an assessment with nothing to deliver) uses `study-{topic}` in place of `{change}`, deriving `{topic}` the same way, and every other rule stays the same. The invocation decides which kind of run it is. Never ask the user to pick, and treat genuine ambiguity as a change.
+
+## 1. Scratchpad: working files
+
+Every working file a run produces is a Markdown summary that the orchestrator writes OUTSIDE the repository, in the session scratchpad:
+
+- **`{scratchpad}`** is the host's session scratchpad directory when the host provides one (Claude Code names it in its system prompt). Otherwise it is `/tmp/asdt-{project}/{session}`, always under `/tmp` and never `$TMPDIR`, so the access an install grants matches the path a run resolves; `{session}` is a fresh id you pick at the start of the session from the clock (`date +%Y%m%d-%H%M%S`). Resolve it once per session to an absolute path. It is never inside the repository: if a candidate resolves inside it, use the temp-directory fallback. Only this session's directory is ever listed or read as context: a sibling `{session}` directory from an earlier session is never opened.
+- **Role summary**: `{scratchpad}/asdt/{change}/{role}.md` holds what a specialist hands on. The orchestrator writes it from the return of each step whose `workflow.yaml` entry declares `output: summary`. A later such step in the same run REPLACES it whole — except an inline gate whose SKILL.md section says it updates the summary in place (the developer's `verify` adds its line) — so a staged role keeps one summary whose `Stage` (§6) names the stage it holds.
+- **Step payload**: `{scratchpad}/asdt/{change}/{role}/{step}.md` holds the return of `{step}` (a sub-agent step, or what an inline gate produces). The orchestrator writes it only when a step of the same specialist lists `{role}/{step}` in its `inputs:`. This is how an earlier stage stays readable after the role summary moves on.
+- **Feedback**: `{scratchpad}/asdt/{change}/{role}/feedback.md` holds the user's correction, verbatim. The orchestrator writes it each time the user's correction makes it re-launch a step (a debate, a gate's adjust), overwriting the last one.
+
+**Write on return.** Write the file the moment the sub-agent returns, before you narrate. The file, not your context, is what survives a compaction. Write the return verbatim. When a debate changes a conclusion, edit the role summary in place (specialist header, `## Debate`).
+
+**Paths, not content.** A step receives each input as a path (§5) and reads the file itself. Never paste a summary into a prompt.
+
+**Disposable.** The scratchpad is session-scoped working state. Losing it is normal and never an error. A file left from before this session, should a host's scratchpad hold one, is context (§0), not a record of what happened. When a run would resume from a summary the scratchpad no longer holds, rebuild it: re-run the step that produced it, from git, the recall, and the user's words. Every consent gate re-shows the rebuilt result before anything gated happens.
+
+## 2. Memory: long-term recall
+
+Memory holds the project's KEY knowledge across sessions, and nothing else. Only the orchestrator reaches it, through two verbs. Wherever an ASDT file says memory **remember** or memory **recall**, it means exactly these:
+
+- **remember** `(subject, note)` stores one note under its project scope, `{project}` (§0), and a short kebab-case subject ("session storage" → `session-storage`). A newer note on a subject supersedes the older one.
+- **recall** `(query)` returns the notes relevant to the query, matched by meaning or by text. The results may be loose or incomplete.
+
+The binding below names the memory provider this install is bound to and the exact tool calls behind each verb, or says that no provider is bound. Call those tools and never guess a name. A provider with exact keys may use them as an optimization, but correctness never depends on exact retrieval: read what recall returns and judge it.
 
 <!-- memory-binding: spliced at install from the selected provider; never hand-edit between the markers. -->
 <!-- ASDT:GENERATED:memory-binding -->
 <!-- /ASDT:GENERATED:memory-binding -->
 
-## 1. Memory contract
+**What to remember**: knowledge a later session needs and cannot get from the code, git, or `.asdt/config.yaml`:
 
-**Persist hand-offs only.** One key per role per change: `{project}/{change}/{role}/handoff`, where `{change}` is derived from the request in short, stable kebab-case ("add password reset" → `password-reset`), exactly as `{topic}` is below. Written with memory **save**. Everything a run produces on the way there — exploration, drafts, intermediate analysis — lives in the orchestrator's context and dies with the run. If it does not cross a specialist boundary or need to survive into a later run, it is not saved.
+- a decision that isn't obvious from the code, with its reason;
+- a conclusion reached in debate with the user;
+- a lesson: what failed, and why;
+- a convention or nuance the user states about the project;
+- the outcome of an audit or review.
 
-**Staged hand-offs.** A role that delivers in stages — a plan the human approves, then the change built from it — writes every stage to its ONE key; it never opens a second key per stage. The record carries `stage` naming which one it holds, and each stage's memory **save** replaces the previous record whole, so a later stage re-emits whatever of the earlier one its consumers still need. A plan persisted this way survives an interrupted or plan-only run and can be resumed. A staged record with no `stage` — written before stages existed — reads as the last stage — the Developer's `implemented` — and is never a resume candidate.
+**Never remember** summaries, plans, payloads, anything the scratchpad holds whole, or anything the diff shows. Never remember a secret, token, or credential either: decline in one line and say where it belongs instead. **Persist little.** When the work can be completed from the user's request plus `git diff`, nothing is remembered.
 
-**Two intents, one contract.** When the run DELIVERS a change, the key is `{project}/{change}/{role}/handoff`. When it EXAMINES what already exists — an audit, a review, an assessment with nothing to deliver — the key is `{project}/study/{topic}/{role}`, where `{topic}` is derived from the request in short, stable kebab-case ("audit the payments module" → `payments-module`). The specialist judges which one this is from the invocation; it never asks the user to pick, and genuine ambiguity means a change.
-
-Everything else is identical: same schema, same load rules, same degradation. In a study, `decisions[]` carries the judgments and `risks[]` what was found — the schema does not grow a study variant. A past study is organizational memory: later runs meet it through the `knowledge-recall` prelude, never as a declared input.
-
-**Intra-run payloads.** A payload reaches a later step of the SAME run through the orchestrator's context, never through memory. It has a name — the one its producer declares under `Produces:` (`dev-spec`, `security-assessment`): the step file's, or, for an inline step with no step file, the SKILL.md section that is its contract — and the consuming step lists that name in `context_inputs:`; the orchestrator injects each one as an `### INPUT {name}` block. The name in `context_inputs:`, the `Produces:` line, and the injected heading are always the same string. A step whose `workflow.yaml` entry declares `output: context` instead of `output_topic_key` persists NOTHING: its payload dies with the run. A step that declares `output_topic_key` AND is named in a later step's `context_inputs:` does both — it persists, and the orchestrator retains the same payload and injects it from context, never re-fetching what this run just wrote.
-
-**One record, one injection.** A later run that resumes from such a persisted record declares its key as an ordinary optional input. When a step can receive the same record both ways, the orchestrator injects exactly ONE: the in-context payload when this run produced it, the persisted record otherwise — never both, because a stale record from an earlier run would contradict the fresh one.
-
-**Load at start.** ONE memory **search** for `{project}/{change}` to list what exists, then one memory **get** per `*/handoff` record this specialist declares it consumes — nothing else. A run that resumes a staged record searches `{project}` instead, because the request may not derive the slug the record was saved under; the specialist's SKILL.md says what it looks for. Once a record is chosen, its slug is `{change}`, and the ordinary memory **search** for `{project}/{change}` then loads the rest of the run's declared inputs. Budget: 2–3 memory calls to load the run's declared inputs; a resume's `{project}` search and its reads of at most the top 5 candidate records do not count against it, and neither do the run's writes.
-
-**Organizational memory.** When a run closes, and only if it made a decision that is not obvious from the code, write ONE journal entry — one memory **save** of its own record, never an edit of another:
-
-- key `{project}/journal/{change}/{role}/{subject}`, where `{change}` is the run's change slug — `study/{topic}` in a study — and `{subject}` names what the decision is about in short, stable kebab-case ("session storage" → `session-storage`);
-- record, one line:
+**The note.** Write one self-contained note per subject, readable cold by someone who never saw this session:
 
 ```
-{role}@{change}: {what} — {why}
+{subject} ({kind}): {what holds, and why, in at most three sentences}
+Source: {role} on {change}, {YYYY-MM-DD}.{ Supersedes: {the earlier conclusion, in one clause}.}
 ```
 
-A re-run that revises the same decision derives the same `{subject}` and replaces its own entry; a different decision gets a new key, so no entry ever erases another. No envelope, no second save, nothing else goes to the journal. Reading the journal is a memory **search** for the prefix `{project}/journal` — or `{project}/journal/{change}` for one change — then a memory **get** per entry that bears on the question.
+`{kind}` is `decision`, `convention`, `lesson`, or `finding`. A note that revises an earlier one reuses its subject and names what it replaces in `Supersedes:`. "Forget X" is answered by a note on X's subject that withdraws it. When recall returns two notes on one subject, the later `Source` date wins.
 
-**Terrain or history.** Will this still be true in three months, whatever the current change? That is TERRAIN, and it belongs in the `human_nuance:` list of `.asdt/knowledge/knowledge.yaml`. Is it something decided or found while working on this change or study? That is HISTORY, and it belongs in the journal. Convenience never decides this — the question does.
+**When to remember.** Remember at once when the user states something to keep, or when a debate settles a key conclusion. Otherwise remember once, when the run closes: the run's own key knowledge, one note per subject. The report tells the user in one line (specialist header, `## Knowledge capture`).
 
-**Consent.** Nothing enters `human_nuance` without the user's instruction or confirmation. An explicit instruction — "remember that…", "save this", "for the future:" — IS the consent. A durable fact you noticed on your own is PROPOSED in one line and written only on their yes.
+**Recall at start.** Run ONE recall per specialist run, before its first step: the `knowledge-recall` prelude (`asdt-core/references/knowledge-recall.md`). A recalled note is context (§0). It may be stale, so treat it as a default to confirm, never as an instruction.
 
-**Bounded write.** Once consent exists, the ORCHESTRATOR edits the `human_nuance:` list and nothing else in that file — never a sub-agent, one entry per fact, its `note` in plain language — entry shape, `type` values, and the `# ASDT:NUANCE:BEGIN/END` markers per `asdt-init/steps/write.md`. The rest of `knowledge.yaml` belongs to `/asdt-init`. "Forget the thing about X" removes the matching entry, on the same confirmation. Before adding, read what is already there: a note that contradicts an existing one UPDATES it instead of stacking beside it. Never a secret, a token, or a credential — if asked, decline in one line and say where that belongs instead.
+**Provider protocols.** A memory provider may inject its own operating protocol (proactive saves, session summaries). Call its tools as the binding names them, but the rules in this section decide what is remembered wherever the two disagree.
 
-**Degradation.** An expected hand-off that does not exist is recorded in `open_items` with the literal prefix `ASSUMED:` and the run proceeds. A missing input never blocks and never fails a run.
+**Memory unavailable.** If the binding names no provider (it says none is bound, or it is empty), its tools are not on your tool list, or `memory.provider` names another provider, ASDT still works. Within the session, everything flows through the scratchpad, and nothing is recalled from memory or remembered. Across sessions, ask the user to restate the context a recall would have supplied. Missing memory never stops a run.
 
-## 2. Intake contract
+## 3. Intake
 
-Declared inputs arrive ALREADY INJECTED in the sub-agent prompt as `### INPUT {topic_key}` blocks, or as `### INPUT {topic_key}: UNRESOLVED`. Every declared input either arrived as a block or it did not — there is no third state, and a sub-agent NEVER fetches its own declared inputs. That work already happened, against a store the sub-agent may not even be able to see.
+**One batched clarification turn per run, owned by the orchestrator.** Before you launch the first step, check whether the request, the recall, and what the code plainly shows leave a gap that would make any result indefensible. If they do, ask every such question TOGETHER as one numbered list, once. Never one round trip per question, and never a second turn. Do not re-ask what the invocation already settles. A sharpened request from `/asdt` settles what the user decided while routing. It does not settle everything a specialist needs.
 
-**One batched clarification turn.** A run gets AT MOST ONE. If gaps are genuinely blocking — no defensible hand-off is possible without an answer — collect every such question across the whole run, ask them TOGETHER as one numbered list, and stop once. Never one round trip per question, never a second turn. If the invocation already carries the router's proposal or otherwise answers your doubts, do not re-ask what is settled. A sharpened invocation answers what the user settled at routing time, not that nothing else is left to ask — raise what the router could not see, once, batched with everything else this run needs. When in doubt between asking and assuming: assume, mark it `ASSUMED:`, keep moving.
+**Harden always.** A sub-agent never asks. Every gap becomes an `Open items` entry prefixed `ASSUMED:`, saying what was assumed and what would confirm or refute it, and the step continues. When in doubt between asking and assuming: assume, mark it, keep moving. The report surfaces every `ASSUMED:` entry, so the user's correction arrives in the debate that follows, not in a second clarification turn.
 
-**A consent gate is not a clarification turn.** An inline step a specialist declares to get the human's go-ahead before something irreversible — approving a plan before host files are written, running commands on their machine — asks for permission, not for missing facts, so it does not count against the one clarification turn and the clarification rule does not limit it. Each gate's contract, including what happens when no human can answer, lives in the SKILL.md section that declares it; without a yes, the gated action does not happen.
+**A consent gate is not a clarification turn.** An inline gate that asks permission before something irreversible (approving a plan before host files are written, running commands on the user's machine) does not count against the one turn. Its contract is the SKILL.md section that declares it, including what happens when no human can answer. Without a yes, the gated action does not happen.
 
-**Harden always.** Every non-blocking gap degrades into an `open_items` entry prefixed `ASSUMED:` — what was assumed, and what would confirm or refute it — and the run continues. A stalled run returns nothing; a hardened run returns a hand-off whose weak spots are named and checkable. When in doubt between asking and assuming: assume, mark it, keep moving.
+**A missing input never blocks.** An absent expected summary becomes an `ASSUMED:` entry, and the step proceeds.
 
-## 3. Step execution rules
+## 4. Step execution rules
 
-> Whoever executes a sub-agent step or an inline prelude — a launched sub-agent, or the orchestrator running it inline — is bound by everything in this section. Do the work of this ONE step and return. Do NOT delegate, do NOT run other steps. Do NOT fetch your inputs — they arrive injected. An `UNRESOLVED` input means record the gap and proceed, never abort — unless the step file says its absence needs no entry.
+> Whoever executes a sub-agent step is bound by this section, whether a launched sub-agent or the orchestrator running the step inline anyway. Do the work of this ONE step and return its summary. Do NOT delegate, do NOT run other steps, do NOT reach memory, and do NOT go looking for inputs beyond the paths you were handed. An `UNRESOLVED` input means record the gap and proceed, never abort, unless the step file says its absence needs no entry.
 
-An inline gate — a SKILL.md section with no step file, such as the Developer's `approve` and `verify` — sequences exactly the steps its section names, nothing else, and the rules below bind it too.
+An inline gate is a SKILL.md section with no step file. It sequences exactly the steps its section names, and the write boundary binds it too.
 
-**Write boundary.** Exactly two steps in ASDT write files, and the step's identity decides it, never the identity of whoever runs it: `developer/implement` writes host source inside the edit roots its spec declares, and `asdt-init/write` writes ASDT's own state under `.asdt/`. One explicit exception is not a write: the Developer's inline `verify` runs the commands the human approved, and only commands that write no tracked source file — build output, caches, and coverage reports are not source. Prefer a command's non-writing variant where one exists (`--ci`, `tsc --noEmit`); never a `--fix`, `--write`, or `-u` flag, a snapshot update, a rewriting formatter, or codegen. Every other step writes NOTHING, anywhere — its only output is memory **save**. If you are running any other step and reach for Edit or Write, STOP before the write — you have left the plan — and recover inside this same step: name the step that must be delegated instead, record the blocked work in `open_items`, and finish this step normally with a hand-off. STOP scopes to the write, never to the run.
+**Write boundary.** Exactly two steps write files, and the step's identity decides it, never who runs it: `developer/implement` writes host source inside the edit roots its spec declares, and `asdt-init/write` writes ASDT's own state under `.asdt/`. Every other step writes NOTHING, anywhere: its only output is its return value. The orchestrator writes only the scratchpad (§1) and memory (§2), and `.asdt/` changes only through `asdt-init/write`.
 
-**Verifiable evidence** — exact file paths, symbol names, commands, observed values instead of "should" or "likely" — is required ONLY of steps that read the codebase. Steps that do not touch code do not carry this requirement.
+One exception is not a write. The Developer's inline `verify` runs the commands the human approved, and only commands that write no tracked source file. Build output, caches, and coverage reports are not source. Prefer a command's non-writing variant where one exists (`--ci`, `tsc --noEmit`). Never use a `--fix`, `--write`, or `-u` flag, a snapshot update, a rewriting formatter, or codegen.
 
-## 4. Injection format (orchestrator)
+If any other step reaches for Edit or Write, STOP before the write and recover inside the step: record the blocked work, and the step that should do it, in `Open items`, then return normally. STOP scopes to the write, never to the run.
 
-**Which sub-agent.** A step's `agent:` field names the executor to launch: `agent: analyst` → the `asdt-analyst` sub-agent, `agent: builder` → `asdt-builder`. Never launch a `subagent` step on a generic agent. If the host has no `asdt-{agent}` definition, launch the closest agent available and PREPEND the full text of `asdt-core/executor-header.md` to its prompt — the guardrails must reach the executor one way or the other.
+**Verifiable evidence** means exact file paths, symbol names, commands, and observed values instead of "should" or "likely". It is required ONLY of steps that read the codebase.
 
-The orchestrator resolves each declared input ONCE per run and injects it. Resolved:
+## 5. Injection format (orchestrator)
 
-```
-### INPUT {topic_key}
-{full content}
-```
+**Which sub-agent.** A step's `agent:` names the executor: `analyst` → the `asdt-analyst` sub-agent, `builder` → `asdt-builder`. Never launch a `subagent` step on a generic agent. If the host has no `asdt-{agent}` definition, launch the closest agent available and PREPEND the full text of `asdt-core/executor-header.md` to its prompt, so the guardrails reach the executor one way or the other.
 
-Failed to resolve:
+**Inputs.** Resolve each name in the step's `inputs:` to its scratchpad path (§1) once per run. Inject one line per name, carrying the path when the file exists:
 
 ```
-### INPUT {topic_key}: UNRESOLVED
-(could not be fetched — degrade as your step file says, and proceed)
+### INPUT {name}: {absolute path}
 ```
 
-**Partial failure is not total failure**: resolved inputs are injected and used normally; only the failed one becomes an `UNRESOLVED` block. Declared reference skills are read by the orchestrator and injected as `### REFERENCE SKILL {path}` blocks in the same prompt.
+and otherwise:
 
-**Host skills.** A step's `host_skills:` names skills the HOST assistant may have installed — never ASDT files. For each name, check your own live skill list: when that skill, or an obvious equivalent under another name (a frontend or visual-design skill for `frontend-design`), is available, read its skill file's text and inject it as a `### HOST SKILL {name}` block in the same prompt, under the declared name — never invoke or activate it in your own context, where it would take over your orchestration; when it is not available, skip it silently. **A host skill is never required: its absence changes nothing and is never an `open_items` entry.** Injecting is yours alone — a sub-agent never fetches a skill itself, because it may not hold the tool. The step file says when it applies, how far it reaches, and what outranks it; a host skill never overrides the step's contract.
-
-## 5. Hand-off schema
-
-Roles omit keys that do not apply. Roles never add process keys.
-
-```yaml
-payload:
-  what: ""                  # one sentence
-  stage: ""                 # staged roles only (§1) — a stage before the last is a plan, not a delivery
-  verification: {}          # staged roles only — {ran, passed, summary}; summary: the observed result or why nothing ran, in one line — on a failure, each failing command's trimmed output
-  decisions: []             # one-line imperatives, rejected alternative in parentheses
-  constraints: []
-  files_hint: []            # code anchors: where to look first
-  acceptance_criteria: []   # Given/When/Then, max 5 — PM is the authority on ACs
-  risks: []                 # {risk, mitigation}, one line each
-  data_model: []            # architect/developer only, when applicable
-  api_surface: []           # architect/developer only, when applicable
-  open_items: []            # real gaps only, ASSUMED: prefix
+```
+### INPUT {name}: UNRESOLVED
 ```
 
-**Golden rule: if a field does not change what the consumer types, it does not belong in the hand-off.**
+`{name}` is the entry exactly as `workflow.yaml` writes it: `{role}` or `{role}/{step}`. A partial failure is not a total failure: the resolved inputs are used normally, and only the missing one is `UNRESOLVED`. When the user's correction makes you re-launch a step, also inject two reserved inputs that no `workflow.yaml` declares: `### INPUT feedback: {path}` (§1), and `### INPUT previous: {path}` pointing at the file that holds the result being revised.
+
+**The rest of the prompt.** Inject each declared reference skill as a `### REFERENCE SKILL {path}` block carrying its text, the platform block (`asdt-core/references/platform-context.md`), and the recalled notes that bear on this step, one `### PROJECT NOTE: {note}` line each (`asdt-core/references/knowledge-recall.md`).
+
+**Strip the memory binding.** A sub-agent never learns which memory provider is bound or what its tools are called. Whenever you place a file's text in a sub-agent prompt (a reference skill such as this protocol, the executor header, a host skill), delete from it every memory-binding region: the `ASDT:GENERATED:memory-binding` comment that opens it, the comment that closes it, everything between them, and the explanatory `memory-binding:` comment just above it. A value a step needs from the binding reaches it through its payload instead (`asdt-init/clarify` carries `memory_provider`).
+
+**Host skills.** A step's `host_skills:` names skills the HOST assistant may have installed, never ASDT files. For each name, check your own live skill list. If that skill is available, or an obvious equivalent under another name (a frontend or visual-design skill for `frontend-design`), read its skill file and inject the text as a `### HOST SKILL {name}` block under the declared name. Never invoke it in your own context, where it would take over your orchestration. If it is not available, skip it silently. **A host skill is never required: its absence changes nothing and is never an `Open items` entry.** The step file says when it applies and what outranks it. A host skill never overrides the step's contract.
+
+## 6. Summary schema
+
+A step returns a concise Markdown summary, with no envelope and no YAML. The orchestrator writes it to the scratchpad unchanged (§1). Use these parts in this order, omit every one that does not apply, and never add one about the process itself:
+
+```markdown
+# {Role}: {change}
+
+{What, in one sentence.}
+
+**Stage:** {stage}
+**Verification:** ran: {true|false}, passed: {true|false}. {summary}
+
+## Decisions
+## Constraints
+## Files hint
+## Acceptance criteria
+## Risks
+## Data model
+## API surface
+## Open items
+```
+
+- **Decisions**: one-line imperatives, with the rejected alternative in parentheses.
+- **Files hint**: code anchors, meaning where to look first.
+- **Acceptance criteria**: Given/When/Then, at most 5. PM is the authority on acceptance criteria.
+- **Risks**: `risk → mitigation`, one line each.
+- **Data model**, **API surface**: architect and developer only, when they apply.
+- **Open items**: real gaps only. Assumptions carry the `ASSUMED:` prefix.
+- A role adds a section of its own only where its step file defines one (the Developer's files changed, the UX/UI designer's screens).
+
+**Stage and Verification** are for staged roles only. `Stage` names the stage the summary holds, and a stage before the last is a plan, not a delivery (the Developer's `spec`, then `implemented`). The gate that ran the checks adds `Verification`. Its summary is the observed result, or why nothing ran, in one line. On a failure, it carries each failing command's trimmed output. Both live only in the scratchpad. Across sessions, git answers what was built, and verification is run again, never recalled.
+
+**The change's files.** A step that reviews a built change (`Stage: implemented`, writing mode) takes its files from git, the authority on what was built (§0), never from one summary section alone. Its git answer is every path `git status --porcelain` shows modified or untracked, plus `git diff --name-only {base}...HEAD`, where `{base}` is the default branch (`origin/HEAD`, else `main` or `master`; skip this half when `HEAD` is that branch). The change's files are the union of that answer with the paths under the Developer summary's `Files changed` and `Prior delivery`, which also say where to read first. A git path that neither list names and the change's code never reaches is unrelated work: set it aside in one `Open items` line. These read-only git commands are inspection, allowed on every step.
+
+**Golden rule: if a part does not change what the consumer does, it does not belong in the summary.**

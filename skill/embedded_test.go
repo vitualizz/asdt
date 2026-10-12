@@ -194,16 +194,23 @@ const (
 	memoryBindingEnd   = "<!-- /ASDT:GENERATED:memory-binding -->"
 )
 
-// TestMemoryBindingRegions asserts every file that owns a memory-binding region
-// still carries it, committed EMPTY. Dropping a region is silent at install
-// time — bindMemory passes marker-free files through — and the file would then
-// ship telling a model to call a verb with no tool behind it.
+// TestMemoryBindingRegions asserts every orchestrator-facing file that owns a
+// memory-binding region still carries it, committed EMPTY, and that the
+// executor header carries none. Dropping a region is silent at install time —
+// bindMemory passes marker-free files through — and the file would then ship
+// telling a model to call a verb with no tool behind it. A region in the
+// executor header would hand memory to sub-agents, which never reach it.
 func TestMemoryBindingRegions(t *testing.T) {
+	if data, err := fs.ReadFile(FS(), "asdt-core/executor-header.md"); err != nil {
+		t.Errorf("asdt-core/executor-header.md missing from embedded FS: %v", err)
+	} else if strings.Contains(string(data), memoryBindingBegin) || strings.Contains(string(data), memoryBindingEnd) {
+		t.Errorf("asdt-core/executor-header.md carries a memory-binding region; sub-agents never reach memory")
+	}
+
 	owners := []string{
-		"asdt-core/protocol.md",        // and, spliced, every routed SKILL.md
-		"asdt-core/executor-header.md", // baked into the generated agents
-		"asdt-init/SKILL.md",           // the knowledge-gate reads it
-		"SKILL.md",                     // the router answers status questions
+		"asdt-core/protocol.md", // and, spliced, every routed SKILL.md
+		"asdt-init/SKILL.md",    // the memory-check reads it
+		"SKILL.md",              // the router recalls and remembers
 	}
 	for _, p := range owners {
 		data, err := fs.ReadFile(FS(), p)

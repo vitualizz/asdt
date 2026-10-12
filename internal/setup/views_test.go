@@ -530,7 +530,7 @@ func TestView_ReviewShowsModelsRow(t *testing.T) {
 		t.Errorf("review view should show 'Chameleon preset' on the default path, got:\n%s", view)
 	}
 	if strings.Contains(view, "recommended defaults") {
-		t.Errorf("review view must not show the retired 'recommended defaults' string, got:\n%s", view)
+		t.Errorf("review view must not show a 'recommended defaults' string, got:\n%s", view)
 	}
 }
 
@@ -585,32 +585,33 @@ func TestView_AgentSetupShowsRadioIndicator(t *testing.T) {
 	}
 }
 
-func TestView_PreflightCheckShowsEngramRecovery(t *testing.T) {
+// TestView_PreflightNeverBlocksOnProviders asserts that with no memory
+// provider found the environment check still offers Continue and shows no
+// blocking recovery block: memory is optional.
+func TestView_PreflightNeverBlocksOnProviders(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = updateKey(t, m, tea.KeyEnter) // → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	// Inject EnvironmentCheckMsg with Engram missing
 	next, _ := m.Update(envCheckMsg(false))
-	m2 := next.(setup.Model)
-	view := m2.View()
-	for _, want := range []string{
-		"Engram is required for memory persistence across AI sessions.",
-		"Install: https://github.com/Gentleman-Programming/engram",
-		"After installing, restart asdt-tui.",
-	} {
-		if !strings.Contains(view, want) {
-			t.Errorf("preflight view missing Engram recovery line %q, got:\n%s", want, view)
+	view := next.(setup.Model).View()
+	if !strings.Contains(view, "enter") {
+		t.Errorf("preflight with no provider must offer Continue (enter), got:\n%s", view)
+	}
+	for _, blocked := range []string{"required", "Required", "restart asdt-tui"} {
+		if strings.Contains(view, blocked) {
+			t.Errorf("preflight with no provider must not read as blocked (%q), got:\n%s", blocked, view)
 		}
 	}
 }
 
-// TestView_ProviderRecoveryFollowsSelection asserts that beside a usable
-// provider, a missing Engram no longer blocks preflight — its row still
-// reports it — and its recovery block moves to provider selection, shown only
-// while Engram is the selected provider.
-func TestView_ProviderRecoveryFollowsSelection(t *testing.T) {
+// TestView_ProviderWarningFollowsSelection asserts the provider screen lists
+// every provider plus "No memory" with why a provider is recommended, and that
+// a selected provider the environment check did not find shows a warning with
+// its install hint — while Continue still works — and no other row does.
+func TestView_ProviderWarningFollowsSelection(t *testing.T) {
 	withHostedProvider(t)
-	const required = "Engram is required for memory persistence across AI sessions."
+	const missing = "Engram was not found. ASDT installs bound to it and runs without memory until you install and connect it."
+	const install = "Install: https://github.com/Gentleman-Programming/engram"
 
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = updateKey(t, m, tea.KeyEnter) // → StateLanguageSelect
@@ -618,18 +619,80 @@ func TestView_ProviderRecoveryFollowsSelection(t *testing.T) {
 	msg := envCheckMsg(true)
 	msg.ProvidersFound[installer.ProviderEngram] = false
 	next, _ := m.Update(msg)
-	m = next.(setup.Model)
-	if view := m.View(); strings.Contains(view, required) || !strings.Contains(view, hostedProvider.Name) {
-		t.Errorf("preflight with a usable provider must list %q and show no recovery block, got:\n%s", hostedProvider.Name, view)
+	m = updateKey(t, next.(setup.Model), tea.KeyEnter) // → SelectAssistants
+	m = updateKey(t, m, tea.KeyEnter)                  // → SelectProvider (hosted provider, the first found)
+
+	view := m.View()
+	for _, want := range []string{"Engram", hostedProvider.Name, "No memory", "keeps key project knowledge between sessions"} {
+		if !strings.Contains(view, want) {
+			t.Errorf("provider screen missing %q, got:\n%s", want, view)
+		}
+	}
+	if strings.Contains(view, missing) {
+		t.Errorf("provider screen on a found provider must show no warning, got:\n%s", view)
 	}
 
-	m = updateKey(t, m, tea.KeyEnter) // → SelectAssistants
-	m = updateKey(t, m, tea.KeyEnter) // → SelectProvider (Engram selected)
-	if view := m.View(); !strings.Contains(view, required) || !strings.Contains(view, "Install: https://github.com/Gentleman-Programming/engram") {
-		t.Errorf("provider selection on a missing Engram must show its recovery block, got:\n%s", view)
+	onEngram := updateKey(t, updateKey(t, m, tea.KeyUp), tea.KeySpace)
+	if view := onEngram.View(); !strings.Contains(view, missing) || !strings.Contains(view, install) {
+		t.Errorf("provider screen on a missing Engram must show its warning and install hint, got:\n%s", view)
 	}
-	if view := updateKey(t, m, tea.KeyDown).View(); strings.Contains(view, required) {
-		t.Errorf("provider selection on a usable provider must show no recovery block, got:\n%s", view)
+	if got := updateKey(t, onEngram, tea.KeyEnter).State(); got != setup.StateModelGate {
+		t.Errorf("Enter on a missing Engram: state = %v, want StateModelGate (a warning, never a block)", got)
+	}
+
+	if view := updateKey(t, updateKey(t, m, tea.KeyDown), tea.KeySpace).View(); strings.Contains(view, missing) {
+		t.Errorf("provider screen on No memory must show no provider warning, got:\n%s", view)
+	}
+}
+
+// TestView_ReviewMemoryRow asserts the Review screen's Memory row: the chosen
+// provider's name, a not-found flag with its install hint, or "none" with the
+// recommended provider.
+func TestView_ReviewMemoryRow(t *testing.T) {
+	cases := []struct {
+		name        string
+		engramFound bool
+		downs       int // Down presses on the provider screen from the default
+		want        string
+	}{
+		{name: "engram found", engramFound: true, want: "Memory:      Engram"},
+		{name: "no memory by default", want: "Memory:      none (recommended: Engram, to keep key project knowledge between sessions)"},
+		{name: "engram chosen while missing", downs: -1, want: "Engram (not found — install: https://github.com/Gentleman-Programming/engram)"},
+		{name: "no memory chosen beside engram", engramFound: true, downs: 1, want: "none (recommended: Engram"},
+		// Walking past "No memory" onto [ Continue → ] keeps the default.
+		{name: "engram kept on the button", engramFound: true, downs: 2, want: "Memory:      Engram"},
+		{name: "no memory kept on the button", downs: 1, want: "Memory:      none (recommended: Engram"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Setenv("HOME", t.TempDir())
+			t.Setenv("XDG_CONFIG_HOME", "")
+			m := setup.New(fstest.MapFS{}, "dev")
+			m = updateKey(t, m, tea.KeyEnter) // → LanguageSelect
+			m = updateKey(t, m, tea.KeyEnter) // → EnvironmentCheck
+			next, _ := m.Update(envCheckMsg(c.engramFound))
+			m = updateKey(t, next.(setup.Model), tea.KeyEnter) // → SelectAssistants
+			m = updateKey(t, m, tea.KeyEnter)                  // → SelectProvider
+			for range c.downs {
+				m = updateKey(t, m, tea.KeyDown)
+			}
+			for range -c.downs {
+				m = updateKey(t, m, tea.KeyUp)
+			}
+			m = updateKey(t, m, tea.KeyEnter) // → ModelGate
+			m = updateKey(t, m, tea.KeyEnter) // → AgentSetup
+			for range installer.PersonaPresets {
+				m = updateKey(t, m, tea.KeyDown) // → [ Skip → ]
+			}
+			m = updateKey(t, m, tea.KeyEnter) // → PermissionConsent
+			m = updateKey(t, m, tea.KeyEnter) // → Review
+			if m.State() != setup.StateReview {
+				t.Fatalf("state = %v, want StateReview", m.State())
+			}
+			if view := m.View(); !strings.Contains(view, c.want) {
+				t.Errorf("review missing %q, got:\n%s", c.want, view)
+			}
+		})
 	}
 }
 

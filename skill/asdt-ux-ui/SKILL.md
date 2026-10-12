@@ -52,17 +52,19 @@ Ambiguous → `ux-spec → ui-design`. The inline `knowledge-recall` and `platfo
 preludes run first either way, and depth changes how many flows and screens get full detail,
 never which steps run.
 
-**Intra-run persistence — you, the orchestrator, own this.** `ux-spec` declares `output:
-context`, not an `output_topic_key`. Retain its returned payload in YOUR context and inject it
-into `ui-design` as `### INPUT ux-flows`. It is NEVER written to memory: `ui-design` persists
-the one hand-off, flows included.
+**No visual surface.** When the platform block reads `Design surface: none`, a change has no
+screens to design: launch neither `ux-spec` nor `ui-design`. Write the role summary yourself,
+so downstream roles read an explicit no instead of a silent gap:
 
-**No visual surface.** When the platform summary reads `Design surface: none`, a change has no
-screens to design: launch neither `ux-spec` nor `ui-design`. Persist the minimal hand-off yourself with
-memory **save** under `{project}/{change}/ux-ui/handoff` — `what: "no UX/UI spec: the project
-declares no visual surface"`, `surface: {primary: none}`, and one `decisions` line, `"Build no UI for this change
-(primary_design_surface: none)"`, nothing else — so downstream roles read an explicit no
-instead of a silent gap.
+```markdown
+# UX/UI: {change}
+
+No UX/UI spec: the project declares no visual surface.
+
+## Decisions
+- Build no UI for this change (primary_design_surface: none)
+```
+
 Tell the user in one line, and if this change is what gives the project a surface, point them
 to `/asdt-init` to recalibrate. `review` is unaffected: it audits whatever the code ships.
 A project WITH a surface whose change has no user-facing step runs both steps as usual: each
@@ -71,29 +73,23 @@ returns its explicit no (`ux-spec.md` step 1, `ui-design.md` step 1).
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
-`ux-ui/handoff` — brief, surface, IA, flows, component mapping, screens, component designs,
-visual direction (greenfield only), and accessibility as sections of ONE artifact, persisted
-by `ui-design` at `{project}/{change}/ux-ui/handoff`. Consumed by Architect, Developer, and QA.
-
-`review` produces `{project}/study/{topic}/ux-ui` — the audit of an existing experience. No
-pipeline declares it as an input; it is organizational memory, reached through
-`knowledge-recall`.
+The role summary `ux-ui`, written from `ui-design`: brief, surface, entry point, flows,
+component mapping, visual direction (greenfield only), screens, component designs, and
+accessibility, as sections of ONE summary. Consumed by Architect, Developer, and QA. `review`
+writes it under `study-{topic}` — the audit of an existing experience, for the user.
 
 ## Invariants
-- This specialist writes NO files — its output is `ux-ui/handoff` via memory **save**, nothing else
-- Everything it persists ends in the `ux-ui` role slot — never another specialist's
-- Inputs arrive already injected; a step never self-fetches them
-- A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none
+- Writes no file: its only output is its summary (`asdt-core/protocol.md` §4)
 - **An existing design system is the foundation** — its tokens and components are used as they
   are, never restyled: a new variant ADDS an option in the system's language and leaves every
-  existing variant unchanged, a value it lacks is a named proposed token in `open_items`, never
+  existing variant unchanged, a value it lacks is a named proposed token in `Open items`, never
   a literal, and a component it lacks is designed in its language. Only a project without one
-  gets a `visual_direction` — a proposal, on record in `decisions`
+  gets a visual direction — a proposal, on record in `Decisions`
 - Flows and screens are designed for the `Design surface` first; the other surfaces get one
   adaptation line
-- The design is text in the hand-off, never a file: flows with their branches, states, and
+- The design is text in the summary, never a file: flows with their branches, states, and
   copy; every screen they touch; every component gap designed part by part
 - The craft is built in (`asdt-core/references/visual-design.md`); a host design skill raises
   it and its absence changes nothing
 - An accessibility requirement that cannot be verified from the tokens or the proposed palette
-  is advisory in `open_items`, never asserted as a pass
+  is advisory in `Open items`, never asserted as a pass

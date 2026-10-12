@@ -3,12 +3,12 @@ routable: true
 steps:
   - name: knowledge-recall
     skill: ../asdt-core/references/knowledge-recall.md
-    description: Query organizational memory for prior decisions relevant to this change before acting
+    description: Recall the project's notes on prior decisions relevant to this change before acting
     execution: inline
 
   - name: platform-analysis
     skill: ../asdt-core/references/platform-context.md
-    description: Load and inject platform conventions and the design surface from knowledge.yaml and config.yaml
+    description: Inject the platform block — conventions and the design surface — from .asdt/config.yaml
     execution: inline
 
   - name: explore
@@ -17,8 +17,6 @@ steps:
     execution: subagent
     model: sonnet
     agent: analyst
-    inputs: []
-    output: context # retained in the orchestrator's context, injected into spec — never persisted
 
   - name: spec
     skill: steps/spec.md
@@ -27,15 +25,14 @@ steps:
     model: sonnet
     agent: analyst
     inputs:
-      - "{project}/{change}/pm/handoff" # optional — acceptance-criteria authority; degrade gracefully if absent
-      - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
-      - "{project}/{change}/ux-ui/handoff" # optional — the flows, screen and component designs, and any visual direction, when UX/UI ran
-      - "{project}/{change}/security/handoff" # optional — mitigations the change must carry, when Security ran
-      - "{project}/{change}/developer/handoff" # optional — the record this plan replaces; any delivery it holds (files_changed, verification) is carried forward
-    context_inputs:
-      - dev-exploration # optional — absent on an adjust in a resumed run
-      - spec-feedback # optional — only when the human chose adjust at approve
-    output_topic_key: "{project}/{change}/developer/handoff" # stage: spec — also retained in context and injected into implement as dev-spec
+      - pm # optional — acceptance-criteria authority
+      - architect # optional — the design decision, when Architect ran
+      - ux-ui # optional — the flows, screen and component designs, and any visual direction, when UX/UI ran
+      - security # optional — mitigations the change must carry, when Security ran
+      - qa # optional — gaps and edge cases to close
+      - developer # optional — the summary this plan replaces; any delivery it holds is carried forward
+      - developer/explore # optional — absent when explore did not run this session
+    output: summary
     reference_skills:
       - ../asdt-core/references/scope-definition.md
       - ../asdt-core/protocol.md
@@ -51,12 +48,10 @@ steps:
     model: opus
     agent: builder
     inputs:
-      - "{project}/{change}/architect/handoff" # optional — the design decision, when Architect ran
-      - "{project}/{change}/developer/handoff" # optional — the persisted spec, injected only on a resumed run that did not produce dev-spec
-    context_inputs:
-      - dev-spec
-      - verification-failures # optional — only on a fix round launched by verify
-    output_topic_key: "{project}/{change}/developer/handoff" # stage: implemented — replaces the spec record
+      - architect # optional — the design decision, when Architect ran
+      - developer/spec
+      - developer/verify # optional — only on a fix round launched by verify
+    output: summary
     reference_skills:
       - ../asdt-core/references/conventions.md
       - ../asdt-core/protocol.md
@@ -64,9 +59,9 @@ steps:
       - frontend-design # visual execution of UI files, when the host has it
 
   - name: verify
-    description: Offer the hand-off's verification commands, run them only on the human's yes, record the outcome, and drive at most two fix rounds through implement
+    description: Offer the summary's verification commands, run them only on the human's yes, record the outcome, and drive at most two fix rounds through implement
     execution: inline
-    output_topic_key: "{project}/{change}/developer/handoff" # the implemented record, re-saved with verification added
+    output: summary
 
   - name: review
     skill: steps/review.md
@@ -74,8 +69,7 @@ steps:
     execution: subagent
     model: sonnet
     agent: analyst
-    inputs: []
-    output_topic_key: "{project}/study/{topic}/developer"
+    output: summary
     reference_skills:
       - ../asdt-core/references/conventions.md
       - ../asdt-core/protocol.md

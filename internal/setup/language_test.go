@@ -62,7 +62,7 @@ func TestUpdate_LanguagePrefMsg_PreselectsPersistedLanguage(t *testing.T) {
 
 	next, _ := m.Update(setup.LanguagePrefMsg{Code: "es"})
 	m2 := next.(setup.Model)
-	// Legacy bare "es" maps to es-419; the catalog still resolves to base es.
+	// Bare "es" maps to es-419; the catalog still resolves to base es.
 	if got := m2.LanguageCode(); got != "es-419" {
 		t.Errorf("after LanguagePrefMsg{es}: LanguageCode() = %q, want %q", got, "es-419")
 	}

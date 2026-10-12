@@ -1,104 +1,128 @@
 ---
-title: Base de conocimiento y memoria
-description: Cómo ASDT persiste artefactos entre especialistas y sesiones — y cómo la base de conocimiento mantiene al equipo sincronizado.
+title: Scratchpad y memoria
+description: Dónde guarda ASDT sus archivos de trabajo (el scratchpad de la sesión) y qué recuerda entre sesiones (solo el conocimiento clave del proyecto).
 order: 7
 locale: es
 ---
 
 import ArtifactAnatomyCard from '@components/ArtifactAnatomyCard.astro'
 
-# Base de conocimiento y memoria
+# Scratchpad y memoria
 
-## Por qué importa la memoria
+ASDT guarda dos cosas muy distintas, en dos lugares distintos:
 
-Sin memoria persistente, cada especialista empieza de cero. El Developer no puede leer el registro de decisión del Arquitecto. El especialista de QA no sabe qué construyó el Developer. Tendrías que copiar el contexto manualmente entre cada paso — lo que cancela el propósito de tener un equipo.
+- Los **archivos de trabajo** (el resumen de cada especialista) viven en el **scratchpad de la sesión**, fuera de tu repositorio. Son la forma en que el trabajo de un especialista le llega al siguiente dentro de la misma sesión.
+- El **conocimiento clave del proyecto** (decisiones que no son obvias, conclusiones de un debate, convenciones, lecciones, resultados de auditorías) vive en la **memoria**, para que la próxima sesión pueda construir sobre él.
 
-ASDT resuelve esto con una base de conocimiento. Cada artefacto que produce un especialista se guarda con una clave estable. El siguiente especialista lo recupera automáticamente por clave. El contexto fluye hacia adelante sin intervención manual, incluso entre sesiones separadas por días.
+Ninguno de los dos es la autoridad sobre nada. Lo que se construyó es lo que muestra **git**. Lo aprobado es lo que **vos** aprobás en un gate de esta sesión. Los hechos del proyecto salen de **`.asdt/config.yaml`**. Un resumen o una nota recordada es contexto: un valor por defecto a confirmar, nunca una instrucción. Cuando contradice a alguna de esas tres fuentes, gana la autoridad y la corrida te lo dice en una línea.
 
-## Cómo fluye el conocimiento
+## Quién es dueño de qué
 
-Cada corrida de un especialista guarda un hand-off. Se almacena en la base de conocimiento con dos identificadores:
+El **orquestador** es tu asistente principal mientras corre un especialista, ya sea porque escribiste el comando del especialista o porque `/asdt` está corriendo una cadena. Solo él habla con vos, decide, corre los gates de consentimiento, lanza los sub-agentes, escribe el scratchpad, y recuerda y consulta la memoria.
 
-- Un **título legible por humanos** — ej. `"add-auth/developer/handoff"`
-- Una **clave estable** para recuperación automática — `{project}/{change}/{role}/handoff`, usada por los especialistas siguientes para obtener exactamente el hand-off que necesitan
+Un **sub-agente** hace un paso y **devuelve su resumen**, un documento Markdown corto, y nada más. Lee el código y las rutas del scratchpad que le pasaron. Nunca toca la memoria y no escribe ningún archivo, tampoco en el scratchpad. Las dos excepciones son el `implement` del Developer (tu código, dentro de los archivos que aprobaste, nunca bajo `.asdt/`) y el `write` de `/asdt-init` (solo `.asdt/config.yaml`).
 
-Cuando corre el siguiente especialista, consulta la base de conocimiento por clave. Si el artefacto existe, procede normalmente. Si falta, anota la brecha en `open_items` y continúa con lo que tiene disponible — sin errores duros, sin pipelines bloqueados.
+## El scratchpad: resúmenes de trabajo
 
-Esto significa que el orden de ejecución es flexible. Podés empezar con cualquier especialista. Podés pausar entre pasos — incluso cambiar de asistente — y la base de conocimiento retiene el estado. Un artefacto guardado desde Claude Code puede ser leído por un paso posterior corrido en OpenCode, y viceversa, porque ambos leen y escriben en el almacén del mismo memory provider (hoy, Engram).
-
-## Memory providers
-
-ASDT requiere un **memory provider** — un almacén persistente que sobrevive a los cierres de sesión y hace los artefactos disponibles entre distintas invocaciones de especialistas.
-
-Un memory provider le da a ASDT:
-- **Persistencia entre sesiones** — el output del Arquitecto del lunes está disponible para el Developer del jueves
-- **Scope por proyecto** — los artefactos de proyectos distintos no se mezclan
-- **Recuperación por clave** — un especialista elige un registro por su clave exacta, nunca por cuánto se parece
-
-Hoy, **Engram** es el memory provider soportado. Más providers están planificados.
-
-### Cómo habla ASDT con la memoria
-
-Ningún prompt de especialista nombra un provider. Los prompts hablan una pequeña **interfaz de memoria** de tres verbos, definida una sola vez en el protocolo compartido:
-
-- **save** — guarda un registro bajo su clave estable. Guardar en una clave que ya tiene un registro lo reemplaza (un upsert).
-- **search** — encuentra registros por prefijo de clave (`{project}/{change}`) o por texto libre. Cada resultado trae su clave, así que un especialista elige el que necesita por clave exacta.
-- **get** — lee un registro completo por el id que devolvió una búsqueda.
-
-Al instalar, el instalador **vincula** esa interfaz al provider que elegiste: escribe el nombre del provider, su valor de `memory.provider` y la herramienta exacta detrás de cada verbo en el protocolo instalado (y por lo tanto en cada especialista), en las definiciones de los agentes ejecutores, en `/asdt-init` y en el router `/asdt` — y otorga esas mismas herramientas a los agentes `asdt-analyst` y `asdt-builder`. Un especialista nunca adivina el nombre de una herramienta: el binding que tiene delante le dice cuál llamar. Soportar otro provider es un cambio solo en el instalador — ver [Desarrollo](/asdt/es/docs/development#agregar-un-memory-provider).
-
-### Engram — implementación actual
-
-[Engram](https://github.com/Gentleman-Programming/engram) es un servidor MCP (Model Context Protocol) que provee memoria persistente y con scope de proyecto para asistentes de IA.
-
-Engram tiene que estar corriendo antes de invocar cualquier especialista (o cualquier memory provider que tengas configurado). Los artefactos guardados en Engram sobreviven al cierre de una sesión del asistente — esa es la propiedad de la que ASDT depende para la continuidad del pipeline entre sesiones, ya sea que uses Claude Code u OpenCode.
-
-#### Instalación
-
-Seguí la [guía de setup de Engram](https://github.com/Gentleman-Programming/engram) para instalar e iniciar el servidor MCP. Luego conectalo a la configuración MCP de tu asistente — Claude Code y OpenCode exponen cada uno su propio setup de MCP, así que seguí el del asistente que uses. Ambos se conectan al mismo servidor de Engram; solo cambia la ubicación de la configuración.
-
-#### Verificar que está corriendo
+Cuando un paso termina, el orquestador escribe su resumen en el scratchpad en el acto, antes de narrar nada:
 
 ```
-/asdt-init
+{scratchpad}/asdt/{change}/{role}.md          ← el resumen de un especialista
+{scratchpad}/asdt/{change}/{role}/{step}.md   ← el resultado de un paso, cuando lo necesita un paso posterior del mismo especialista
+{scratchpad}/asdt/study-{topic}/{role}.md     ← una auditoría o revisión de lo que ya existe
+
+Ejemplos:
+  …/asdt/add-auth/pm.md
+  …/asdt/add-auth/architect.md
+  …/asdt/add-auth/developer.md
+  …/asdt/add-auth/developer/spec.md
 ```
 
-El especialista de init verifica, antes que nada, que la sesión tenga las herramientas del memory provider; si faltan, explica cómo conectarlo y se detiene sin escribir la configuración.
+- **`{scratchpad}`** es el scratchpad de sesión de tu asistente cuando tiene uno (Claude Code lo tiene). Si no, es `/tmp/asdt-{project}/{session}`, siempre bajo `/tmp` y nunca `$TMPDIR`, para que el acceso que otorga la instalación coincida con la ruta que resuelve una corrida; `{session}` es un id nuevo tomado del reloj cuando arranca la sesión. Nunca está dentro de tu repositorio. Solo se lista o se lee el directorio de la sesión actual: un directorio hermano que dejó una sesión anterior nunca se abre.
+- **`{project}`** es `{basename}-{hash}`: el nombre del directorio de tu proyecto, más los primeros 8 dígitos hex del SHA-256 de su remoto `origin` de git, normalizado (sin esquema, sin usuario, sin `.git` final, en minúsculas), o de la ruta absoluta del proyecto cuando no tiene remoto. El directorio del proyecto es el que contiene `.asdt/`, si no la raíz del repositorio, y si no (sin `.asdt/` ni git) el directorio de trabajo actual, hasheado por su ruta. Por ejemplo, `asdt-1a2b3c4d`. El orquestador lo calcula una vez por sesión y lo usa tanto para el scratchpad temporal como para el alcance de proyecto de la memoria. Dos proyectos con el mismo nombre de directorio nunca se mezclan, y todos los clones y worktrees de un repositorio comparten el mismo alcance de memoria. Un proyecto sin `origin` que se mueve a otra ruta obtiene un `{project}` nuevo, y sus notas viejas quedan bajo el anterior.
+- **`{change}`** nombra el trabajo en kebab-case corto ("agregar reseteo de contraseña" → `password-reset`). Se fija una vez, cuando empieza el trabajo, y lo reusan todos los especialistas de ese trabajo. Cuando un pedido puede continuar un trabajo anterior, el orquestador te pide confirmarlo una vez ("¿Seguimos con `password-reset`?").
+- **Rutas, no contenido.** El paso siguiente recibe cada resumen como una ruta (`### INPUT pm: /…/add-auth/pm.md`) y lee el archivo él mismo. Los resúmenes nunca se pegan en los prompts: así el contexto del orquestador queda chico y el trabajo sobrevive a una compactación del contexto.
 
-## Cómo se almacenan los artefactos
+Un resumen que falta nunca bloquea nada. El paso anota qué asumió en su lugar (una entrada `ASSUMED:`) y el reporte te lo cuenta.
 
-Con Engram, un artefacto guardado lleva estos campos:
+### El scratchpad es descartable
+
+El scratchpad pertenece a la sesión. Perderlo es normal, nunca un error. Un archivo que quedó de una sesión anterior es contexto, no un registro de lo que pasó.
+
+Cuando un trabajo necesita un resumen que el scratchpad ya no tiene, el orquestador lo **reconstruye**. Vuelve a correr el paso que lo produjo, a partir de git, de lo que recuerda la memoria y de lo que vos le digas. Después, cada gate de consentimiento te vuelve a mostrar el resultado reconstruido antes de que pase nada de lo que ese gate protege. Un plan que aprobaste la semana pasada se reconstruye y se vuelve a aprobar. Una aprobación vieja nunca se arrastra.
+
+## Memoria: el conocimiento clave del proyecto
+
+La memoria guarda el conocimiento **clave** del proyecto entre sesiones, y nada más. Guarda lo que una sesión posterior necesita y no puede sacar del código, de git ni de `.asdt/config.yaml`:
+
+- una decisión que no es obvia desde el código, con su motivo;
+- una conclusión a la que llegaste con un especialista en un debate;
+- una lección: qué falló y por qué;
+- una convención o un matiz que vos declarás sobre el proyecto;
+- el resultado de una auditoría o una revisión.
+
+**Nunca** guarda resúmenes, planes, resultados de pasos, nada que el scratchpad ya tenga completo, ni nada que muestre el diff. Tampoco guarda secretos, tokens ni credenciales: el orquestador se niega en una línea y te dice dónde corresponde guardarlo. Cuando el trabajo se puede terminar con tu pedido y `git diff`, no se recuerda nada.
+
+### Cuándo recuerda y cuándo consulta
+
+- **Consulta una vez al empezar.** Antes del primer paso de un especialista, el orquestador hace una consulta (recall) con unas pocas palabras de tu pedido. Le pasa cada nota relevante a los pasos a los que les concierne, como un `PROJECT NOTE` aparte. Una nota es un valor por defecto que el paso sigue salvo que el pedido o el código den un motivo para no hacerlo. Un paso que va en contra de una nota marca el conflicto, para que vos digas cuál vale.
+- **Recuerda cuando se lo pedís.** "Acordate de que…", "para el futuro:", o una convención que soltás al pasar se recuerda en el momento y se confirma en una línea.
+- **Recuerda cuando un debate cierra algo clave**, reemplazando la nota anterior.
+- **Recuerda al final de una corrida**: el conocimiento clave de esa corrida, una nota por tema. El reporte enumera en una línea lo que se recordó, y no dice nada cuando no se recordó nada.
+- **"Olvidate de X"** se recuerda como una nota que retira X.
+
+### Cómo es una nota
+
+Cada nota es autocontenida, se entiende en frío aunque nunca hayas visto la sesión, y se archiva bajo un tema corto:
+
+```
+session-storage (decision): Sessions live server-side in Redis, not in JWTs, so logout revokes access immediately.
+Source: architect on add-auth, 2026-05-04.
+```
 
 <ArtifactAnatomyCard lang="es" />
 
-Cuando un especialista necesita un artefacto previo, hace un memory **search** por la clave del artefacto (la etiqueta exacta con la que se guardó y con la que se lo vuelve a encontrar) — con Engram, `mem_search`, donde la clave viaja como `query` (se guardó como `topic_key`). La búsqueda puede traer resultados parecidos, así que el especialista se queda con el que tiene la clave exacta — Engram la muestra como el `title` del resultado, la clave sin su `{project}/` inicial — y luego hace un memory **get** con el id de ese resultado para traer el contenido completo (`mem_get_observation` con Engram). Decide la clave exacta, nunca el ranking, y no se escanea nada más allá de los registros declarados.
+Una nota que corrige otra anterior reusa su tema y agrega `Supersedes: {la conclusión anterior}`. Cuando una consulta devuelve dos notas sobre el mismo tema, gana la de fecha `Source` más reciente.
 
-## Continuidad entre sesiones
+## Memory providers
 
-Retomar un pipeline después de cerrar una sesión es igual que continuarlo en medio de una:
+Ningún prompt de ASDT nombra un memory provider. Los prompts hablan exactamente dos verbos, definidos una sola vez en el protocolo compartido:
+
+- **remember** `(subject, note)`: guarda una nota bajo el alcance del proyecto y un tema corto en kebab-case. Una nota más nueva sobre un tema reemplaza a la anterior.
+- **recall** `(query)`: devuelve las notas relevantes para la consulta, por significado o por texto. Los resultados pueden ser imprecisos, así que el orquestador los lee y juzga.
+
+Al instalar, el instalador **vincula** esos verbos al provider que elegiste. Escribe el nombre del provider, su valor de `memory.provider` y las llamadas exactas detrás de cada verbo en los tres archivos del orquestador que llegan a la memoria: el protocolo compartido (y por lo tanto cada especialista), `/asdt-init` y el router `/asdt`. Los sub-agentes `asdt-analyst` y `asdt-builder` nunca ven el vínculo: cada vez que el orquestador pone un archivo compartido (el protocolo, el executor header, una host skill) en el prompt de un sub-agente, primero le quita todas las regiones del vínculo. Un valor del vínculo que un paso necesita le llega por su input (el paso `write` de `/asdt-init` recibe el nombre del provider en las respuestas de `clarify`). Los sub-agentes tampoco reciben herramientas de memoria: en Claude Code su allowlist de herramientas no incluye ninguna, y en OpenCode, que por defecto les pasa las herramientas MCP a los sub-agentes, su bloque de permisos deniega las herramientas de memoria de cada provider conocido (ver [Asistentes de IA](/asdt/es/docs/ai-assistants#agentes-ejecutores-en-ambos)). Si tu provider además inyecta su propio protocolo de memoria, ASDT llama a sus herramientas, pero las reglas de memoria de ASDT deciden qué se guarda cuando los dos no coinciden. Soportar otro provider es un cambio solo en el instalador (ver [Desarrollo](/asdt/es/docs/development#agregar-un-memory-provider)).
+
+### Engram, el provider actual
+
+[Engram](https://github.com/Gentleman-Programming/engram) es un servidor MCP (Model Context Protocol) que les da a los asistentes de IA memoria persistente y con alcance por proyecto. Es el provider que ASDT trae hoy. Con Engram:
+
+- **remember** es `mem_save`, bajo la clave de tema `{project}/notes/{subject}`. Guardar sobre una clave existente reemplaza esa nota, y así una nota más nueva reemplaza a la anterior.
+- **recall** es `mem_search` con tu consulta, y después `mem_get_observation` por cada resultado cuya vista previa sea relevante.
+
+Seguí la [guía de instalación de Engram](https://github.com/Gentleman-Programming/engram) para instalar el servidor, y conectalo en la configuración MCP de tu asistente. Claude Code y OpenCode tienen cada uno su propia configuración MCP, pero los dos se conectan al mismo servidor Engram, así que una nota recordada en uno se recupera en el otro.
+
+### Sin memoria
+
+La memoria es opcional, pero recomendada. Si instalaste con **Sin memoria**, si el provider no está conectado, o si `memory.provider` en `.asdt/config.yaml` nombra un provider distinto al de tu instalación, ASDT igual funciona:
+
+- Cada especialista arranca con un aviso de una línea: la memoria no está conectada, así que esta sesión trabaja desde su scratchpad y nada pasa a la siguiente; conectar un memory provider conserva el conocimiento clave del proyecto entre sesiones.
+- Dentro de la sesión, todo fluye por el scratchpad como siempre. No se consulta ni se recuerda nada.
+- En una sesión posterior, el orquestador te pide que repitas el contexto que habría aportado una consulta a la memoria.
+- `/asdt-init` igual detecta tu stack y escribe la configuración. Solo se saltea sus preguntas opcionales de notas. En una instalación **Sin memoria** no escribe ningún bloque `memory` (deja como está el que exista); si no, escribe el provider al que está vinculada tu instalación, reemplazando un `memory.provider` que no coincida.
+
+Lo que perdés es continuidad: las decisiones, las conclusiones de un debate, las convenciones y las lecciones se quedan en la sesión que las produjo, y la próxima vez las tenés que repetir. Para conectar un provider más adelante, configuralo y volvé a ejecutar `asdt-tui`, eligiéndolo en el paso de memoria. La instalación vuelve a vincular cada skill a él; nada más cambia, y la sesión siguiente ya recuerda y consulta.
+
+## Retomar otro día
 
 ```
-/asdt-developer Implementar basándose en el ADR del Arquitecto
+/asdt-developer "implement the plan we approved"
 ```
 
-El Developer busca el hand-off del Arquitecto en la base de conocimiento por clave. Si lo encuentra, procede normalmente. Si no, anota el input faltante y continúa con el contexto disponible.
+Si el scratchpad todavía tiene el plan del Developer, la corrida va directo al gate de aprobación y te vuelve a mostrar ese plan. Si el scratchpad ya no está (una sesión nueva, por ejemplo), el Developer reconstruye el plan a partir de git, de las notas recordadas y de tus palabras. Te pregunta qué especialistas dieron forma al plan, ofreciéndote volver a correrlos primero, y te pide que lo repitas si hace falta. Después el gate te muestra el plan reconstruido para que lo apruebes. "Verificá lo que construiste" funciona igual: git dice qué se construyó, y los chequeos se vuelven a correr, nunca se recuerdan.
 
-Lo mismo vale para el propio plan del Developer. El plan se guarda bajo la clave del Developer antes de escribir nada, así que una sesión posterior puede retomarlo donde quedó:
+## Lo que la memoria no es
 
-```
-/asdt-developer "implementá el plan que aprobamos"
-```
+La memoria no es un sistema de archivos, y el scratchpad tampoco. Cuando el Developer escribe código, escribe archivos reales en tu repositorio (solo los que aprobaste) y git los registra. Su resumen enumera qué archivos cambiaron y por qué. Cuando no tiene archivos para escribir (un plan sin destinos declarados), el código vuelve como fragmentos dentro de su resumen.
 
-Encuentra el spec guardado y va directo a la compuerta de aprobación — o, si el plan ya se construyó pero nunca se chequeó, directo a la verificación. Una vez construido, la misma clave guarda qué se escribió y cómo salió la verificación.
-
-Los límites de sesión no importan. El output del Arquitecto del lunes es tan legible para el Developer del jueves como si hubieran corrido uno tras el otro.
-
-## Scope por proyecto
-
-Cada clave bajo la que guarda un especialista — mediante el verbo memory **save**, `mem_save` con Engram — empieza con el nombre del proyecto (`{project}/…`). ASDT deriva el nombre del proyecto de `.asdt/config.yaml` o del nombre del directorio. Los artefactos son buscables dentro del scope de un proyecto — correr ASDT en dos proyectos distintos no mezcla su memoria.
-
-## Qué no es Engram
-
-Engram no es un sistema de archivos. Los artefactos son documentos, no archivos de código. Cuando el Developer escribe código, escribe archivos reales en tu repositorio — solo los que aprobaste — y su hand-off registra qué archivos cambiaron y por qué. Cuando no tiene archivos que escribir (un plan sin destinos declarados), el código vuelve como snippets dentro del documento de Engram — especificaciones de qué escribir, no archivos en disco.
-
-Esta separación es intencional. Los archivos de código tienen historial de git. Los artefactos tienen la base de conocimiento. Cada uno vive donde corresponde.
+La separación es intencional. El código tiene el historial de git. Los resúmenes de trabajo viven en el scratchpad de la sesión. El conocimiento clave vive en la memoria. Cada cosa vive donde corresponde.

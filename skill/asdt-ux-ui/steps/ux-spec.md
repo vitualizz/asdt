@@ -3,25 +3,25 @@
 ## Purpose
 Turn a requirement into flows a developer can build on the project's design surface: what the
 user does, on which screen, which existing components carry it, and what accessibility each one
-owes. `ui-design` designs the UI from this payload; this step designs no visuals.
+owes. `ui-design` designs the UI from this return; this step designs no visuals.
 
 ## Inputs
-- `{project}/{change}/pm/handoff` — OPTIONAL. The requirement, its acceptance criteria and scope
-- Platform summary — injected inline. Extract the `CSS:` line and the `Design surface:` line
+- `### INPUT pm` — OPTIONAL. Product's summary: the requirement, its `Acceptance criteria`, and
+  the scope in `Constraints`
 
-All arrive ALREADY INJECTED — never self-fetch. If `pm/handoff` is UNRESOLVED, work from the
-raw request and note `ASSUMED: no PM hand-off — requirement read from the raw request` in
-`open_items`. Use the `Design surface:` line's bare value (`mobile (default — never asked)` →
-`mobile`); that default marker, or a line that never arrived, means `mobile` plus ONE
-`ASSUMED:` entry saying so.
-A `Design surface: none` never reaches this step: the orchestrator stops first (SKILL.md).
+It arrives as a path to read — never look for anything else. The platform block is in this
+prompt: extract its `CSS:` line and its `Design surface:` line, whose bare value you use
+(`mobile (default — never asked)` → `mobile`). A `Design surface: none` never reaches this
+step: the orchestrator stops first (SKILL.md).
+
+**DEGRADATION**: `pm` UNRESOLVED → work from the raw request and record `ASSUMED: no PM summary — requirement read from the raw request` in `Open items`.
+**DEGRADATION**: `Design surface:` default marker, or no such line → design for `mobile` and record ONE `ASSUMED:` entry saying so.
 
 ## Processing
 
 1. **No UI — the explicit no.** When the change touches no user-facing screen — a background
-   job, an API-only change — return `flows: []`, `components: []`, `a11y_requirements: []`, and
-   the one `decisions` line `Build no UI for this change (no user-facing step)`, and skip steps
-   2–7.
+   job, an API-only change — return only the heading, the one-sentence what, and the one
+   `Decisions` line `Build no UI for this change (no user-facing step)`, and skip steps 2–7.
 
 2. **Design system — judge it; `ui-design` builds on your verdict.** The project HAS one when it
    already defines its own visual vocabulary: token or theme files (CSS custom properties, a
@@ -59,47 +59,56 @@ A `Design surface: none` never reaches this step: the orchestrator stops first (
    the focus behavior, the keyboard interaction, the labelling, and the contrast pair each
    component owes — a project token pair, or, without a design system, the role pair it sits on
    (`text on surface`), which `ui-design` resolves to values. A requirement you cannot verify
-   from those values goes to `open_items` as advisory — never asserted as a pass.
+   from those values goes to `Open items` as advisory — never asserted as a pass.
 
 No self-critique section. Judging your own design without a user in front of it produces
 confident prose and no signal.
 
 ## Output
-Produces: `ux-flows` — retained in the orchestrator's context and injected into `ui-design`,
-NOT persisted.
+Return this summary (`asdt-core/protocol.md` §6):
 
-```yaml
-payload:
-  what: ""                    # the experience this change delivers, one sentence
-  design_system:
-    present: true             # false on a greenfield project (step 2)
-    evidence: []              # token/theme files and the component directory; empty when absent
-  brief:
-    actor: ""
-    problem: ""
-    success: ""
-    design_intent: ""
-  surface:
-    primary: ""               # the Design surface line's bare value, never its marker
-    adaptation: ""            # one line: what changes on the other surfaces
-  entry_point: ""             # full path from the app's front door
-  flows:
-    - name: ""
-      steps:                  # numbered, in order
-        - step: ""            # what the user does or sees
-          screen: ""          # the route, view, dialog, or sheet it happens on
-          branches: []        # decision points and what happens on each
-          copy: ""            # the exact wording, when it carries the interaction
-  components:
-    - flow_step: ""
-      component: ""           # the EXISTING component, by its real name; the gap's name when a gap
-      gap: ""                 # "" when it exists; its role when it does not
-  a11y_requirements:
-    - component: ""
-      focus: ""
-      keyboard: ""
-      labelling: ""
-      contrast: ""            # the token pair, or the role pair to resolve
-  decisions: []               # component gaps and IA calls
-  open_items: []              # ASSUMED: prefix for anything unverified
+```markdown
+# UX/UI: {change}
+
+{The experience this change delivers, in one sentence.}
+
+## Decisions
+- {Component gap or IA call}
+
+## Design system
+Present: {yes | no}. Evidence: `{token or theme file}`, `{component directory}` — or none.
+
+## Brief
+- Actor: {who}
+- Problem: {what they have}
+- Success: {what success looks like for them}
+- Intent: {the one quality this should feel like}
+
+## Surface
+Primary: {the Design surface line's bare value}. Other surfaces: {one line on what changes}.
+
+## Entry point
+`{Front door} → {…} → {screen}`
+
+## Flows
+### {Flow name}
+1. {What the user does or sees} — screen: `{route, view, dialog, or sheet}`
+   - Branch: {condition} → {what happens}
+   - Copy: "{exact wording, when it carries the interaction}"
+
+## Components
+| Flow step | Component | Gap |
+|---|---|---|
+| {flow} {n} | `{existing component, by its real name}` | — |
+| {flow} {n} | `{gap name, in the project's convention}` | {its role} |
+
+## Accessibility
+| Component | Focus | Keyboard | Labelling | Contrast |
+|---|---|---|---|---|
+| `{name}` | {behavior} | {interaction} | {label} | {token pair, or role pair to resolve} |
+
+## Open items
+- ASSUMED: {anything unverified} — {what would confirm or refute it}
 ```
+
+Name each screen the same way every time it recurs: `ui-design` designs one screen per name.

@@ -1,6 +1,6 @@
 # TEMPLATE — Specialist Authoring Contract
 
-How to add or normalize a specialist. Repo-only guidance — `skill/embedded.go` bundles `SKILL.md` and `asdt-*` only, so nothing at this level ships to a user project. The shape is deliberately small: one specialist, a few steps, ONE persisted hand-off. If a design needs a consolidation step, a self-review step, or a second output key, the design is wrong — go back and cut it.
+How to add or normalize a specialist. Repo-only guidance — `skill/embedded.go` bundles `SKILL.md` and `asdt-*` only, so nothing at this level ships to a user project. The shape is deliberately small: one specialist, a few steps, ONE role summary. If a design needs a consolidation step, a self-review step, or a second summary, the design is wrong — go back and cut it.
 
 ## 1. Directory layout
 
@@ -43,24 +43,30 @@ metadata:
 - `## Role` — two or three sentences: what it does, and what it explicitly does not.
 - `## Orchestration Plan` — for a single-step specialist, one sentence naming the step and what depth changes; for a multi-step one, a table mapping what the request asks for to the chain that serves it. Then the pointer: `Step identity, model, inputs, and outputs: workflow.yaml.` Never restate a step's file, model, inputs, or outputs here — that duplication is what `workflow.yaml` exists to prevent.
 - One `## {step} — …` section per `inline` step that has no prompt file, and only for those — that section IS the step's contract, so it says when the step runs, what it shows or asks, and what happens on every answer, including when no human can answer.
-- `## Final Output` — the one key this specialist persists, and who consumes it.
+- `## Final Output` — what this specialist's role summary carries, which step writes it, and who consumes it.
 - `## Invariants` — a handful of lines: write scope, prefix, degradation, and whatever is load-bearing for THIS specialist.
 
 ## 3. workflow.yaml
 
 ```yaml
-specialist: {name}
+specialist: {name}               # the role id: names the summary file and own-step inputs
 routable: true
 steps:
+  - name: knowledge-recall       # inline prelude: names the reference it follows
+    skill: ../asdt-core/references/knowledge-recall.md
+    description: One line.
+    execution: inline
+
   - name: {step}
     skill: steps/{step}.md
-    description: One line — what this step produces.
+    description: One line — what this step returns.
     execution: subagent          # or: inline
     model: haiku | sonnet | opus
     agent: analyst | builder     # builder ONLY when the step writes host files
-    inputs:
-      - "{project}/{change}/{role}/handoff"  # optional — say so, and degrade
-    output_topic_key: "{project}/{change}/{name}/handoff"
+    inputs:                      # optional — subagent steps only
+      - pm # optional — what to extract from Product's summary
+      - {name}/{earlier-step} # this specialist's own step payload
+    output: summary              # optional — this step's return becomes the role summary
     reference_skills:
       - ../asdt-core/references/{x}.md
       - ../asdt-core/protocol.md
@@ -68,19 +74,25 @@ steps:
       - {kebab-case-skill-name}
 ```
 
-`host_skills:` names skills the host assistant MAY have installed — a craft ASDT does not ship, such as `frontend-design`. They are never paths and never required: the orchestrator injects each one it finds and skips the rest silently (`asdt-core/protocol.md` §4). Declare one only on a `subagent` step whose step file says when it applies and what outranks it — a host skill sharpens execution inside the step's contract, never replaces it.
+**`inputs:`** — scratchpad names, never paths or memory keys. The orchestrator resolves each one to a file (`asdt-core/protocol.md` §1) and injects it as `### INPUT {name}: {path}`, or `UNRESOLVED` (§5). An entry is one of:
 
-A step whose payload feeds the NEXT step of the same run and matters to no one after it declares `output: context` instead of `output_topic_key`: it persists nothing, and the orchestrator retains the payload and injects it into the next step. A step whose payload must ALSO outlive the run — a plan a later session resumes — keeps `output_topic_key` on the role's one key and is still injected from context within the run. Both rules, and the staged record they produce, live in `asdt-core/protocol.md` §1; a second key per stage is never the answer.
+- `{role}` — another specialist's role summary for this change, `{scratchpad}/asdt/{change}/{role}.md`, where `{role}` is that specialist's `specialist:` id. Every cross-specialist input is optional: mark it with a trailing `# optional — {what to extract}` comment, and have the step file degrade when it is missing. `{role}` may also be this specialist's own id, meaning its current summary (a plan being revised).
+- `{name}/{step}` — the return of an earlier step of THIS specialist, `{scratchpad}/asdt/{change}/{name}/{step}.md`. Listing it is what makes the orchestrator write that file. The step may be an inline gate that produces a payload (the Developer's `verify` failures). Mark it `# optional` when its producer may not have run. Never name another specialist's step: read its role summary.
+- Never `feedback` or `previous`. Those are reserved for the orchestrator, which injects them whenever the user's correction makes it re-launch a step (§5).
 
-An `inline` step with no prompt file — a gate where the orchestrator pauses for the human — declares only `name`, `description`, and `execution: inline`, plus `output_topic_key` when the orchestrator itself persists the step's outcome (a gate that records a result on the role's one key). Its contract is a section of SKILL.md (§2).
+**`output: summary`** — the step's return is written as the role summary, `{scratchpad}/asdt/{change}/{name}.md`. It is the only value. A later `output: summary` step of the same run replaces the file, which is how a staged role (plan, then build) keeps ONE summary with a `Stage`. An inline gate declares it when the orchestrator itself rewrites the summary (the Developer's `verify`). A step without it hands its return only to the steps that list it, and to the orchestrator's narration.
+
+`host_skills:` names skills the host assistant MAY have installed — a craft ASDT does not ship, such as `frontend-design`. They are never paths and never required: the orchestrator injects each one it finds and skips the rest silently (`asdt-core/protocol.md` §5). Declare one only on a `subagent` step whose step file says when it applies and what outranks it — a host skill sharpens execution inside the step's contract, never replaces it.
+
+An `inline` step with no prompt file — a gate where the orchestrator pauses for the human — declares only `name`, `description`, and `execution: inline`, plus `output: summary` when it rewrites the role summary. No inline step declares `inputs:`. Its contract, including any payload it produces for a later step, is a section of SKILL.md (§2).
 
 **Ceiling: four sub-agent steps.** A specialist declares AT MOST four `execution: subagent` steps in its `workflow.yaml`. Inline steps — the orchestrator's own preludes and gates — do not count: they are no sub-agent of their own, and a gate re-launches only steps already declared. Needing a fifth sub-agent step means the design is wrong — merge two, or split the specialist.
 
-**Every specialist works standalone.** No specialist may require another's hand-off: every cross-specialist input is optional and degrades. Whether a run delivers a change or studies what already exists is judged from the invocation per `asdt-core/protocol.md` §1, never from a flag or a mode.
+**Every specialist works standalone.** No specialist may require another's summary: every cross-specialist input is optional and degrades. Whether a run delivers a change or studies what already exists is judged from the invocation per `asdt-core/protocol.md` §0, never from a flag or a mode.
 
-**Permanent project knowledge lives in `human_nuance`** inside `.asdt/knowledge/knowledge.yaml`, and only ever enters with the user's consent. No specialist writes it through a sub-agent, and none invents a second store for conventions.
+**Durable project knowledge lives in memory**, remembered by the orchestrator alone (`asdt-core/protocol.md` §2). No step reaches memory, and no specialist invents a second store for conventions.
 
-**The study step is called `review`** and persists under `{project}/study/{topic}/{role}`. A specialist whose normal work ALREADY examines what exists — an audit, a discovery — does not duplicate its chain into a review; it runs the same steps under the study key.
+**The study step is called `review`** and declares `output: summary`; a study run writes under `study-{topic}` instead of `{change}`. A specialist whose normal work ALREADY examines what exists — an audit, a discovery — does not duplicate its chain into a review; it runs the same steps under the study name.
 
 Paths in `skill:` and `reference_skills:` resolve from the specialist's own directory.
 
@@ -91,20 +103,22 @@ Four sections. Nothing else.
 ```markdown
 # {Step} — {Specialist} Specialist
 ## Purpose        One or two sentences.
-## Inputs         One bullet per input, marking the optional ones OPTIONAL, and what to
-                  extract from each. Then: everything arrives ALREADY INJECTED — never
-                  self-fetch. Then one DEGRADATION line per optional input.
+## Inputs         One bullet per `### INPUT {name}` line, marking the optional ones
+                  OPTIONAL, and what to extract from that file. Then: each arrives as a
+                  path to read — never look for anything else. Then one DEGRADATION line
+                  per optional input.
 ## Processing     Numbered steps. Reasoning and judgment, not bureaucracy.
-## Output         Produces `{role}/handoff`, with the canonical schema from protocol.md.
+## Output         "Return this summary:" — the protocol §6 schema, naming the sections
+                  this step fills and any role-specific section it adds.
 ```
 
-Reach memory only through the verbs of `asdt-core/protocol.md` §0 — "persist via memory **save** under this step's `output_topic_key`" — and never write a provider's name or tool names into a prompt: the installer binds the verbs to the selected provider, and `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails on a hardcoded one.
+A step never reaches memory, never writes a file (the two exceptions are `asdt-core/protocol.md` §4), and never asks the user — it hardens every gap into an `ASSUMED:` entry. Never write a memory provider's name or tool names into any prompt: the installer binds the verbs for the orchestrator, and `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails on a hardcoded one. A step never reads the binding either: the orchestrator strips it from every text it injects (protocol §5), so a value a step needs from it arrives in the step's payload.
 
-No numeric context budgets. No per-input degradation paragraph — one line each. No summary envelope: the return value IS the payload. A step file NEVER contains the EXECUTOR block; those guardrails come from the agent definition (`agent: analyst` / `agent: builder` bake in `asdt-core/executor-header.md`) or from the orchestrator prepending that header.
+No numeric context budgets. No per-input degradation paragraph — one line each. No envelope: the return value IS the summary. A step file NEVER contains the EXECUTOR block; those guardrails come from the agent definition (`agent: analyst` / `agent: builder` bake in `asdt-core/executor-header.md`) or from the orchestrator prepending that header.
 
-## 5. Artifact contract
+## 5. Summary contract
 
-One key per role per change: `{project}/{change}/{role}/handoff`. The payload schema is defined once, in `asdt-core/protocol.md` §5 — reference it, never restate it. A role omits keys that do not apply, and never adds keys about the process itself.
+One role summary per role per change: `{scratchpad}/asdt/{change}/{role}.md`. Its schema is defined once, in `asdt-core/protocol.md` §6 — reference it, never restate it. A role omits sections that do not apply, and never adds sections about the process itself.
 
 ## 6. Registering a new specialist
 

@@ -33,7 +33,7 @@ Comandos Slash — comandos que escribís directamente en tu asistente de IA, pr
 
 ### `/asdt-init`
 
-Inicializa ASDT en el proyecto actual. Detecta tu stack, pregunta para qué superficie diseña primero el proyecto (mobile, tablet, desktop o none) y crea `.asdt/config.yaml` y `.asdt/knowledge/knowledge.yaml`. Ejecutalo dentro de tu asistente, en la carpeta de tu proyecto.
+Inicializa ASDT en el proyecto actual. Detecta tu stack, pregunta para qué superficie diseña primero el proyecto (mobile, tablet, desktop o none) y escribe todo lo que detectó en `.asdt/config.yaml`. En un proyecto que ya tiene configuración, ofrece recalibrarla y nunca pisa un valor que fijaste a mano. Ejecutalo dentro de tu asistente, en la carpeta de tu proyecto.
 
 ```
 /asdt-init
@@ -41,13 +41,13 @@ Inicializa ASDT en el proyecto actual. Detecta tu stack, pregunta para qué supe
 
 ### `/asdt`
 
-Preguntale al equipo. Describí qué querés construir y te recomienda qué especialistas involucrar y en qué orden, esperando tu confirmación antes de listar los comandos.
+Preguntale al equipo. Describí qué querés construir y te recomienda qué especialistas involucrar y en qué orden, como comandos que podrías correr vos. Si le decís que sí, corre esa cadena de a un especialista por vez y hace una pausa después de cada uno, para que puedas debatir el resultado antes de que arranque el siguiente.
 
 ```
 /asdt "agregar verificación de email al flujo de registro"
 ```
 
-También responde preguntas sobre el estado del trabajo, directo desde lo que el equipo ya resolvió — sin correr ningún especialista:
+También responde preguntas sobre el estado del trabajo, a partir del scratchpad de la sesión, git y lo que recuerda la memoria — sin correr ningún especialista:
 
 ```
 /asdt "¿qué decidimos sobre el hashing de contraseñas?"

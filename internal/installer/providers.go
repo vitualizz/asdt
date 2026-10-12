@@ -13,24 +13,24 @@ type ProviderID = string
 const ProviderEngram ProviderID = "engram"
 
 // MemoryVerb names one operation of the provider-neutral memory interface the
-// prompts speak (skill/asdt-core/protocol.md §0). Prompts never name a
-// provider's tools; the installer binds each verb to the selected provider's
-// tool at install time.
+// orchestrator-facing prompts speak (skill/asdt-core/protocol.md §2). Prompts
+// never name a provider's tools; the installer binds each verb to the selected
+// provider's tools at install time.
 type MemoryVerb string
 
-// The memory interface. save upserts a record by stable key; search finds
-// records by key prefix or free text; get returns one full record by id.
+// The memory interface. remember stores one concise, self-contained note with
+// its project scope and a short subject (a newer note on a subject supersedes
+// the older); recall retrieves the notes relevant to a query, by meaning or by
+// text. Correctness never depends on exact-key retrieval.
 const (
-	MemorySave   MemoryVerb = "save"
-	MemorySearch MemoryVerb = "search"
-	MemoryGet    MemoryVerb = "get"
+	MemoryRemember MemoryVerb = "remember"
+	MemoryRecall   MemoryVerb = "recall"
 )
 
-// memoryVerbs is the canonical verb order: the order the binding lists them and
-// the order each namespace's tools are granted to the executor agents.
-var memoryVerbs = []MemoryVerb{MemorySave, MemorySearch, MemoryGet}
+// memoryVerbs is the canonical verb order: the order the binding lists them.
+var memoryVerbs = []MemoryVerb{MemoryRemember, MemoryRecall}
 
-// MemoryTool is one provider tool bound to a memory verb.
+// MemoryTool is one provider tool call in a verb's recipe.
 type MemoryTool struct {
 	Name  string // bare tool name, without any host prefix (e.g. "mem_save")
 	Usage string // how to call it for this verb, in prompt prose; spliced verbatim
@@ -39,19 +39,26 @@ type MemoryTool struct {
 // ProviderDescriptor describes a known memory provider: everything the
 // installer needs to bind the prompts' memory interface to it. Adding a
 // provider is a new entry in Providers — no prompt edits.
+//
+// The zero ProviderDescriptor is the "no memory" selection: installing with it
+// binds no provider (see IsNone). A memory provider is optional; ASDT works
+// without one (protocol.md §2, "Memory unavailable").
 type ProviderDescriptor struct {
 	ID          ProviderID
 	Name        string
 	Description string
 	// ConfigValue is what /asdt-init writes to `memory.provider` in
-	// .asdt/config.yaml, and what every specialist's Prerequisites check reads.
+	// .asdt/config.yaml. protocol.md §2 ("Memory unavailable") treats memory as
+	// unavailable when that config value names a different provider. It is
+	// never MemoryNone: that value means no provider is bound.
 	ConfigValue string
-	// Tools binds every verb in memoryVerbs to the provider's tool.
-	Tools map[MemoryVerb]MemoryTool
+	// Tools binds every verb in memoryVerbs to its recipe: one or more tool
+	// calls, made in order (recall may need a search, then a full read).
+	Tools map[MemoryVerb][]MemoryTool
 	// ClaudeToolPrefixes are the MCP namespaces Claude Code may expose the
-	// tools under (plugin install and plain MCP install). The executor agents'
-	// Claude Code allowlist is every prefix × every verb's tool, so at least
-	// one is required: none would install agents that cannot reach memory.
+	// tools under (plugin install and plain MCP install). The binding names
+	// them so the orchestrator matches its own tool list; optional — a
+	// provider without one gets no prefix sentence.
 	ClaudeToolPrefixes []string
 	// Detect is how the setup TUI's environment check looks for the provider.
 	Detect ProviderDetect
@@ -75,18 +82,20 @@ var Providers = []ProviderDescriptor{
 		Name:        "Engram",
 		Description: "Persistent cross-session memory via the Engram MCP server.",
 		ConfigValue: "engram",
-		Tools: map[MemoryVerb]MemoryTool{
-			MemorySave: {
+		Tools: map[MemoryVerb][]MemoryTool{
+			MemoryRemember: {{
 				Name:  "mem_save",
-				Usage: "pass the key as `topic_key`, the key without its leading `{project}/` as `title` (a hand-off's title is `{change}/{role}/handoff`), `type: \"decision\"`, and the record as `content`",
-			},
-			MemorySearch: {
-				Name:  "mem_search",
-				Usage: "pass the key prefix or the free text as `query`. Each match shows the record's key as its `title`, without the leading `{project}/` (key `{project}/{change}/developer/handoff` → title `{change}/developer/handoff`): match keys and prefixes against `title` with that segment removed",
-			},
-			MemoryGet: {
-				Name:  "mem_get_observation",
-				Usage: "pass the id a search result carries as `id`",
+				Usage: "pass `project: {project}`, `topic_key: {project}/notes/{subject}` (saving to an existing `topic_key` replaces that note, which is how a newer note supersedes the older), `title: {subject}`, `type` (`decision` for a decision, `pattern` for a convention, `learning` for a lesson, `discovery` for a finding), and the note as `content`",
+			}},
+			MemoryRecall: {
+				{
+					Name:  "mem_search",
+					Usage: "pass the query as `query` and `project: {project}`; each match is a truncated preview with its `id` — a preview is never the note",
+				},
+				{
+					Name:  "mem_get_observation",
+					Usage: "pass a match's `id` as `id` to read the full note, for each match whose preview bears on the query",
+				},
 			},
 		},
 		ClaudeToolPrefixes: []string{"mcp__plugin_engram_engram__", "mcp__engram__"},
@@ -97,50 +106,67 @@ var Providers = []ProviderDescriptor{
 	},
 }
 
+// MemoryNone is the value that stands for "no memory provider": it is what
+// /asdt-init passes as `memory_provider` when the binding names none (and then
+// writes no `memory.provider` key), and what install metadata records.
+const MemoryNone = "none"
+
+// IsNone reports whether p is the "no memory" selection: the zero
+// ProviderDescriptor. A descriptor with any identity or tool set is a provider,
+// and must Validate.
+func (p ProviderDescriptor) IsNone() bool {
+	return p.ID == "" && p.Name == "" && p.ConfigValue == "" && len(p.Tools) == 0
+}
+
+// MetaValue is what install metadata records for p: its ID, or MemoryNone.
+func (p ProviderDescriptor) MetaValue() string {
+	if p.IsNone() {
+		return MemoryNone
+	}
+	return p.ID
+}
+
+// noProviderBinding is the binding region body of a "no memory" install. Its
+// opening phrase is what protocol.md §2 ("Memory unavailable") and
+// asdt-init/SKILL.md test for: a binding that names no provider.
+const noProviderBinding = "\n**No memory provider bound.** This install has no memory: nothing is remembered or recalled, even when a memory tool is on your tool list (`asdt-core/protocol.md` §2, \"Memory unavailable\"). Re-running the ASDT installer with a provider selected connects one.\n"
+
 // Memory-binding generated-region markers. They bound the provider binding in
-// every skill file that reaches memory (asdt-core/protocol.md, and through it
-// every routed SKILL.md; asdt-core/executor-header.md; asdt-init/SKILL.md; the
-// root SKILL.md). skill/embedded_test.go keeps a hand-copy of these two
-// literals (package skill cannot import internal/installer) — change both
-// copies together.
+// every orchestrator-facing skill file that reaches memory
+// (asdt-core/protocol.md, and through it every routed SKILL.md;
+// asdt-init/SKILL.md; the root SKILL.md). Sub-agents never reach memory, so
+// asdt-core/executor-header.md carries no region. skill/embedded_test.go keeps
+// a hand-copy of these two literals (package skill cannot import
+// internal/installer) — change both copies together.
 const (
 	memoryBindingBeginMarker = "<!-- ASDT:GENERATED:memory-binding -->"
 	memoryBindingEndMarker   = "<!-- /ASDT:GENERATED:memory-binding -->"
 )
 
-// claudeMemoryTools returns the Claude Code tool names the executor agents are
-// granted for this provider: for each prefix, every verb's tool in
-// memoryVerbs order. Derived from Tools, so the grant can never drift from the
-// binding the prompts read.
-func (p ProviderDescriptor) claudeMemoryTools() []string {
-	tools := make([]string, 0, len(p.ClaudeToolPrefixes)*len(memoryVerbs))
-	for _, prefix := range p.ClaudeToolPrefixes {
-		for _, verb := range memoryVerbs {
-			tools = append(tools, prefix+p.Tools[verb].Name)
-		}
-	}
-	return tools
-}
-
-// Validate reports the first gap that would install a broken binding: no
-// Name or ConfigValue, a verb with no tool Name or Usage, no Claude Code
-// prefix (the executor agents would be granted no memory tool), or a probe
-// Binary with nowhere to point a user who lacks it.
+// Validate reports the first gap that would install a broken binding: no ID,
+// Name or ConfigValue, a ConfigValue of MemoryNone, a verb with no tool or a
+// tool with no Name or Usage, an empty Claude Code prefix, or a probe Binary
+// with nowhere to point a user who lacks it.
 func (p ProviderDescriptor) Validate() error {
-	if p.Name == "" || p.ConfigValue == "" {
-		return fmt.Errorf("memory provider %q has no Name or ConfigValue", p.ID)
+	if p.ID == "" || p.Name == "" || p.ConfigValue == "" {
+		return fmt.Errorf("memory provider %q has no ID, Name or ConfigValue", p.ID)
+	}
+	if p.ConfigValue == MemoryNone {
+		return fmt.Errorf("memory provider %q has ConfigValue %q, which means no provider", p.ID, MemoryNone)
 	}
 	for _, verb := range memoryVerbs {
-		tool, ok := p.Tools[verb]
-		if !ok || tool.Name == "" {
+		tools := p.Tools[verb]
+		if len(tools) == 0 {
 			return fmt.Errorf("memory provider %q binds no tool to verb %q", p.ID, verb)
 		}
-		if tool.Usage == "" {
-			return fmt.Errorf("memory provider %q gives verb %q no Usage", p.ID, verb)
+		for _, tool := range tools {
+			if tool.Name == "" {
+				return fmt.Errorf("memory provider %q binds a tool with no Name to verb %q", p.ID, verb)
+			}
+			if tool.Usage == "" {
+				return fmt.Errorf("memory provider %q gives verb %q tool %q no Usage", p.ID, verb, tool.Name)
+			}
 		}
-	}
-	if len(p.ClaudeToolPrefixes) == 0 {
-		return fmt.Errorf("memory provider %q has no ClaudeToolPrefixes", p.ID)
 	}
 	for _, prefix := range p.ClaudeToolPrefixes {
 		if prefix == "" {
@@ -154,26 +180,35 @@ func (p ProviderDescriptor) Validate() error {
 }
 
 // renderMemoryBinding emits the binding region body for p — the bytes strictly
-// between the memory-binding markers. It fails when p does not Validate: a
-// partial binding would leave a prompt with a verb it cannot call.
+// between the memory-binding markers. The "no memory" selection renders
+// noProviderBinding. Any other p must Validate: a partial binding would leave a
+// prompt with a verb it cannot call.
 func renderMemoryBinding(p ProviderDescriptor) (string, error) {
+	if p.IsNone() {
+		return noProviderBinding, nil
+	}
 	if err := p.Validate(); err != nil {
 		return "", err
 	}
 
 	var b strings.Builder
-	fmt.Fprintf(&b, "\n**Memory provider: %s.** `.asdt/config.yaml` names it as `memory.provider: %s`. Each verb is bound to exactly one tool:\n\n", p.Name, p.ConfigValue)
+	fmt.Fprintf(&b, "\n**Memory provider: %s.** `.asdt/config.yaml` names it as `memory.provider: %s`. Each verb is bound to the tool calls below, made in order:\n\n", p.Name, p.ConfigValue)
 	for _, verb := range memoryVerbs {
-		tool := p.Tools[verb]
-		fmt.Fprintf(&b, "- **%s** → `%s` — %s.\n", verb, tool.Name, tool.Usage)
+		calls := make([]string, len(p.Tools[verb]))
+		for i, tool := range p.Tools[verb] {
+			calls[i] = fmt.Sprintf("`%s` — %s", tool.Name, tool.Usage)
+		}
+		fmt.Fprintf(&b, "- **%s** → %s.\n", verb, strings.Join(calls, "; then "))
 	}
 
-	example := p.Tools[MemorySave].Name
-	exposed := make([]string, len(p.ClaudeToolPrefixes))
-	for i, prefix := range p.ClaudeToolPrefixes {
-		exposed[i] = "`" + prefix + example + "`"
+	if len(p.ClaudeToolPrefixes) > 0 {
+		example := p.Tools[MemoryRemember][0].Name
+		exposed := make([]string, len(p.ClaudeToolPrefixes))
+		for i, prefix := range p.ClaudeToolPrefixes {
+			exposed[i] = "`" + prefix + example + "`"
+		}
+		fmt.Fprintf(&b, "\nA host may prefix these names: Claude Code exposes `%s` as %s, and another host may use a different prefix or none. Match the name after the prefix.\n", example, strings.Join(exposed, " or "))
 	}
-	fmt.Fprintf(&b, "\nA host may prefix these names: Claude Code exposes `%s` as %s, and another host may use a different prefix or none. Match the name after the prefix.\n", example, strings.Join(exposed, " or "))
 	return b.String(), nil
 }
 

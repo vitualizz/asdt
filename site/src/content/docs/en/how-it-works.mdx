@@ -1,6 +1,6 @@
 ---
 title: How It Works
-description: End-to-end flow from feature request to shipped code — how ASDT orchestrates specialists through structured artifacts.
+description: End-to-end flow from feature request to shipped code — how ASDT orchestrates specialists through the summaries they hand on.
 order: 5
 locale: en
 ---
@@ -11,22 +11,21 @@ import AllSpecialistsOverview from '@components/AllSpecialistsOverview.astro'
 
 ## The execution model
 
-ASDT gives you structure without removing control. When you run a specialist, it orchestrates a short, focused sequence of steps — each one receiving only what it needs from the steps before it — and the run ends by saving one hand-off for the rest of the team.
+ASDT gives you structure without removing control. When you run a specialist, your assistant becomes its **orchestrator**: it talks to you, decides, runs the consent gates, and launches a short, focused sequence of steps. Each step does one job and returns a concise Markdown summary. The orchestrator files it, and the run ends with one summary for the rest of the team.
 
-You invoke the specialists. ASDT never runs them automatically. That is intentional: every step where a human confirms a plan is a step where wrong assumptions get caught before they compound.
+You decide what runs. The `/asdt` advisor analyzes your request and proposes which specialists to involve and in what order. On your yes, it runs that chain one specialist at a time and **pauses after each one**, so you can debate the result before the next one starts. Or you run each specialist's command yourself. Nothing runs without your yes, and every pause is a point where wrong assumptions get caught before they compound.
 
-The `/asdt` advisor analyzes your request and suggests which specialists to involve and in what order. You confirm the plan, then run each command yourself.
+## Work flows forward through summaries
 
-## Knowledge flows forward automatically
-
-Every specialist run that produces something for the team saves one hand-off (a question-only Developer run saves none) — a structured document stored in the knowledge base at a stable key, `{project}/{change}/{role}/handoff`. What its steps pass to each other along the way stays inside the run. The next specialist retrieves the hand-off by key. No manual context-passing. No copy-pasting between commands.
+Every specialist run that produces something for the team returns one summary (a question-only Developer run hands none on). The orchestrator writes it to the **session scratchpad**, outside your repository, at `{scratchpad}/asdt/{change}/{role}.md`, and hands the next specialist its path. No manual context-passing. No copy-pasting between commands.
 
 This means:
 
-- **Specialists are decoupled.** The Developer reads the Architect's decision record as a document — not a shared variable, not a file import.
-- **Artifacts survive sessions.** Run PM on Monday, continue with Architect on Thursday. The knowledge base holds the context.
-- **Missing inputs degrade gracefully.** If a hand-off is missing, the next specialist notes it in a running list of gaps called `open_items` (prefixed `ASSUMED:`) and proceeds with whatever is available.
-- **You see the hand-offs happen.** Every specialist's report opens with one line on what it built on — which teammates' work arrived and what was missing — and closes proposing the next specialist as a command you can copy.
+- **Specialists are decoupled.** The Developer reads the Architect's summary as a document, not a shared variable or a file import.
+- **Key knowledge survives sessions; working files don't need to.** The scratchpad belongs to the session. What a later session needs (a non-obvious decision, a conclusion from a debate, a convention, a lesson) is remembered as a short note in memory. When work resumes another day, it is rebuilt from git, those notes, and you, and every gate asks again. See [Scratchpad & Memory](/asdt/docs/memory-and-engram).
+- **Missing inputs degrade gracefully.** If a summary is missing, the next specialist records the gap in its `Open items` (prefixed `ASSUMED:`) and proceeds with whatever is available.
+- **You see the work handed along.** Every specialist's report opens with one line on what it built on (which teammates' summaries arrived and what was missing) and closes proposing the next specialist as a command you can copy.
+- **You can push back.** After each report you can question or change a conclusion. The orchestrator answers from the summary and the code, updates the summary when a conclusion changes, and remembers it when it's key.
 
 ## Specialists judge their own depth
 
@@ -34,14 +33,14 @@ Every specialist judges how deep to go from the request — a quick bugfix gets 
 
 <AllSpecialistsOverview lang="en" />
 
-The main steps run as isolated sub-agents (separate single-task AI runs that don't see each other's reasoning) — they don't share context with each other, which prevents earlier reasoning from leaking into later steps. Each one receives only its declared inputs, does its one job, and hands back. The short `inline` steps — recalling memory, loading the platform summary, and the Developer's approval and verification gates — run in your assistant's own context.
+The main steps run as isolated sub-agents (separate single-task AI runs that don't see each other's reasoning) — they don't share context with each other, which prevents earlier reasoning from leaking into later steps. Each one receives only its declared inputs (as scratchpad paths it reads itself), does its one job, and returns its summary. It never touches memory and writes no file, except the Developer's `implement` (your approved files) and `/asdt-init`'s `write` (`.asdt/config.yaml`). The short `inline` steps — recalling memory, loading the platform summary, and the Developer's approval and verification gates — run in your assistant's own context.
 
 ## The human is always in the loop
 
 ASDT enforces a gate at three points:
 
-1. **After `/asdt`** — the pipeline advisor presents a routing plan and waits for confirmation before telling you which commands to run.
-2. **Between specialists** — you choose when to run the next one. Nothing is automated.
+1. **After `/asdt`** — the advisor presents a routing plan and waits for your yes before running anything.
+2. **Between specialists** — whether `/asdt` is running the chain or you are, nothing moves to the next specialist without your go. `/asdt` pauses after each one for you to debate the result.
 3. **Before the Developer writes or runs anything** — it shows you its spec (scope, acceptance criteria, the exact files) and waits for approve, adjust, or stop before writing a single file. After implementing, it offers the check commands — never one that would rewrite files — and runs them only on your yes.
 
 This isn't a limitation. It's the design. AI-generated architecture decisions benefit from human review before a developer acts on them. QA plans benefit from human review before they define what "done" means. ASDT gives you the structure; you apply the judgment.

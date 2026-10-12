@@ -8,9 +8,9 @@ import (
 )
 
 // pruneStale removes files under the assistant's managed sibling roots that
-// the current install no longer provides, returning the SkillsDir-relative
+// the current install does not provide, returning the SkillsDir-relative
 // paths actually removed. Candidate selection prefers the previous install
-// manifest (prevFiles) when present; legacy installs without a manifest fall
+// manifest (prevFiles) when present; without a recorded manifest it falls
 // back to scanning the managed roots on disk. Every candidate must pass the
 // lexical safety gate (underManagedRoot) and the dotfile guard before
 // removal. Removal is best-effort: failures skip the candidate and never

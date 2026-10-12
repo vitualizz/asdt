@@ -38,18 +38,18 @@ Lenguaje natural, sin flags. Si querés que se tome más tiempo o menos, decilo 
 
 ## Qué produce
 
-Un único hand-off en `{project}/{change}/researcher/handoff`:
+Un único resumen, `researcher`, archivado en el scratchpad de la sesión como `{scratchpad}/asdt/{change}/researcher.md`:
 
-| Campo | Qué lleva |
+| Parte | Qué lleva |
 |---|---|
-| `what` | La dirección recomendada en una frase |
-| `decisions` | La recomendación primero, después cada dirección descartada como `rejected: {dirección} — {porqué}` |
-| `constraints` | Lo que cualquier implementación de esa dirección tiene que respetar |
-| `files_hint` | El código que realmente leyó para juzgar factibilidad |
-| `risks` | `{riesgo, mitigación}` de la dirección recomendada |
-| `open_items` | Veredictos que no pudo anclar en evidencia, con prefijo `ASSUMED:` |
+| primera línea | La dirección recomendada en una frase |
+| `Decisions` | La recomendación primero, después cada dirección descartada como `rejected: {dirección} — {porqué}` |
+| `Constraints` | Lo que cualquier implementación de esa dirección tiene que respetar |
+| `Files hint` | El código que realmente leyó para juzgar factibilidad |
+| `Risks` | `riesgo → mitigación` de la dirección recomendada |
+| `Open items` | Veredictos que no pudo anclar en evidencia, con prefijo `ASSUMED:` |
 
-En `decisions` es donde sobrevive la exploración: no solo qué eligió, sino qué miró y descartó.
+En `Decisions` es donde sobrevive la exploración: no solo qué eligió, sino qué miró y descartó.
 
 Lo consume el **PM**, como entrada opcional: la dirección recomendada le da el punto de partida y las descartadas alimentan su alcance fuera. También lo lee el **Arquitecto** — y cuando se saltea el PM, la dirección enmarca el diseño en lugar del PM, con las direcciones descartadas fuera de alcance.
 

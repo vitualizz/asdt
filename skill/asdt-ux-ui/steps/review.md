@@ -6,12 +6,9 @@ audits **the user's product** — it is not the deleted design-critique, which w
 grading its own output and produced confident prose with no signal.
 
 ## Inputs
-- Platform summary — the project's detected design system and conventions, injected inline
-- The screen, flow, or area named in the request
-
-No declared input from another specialist: this step runs standalone, and anything prior
-about the area was already surfaced by the `knowledge-recall` prelude. Everything arrives
-ALREADY INJECTED — never self-fetch.
+No `### INPUT` line: this step runs standalone, on the screen, flow, or area the request names,
+the codebase, the platform block (detected design system and conventions), and any `### PROJECT
+NOTE` lines. Look for nothing else.
 
 ## Processing
 
@@ -31,7 +28,7 @@ ALREADY INJECTED — never self-fetch.
 3. **Audit accessibility** against `asdt-core/references/accessibility.md`: focus behavior
    and visible indicators, keyboard reachability and no traps, labelling for every control,
    and contrast pairs. A requirement you cannot verify from the code and tokens is an
-   `open_items` entry, never an asserted pass.
+   `Open items` entry, never an asserted pass.
 
 4. **Findings.** At most 7, each with a one-word severity (`high`, `medium`, `low`), the path
    or component that grounds it, and the fix in one line. Plus two or three strengths with
@@ -39,14 +36,24 @@ ALREADY INJECTED — never self-fetch.
    what already works.
 
 ## Output
-Produces: `{project}/study/{topic}/ux-ui`, with `{topic}` derived from the request in short
-kebab-case.
+Return this summary (`asdt-core/protocol.md` §6):
 
-Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
-schema from `asdt-core/protocol.md`:
+```markdown
+# UX/UI: {change}
 
-- `what` — the state of this experience in one sentence
-- `decisions` — the judgments, strongest first, with the strengths among them
-- `risks` — `{risk, mitigation}` per finding, highest severity first
-- `files_hint` — the views and components a reader should open first
-- `open_items` — anything you could not verify from the code and tokens, `ASSUMED:` prefix
+{The state of this experience, in one sentence.}
+
+## Decisions
+- {Judgment, strongest first — strengths among them}
+
+## Files hint
+- `{view or component}` — {why to open it first}
+
+## Risks
+- [{high|medium|low}] {finding} (`{path or component}`) → {fix}
+
+## Open items
+- ASSUMED: {what you could not verify from the code and tokens}
+```
+
+`Risks` holds one line per finding, highest severity first.

@@ -7,7 +7,7 @@ locale: es
 
 # Contribuir
 
-Las contribuciones de mayor impacto son los archivos `SKILL.md` de los specialists y las definiciones de los steps del workflow — no necesitas experiencia en Go. La capa de skills ES el producto. Si puedes describir el rol de un specialist, sus workflow steps y sus contratos de artifacts, puedes shippear un nuevo specialist.
+Las contribuciones de mayor impacto son los archivos `SKILL.md` de los specialists y las definiciones de los steps del workflow — no necesitas experiencia en Go. La capa de skills ES el producto. Si puedes describir el rol de un specialist, sus workflow steps y el resumen que entrega, puedes shippear un nuevo specialist.
 
 ## Agregar un nuevo specialist
 
@@ -56,23 +56,29 @@ Entre el frontmatter y `## Role` van tres bloques textuales de los que depende e
 
 `metadata` (`author` + `version`) es obligatorio en todos los `SKILL.md`. `trigger_phrases` es la única key opcional — una lista de descubribilidad que consume el host.
 
-`shared-skills` está **prohibida**. La key está retirada: ningún loader la resolvió nunca, así que declararla no documenta nada ni carga nada. Ver [Cómo se cargan realmente las shared skills](#cómo-se-cargan-realmente-las-shared-skills) para los tres mecanismos reales.
+`shared-skills` está **prohibida**: ningún loader la resuelve, así que declararla no documenta nada ni carga nada. Ver [Cómo se cargan realmente las shared skills](#cómo-se-cargan-realmente-las-shared-skills) para los tres mecanismos reales.
 
 ### 3. Escribí workflow.yaml
 
 ```yaml
-specialist: {name}
+specialist: {name}               # el id del rol: nombra el archivo de resumen y los inputs propios
 routable: true
 steps:
+  - name: knowledge-recall       # preludio inline: nombra la referencia que sigue
+    skill: ../asdt-core/references/knowledge-recall.md
+    description: Una línea.
+    execution: inline
+
   - name: {step}
     skill: steps/{step}.md
-    description: Una línea — qué produce este step.
+    description: Una línea — qué devuelve este step.
     execution: subagent          # o: inline
     model: haiku | sonnet | opus
     agent: analyst | builder     # builder SOLO cuando el step escribe archivos del host
-    inputs:
-      - "{project}/{change}/{role}/handoff"  # opcional — decilo, y degradá
-    output_topic_key: "{project}/{change}/{name}/handoff"
+    inputs:                      # opcional — solo en steps subagent
+      - pm # opcional — qué extraer del resumen de Product
+      - {name}/{step-anterior} # el payload de un step propio de este specialist
+    output: summary              # opcional — lo que devuelve este step pasa a ser el resumen del rol
     reference_skills:
       - ../asdt-core/references/{x}.md
       - ../asdt-core/protocol.md
@@ -80,24 +86,27 @@ steps:
       - {nombre-de-skill-en-kebab-case}
 ```
 
-- Un step cuyo payload solo alimenta al siguiente step de la misma corrida declara `output: context` en lugar de `output_topic_key` — no persiste nada.
-- Un step `inline` de compuerta sin archivo de prompt declara solo `name`, `description` y `execution: inline`.
+- **`inputs:`** son nombres del scratchpad, nunca paths ni claves de memoria. El orquestador resuelve cada uno a un archivo del scratchpad de la sesión y lo inyecta como `### INPUT {name}: {path}`, o `UNRESOLVED` si el archivo no existe. Una entrada es `{role}` (el resumen de otro specialist para este cambio, `{scratchpad}/asdt/{change}/{role}.md`, donde `{role}` es el id `specialist:` de ese specialist) o `{name}/{step}` (lo que devolvió un step anterior de ESTE specialist, `{scratchpad}/asdt/{change}/{name}/{step}.md`; listarlo es lo que hace que el orquestador escriba ese archivo). Nunca nombres el step de otro specialist: leé su resumen. `feedback` y `previous` están reservados para el orquestador, que los inyecta cuando tu corrección lo obliga a relanzar un step.
+- **`output: summary`** significa que lo que devuelve el step se escribe como el resumen del rol, `{scratchpad}/asdt/{change}/{name}.md`. Un step posterior con `output: summary` en la misma corrida lo reemplaza: así un rol por etapas (plan, después construcción) mantiene UN solo resumen con su `Stage`. Un step sin `output: summary` le pasa lo que devuelve solo a los steps que lo listan.
+- Un step `inline` de compuerta sin archivo de prompt declara solo `name`, `description` y `execution: inline`, más `output: summary` cuando el propio orquestador reescribe el resumen (el `verify` del Developer). Ningún step inline declara `inputs:`.
 - **Techo: cuatro steps `subagent`.** Los preludios y compuertas inline no cuentan. Si necesitás un quinto, el diseño está mal — fusioná dos o dividí el specialist.
-- Todo input entre specialists es opcional y degrada — ningún specialist puede exigir el hand-off de otro.
+- Todo input entre specialists es opcional y degrada — marcalo con un comentario final `# optional — {qué extraer}`. Ningún specialist puede exigir el resumen de otro.
+- Ningún step llega a la memoria. El conocimiento duradero del proyecto lo recuerda solo el orquestador, y ningún specialist inventa un segundo almacén para convenciones.
 
 `host_skills:` nombra skills que el **asistente host** puede tener instaladas — un oficio que ASDT no trae, como `frontend-design`. Son nombres, nunca paths, y nunca son obligatorias: si el host tiene la skill (o un equivalente obvio), el orquestador lee el archivo de la skill e inyecta su texto en el prompt del sub-agente como un bloque `### HOST SKILL {name}` — nunca la activa en su propio contexto; si no la tiene, se omite en silencio y no queda registro. Declarala solo en un step `subagent` cuyo archivo diga cuándo aplica y qué tiene prioridad sobre ella — una host skill afina la ejecución dentro del contrato del step, nunca lo reemplaza. Hoy declaran `frontend-design` el `ui-design` de UX/UI y el `implement` del Developer.
 
 ### 4. Escribí los archivos de steps
 
-Creá un `.md` por step `subagent` en `skill/{name}/steps/{step}.md`. Cada archivo contiene las instrucciones para el LLM en ese step — qué leer, qué producir, qué formato debe tener el artifact.
+Creá un `.md` por step `subagent` en `skill/{name}/steps/{step}.md`. Cada archivo tiene cuatro secciones — `Purpose`, `Inputs` (una viñeta por cada línea `### INPUT {name}`, cada una un path a leer, con una línea de degradación por input opcional), `Processing` y `Output` (el resumen que devuelve, en el esquema del protocolo compartido). Un step nunca llega a la memoria, nunca escribe un archivo (el `implement` del Developer y el `write` de `/asdt-init` son las únicas excepciones) y nunca le pregunta al usuario: cada hueco se vuelve una entrada `ASSUMED:`. Nunca escribas el nombre de un memory provider ni de sus herramientas en un prompt — `TestPromptsAreProviderNeutral` falla si aparece uno.
 
 ### 5. Registrá el specialist
 
-El embed no necesita nada de vos — `//go:embed SKILL.md asdt-*` ya shippea tu directorio. Lo que **no** es automático es el registro: un specialist routable tiene que espejarse a mano en dos lugares, más un fixture de test.
+El embed no necesita nada de vos — `//go:embed SKILL.md asdt-*` ya shippea tu directorio. Lo que **no** es automático es el registro: un specialist routable tiene que espejarse a mano en varios lugares.
 
-1. `skill/SKILL.md` — agregá la fila a la tabla de `## Registry` (comando, disciplina, cuándo involucrarlo).
+1. `skill/SKILL.md` — agregá la fila a la tabla de `## Registry` (comando, disciplina, cuándo involucrarlo) y ubicalo en la prosa de dependencias debajo de esa tabla.
 2. `internal/installer/assets/agents-template.md` — agregá la fila a la tabla de `## ASDT Specialists`.
-3. `skill/embedded_test.go` — el test de invariantes routed mantiene una lista de specialists hardcodeada que un mantenedor debe actualizar.
+3. `internal/installer/registry_gen.go` — agregá el directorio a `registryRenderOrder` y a `inlineStepsDisplayNames`. `TestRegistryDrift` verifica que esos espejos coincidan con los `workflow.yaml`.
+4. `skill/embedded_test.go` — el test de invariantes routed mantiene una lista de specialists hardcodeada que un mantenedor debe actualizar.
 
 **No te saltees estos pasos.** El directorio se shippea igual, así que nada falla en tiempo de build — el specialist simplemente nunca aparece en el routing, ni en el archivo de agents instalado, ni en la cobertura del test de invariantes.
 
@@ -138,9 +147,9 @@ Las shared skills son fragmentos de capacidad reutilizados entre múltiples spec
 
 Tres mecanismos, y solo tres. Los paths siempre se resuelven desde el directorio propio del specialist.
 
-**1. Splice en tiempo de instalación.** El instalador injerta `asdt-core/specialist-header.md` en una región generada de cada `SKILL.md` routado, así el orquestador lee el header inline en lugar de ir a buscar un archivo aparte. Esto aplica solo a ese archivo. El blockquote de FIRST ACTION ya no indica leer `specialist-header.md` — el único archivo al que te manda es `./workflow.yaml`. Nunca edites a mano entre los marcadores de la región; el splice sobrescribe lo que haya ahí.
+**1. Splice en tiempo de instalación.** El instalador injerta `asdt-core/specialist-header.md` en una región generada de cada `SKILL.md` routado, así el orquestador lee el header inline en lugar de ir a buscar un archivo aparte. Esto aplica solo a ese archivo. El blockquote de FIRST ACTION apunta al header injertado justo debajo, nunca a `specialist-header.md` como archivo — el único archivo al que te manda es `./workflow.yaml`. Nunca edites a mano entre los marcadores de la región; el splice sobrescribe lo que haya ahí.
 
-**2. Inline step.** Un step de `workflow.yaml` con `execution: inline` cuyo `skill:` nombra un archivo compartido — `knowledge-recall.md`, `platform-context.md` (declarado como el step `platform-analysis`). El orquestador lee ese archivo y lo sigue en su propio contexto. No se inyecta nada en ningún lado y no se lanza ningún sub-agente.
+**2. Inline step.** Un step de `workflow.yaml` con `execution: inline` cuyo `skill:` nombra un archivo compartido — `knowledge-recall.md`, `platform-context.md` (declarado como el step `platform-analysis`). El orquestador lee ese archivo y lo sigue en su propio contexto; no se lanza ningún sub-agente. Lo que produce el preludio — el bloque de plataforma, las notas del proyecto recordadas — le llega a cada step posterior como líneas en su prompt.
 
 **3. `reference_skills:` en un step `subagent`.** Antes de lanzar el step, el orquestador lee cada archivo listado e inyecta su contenido en el prompt del sub-agente como un bloque `### REFERENCE SKILL {path}`. El sub-agente nunca los busca por su cuenta — los sub-agentes corren desde un directorio de trabajo distinto y no pueden resolver esos paths. Cuando una lectura falla, el bloque llega como `### REFERENCE SKILL {path}: UNRESOLVED` y el step sigue en modo best-effort.
 

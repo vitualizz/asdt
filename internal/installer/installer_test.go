@@ -406,7 +406,7 @@ func checkFile(t *testing.T, path string) {
 }
 
 // pruneV1FS and pruneV2FS model two releases of the embedded skill tree:
-// v2 drops sample/old/extra.md, so upgrading from v1 must prune it.
+// v2 drops sample/old/extra.md, so reinstalling v2 over v1 must prune it.
 var pruneV1FS = fstest.MapFS{
 	"SKILL.md":            &fstest.MapFile{Data: []byte("# ASDT consultant")},
 	"sample/SKILL.md":     &fstest.MapFile{Data: []byte("# Sample skill v1")},
@@ -418,10 +418,10 @@ var pruneV2FS = fstest.MapFS{
 	"sample/SKILL.md": &fstest.MapFile{Data: []byte("# Sample skill v2")},
 }
 
-// TestInstall_PrunesStaleFilesOnUpgrade verifies the manifest-based prune:
-// upgrading to an embedded tree that no longer contains a file removes that
+// TestInstall_PrunesStaleFilesOnReinstall verifies the manifest-based prune:
+// reinstalling from an embedded tree that does not contain a file removes that
 // file from disk, reports it in Removed, and records the fresh manifest.
-func TestInstall_PrunesStaleFilesOnUpgrade(t *testing.T) {
+func TestInstall_PrunesStaleFilesOnReinstall(t *testing.T) {
 	root := filepath.Join(t.TempDir(), "skills")
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: root}
 	provider := installer.Providers[0]
@@ -464,10 +464,10 @@ func TestInstall_PrunesStaleFilesOnUpgrade(t *testing.T) {
 	}
 }
 
-// TestInstall_LegacyMetaFallbackPrune verifies the fallback scan: when the
-// existing meta predates the Files manifest, stale files inside managed
+// TestInstall_NoManifestFallbackPrune verifies the fallback scan: when the
+// existing meta records no Files manifest, stale files inside managed
 // roots are still detected by walking the disk.
-func TestInstall_LegacyMetaFallbackPrune(t *testing.T) {
+func TestInstall_NoManifestFallbackPrune(t *testing.T) {
 	root := filepath.Join(t.TempDir(), "skills")
 	assistant := installer.AssistantDescriptor{ID: "a1", Name: "A1", BinaryName: "sh", SkillsDir: root}
 	provider := installer.Providers[0]
@@ -477,7 +477,7 @@ func TestInstall_LegacyMetaFallbackPrune(t *testing.T) {
 		t.Fatalf("install failed: %v", results[0].Err)
 	}
 
-	// Simulate a legacy install: meta without the Files manifest, plus a
+	// Simulate an install with no recorded manifest, plus a
 	// stale file inside a managed root.
 	meta, err := installer.ReadInstallMeta(assistant)
 	if err != nil {
@@ -485,7 +485,7 @@ func TestInstall_LegacyMetaFallbackPrune(t *testing.T) {
 	}
 	meta.Files = nil
 	if err := installer.WriteInstallMeta(assistant, meta); err != nil {
-		t.Fatalf("write legacy meta: %v", err)
+		t.Fatalf("write meta: %v", err)
 	}
 	stale := filepath.Join(root, "sample", "stale.md")
 	if err := os.WriteFile(stale, []byte("old"), 0o644); err != nil {

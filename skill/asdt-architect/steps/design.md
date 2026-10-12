@@ -1,33 +1,30 @@
 # Design — Architect Specialist
 
 ## Purpose
-Make the architectural decision, design the system that follows from it, and emit the
-hand-off Developer, QA, and Security consume. One step, one artifact.
+Make the architectural decision and design the system that follows from it, in the one
+summary Developer, QA, and Security consume.
 
 ## Inputs
-- `{project}/{change}/pm/handoff` — OPTIONAL. The requirements this design has to satisfy:
-  its `acceptance_criteria`, `constraints` (scope and NFR budgets), and `risks`
-- `{project}/{change}/ux-ui/handoff` — OPTIONAL. Extract: `flows` and `components` — the
-  interactions the API surface has to serve, and every component `gap` the design must cover
-- `{project}/{change}/security/handoff` — OPTIONAL. Extract: `risks` and `constraints` (the
-  hardening checklist) — a finding that reshapes a boundary is a design constraint, not a footnote
-- `{project}/{change}/researcher/handoff` — OPTIONAL. Extract: `what` (the recommended
-  direction) and every `rejected:` decision. **When `pm/handoff` is UNRESOLVED, the
-  researcher's direction frames the problem** and its rejections are out of scope; when PM
-  ran, PM wins — PM already folded discovery into the requirements, and a conflict between
-  them is PM's decision, not yours
-- Platform summary — the stack, conventions, and existing structure, injected inline
+- `### INPUT pm` — OPTIONAL. Product's summary: `Acceptance criteria`, `Constraints` (scope
+  and NFR targets), and `Risks` — the requirements this design has to satisfy
+- `### INPUT ux-ui` — OPTIONAL. UX/UI's summary: `Flows` and `Components` — the interactions
+  the API surface has to serve, and every component gap the design must cover
+- `### INPUT security` — OPTIONAL. Security's summary: `Risks` and `Constraints` (the hardening
+  checklist) — a finding that reshapes a boundary is a design constraint, not a footnote
+- `### INPUT researcher` — OPTIONAL. Researcher's summary: its one-sentence direction and every
+  `rejected:` decision. **When `pm` is UNRESOLVED, the researcher's direction frames the
+  problem** and its rejections are out of scope; when PM ran, PM wins — PM already folded
+  discovery into the requirements, and a conflict between them is PM's decision, not yours
 
-All of these arrive ALREADY INJECTED. Do NOT self-fetch. If `pm/handoff` is UNRESOLVED, design
-against the raw request, framed by the researcher's direction when it arrived, and note
-`ASSUMED: no PM hand-off — requirements read from the raw request` (or `… from the raw
-request and the researcher's direction`) in `open_items`. If `ux-ui/handoff`,
-`security/handoff`, or `researcher/handoff` is UNRESOLVED, proceed without it — none of them
-running is the common case, and it needs no `open_items` entry.
+Each arrives as a path to read — never look for anything else. The platform block (stack,
+conventions, existing structure) is in this prompt.
+
+**DEGRADATION**: `pm` UNRESOLVED → design against the raw request, framed by the researcher's direction when it arrived, and record `ASSUMED: no PM summary — requirements read from the raw request` (or `… from the raw request and the researcher's direction`) in `Open items`.
+**DEGRADATION**: `ux-ui`, `security`, or `researcher` UNRESOLVED → proceed without it; none of them running is the common case, so no entry.
 
 ## Processing
 
-1. **Constraints.** Pull from the platform summary and the codebase ONLY what constrains
+1. **Constraints.** Pull from the platform block and the codebase ONLY what constrains
    THIS decision — 3 to 6 items. What is already coupled to the affected area, which
    contracts cannot move, which conventions the design has to live inside. A constraint that
    would not change the design is not a constraint, it is trivia.
@@ -47,8 +44,8 @@ running is the common case, and it needs no `open_items` entry.
    simple.
 
 3. **Design.** From the chosen approach, define:
-   - `data_model` — entities with their fields and relationships
-   - `api_surface` — endpoints, functions, or interfaces WITH signatures
+   - the data model — entities with their fields and relationships
+   - the API surface — endpoints, functions, or interfaces WITH signatures
    - migration and backward-compatibility concerns, when the change touches an existing
      contract. Expand → migrate → contract, with the contract phase named explicitly, because
      it is the phase everyone forgets
@@ -64,20 +61,36 @@ running is the common case, and it needs no `open_items` entry.
 Do NOT write implementation code. Define the technical structure and stop.
 
 ## Output
-Produces: `architect/handoff`
+Return this summary (`asdt-core/protocol.md` §6):
 
-Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
-schema from `asdt-core/protocol.md`:
+```markdown
+# Architect: {change}
 
-- `what` — the architectural decision in one sentence
-- `decisions` — the chosen approach first, then each rejected alternative as
-  `rejected: {approach} — {why}`. This is where the reasoning survives
-- `constraints` — what the implementation has to respect, including migration phases
-- `data_model` — entities and fields
-- `api_surface` — signatures
-- `files_hint` — where in the codebase this design lands
-- `risks` — `{risk, mitigation}`, one line each
-- `open_items` — real gaps only, `ASSUMED:` prefix
+{The architectural decision, in one sentence.}
 
-ONE artifact. Every decision carries its alternatives; the design always carries both a data
-model and an API surface, or says explicitly why the change has neither.
+## Decisions
+- {The chosen approach} — {why it won}
+- rejected: {approach} — {why it lost}
+
+## Constraints
+- {What the implementation has to respect, including each migration phase: expand → migrate → contract}
+
+## Files hint
+- `{path}` — {what of this design lands there}
+
+## Risks
+- {Risk this design creates} → {mitigation}
+
+## Data model
+- `{Entity}`: `{field}: {type}`, … — {relationships}
+
+## API surface
+- `{signature}` — {what it does}
+
+## Open items
+- ASSUMED: {what was assumed} — {what would confirm or refute it}
+```
+
+`Decisions` is the architecture decision record: every rejected alternative carries its
+reason. `Data model` and `API surface` are always present, or replaced by one `Decisions` line
+saying why the change has neither.

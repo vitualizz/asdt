@@ -3,18 +3,18 @@ routable: true
 steps:
   - name: knowledge-recall
     skill: ../asdt-core/references/knowledge-recall.md
-    description: Query organizational memory for prior requirements, similar features, and scope decisions relevant to this change
+    description: Recall the project's notes on prior requirements, similar features, and scope decisions relevant to this change
     execution: inline
 
   - name: backlog
     skill: steps/backlog.md
-    description: Turn the raw request into the requirements hand-off — user stories in delivery order, explicit scope, measurable NFRs, acceptance criteria
+    description: Turn the raw request into the requirements summary — user stories in delivery order, explicit scope, measurable NFRs, acceptance criteria
     execution: subagent
     model: sonnet
     agent: analyst
     inputs:
-      - "{project}/{change}/researcher/handoff" # optional — prior discovery; degrade gracefully if absent
-    output_topic_key: "{project}/{change}/pm/handoff"
+      - researcher # optional — the recommended direction and its rejected ones
+    output: summary
     reference_skills:
       - ../asdt-core/references/scope-definition.md
       - ../asdt-core/protocol.md
@@ -25,8 +25,7 @@ steps:
     execution: subagent
     model: sonnet
     agent: analyst
-    inputs: []
-    output_topic_key: "{project}/study/{topic}/pm"
+    output: summary
     reference_skills:
       - ../asdt-core/references/scope-definition.md
       - ../asdt-core/protocol.md

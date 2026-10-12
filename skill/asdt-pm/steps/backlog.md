@@ -1,19 +1,17 @@
 # Backlog — PM Specialist
 
 ## Purpose
-Turn the raw request into the requirements hand-off that Architect, Developer, QA, and UX/UI
-consume. One step, one artifact: everything PM has to say about this change lands in
-`pm/handoff`, and nothing else is persisted.
+Turn the raw request into the requirements Architect, Developer, QA, and UX/UI consume:
+everything PM has to say about this change, in one summary.
 
 ## Inputs
-- The raw feature request from the user — always present, injected in this prompt
-- Platform summary — stack and domain vocabulary, injected when available
-- `{project}/{change}/researcher/handoff` — OPTIONAL. When it arrives, its recommended
-  direction is your starting point and its rejected directions seed `scope.out`
+- `### INPUT researcher` — OPTIONAL. Researcher's summary: its one-sentence direction is your
+  starting point, and its `rejected:` decisions seed the out-of-scope list
 
-Everything above arrives ALREADY INJECTED. Do NOT self-fetch any of it. If the researcher
-hand-off is UNRESOLVED, work from the raw request alone and note `ASSUMED: no prior
-discovery — requirements derived from the raw request` in `open_items`.
+Each arrives as a path to read — never look for anything else. The raw request, the platform
+block (stack and domain vocabulary), and any `### PROJECT NOTE` lines are in this prompt.
+
+**DEGRADATION**: `researcher` UNRESOLVED → work from the raw request alone and record `ASSUMED: no prior discovery — requirements derived from the raw request` in `Open items`.
 
 ## Processing
 
@@ -22,10 +20,10 @@ discovery — requirements derived from the raw request` in `open_items`.
    them by delivery sequence: the order IS the priority, so the first story is the one that
    ships first. No MoSCoW ratings, no separate priority field.
 
-2. **Explicit scope** — `scope.in` and `scope.out` are both MANDATORY. Apply the criteria in
-   `asdt-core/references/scope-definition.md`: if it is not in `scope.in` it is out, and
-   anything adjacent enough to be assumed in belongs in `scope.out` by name. A hand-off with
-   an empty `scope.out` is incomplete, never "nothing to exclude".
+2. **Explicit scope** — the in-scope and out-of-scope lists are both MANDATORY. Apply the criteria in
+   `asdt-core/references/scope-definition.md`: if it is not in scope it is out, and
+   anything adjacent enough to be assumed in belongs out of scope by name. A summary with
+   an empty out-of-scope list is incomplete, never "nothing to exclude".
 
 3. **NFRs** — only the ones this feature directly implies, and only if measurable. "p95 under
    200ms, measured with k6" is an NFR; "it should be fast" is not. No verdict matrix, no
@@ -33,24 +31,38 @@ discovery — requirements derived from the raw request` in `open_items`.
    against them. If the feature implies none, write none.
 
 4. **Open questions** — a genuine unresolved decision that changes the design goes to
-   `open_items`. If you answer it yourself to keep moving, that answer is an assumption:
+   `Open items`. If you answer it yourself to keep moving, that answer is an assumption:
    record it with the `ASSUMED:` prefix and say what would confirm or refute it. Do not pad
    this list to look thorough.
 
 ## Output
-Produces: `pm/handoff`
+Return this summary (`asdt-core/protocol.md` §6):
 
-Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
-schema from `asdt-core/protocol.md`:
+```markdown
+# PM: {change}
 
-- `what` — the change in one sentence
-- `decisions` — the user stories in delivery order, plus scope calls worth stating; priority
-  is the ORDER, never a separate rating
-- `constraints` — `scope.in`, `scope.out`, and the measurable NFRs
-- `acceptance_criteria` — Given/When/Then, max 5. These are the criteria the whole pipeline
-  refines; QA formalizes edge cases from them, it does not replace them
-- `risks` — `{risk, mitigation}`, one line each, only where a real requirements risk exists
-- `open_items` — genuine gaps only, `ASSUMED:` prefix
+{The change, in one sentence.}
 
-No summary envelope, no traceability matrix, no MoSCoW block. If a field does not change
-what the consumer types, leave it out.
+## Decisions
+1. As a {actor} I want {capability} so that {outcome}. — {1–2 plain-language criteria}
+- {A scope call worth stating}
+
+## Constraints
+- In scope: {item}
+- Out of scope: {item}
+- NFR: {measurable target}, measured with {method}
+
+## Acceptance criteria
+- Given {context}, when {action}, then {observable outcome}
+
+## Risks
+- {Requirements risk} → {mitigation}
+
+## Open items
+- ASSUMED: {what was assumed} — {what would confirm or refute it}
+```
+
+The stories are numbered in delivery order: the order IS the priority, never a separate
+rating. At most 5 acceptance criteria: the whole pipeline refines them, and QA formalizes edge
+cases from them without replacing them. No traceability matrix, no MoSCoW block — if a part
+does not change what the consumer does, leave it out.

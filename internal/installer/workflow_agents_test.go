@@ -3,6 +3,7 @@ package installer
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -25,15 +26,14 @@ var workflowSpecialistDirs = []string{
 }
 
 type workflowStep struct {
-	Name           string   `yaml:"name"`
-	Skill          string   `yaml:"skill"`
-	Execution      string   `yaml:"execution"`
-	Agent          string   `yaml:"agent"`
-	OutputTopicKey string   `yaml:"output_topic_key"`
-	ContextInputs  []string `yaml:"context_inputs"`
-	HostSkills     []string `yaml:"host_skills"`
-	// Output is `context` on a step whose payload is injected into the next
-	// step and never persisted (protocol.md §1).
+	Name       string   `yaml:"name"`
+	Skill      string   `yaml:"skill"`
+	Execution  string   `yaml:"execution"`
+	Agent      string   `yaml:"agent"`
+	Inputs     []string `yaml:"inputs"`
+	HostSkills []string `yaml:"host_skills"`
+	// Output is `summary` on a step whose return the orchestrator writes as
+	// the role summary (protocol.md §1); absent otherwise.
 	Output          string   `yaml:"output"`
 	ReferenceSkills []string `yaml:"reference_skills"`
 }
@@ -122,14 +122,14 @@ func TestWorkflowSubagentStepsDeclareKnownAgentTypes(t *testing.T) {
 	if builderCount != 1 {
 		t.Errorf("builder subagent steps = %d, want 1 (got %v)", builderCount, builderSteps)
 	}
-	// Only implement writes host files. The former `test` step was absorbed
-	// into implement, which now writes tests under the same mode and roots.
+	// Only implement writes host files, tests included, under one mode and one
+	// set of roots.
 	wantBuilder := map[string]bool{
 		"asdt-developer/implement": true,
 	}
 	for _, step := range builderSteps {
 		if !wantBuilder[step] {
-			t.Errorf("unexpected builder step %q; only asdt-developer implement and test may be builder", step)
+			t.Errorf("unexpected builder step %q; only asdt-developer/implement may be builder", step)
 		}
 	}
 }
@@ -155,58 +155,87 @@ func TestSubagentStepCeiling(t *testing.T) {
 	}
 }
 
-// TestContextInputsMatchProduces guards protocol.md §1 "Intra-run payloads":
-// every name a step lists in `context_inputs:` is the exact string a producer
-// declares on a `Produces:` line — searched only where producers declare it: a
-// step file's `## Output` section, or the SKILL.md section of an inline gate
-// with no step file. The consumer must also name the `### INPUT {name}` block
-// it receives, in its step file or, failing that, in SKILL.md. A renamed
-// producer otherwise leaves the consumer waiting for a payload nothing emits.
-func TestContextInputsMatchProduces(t *testing.T) {
-	root := skillDir(t)
-	for _, dir := range append(append([]string{}, workflowSpecialistDirs...), "asdt-init") {
-		path, wf := readWorkflowFile(t, root, dir)
-		skillPath := filepath.Join(root, dir, "SKILL.md")
-		skillMD := readText(t, skillPath)
+// inputName is the shape of a workflow.yaml `inputs:` entry (TEMPLATE.md §3):
+// `{role}`, another role's summary, or `{role}/{step}`, a step payload of the
+// specialist's own run. Both resolve to a scratchpad path (protocol.md §1).
+var inputName = regexp.MustCompile(`^[a-z][a-z0-9-]*(/[a-z][a-z0-9-]*)?$`)
 
-		var producers []string
-		stepText := make(map[string]string, len(wf.Steps))
+// TestStepInputsResolve guards TEMPLATE.md §3 and protocol.md §1, §5: every
+// `inputs:` entry names a file the orchestrator can resolve. A `{role}` entry
+// names a known specialist; a `{role}/{step}` entry names a step of the same
+// workflow, under the workflow's own `specialist:` id, and the consumer must
+// mention the `### INPUT {role}/{step}` line it receives in its step file or,
+// failing that, in SKILL.md. Only subagent steps declare inputs; `feedback`
+// and `previous` are reserved for the orchestrator's re-launches; `output:`
+// is `summary` or absent; and every routed specialist writes a role summary
+// from at least one step. A renamed producer otherwise leaves the consumer
+// reading a path nothing writes.
+func TestStepInputsResolve(t *testing.T) {
+	root := skillDir(t)
+	dirs := append(append([]string{}, workflowSpecialistDirs...), "asdt-init")
+
+	roles := map[string]bool{}
+	files := map[string]workflowFile{}
+	for _, dir := range dirs {
+		_, wf := readWorkflowFile(t, root, dir)
+		files[dir] = wf
+		roles[wf.Specialist] = true
+	}
+
+	for _, dir := range dirs {
+		wf := files[dir]
+		path := filepath.Join(root, dir, "workflow.yaml")
+		skillMD := readText(t, filepath.Join(root, dir, "SKILL.md"))
+
+		stepNames := map[string]bool{}
+		summaries := 0
 		for _, s := range wf.Steps {
-			switch {
-			case s.Skill == "" && s.Execution == "inline":
-				if section, ok := markdownSection(skillMD, s.Name); ok {
-					producers = append(producers, section)
-				}
-			case strings.HasPrefix(s.Skill, "steps/"):
-				stepPath := filepath.Join(root, dir, s.Skill)
-				data := readText(t, stepPath)
-				stepText[s.Name] = data
-				_, output, found := strings.Cut(data, "\n## Output")
-				if !found {
-					t.Errorf("%s: no `## Output` section", stepPath)
-					continue
-				}
-				producers = append(producers, output)
+			stepNames[s.Name] = true
+			switch s.Output {
+			case "":
+			case "summary":
+				summaries++
+			default:
+				t.Errorf("%s: step %q declares output %q, want `summary` or nothing", path, s.Name, s.Output)
 			}
+		}
+		if dir != "asdt-init" && summaries == 0 {
+			t.Errorf("%s: no step declares `output: summary`; the specialist hands nothing on", path)
 		}
 
 		for _, s := range wf.Steps {
-			for _, name := range s.ContextInputs {
-				want := "Produces: `" + name + "`"
-				produced := false
-				for _, src := range producers {
-					if strings.Contains(src, want) {
-						produced = true
-						break
+			if len(s.Inputs) > 0 && s.Execution != "subagent" {
+				t.Errorf("%s: %s step %q declares inputs %v; only subagent steps receive injected inputs", path, s.Execution, s.Name, s.Inputs)
+			}
+			var stepText string
+			if strings.HasPrefix(s.Skill, "steps/") {
+				stepText = readText(t, filepath.Join(root, dir, s.Skill))
+			}
+			for _, name := range s.Inputs {
+				if !inputName.MatchString(name) {
+					t.Errorf("%s: step %q input %q is neither `{role}` nor `{role}/{step}`", path, s.Name, name)
+					continue
+				}
+				role, step, own := strings.Cut(name, "/")
+				if name == "feedback" || name == "previous" {
+					t.Errorf("%s: step %q declares the reserved input %q; the orchestrator injects it on a re-launch", path, s.Name, name)
+					continue
+				}
+				if !own {
+					if !roles[role] {
+						t.Errorf("%s: step %q input %q names no known specialist", path, s.Name, name)
 					}
+					continue
 				}
-				if !produced {
-					t.Errorf("%s: step %q lists context input %q, but no step file `## Output` or inline-gate SKILL.md section declares %s", path, s.Name, name, want)
+				if role != wf.Specialist {
+					t.Errorf("%s: step %q input %q reads another specialist's step payload; read its role summary `%s` instead", path, s.Name, name, role)
 				}
-
+				if !stepNames[step] || step == s.Name {
+					t.Errorf("%s: step %q input %q names no other step of this workflow", path, s.Name, name)
+				}
 				heading := "### INPUT " + name
-				if !strings.Contains(stepText[s.Name], heading) && !strings.Contains(skillMD, heading) {
-					t.Errorf("%s: step %q lists context input %q, but neither its step file nor %s mentions the injected `%s` block", path, s.Name, name, skillPath, heading)
+				if !strings.Contains(stepText, heading) && !strings.Contains(skillMD, heading) {
+					t.Errorf("%s: step %q lists input %q, but neither its step file nor SKILL.md mentions the injected `%s` line", path, s.Name, name, heading)
 				}
 			}
 		}

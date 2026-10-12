@@ -3,7 +3,7 @@ routable: true
 steps:
   - name: knowledge-recall
     skill: ../asdt-core/references/knowledge-recall.md
-    description: Query organizational memory for prior quality findings, edge cases, and test decisions relevant to this change
+    description: Recall the project's notes on prior quality findings, edge cases, and test decisions relevant to this change
     execution: inline
 
   - name: test-plan
@@ -13,12 +13,12 @@ steps:
     model: opus
     agent: analyst
     inputs:
-      - "{project}/{change}/pm/handoff" # optional — acceptance criteria and NFR targets
-      - "{project}/{change}/developer/handoff" # optional — the plan (stage: spec) or what was built (stage: implemented)
-      - "{project}/{change}/architect/handoff" # optional — the design and its declared risks
-      - "{project}/{change}/ux-ui/handoff" # optional — flow branches and empty/loading/error states become edge cases
-      - "{project}/{change}/security/handoff" # optional — each mitigation needs a test that proves it holds
-    output_topic_key: "{project}/{change}/qa/handoff"
+      - pm # optional — acceptance criteria and NFR targets
+      - developer # optional — the plan (Stage: spec) or what was built (Stage: implemented)
+      - architect # optional — the design and its declared risks
+      - ux-ui # optional — flow branches and empty/loading/error states become edge cases
+      - security # optional — each mitigation needs a test that proves it holds
+    output: summary
     reference_skills:
       - ../asdt-core/references/testing.md
       - ../asdt-core/protocol.md
@@ -29,8 +29,7 @@ steps:
     execution: subagent
     model: opus
     agent: analyst
-    inputs: []
-    output_topic_key: "{project}/study/{topic}/qa"
+    output: summary
     reference_skills:
       - ../asdt-core/references/testing.md
       - ../asdt-core/protocol.md

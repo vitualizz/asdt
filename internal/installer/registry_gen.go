@@ -56,16 +56,16 @@ var registryRenderOrder = []string{
 //   - specialist-header.md first: the Prerequisites gate and the ORCHESTRATOR
 //     GATE must be the very first thing a specialist reads, before it can act
 //     on anything else in the document.
-//   - protocol.md second: the memory interface and its binding, the intake
-//     contract, the injection format, the persistence rules, and the
-//     degradation contract govern how every step treats its inputs, so they
-//     must be settled before any step content arrives. Its memory-binding
+//   - protocol.md second: ownership and authority, the scratchpad contract,
+//     the memory interface and its binding, the intake contract, the write
+//     boundary, the injection format, and the summary schema govern how every
+//     step treats its inputs, so they must be settled before any step content
+//     arrives. Its memory-binding
 //     region is folded in EMPTY here and bound afterwards, by writeSkillFile's
-//     bindMemory pass over the finished file. It absorbed the former parallel-retrieval.md and
-//     intake-contract.md fragments.
+//     bindMemory pass over the finished file.
 //
-// knowledge-recall.md is deliberately NOT here: it is no longer a header
-// fragment but a per-specialist inline step pointing at
+// knowledge-recall.md is deliberately NOT here: it is not a header fragment
+// but a per-specialist inline step pointing at
 // asdt-core/references/knowledge-recall.md.
 var specialistHeaderFragments = []string{
 	"asdt-core/specialist-header.md",

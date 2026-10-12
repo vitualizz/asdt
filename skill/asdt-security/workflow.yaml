@@ -3,12 +3,12 @@ routable: true
 steps:
   - name: knowledge-recall
     skill: ../asdt-core/references/knowledge-recall.md
-    description: Query organizational memory for prior security findings, threat models, and mitigations relevant to this change before acting
+    description: Recall the project's notes on prior security findings, threat models, and mitigations relevant to this change before acting
     execution: inline
 
   - name: platform-analysis
     skill: ../asdt-core/references/platform-context.md
-    description: Load and inject platform conventions and architectural fingerprint from knowledge.yaml
+    description: Inject the platform block — conventions and architectural fingerprint — from .asdt/config.yaml
     execution: inline
 
   - name: assess
@@ -18,11 +18,11 @@ steps:
     model: opus
     agent: analyst
     inputs:
-      - "{project}/{change}/developer/handoff" # optional — the planned surface (stage: spec) or the code that changed (stage: implemented); Security runs at any point
-      - "{project}/{change}/architect/handoff" # optional — the design and its trust boundaries
-    output: context # retained in the orchestrator's context, injected into harden — never persisted
+      - developer # optional — the planned surface (Stage: spec) or the code that changed (Stage: implemented); Security runs at any point
+      - architect # optional — the design and its trust boundaries
     reference_skills:
       - ../asdt-core/references/owasp.md
+      - ../asdt-core/protocol.md
 
   - name: harden
     skill: steps/harden.md
@@ -30,8 +30,8 @@ steps:
     execution: subagent
     model: sonnet
     agent: analyst
-    inputs: []
-    context_inputs: [security-assessment]
-    output_topic_key: "{project}/{change}/security/handoff"
+    inputs:
+      - security/assess
+    output: summary
     reference_skills:
       - ../asdt-core/protocol.md

@@ -24,7 +24,8 @@ type InstallOptions struct {
 }
 
 // InstallWithModels copies skill files from skillsFS into each assistant's
-// SkillsDir, binds every memory-binding region to provider, and returns one
+// SkillsDir, binds every memory-binding region to provider (the zero
+// ProviderDescriptor binds none: a "no memory" install), and returns one
 // result per assistant. A failure for one assistant does not abort
 // the others. lang is the language code chosen in the TUI; it is recorded in
 // each assistant's install metadata (an empty lang preserves the existing
@@ -124,7 +125,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 	}
 
 	generateCommands(assistant, skillsFS, &result)
-	generateAgents(assistant, skillsFS, provider, opts, &result)
+	generateAgents(assistant, skillsFS, opts, &result)
 
 	if result.Err == nil {
 		// Preserve existing persona, emoji preference, and language so a
@@ -135,8 +136,8 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 		if lang == "" {
 			lang = existing.Language
 		}
-		// Prune files a previous install wrote that this one no longer
-		// provides, then record the fresh manifest. Prune is best-effort and
+		// Prune files a previous install wrote that this one does not
+		// provide, then record the fresh manifest. Prune is best-effort and
 		// never fails the install.
 		relWritten := relativizeWritten(assistant.SkillsDir, result.Written)
 		result.Removed = pruneStale(assistant.SkillsDir, managedRootsFor(skillsFS), existing.Files, relWritten)
@@ -145,6 +146,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 			Persona:     existing.Persona,
 			Emojis:      existing.Emojis,
 			Language:    lang,
+			Memory:      provider.MetaValue(),
 			AgentTypes:  AgentTypeNames,
 			Files:       relWritten,
 		})
@@ -280,8 +282,7 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 	// The memory binding runs LAST, over every file: the specialist-header
 	// splice above copies protocol.md's still-empty binding region into each
 	// routed SKILL.md, and this one pass binds that copy and every standalone
-	// region (protocol.md, executor-header.md, asdt-init/SKILL.md, the root
-	// SKILL.md) alike. Marker-free files pass through unchanged.
+	// region (protocol.md, asdt-init/SKILL.md, the root SKILL.md) alike. Marker-free files pass through unchanged.
 	bound, bindErr := bindMemory(data, provider)
 	if bindErr != nil {
 		return fmt.Errorf("bind memory provider into %s: %w", srcPath, bindErr)

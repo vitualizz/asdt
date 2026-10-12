@@ -7,28 +7,48 @@ This directory contains everything installed into the AI assistant. The Go binar
 ```mermaid
 flowchart TD
     A["/asdt\nMeta-orchestrator\nskill/SKILL.md"]
-    A -->|routes · never executes| B
+    A -->|"proposes · runs the chain on yes,\npausing after each specialist"| B
 
-    B["/asdt-architect · /asdt-developer · …\nSpecialist as orchestrator\nskill/asdt-name/SKILL.md"]
+    B["/asdt-architect · /asdt-developer · …\nThe main assistant as orchestrator\nskill/asdt-name/SKILL.md"]
 
-    B -->|inline| C["preludes · gates\nrun in the orchestrator's own context"]
-    B -->|subagent| D["steps/step-name.md\nexecutor-only · never delegates"]
+    B -->|inline| C["preludes · gates · debate\nrun in the orchestrator's own context"]
+    B -->|"subagent — INPUT name: path"| D["steps/step-name.md\nexecutor-only · returns one summary"]
 
-    D -.->|"output: context\nintermediate payloads stay in the thread"| B
-    D <-->|"memory save / search / get\nkey: project/change/role/handoff"| E[(Memory provider\nbound at install)]
+    D -.->|returns its summary| B
+    B <-->|"writes summaries · passes paths"| S[("Session scratchpad\n{scratchpad}/asdt/{change}/")]
+    B <-->|"remember / recall\nkey knowledge only"| E[(Memory provider\nbound at install)]
 ```
 
-**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Reads the request and answers one of three ways: a specialist chain, a single specialist, or — when the question is about the STATE of the work ("what did we decide about X?") — the answer itself, read inline from memory. It never executes a specialist step; the only thing it writes is knowledge the user dictates to it (`asdt-core/protocol.md` §1).
+**Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command. Reads the request and answers one of three ways: a specialist chain, a single specialist, or — when the question is about the STATE of the work — the answer itself, from the scratchpad, git, and a recall. On the user's yes it runs the chain one specialist at a time, pausing after each so the user can debate before the next one starts.
 
-**Specialist as orchestrator** (`skill/asdt-{name}/SKILL.md`) — reads `workflow.yaml` and drives the steps. Does not do the specialist work itself — it tells the calling assistant which steps to run inline and which to launch as isolated sub-agents.
+**The orchestrator** (`skill/asdt-{name}/SKILL.md`, read by the main assistant) — whoever runs, the main assistant orchestrates under the same rules: it converses with the user, decides, runs the gates, writes every working file, and alone remembers and recalls. It reads `workflow.yaml` and launches each `subagent` step as an isolated sub-agent; `inline` steps run in its own context.
 
-**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. No specialist requires another's work: every cross-specialist input is optional and degrades, which is what lets any of them run alone. Each step does one thing and returns. A specialist persists ONE hand-off key per change; a step whose payload only feeds the next step declares `output: context` and hands it back to the orchestrator, which injects it there. A role that delivers in stages — the Developer's plan, then its build — writes each stage to that same key. Steps never delegate further.
+**Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. Each does one step, reads the scratchpad paths it was handed and the codebase, and RETURNS a concise Markdown summary. It never reaches memory and writes nothing — except `developer/implement` (host code inside approved roots) and `asdt-init/write` (`.asdt/`). Steps never delegate further. No specialist requires another's work: every cross-specialist input is optional and degrades, which is what lets any of them run alone.
 
-The full contract — how memory is reached, what gets persisted, how inputs arrive, how a step degrades when one is missing — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
+The full contract — ownership and authority, the scratchpad, memory, intake, the write boundary, injection, the summary schema — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
 
-## Memory Provider Binding
+## Working Files: the Session Scratchpad
 
-No prompt names a memory provider or its tools. Prompts speak three verbs — memory **save** (upsert by key), **search** (by key prefix or free text), and **get** (one full record by id) — defined once in `asdt-core/protocol.md` §0. The binding lives in a `<!-- ASDT:GENERATED:memory-binding -->` region committed EMPTY — in `asdt-core/protocol.md` (and so in every routed SKILL.md the protocol is spliced into), and in each file that reaches memory without the protocol in hand: `asdt-core/executor-header.md`, `asdt-init/SKILL.md`, and the root `SKILL.md`. At install, the Go installer splices the selected provider's binding into each one — its name, its `memory.provider` config value, the tool behind each verb, and how to call it — and grants the same tools to the generated `asdt-analyst` / `asdt-builder` agents. Both come from the provider's `ProviderDescriptor` in `internal/installer/providers.go`; Engram is the provider ASDT ships today. Never write a provider's name or tool names into a prompt — `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails if one appears outside a binding region.
+The orchestrator writes each step's returned summary to the session scratchpad, never to the repository:
+
+```
+{scratchpad}/asdt/{change}/{role}.md          ← role summary (output: summary)
+{scratchpad}/asdt/{change}/{role}/{step}.md   ← step payload, when a later step lists {role}/{step}
+{scratchpad}/asdt/study-{topic}/{role}.md     ← a study (audit, review)
+
+Examples:
+  …/asdt/add-auth/architect.md
+  …/asdt/add-auth/developer.md
+  …/asdt/add-auth/developer/spec.md
+```
+
+`{scratchpad}` is the host's session scratchpad directory (Claude Code provides one), else `/tmp/asdt-{project}/{session}`, where `{project}` is the project's basename plus a short hash of its identity (so same-named repositories get separate scopes) and `{session}` is a fresh clock-based id, so a session never reads another's files (`asdt-core/protocol.md` §0, §1). A step receives each file as `### INPUT {name}: {path}` and reads it itself, which keeps the orchestrator's context small and survives compaction. The scratchpad is disposable: losing it is normal, and a run that needs a lost summary rebuilds it from git, recall, and the user's words, re-showing every consent gate.
+
+## Memory: Long-Term Recall
+
+Memory keeps only the project's KEY knowledge across sessions — non-obvious decisions, conclusions reached in debate, lessons, conventions the user states, audit outcomes — as concise, self-contained notes with a short subject; a newer note on a subject supersedes the older. Never summaries, plans, or payloads. It is context, never authority: what was built is git, what is approved is the user at the gate, project facts are `.asdt/config.yaml`. Without memory, ASDT still works within a session.
+
+No prompt names a memory provider or its tools. The orchestrator-facing prompts speak two verbs — memory **remember** and **recall** — defined once in `asdt-core/protocol.md` §2. The binding lives in a `<!-- ASDT:GENERATED:memory-binding -->` region committed EMPTY in the three orchestrator-facing files that reach memory: `asdt-core/protocol.md` (and so every routed SKILL.md it is spliced into), `asdt-init/SKILL.md`, and the root `SKILL.md`. At install, the Go installer splices the selected provider's binding into each one — its name, its `memory.provider` config value, and the tool calls behind each verb — from the provider's `ProviderDescriptor` in `internal/installer/providers.go`. Engram is the only provider available today. Memory is optional: a **No memory** install (the zero `ProviderDescriptor`) binds no provider and splices the explicit no-provider body (`noProviderBinding`, opening **No memory provider bound.**) instead, which `protocol.md` §2 and `asdt-init/SKILL.md` read as memory unavailable. Sub-agents never see the binding or reach memory: the generated `asdt-analyst` / `asdt-builder` agents carry no binding region, the Claude Code agents' tool allowlist grants no memory tool, and the OpenCode agents' permission block denies every known provider's memory tools (`*_{tool}`: OpenCode hands MCP tools to subagents otherwise). Because `protocol.md` is also injected into sub-agent prompts as a reference skill, `protocol.md` §5 makes the orchestrator strip every memory-binding region from any text it injects; `asdt-init/write` receives `memory.provider` through its `asdt-init/clarify` payload instead. Never write a provider's name or tool names into a prompt — `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails if one appears outside a binding region.
 
 ## Directory Structure
 
@@ -39,7 +59,7 @@ skill/
 ├── embedded.go                 ← go:embed — bundles this dir into the binary
 ├── asdt-{name}/                ← one directory per specialist
 │   ├── SKILL.md                ← orchestration plan (ORCHESTRATOR GATE + step table)
-│   ├── workflow.yaml           ← step registry: name, execution mode, inputs, outputs
+│   ├── workflow.yaml           ← step registry: name, execution mode, inputs, output
 │   └── steps/                  ← sub-agent prompt files (one per subagent step)
 │       └── {step-name}.md
 ├── asdt-core/                  ← the protocol and its optional references
@@ -55,58 +75,27 @@ skill/
 
 Every step in `workflow.yaml` has an `execution:` field:
 
-| Mode | What it means | Produces an artifact? |
+| Mode | What it means | Writes the role summary? |
 |---|---|---|
-| `inline` | Runs in the orchestrator's context — a prelude that injects context, or a gate that pauses for the human | Only if it declares `output_topic_key` |
-| `subagent` | Launched as an isolated sub-agent | Only if it declares `output_topic_key` |
+| `inline` | Runs in the orchestrator's context — a prelude that enriches the prompts after it, or a gate that pauses for the human | Only if it declares `output: summary` |
+| `subagent` | Launched as an isolated sub-agent that returns one summary | Only if it declares `output: summary` |
 
-**Inline steps** run in the orchestrator's own context, never as a sub-agent. Preludes (`knowledge-recall`, `platform-analysis`) name the reference they follow in `skill:` and enrich the context for the steps after them. Gates (the Developer's `approve` and `verify`) have no `skill:` — their contract is a section of the specialist's `SKILL.md`, and they re-launch only the sub-agent steps that section names — and one that persists its outcome declares `output_topic_key`. No inline step declares `inputs:`.
+**Inline steps** run in the orchestrator's own context, never as a sub-agent. Preludes (`knowledge-recall`, `platform-analysis`) name the reference they follow in `skill:`. Gates (the Developer's `approve` and `verify`) have no `skill:` — their contract is a section of the specialist's `SKILL.md`, and they re-launch only the sub-agent steps that section names. No inline step declares `inputs:`.
 
 **Subagent steps** each declare:
-- `inputs:` — keys the orchestrator retrieves from memory and injects before the step starts
-- `output_topic_key` — the key the step's hand-off is saved under
-- `output: context` — declared *instead of* `output_topic_key`: the step persists nothing, and the orchestrator keeps its payload and injects it into the next step
-- `context_inputs:` — payloads produced earlier in the same run, each named by its producer's `Produces:` line (a step file's `## Output`, or an inline gate's SKILL.md section) and injected as `### INPUT {name}` blocks
+- `inputs:` — scratchpad names: `{role}` (another specialist's role summary) or `{role}/{step}` (an earlier step of this specialist), injected as `### INPUT {name}: {path}`
+- `output: summary` — optional: the step's return becomes the role summary
 - `reference_skills:` — which shared skill files to load as guidelines
 - `host_skills:` — optional: skills the host assistant may have installed (e.g. `frontend-design`), injected when present and skipped silently when not
 
-## Artifact Topic Keys
-
-Every artifact is stored in memory under a structured key:
-
-```
-{project}/{change}/{role}/handoff
-
-Examples:
-  myapp/add-auth/architect/handoff
-  myapp/add-auth/developer/handoff
-  myapp/add-auth/security/handoff
-```
-
-One key per role per change. That is the whole address space for delivering a change: a specialist looking for upstream work knows exactly what to ask for, and a run that finds nothing there proceeds and says so.
-
-The router's sharpened request is not one of these keys: it names no key, no field, and no file of its own — it lives only inside the quotes of the `/asdt-*` command the router emits, and it never reaches memory.
-
-A run that EXAMINES what already exists — an audit, a review, an assessment with nothing to deliver — persists under a second namespace instead:
-
-```
-{project}/study/{topic}/{role}
-
-Examples:
-  myapp/study/payments-module/security
-  myapp/study/checkout-flow/architect
-```
-
-Which namespace applies is judged from the invocation, never declared: same schema, same load rules, same degradation. A past study is organizational memory — no step declares it as an input, and later runs meet it through the `knowledge-recall` prelude. The full contract is `asdt-core/protocol.md` §1.
-
-A run that made a non-obvious decision also saves one journal entry — its own one-line record at `{project}/journal/{change}/{role}/{subject}`, so no entry overwrites another. Nothing else is written.
+The exact schema is `TEMPLATE.md` §3.
 
 ## Adding a New Specialist
 
-`TEMPLATE.md` in this directory is the normative contract for the steps below — required frontmatter, the fixed `SKILL.md` body order, the step-file layout, the artifact contract, and the registration mirrors. Read it before adding or normalizing a specialist. It is repo-only authoring guidance: `embedded.go` bundles `SKILL.md` and `asdt-*`, so nothing else at this level ships to user projects.
+`TEMPLATE.md` in this directory is the normative contract for the steps below — required frontmatter, the fixed `SKILL.md` body order, the step-file layout, the summary contract, and the registration mirrors. Read it before adding or normalizing a specialist. It is repo-only authoring guidance: `embedded.go` bundles `SKILL.md` and `asdt-*`, so nothing else at this level ships to user projects.
 
 1. Create `skill/asdt-{name}/` with `SKILL.md`, `workflow.yaml`, and `steps/`
 2. Add the ORCHESTRATOR GATE block to `SKILL.md` — copy from any existing specialist
-3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, and either `output_topic_key:` or `output: context`
+3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, and `output: summary` on the step whose return is the role summary
 4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-core/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-core/protocol.md` for which of the two applies
 5. Register the specialist in the `Registry` section of `skill/SKILL.md`

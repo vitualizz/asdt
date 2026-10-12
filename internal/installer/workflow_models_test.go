@@ -20,7 +20,6 @@ steps:
     execution: subagent
     agent: analyst
     inputs: []
-    output_topic_key: "{project}/{change}/pm/explore"
 
   - name: backlog
     skill: steps/backlog.md
@@ -28,8 +27,8 @@ steps:
     agent: analyst
     model: sonnet
     inputs:
-      - "{project}/{change}/pm/explore"
-    output_topic_key: "{project}/{change}/pm/backlog"
+      - pm/explore
+    output: summary
 `
 
 func TestWorkflowModelStepsListsOnlySubagentSteps(t *testing.T) {

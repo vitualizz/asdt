@@ -14,7 +14,7 @@ import ModelPresetTierCard from '@components/ModelPresetTierCard.astro'
 Before using ASDT, you need:
 
 - **Claude Code** or **OpenCode** — installed and authenticated (these are the only assistants ASDT targets today)
-- **[Engram](https://github.com/Gentleman-Programming/engram)** — the memory provider, required for cross-session persistence. It must be on your `PATH` before you install
+- **A memory provider** (optional, recommended) — carries key project knowledge (decisions, conventions, lessons) across sessions. The installer offers [Engram](https://github.com/Gentleman-Programming/engram). Without one, ASDT still works within each session
 - A terminal (bash or zsh)
 
 > **Building from source?** Go 1.22+ is required. Running the one-line installer downloads a pre-built binary — no compiler needed.
@@ -38,9 +38,9 @@ asdt-tui
 `asdt-tui` is an interactive terminal UI. From the main menu, choose **Install / Update Skills** and it walks you through a short guided flow:
 
 1. **Language** — pick the language ASDT speaks in: `en` (English), `es-419` (Latin American Spanish), or `es-ES` (peninsular Spanish). Your choice drives both the installer UI and the installed specialists.
-2. **Environment check** — probes your OS, shell, Engram, and Codegraph (an optional code-search index). **Engram is a hard gate**: *Continue* stays disabled until Engram is found on your `PATH`. A missing Codegraph is only a soft warning and never blocks you.
+2. **Environment check** — probes your OS, shell, Engram, and Codegraph (an optional code-search index). Nothing here blocks you: a missing Engram or Codegraph is a warning with its install link.
 3. **Assistants** — choose which to target: **Claude Code**, **OpenCode**, or both. Each shows a present/missing badge.
-4. **Memory provider** — Engram is the provider ASDT installs against.
+4. **Memory provider** — pick Engram or **No memory**. The default is Engram when it is on your `PATH`, otherwise No memory. You can pick Engram before installing it: the installer warns and shows the install link, and memory works once Engram is connected. A provider is recommended because it keeps key project knowledge between sessions.
 5. **Model preset** — pick how much model horsepower each specialist step uses (see below).
 6. **Persona** — optionally pick a persona for the installed assistants, and whether they should use emojis. You can skip this entirely.
 7. **Permissions** — an opt-in gate for the Claude Code permission overlay. Declining is the safe default and writes nothing.
@@ -68,7 +68,7 @@ It detects your stack, asks a couple of questions, and writes `.asdt/config.yaml
 /asdt Add user authentication with email and password
 ```
 
-ASDT analyzes the request and recommends a specialist sequence — for example: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Confirm the plan, then run each command. Each specialist saves its output to the knowledge base so the next one picks up where the previous left off.
+ASDT analyzes the request and recommends a specialist sequence — for example: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Say yes and it runs that chain one specialist at a time, pausing after each so you can push back; or run each command yourself. Each specialist's summary goes to the session scratchpad, so the next one picks up where the previous left off.
 
 ## Running individual specialists
 
@@ -80,6 +80,6 @@ ASDT analyzes the request and recommends a specialist sequence — for example: 
 
 ## Next steps
 
-- Learn how memory persists across sessions in [Memory & Engram](/asdt/docs/memory-and-engram).
+- Learn where working summaries live and what memory keeps across sessions in [Scratchpad & Memory](/asdt/docs/memory-and-engram).
 - Browse the full command set in [Commands](/asdt/docs/commands).
 - Hit a snag? See [Troubleshooting](/asdt/docs/troubleshooting).

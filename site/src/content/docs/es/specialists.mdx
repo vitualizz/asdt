@@ -1,6 +1,6 @@
 ---
 title: Especialistas
-description: Todos los especialistas de ASDT de un vistazo — elegí el correcto rápido según condición de activación, artefacto que produce y cuándo NO invocarlo, o corré /asdt cuando el trabajo abarca múltiples perspectivas.
+description: Todos los especialistas de ASDT de un vistazo — elegí el correcto rápido según condición de activación, el resumen que devuelve y cuándo NO invocarlo, o corré /asdt cuando el trabajo abarca múltiples perspectivas.
 order: 19
 locale: es
 ---
@@ -17,8 +17,8 @@ Cuando el trabajo abarca múltiples perspectivas, salteá las filas de arriba y 
 
 ### Cambiar de especialista
 
-No existe un especialista "equivocado" del que haya que recuperarse — los especialistas trabajan de forma independiente, así que cambiar no cuesta nada. Podés correr cualquier especialista directamente en cualquier momento; cada uno lee automáticamente los artefactos previos desde la base de conocimiento compartida. Si un pedido no encaja con el especialista que elegiste, `/asdt` te va a recomendar uno más adecuado.
+No existe un especialista "equivocado" del que haya que recuperarse — los especialistas trabajan de forma independiente, así que cambiar no cuesta nada. Podés correr cualquier especialista directamente en cualquier momento; cada uno lee los resúmenes que los especialistas anteriores dejaron en el scratchpad de la sesión. Si un pedido no encaja con el especialista que elegiste, `/asdt` te va a recomendar uno más adecuado.
 
-Ejemplo: si corriste `/asdt-developer` antes de crear un ADR, corré `/asdt-architect` para producir el registro de decisión, y después volvé a invocar `/asdt-developer`. El Developer va a leer el ADR automáticamente en su próxima corrida.
+Ejemplo: si corriste `/asdt-developer` antes de crear un ADR, corré `/asdt-architect` para producir el registro de decisión, y después volvé a invocar `/asdt-developer`. El Developer recibe el resumen del Arquitecto como input en su próxima corrida.
 
 Mirá [Solución de problemas](/asdt/docs/troubleshooting) para procedimientos de recuperación paso a paso.

@@ -243,7 +243,7 @@ func TestMergePermissionOverlay_Idempotent(t *testing.T) {
 }
 
 // TestMergePermissionOverlay_ReconcilesStaleManaged: a previously-managed entry
-// that is no longer shipped (e.g. a removed MultiEdit verb) is pruned on re-merge,
+// that the current set does not ship is pruned on re-merge,
 // the current managed rules are re-placed, and the user's OWN deny rule survives.
 func TestMergePermissionOverlay_ReconcilesStaleManaged(t *testing.T) {
 	existing := []byte(`{

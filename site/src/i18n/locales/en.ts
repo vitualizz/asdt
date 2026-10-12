@@ -20,7 +20,7 @@ export const en: UIStrings = {
     headline: 'A full',
     headlineGrad: 'software team',
     headlineSuffix: ', in your terminal',
-    sub: 'AI specialists that pass work to each other over a shared knowledge base. You direct the route; the team forgets nothing.',
+    sub: 'AI specialists that hand work to each other, one summary at a time. You direct the route; the team remembers what matters.',
     cta: 'Get started',
     secondaryCta: 'Star on GitHub',
     installLabel: 'Install — one command',
@@ -46,7 +46,7 @@ export const en: UIStrings = {
     orchestrator: {
       id: 'orchestrator',
       name: 'Route Advisor',
-      desc: 'Analyzes what you ask and recommends which specialists to involve and in what order. You confirm the plan and run each command.',
+      desc: 'Analyzes what you ask and recommends which specialists to involve and in what order. On your yes it runs them one at a time, pausing after each — or you run each command yourself.',
       command: '/asdt',
     },
   },
@@ -56,7 +56,7 @@ export const en: UIStrings = {
   },
   pipeline: {
     title: 'How it works',
-    sub: 'Describe what you need — /asdt tells you which specialists to involve and in what order. Each reads the previous one\'s artifacts from the shared knowledge base.',
+    sub: 'Describe what you need — /asdt tells you which specialists to involve and in what order. Each reads the summaries of the ones before it.',
     nodes: [
       { id: 'researcher', label: 'Researcher' },
       { id: 'pm', label: 'PM' },
@@ -67,7 +67,7 @@ export const en: UIStrings = {
       { id: 'ux-ui', label: 'UX/UI' },
     ],
     a11yTitle: 'ASDT specialist pipeline',
-    a11yDesc: 'Diagram showing seven specialists in sequence: Researcher, PM, Architect, Developer, QA, Security, UX/UI — all connected through a shared knowledge base.',
+    a11yDesc: 'Diagram showing seven specialists in sequence: Researcher, PM, Architect, Developer, QA, Security, UX/UI — each handing its summary on to the next.',
   },
   recipes: {
     kicker: '02 · How it works',
@@ -80,7 +80,7 @@ export const en: UIStrings = {
       '/asdt-security review session handling',
       '/asdt redesign onboarding for mobile',
     ],
-    kbNote: 'each step saves to the knowledge base · next specialist reads automatically',
+    kbNote: 'each specialist returns a summary · the next one reads it',
   },
   vs: {
     kicker: '03 · Why ASDT',
@@ -91,7 +91,7 @@ export const en: UIStrings = {
     items: [
       {
         chat: 'Context degrades as the conversation grows — what you decided yesterday no longer exists.',
-        asdt: 'Every decision lives in a shared knowledge base the whole team consults. ASDT remembers.',
+        asdt: 'Each specialist builds on the summaries of the ones before it, and key decisions are remembered across sessions. ASDT remembers what matters.',
       },
       {
         chat: 'Each prompt reinvents the process from scratch — sometimes brilliant, sometimes chaotic.',
@@ -99,7 +99,7 @@ export const en: UIStrings = {
       },
       {
         chat: 'You get to a demo fast, but without stories, decisions, or tests to back it up.',
-        asdt: 'Real artifacts remain — stories, decisions, tests — ready to pick up tomorrow.',
+        asdt: 'Real results remain — code in git, key decisions in memory — ready to pick up tomorrow.',
       },
     ],
   },
@@ -133,8 +133,8 @@ export const en: UIStrings = {
     notAutoInvoked: 'Not auto-invoked. Still user-invocable on demand.',
     produces: 'Produces',
     pipelinePosition: 'Pipeline position',
-    artifactReads: 'Reads from knowledge base',
-    artifactWrites: 'Writes to knowledge base',
+    artifactReads: 'Reads these summaries',
+    artifactWrites: 'Returns its summary',
     flowStep: 'Step',
     flowOf: 'of',
     flowTitle: 'How it runs',
@@ -145,7 +145,7 @@ export const en: UIStrings = {
     configuration: 'Configuration',
     howItWorksTitle: 'How It Works',
     specialistModel: 'Specialist Model',
-    memoryAndEngram: 'Knowledge Base & Memory',
+    memoryAndEngram: 'Scratchpad & Memory',
     contributing: 'Contributing',
     development: 'Development',
     groupGettingStarted: 'Getting Started',
@@ -199,7 +199,7 @@ export const en: UIStrings = {
       },
       'researcher:discovery': {
         purpose: 'Frame the problem, diverge into candidate directions, judge feasibility with evidence, converge on one recommendation',
-        produces: 'researcher/handoff',
+        produces: 'researcher summary',
       },
       'pm:knowledge-recall': {
         purpose: 'Recall prior requirements and scope decisions for this project',
@@ -207,7 +207,7 @@ export const en: UIStrings = {
       },
       'pm:backlog': {
         purpose: 'Turn the request into user stories in delivery order, explicit scope, measurable NFRs and acceptance criteria',
-        produces: 'pm/handoff',
+        produces: 'pm summary',
       },
       'ux-ui:knowledge-recall': {
         purpose: 'Recall prior UX decisions and component patterns',
@@ -219,39 +219,39 @@ export const en: UIStrings = {
       },
       'ux-ui:ux-spec': {
         purpose: "Turn the requirement into user flows for the project's design surface — branches, states, and copy — mapped to existing components, with the accessibility each one owes",
-        produces: 'context — stays in the run',
+        produces: 'ux-ui/ux-spec — read by ui-design',
       },
       'ux-ui:ui-design': {
         purpose: "Design the UI the flows need — every screen's layout, hierarchy, typography, and states, every missing component part by part, and the visual foundation when there is no design system",
-        produces: 'ux-ui/handoff',
+        produces: 'ux-ui summary',
       },
       'architect:knowledge-recall': {
         purpose: 'Recall prior architectural decisions relevant to this change',
         produces: 'context (inline)',
       },
       'architect:platform-analysis': {
-        purpose: 'Load platform conventions and design fingerprint from knowledge.yaml',
+        purpose: 'Load platform conventions and design fingerprint from config.yaml',
         produces: 'context (inline)',
       },
       'architect:design': {
         purpose: 'Decide the approach against its alternatives, then design the data model and API surface that follow',
-        produces: 'architect/handoff',
+        produces: 'architect summary',
       },
       'developer:knowledge-recall': {
         purpose: 'Recall prior decisions relevant to this change',
         produces: 'context (inline)',
       },
       'developer:platform-analysis': {
-        purpose: 'Load platform conventions and the design surface from knowledge.yaml and config.yaml',
+        purpose: 'Load platform conventions and the design surface from config.yaml',
         produces: 'context (inline)',
       },
       'developer:explore': {
         purpose: 'Read the area of the codebase that will change, and name the open questions',
-        produces: 'context — stays in the run',
+        produces: 'developer/explore — read by spec',
       },
       'developer:spec': {
         purpose: 'Define scope, acceptance criteria, the technical approach, and the files implement may touch',
-        produces: 'developer/handoff (stage: spec) — saved, resumable, and handed to implement',
+        produces: 'developer summary (Stage: spec) — shown at the gate and handed to implement',
       },
       'developer:approve': {
         purpose: 'Show you the scope, the acceptance criteria and the exact files, then wait for approve, adjust or stop before any file is written',
@@ -259,11 +259,11 @@ export const en: UIStrings = {
       },
       'developer:implement': {
         purpose: 'Write the code — and its tests under strict TDD — within the edit roots the approved spec declared; it never runs them',
-        produces: 'developer/handoff (stage: implemented)',
+        produces: 'developer summary (Stage: implemented)',
       },
       'developer:verify': {
         purpose: 'Offer the check commands, run them only on your yes, and drive at most two fix rounds within the same files',
-        produces: 'the verification outcome, added to developer/handoff',
+        produces: 'the verification outcome, added to the developer summary',
       },
       'security:knowledge-recall': {
         purpose: 'Recall prior findings, threat models and mitigations',
@@ -275,11 +275,11 @@ export const en: UIStrings = {
       },
       'security:assess': {
         purpose: 'Map the attack surface, run STRIDE over it, cross-check the surviving threats against the applicable OWASP categories',
-        produces: 'context — stays in the run',
+        produces: 'security/assess — read by harden',
       },
       'security:harden': {
         purpose: 'Turn the assessment into prioritized findings with concrete mitigations and an actionable checklist',
-        produces: 'security/handoff',
+        produces: 'security summary',
       },
       'qa:knowledge-recall': {
         purpose: 'Recall prior quality findings and test decisions',
@@ -287,7 +287,7 @@ export const en: UIStrings = {
       },
       'qa:test-plan': {
         purpose: 'Find the gaps and edge cases the acceptance criteria missed, turn them into test cases, and give a go/no-go verdict',
-        produces: 'qa/handoff',
+        produces: 'qa summary',
       },
     },
     pipelineFlows: {
@@ -295,19 +295,19 @@ export const en: UIStrings = {
         title: 'Getting a pipeline suggestion',
         steps: {
           orchestrate: {
-            description: 'Ask the orchestrator — ASDT analyzes the request and recommends which specialists to involve and in what order.',
+            description: 'Ask the orchestrator — ASDT analyzes the request, recommends which specialists to involve and in what order, and on your yes runs them one at a time, pausing after each.',
           },
           pm: {
-            description: 'PM defines scope, writes user stories with acceptance criteria, saves pm/handoff to the knowledge base.',
+            description: 'PM defines scope and writes user stories with acceptance criteria, returned as its summary.',
           },
           architect: {
-            description: 'Architect reads pm/handoff, designs the token flow and API contracts, saves architect/handoff.',
+            description: 'Architect reads PM\'s summary, designs the token flow and API contracts, and returns its own.',
           },
           developer: {
-            description: 'Developer reads pm/handoff and architect/handoff, specs the magic link handler, waits for your approval, implements it and saves developer/handoff.',
+            description: 'Developer reads PM\'s and the Architect\'s summaries, specs the magic link handler, waits for your approval, implements it and returns its summary.',
           },
           security: {
-            description: 'Security reviews the auth mechanism, runs STRIDE and OWASP analysis, saves security/handoff — findings with mitigations and a hardening checklist.',
+            description: 'Security reviews the auth mechanism, runs STRIDE and OWASP analysis, and returns its summary — findings with mitigations and a hardening checklist.',
           },
         },
       },
@@ -315,10 +315,10 @@ export const en: UIStrings = {
         title: 'Picking up mid-pipeline',
         steps: {
           developer: {
-            description: 'Developer reads prior artifacts from the knowledge base automatically — even from a previous session. No manual context passing.',
+            description: 'Developer reads the earlier summaries from the session scratchpad. In a new session it rebuilds from git, the key decisions memory recalls, and you. No manual context passing.',
           },
           qa: {
-            description: 'QA loads developer/handoff and plans the tests: acceptance-criteria gaps, edge cases, Given/When/Then cases and a go/no-go verdict.',
+            description: 'QA reads the Developer\'s summary and plans the tests: acceptance-criteria gaps, edge cases, Given/When/Then cases and a go/no-go verdict.',
           },
         },
       },
@@ -327,7 +327,7 @@ export const en: UIStrings = {
       'ship-new-feature': {
         title: 'Ship a new user-facing feature',
         note: 'Start here when a feature request is in vague language and needs the full PM → Architect → Developer sequence.',
-        kbNote: 'Review the suggested specialist sequence, then run each in order.',
+        kbNote: 'Review the suggested specialist sequence, then say yes to run it — or run each in order yourself.',
       },
       'new-rest-endpoint': {
         title: 'Build a new REST API endpoint',
@@ -344,7 +344,7 @@ export const en: UIStrings = {
       'explore-before-planning': {
         title: 'Explore before planning (fuzzy problem)',
         note: 'When the problem is unclear and you need discovery before requirements.',
-        kbNote: 'Researcher saves researcher/handoff with one recommended direction — PM picks it up next (or the Architect, when PM is skipped).',
+        kbNote: 'Researcher returns one recommended direction in its summary — PM picks it up next (or the Architect, when PM is skipped).',
       },
       'lock-scope-user-stories': {
         title: 'Lock scope and write user stories',
@@ -356,7 +356,7 @@ export const en: UIStrings = {
       },
       'write-code-from-settled-spec': {
         title: 'Write production code from a settled spec',
-        note: 'When scope and architecture are already locked in the knowledge base.',
+        note: 'When scope and architecture are already settled.',
       },
       'security-audit-existing-feature': {
         title: 'Security audit on an existing feature',
@@ -368,17 +368,17 @@ export const en: UIStrings = {
       },
       'validate-test-coverage': {
         title: 'Validate test coverage before shipping',
-        note: 'Run after Developer — QA reads developer/handoff automatically.',
+        note: 'Run after Developer — QA reads the Developer\'s summary.',
       },
       'pickup-developer-existing-adr': {
         title: 'Pick up at Developer after an existing ADR',
-        note: 'When PM and Architect ran in a previous session. Developer loads prior artifacts automatically.',
-        kbNote: 'No need to re-run PM or Architect — artifacts are in the knowledge base.',
+        note: 'When PM and Architect ran in a previous session. Developer builds on the recalled decisions and the code.',
+        kbNote: 'No need to re-run PM or Architect — tell the Developer what was settled, or rely on the decisions memory recalls.',
       },
       'add-security-review-inflight': {
         title: 'Add a security review to an in-flight pipeline',
         note: 'Run Security at any point without restarting the pipeline.',
-        kbNote: 'Security reads architect/handoff and developer/handoff from the knowledge base.',
+        kbNote: 'Security reads the Architect\'s and the Developer\'s summaries when they exist.',
       },
       'qa-completed-feature-no-pipeline': {
         title: 'QA a completed feature without a full pipeline',
@@ -399,11 +399,11 @@ export const en: UIStrings = {
       },
       'asdt-init': {
         title: 'Initialize ASDT',
-        oneLiner: 'Detects your stack and creates .asdt/config.yaml and .asdt/knowledge/knowledge.yaml.',
+        oneLiner: 'Detects your stack and writes the project\'s facts to .asdt/config.yaml.',
       },
       asdt: {
         title: 'Pipeline routing suggestion',
-        oneLiner: 'Analyzes the request and recommends which specialists to involve and in what order.',
+        oneLiner: 'Analyzes the request, recommends which specialists to involve and in what order, and runs them on your yes.',
       },
       'asdt-researcher': {
         title: 'Researcher',
@@ -438,43 +438,43 @@ export const en: UIStrings = {
       pm: {
         teaser: 'Locks scope and turns vague requests into structured user stories.',
         invokeWhen: "The request is vague or user-facing, scope isn't locked, or user stories don't exist yet",
-        produces: 'pm/handoff — the change in one sentence, stories in delivery order, in/out scope, acceptance criteria, risks',
+        produces: 'pm summary — the change in one sentence, stories in delivery order, in/out scope, acceptance criteria, risks',
         doNotUseWhen: 'You already have a clear backlog entry — re-running PM regenerates stories from scratch',
       },
       architect: {
         teaser: 'Decides how the pieces fit together before anyone writes code.',
         invokeWhen: 'The solution touches service boundaries, data models, or API contracts, or has two viable technical approaches worth documenting',
-        produces: 'architect/handoff — the decision with the alternatives it beat, data model, API surface',
+        produces: 'architect summary — the decision with the alternatives it beat, data model, API surface',
         doNotUseWhen: 'You need implementation code, test plans, or UX specs — Architect produces decisions, not code',
       },
       developer: {
         teaser: 'Turns a settled design into a plan you approve, then real code.',
         invokeWhen: 'The shape of the solution is settled and you need an implementation plan or production code written to the repo',
-        produces: 'developer/handoff — the approved plan (stage: spec), then the files written and the verification outcome',
+        produces: 'developer summary — the approved plan (Stage: spec), then the files written and the verification outcome',
         doNotUseWhen: "You haven't locked scope or architecture yet — Developer will implement against ambiguous requirements",
       },
       qa: {
         teaser: 'Turns acceptance criteria into a systematic test plan with a go/no-go verdict.',
         invokeWhen: "Code is ready for review, AC exists but hasn't been validated, or you need systematic edge case and boundary coverage",
-        produces: 'qa/handoff — acceptance-criteria gaps, edge cases, Given/When/Then test cases, go/no-go verdict',
+        produces: 'qa summary — acceptance-criteria gaps, edge cases, Given/When/Then test cases, go/no-go verdict',
         doNotUseWhen: 'You want executable test code written — QA produces test specifications, not runnable code',
       },
       security: {
         teaser: 'Hunts for auth, data, and integration risks before they ship.',
         invokeWhen: 'The feature touches auth, sessions, PII, external integrations, webhooks, or new public API endpoints',
-        produces: 'security/handoff — findings rated high/medium/low, each with a concrete mitigation, plus a hardening checklist',
+        produces: 'security summary — findings rated high/medium/low, each with a concrete mitigation, plus a hardening checklist',
         doNotUseWhen: 'You want implementation code or architectural decisions — Security produces findings and checklists only',
       },
       'ux-ui': {
         teaser: 'Designs the flows, screens, and components before implementation starts.',
         invokeWhen: 'A new screen or feature-level UI needs design before implementation begins, or user flows need mapping',
-        produces: 'ux-ui/handoff — flows with their states and copy, every screen and missing component designed, accessibility, and a visual direction when there is no design system',
+        produces: 'ux-ui summary — flows with their states and copy, every screen and missing component designed, accessibility, and a visual direction when there is no design system',
         doNotUseWhen: 'The screen has already been built — a UX spec delivered after implementation is too late to shape it',
       },
       researcher: {
         teaser: 'Explores a fuzzy problem before anyone commits to a direction.',
         invokeWhen: 'The problem is fuzzy or open-ended — you need discovery and framing before requirements can be written',
-        produces: 'researcher/handoff — problem framing, one recommended direction, every rejected one with its reason, feasibility evidence',
+        produces: 'researcher summary — problem framing, one recommended direction, every rejected one with its reason, feasibility evidence',
         doNotUseWhen: 'You already have a defined problem statement — Researcher explores; it does not produce user stories or ADRs',
       },
     },
@@ -487,10 +487,10 @@ export const en: UIStrings = {
       developer: { label: 'Developer' },
     },
     artifactAnatomy: {
-      title: { desc: 'The human-readable name of the artifact.' },
-      topicKey: { desc: 'The stable key it is saved under; a later run picks it out of a search by this exact key.' },
-      type: { desc: 'The artifact\'s category — architecture, decision, bugfix, etc.' },
-      project: { desc: 'The project it belongs to, so results never mix across projects.' },
+      subject: { desc: 'A short kebab-case subject. A newer note on the same subject supersedes the older one.' },
+      kind: { desc: 'What the note holds: decision, convention, lesson, or finding.' },
+      source: { desc: 'Which specialist wrote it, on which change, and when. When two notes share a subject, the later date wins.' },
+      project: { desc: 'The project scope: the directory name plus a short hash of its git origin remote (or of its path, without one), so recalls never mix across projects and every clone shares one scope.' },
     },
     modelPresets: {
       chameleon: {

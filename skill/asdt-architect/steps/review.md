@@ -5,12 +5,9 @@ Judge the architecture that ALREADY EXISTS in an area. The product is prioritize
 not a design — nothing is being built here.
 
 ## Inputs
-- Platform summary — the stack, conventions, and existing structure, injected inline
-- The area named in the request
-
-This step declares no upstream hand-off. It runs in studies, where there is no `{change}` to
-read from; if the area has prior work in memory, the `knowledge-recall` prelude already
-surfaced it. Everything arrives ALREADY INJECTED — never self-fetch.
+No `### INPUT` line: this step runs in studies, on the area the request names, the codebase,
+the platform block (stack, conventions, existing structure), and any `### PROJECT NOTE` lines
+(prior work on the area). Look for nothing else.
 
 ## Processing
 
@@ -41,15 +38,27 @@ Do NOT design a replacement. Judging what exists and proposing its rewrite are d
 jobs, and mixing them buries the judgment under the proposal.
 
 ## Output
-Produces: `{project}/study/{topic}/architect`, with `{topic}` derived from the request in
-short kebab-case.
+Return this summary (`asdt-core/protocol.md` §6):
 
-Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
-schema from `asdt-core/protocol.md`:
+```markdown
+# Architect: {change}
 
-- `what` — the state of this architecture in one sentence
-- `decisions` — the judgments, strongest first, and the strengths among them
-- `risks` — `{risk, mitigation}` per finding, highest severity first
-- `constraints` — what any future change to this area has to respect
-- `files_hint` — where a reader should look first
-- `open_items` — anything you could not ground in evidence, `ASSUMED:` prefix
+{The state of this architecture, in one sentence.}
+
+## Decisions
+- {Judgment, strongest first — strengths among them}
+
+## Constraints
+- {What any future change to this area has to respect}
+
+## Files hint
+- `{path}` — {why to look there first}
+
+## Risks
+- [{high|medium|low}] {finding} (`{path or symbol}`) → {mitigation}
+
+## Open items
+- ASSUMED: {what you could not ground in evidence}
+```
+
+`Risks` holds one line per finding, highest severity first.

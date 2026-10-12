@@ -42,8 +42,8 @@ func localeFor(code string) Locale {
 	return Locale{Code: DefaultLocaleCode, Label: "🇬🇧 English", Directive: "Respond in English, keeping the assistant's own defined voice and style."}
 }
 
-// LocaleByCode resolves code to a Locale: exact match first, then the legacy
-// bare "es" maps to es-419 for backward compatibility, then the default locale
+// LocaleByCode resolves code to a Locale: exact match first, then a bare "es"
+// maps to neutral es-419, then the default locale
 // for any empty or unknown code. The returned Directive is always non-empty.
 func LocaleByCode(code string) Locale {
 	for _, l := range SupportedLocales {
@@ -52,7 +52,7 @@ func LocaleByCode(code string) Locale {
 		}
 	}
 	if code == "es" {
-		return localeFor("es-419") // legacy bare-es backward-compat
+		return localeFor("es-419") // bare "es" means neutral Spanish
 	}
 	return localeFor(DefaultLocaleCode)
 }

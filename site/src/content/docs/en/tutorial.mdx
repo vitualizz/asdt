@@ -22,7 +22,7 @@ Estimated time: 15 minutes.
 Before starting, make sure you have:
 
 - **Claude Code** or **OpenCode** installed and authenticated. If your session has expired, re-authenticate through your assistant's login flow (`claude` for Claude Code, `opencode` for OpenCode).
-- **Engram** running as an MCP server, wired into your assistant's MCP configuration. See [Memory & Engram](/asdt/docs/memory-and-engram) for setup.
+- Optional, recommended: **Engram** installed and wired into your assistant's MCP configuration, so key decisions carry over to the next session. Without it, ASDT still works within each session. See [Scratchpad & Memory](/asdt/docs/memory-and-engram) for setup.
 - A **bash or zsh** terminal.
 
 ## Step 1 — Install ASDT
@@ -62,7 +62,7 @@ Open your assistant (Claude Code or OpenCode) in your project directory and run:
 /asdt-init
 ```
 
-This creates `.asdt/config.yaml` (memory provider settings) and `.asdt/knowledge/knowledge.yaml` (detected stack and conventions), so every specialist tailors its output to your project. Along the way it asks which surface the project designs for first — mobile, tablet, desktop, or none for a project with no UI.
+This detects your stack and conventions and writes them, with the memory provider setting, to `.asdt/config.yaml`, so every specialist tailors its output to your project. Along the way it asks which surface the project designs for first — mobile, tablet, desktop, or none for a project with no UI.
 
 ## Step 3 — Ask a specialist something
 
@@ -72,7 +72,7 @@ Before building anything, try the shortest path in. Point a specialist at code y
 /asdt-security "audit how we handle sessions"
 ```
 
-It reads the relevant code, tells you what it found in plain prose, and keeps the findings so anything you run later over that area starts already knowing them. Nothing was planned, nothing was routed — one question, one answer.
+It reads the relevant code and tells you what it found in plain prose. With memory connected, it remembers the audit's key findings as short notes, so anything you run later over that area starts already knowing them. Nothing was planned, nothing was routed — one question, one answer.
 
 Every specialist works this way. `/asdt-architect "does this structure scale?"`, `/asdt-qa "what don't our tests cover?"`. That is the whole of it, and for many days it is all you need.
 
@@ -86,7 +86,7 @@ In your assistant, run:
 /asdt "Add a contact form with validation"
 ```
 
-ASDT analyzes your request and recommends which specialists to involve and in what order.
+ASDT analyzes your request, recommends which specialists to involve and in what order, and asks whether to run that chain.
 
 ```text
 # Example output — your results will vary based on your project
@@ -98,8 +98,13 @@ Recommended pipeline:
   2. /asdt-architect → Design validation approach and API contract
   3. /asdt-developer → Implement the form handler and validation logic
 
-Run each command in order. Each specialist reads the previous one's output automatically.
+Work: contact-form
+
+Run the chain? I'll run one specialist at a time and pause after each,
+so you can push back before the next one starts.
 ```
+
+Say yes and `/asdt` runs the chain for you, pausing after each specialist. Or run each command yourself, as the steps below do. It's the same work either way: each specialist reads the summaries of the ones before it.
 
 ## Step 5 — Run the Product Manager
 
@@ -107,14 +112,14 @@ Run each command in order. Each specialist reads the previous one's output autom
 /asdt-pm "Add a contact form with validation"
 ```
 
-PM locks scope, writes user stories, and saves a `pm/handoff` artifact to the knowledge base (see [Memory & Engram](/asdt/docs/memory-and-engram)).
+PM locks scope and writes user stories. Its summary goes to the session scratchpad, where the next specialists read it (see [Scratchpad & Memory](/asdt/docs/memory-and-engram)).
 
 ```text
 # Example output — your results will vary based on your project
 
 Running PM specialist...
 
-Produced: pm/handoff
+Summary: pm
 
   Feature: Contact form with validation
   
@@ -132,7 +137,7 @@ Produced: pm/handoff
   In scope: form UI, client-side validation, form submission handler, email notification.
   Out of scope: CAPTCHA, rate limiting, analytics tracking.
 
-Artifact saved to knowledge base.
+Next: /asdt-architect "Add a contact form with validation"
 ```
 
 ## Step 6 — Run the Architect
@@ -141,15 +146,15 @@ Artifact saved to knowledge base.
 /asdt-architect "Add a contact form with validation"
 ```
 
-Architect reads PM's hand-off automatically, weighs the technical approaches against each other, and saves one hand-off: the decision, the alternatives it beat, and the data model and API surface that follow.
+Architect reads PM's summary, weighs the technical approaches against each other, and returns one summary: the decision, the alternatives it beat, and the data model and API surface that follow.
 
 ```text
 # Example output — your results will vary based on your project
 
 Running Architect specialist...
-Loading: pm/handoff ✓
+Built on Product's stories and scope.
 
-Produced: architect/handoff
+Summary: architect
 
   Decision: Use the browser's native Constraint Validation API for field validation,
   augmented with a thin JS layer for custom error messages and blur-event handling.
@@ -163,7 +168,6 @@ Produced: architect/handoff
     - Email notification via nodemailer (existing dep)
     - No database write — form data forwarded directly to email
 
-Hand-off saved to knowledge base.
 Next: /asdt-developer "Add a contact form with validation"
 ```
 
@@ -173,16 +177,15 @@ Next: /asdt-developer "Add a contact form with validation"
 /asdt-developer "Add a contact form with validation"
 ```
 
-Developer reads PM's and Architect's hand-offs, explores the code, and writes a spec — scope, acceptance criteria, and the exact files it will touch. The spec is saved, then shown to you: **nothing is written until you approve it.** Approve and it implements within exactly those files; adjust and it revises the spec; stop and the plan stays saved, so `/asdt-developer "implement the plan we approved"` picks it up later.
+Developer reads PM's and Architect's summaries, explores the code, and writes a spec — scope, acceptance criteria, and the exact files it will touch. The spec becomes its summary and is shown to you: **nothing is written until you approve it.** Approve and it implements within exactly those files; adjust and it revises the spec; stop and the run ends at the plan. `/asdt-developer "implement the plan we approved"` picks it up later and shows it to you again. If the session ended in between, the plan is rebuilt from git, memory, and your words before you approve it.
 
 ```text
 # Example output — your results will vary based on your project
 
 Running Developer specialist...
-Loading: pm/handoff ✓
-Loading: architect/handoff ✓
+Built on Product's acceptance criteria and the Architect's validation design.
 
-Plan (saved): developer/handoff — stage: spec
+Plan: developer summary — stage: spec
 
   Will create:  src/components/ContactForm.astro
                 src/pages/api/contact.ts
@@ -191,12 +194,11 @@ Plan (saved): developer/handoff — stage: spec
 
 Approve, adjust, or stop?  › approve
 
-Produced: developer/handoff — stage: implemented
+Summary: developer — stage: implemented
 
 Run the checks now?  npm run lint · npm test  › yes
   ✓ all passed
 
-Hand-off saved to knowledge base.
 Next: /asdt-qa "Add a contact form with validation"
 ```
 

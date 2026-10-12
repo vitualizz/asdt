@@ -3,26 +3,26 @@ routable: true
 steps:
   - name: knowledge-recall
     skill: ../asdt-core/references/knowledge-recall.md
-    description: Query organizational memory for prior architectural decisions relevant to this change before acting
+    description: Recall the project's notes on prior architectural decisions relevant to this change before acting
     execution: inline
 
   - name: platform-analysis
     skill: ../asdt-core/references/platform-context.md
-    description: Load and inject platform conventions and design fingerprint from knowledge.yaml
+    description: Inject the platform block — conventions and design fingerprint — from .asdt/config.yaml
     execution: inline
 
   - name: design
     skill: steps/design.md
-    description: Make the architectural decision, design the data model and API surface, and emit the hand-off Developer, QA, and Security consume
+    description: Make the architectural decision, design the data model and API surface, and return the summary Developer, QA, and Security consume
     execution: subagent
     model: opus
     agent: analyst
     inputs:
-      - "{project}/{change}/pm/handoff" # optional — the requirements this design satisfies; degrade gracefully if absent
-      - "{project}/{change}/ux-ui/handoff" # optional — the flows and components the design has to serve
-      - "{project}/{change}/security/handoff" # optional — findings and checklist the design has to absorb
-      - "{project}/{change}/researcher/handoff" # optional — the explored direction; frames the problem only when PM was skipped
-    output_topic_key: "{project}/{change}/architect/handoff"
+      - pm # optional — the requirements this design satisfies
+      - ux-ui # optional — the flows and components the design has to serve
+      - security # optional — findings and checklist the design has to absorb
+      - researcher # optional — the explored direction; frames the problem only when PM was skipped
+    output: summary
     reference_skills:
       - ../asdt-core/references/api-design.md
       - ../asdt-core/references/scope-definition.md
@@ -34,8 +34,7 @@ steps:
     execution: subagent
     model: opus
     agent: analyst
-    inputs: []
-    output_topic_key: "{project}/study/{topic}/architect"
+    output: summary
     reference_skills:
       - ../asdt-core/references/api-design.md
       - ../asdt-core/protocol.md

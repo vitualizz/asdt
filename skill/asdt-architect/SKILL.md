@@ -57,21 +57,13 @@ run and never which sections the output carries.
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
-One artifact, and which one depends on the step that ran.
-
-`design` produces `architect/handoff` at `{project}/{change}/architect/handoff` — the
-decision plus the system design that follows from it, in ONE hand-off, consumed by Developer,
-QA, and Security.
-
-`review` produces `{project}/study/{topic}/architect` — the findings on an existing area. No
-pipeline declares it as an input; it is organizational memory, and later runs meet it through
-`knowledge-recall`.
+The role summary `architect`. `design` writes it for a change — the decision, with the
+alternatives it beat, plus the data model and API surface that follow from it — consumed by
+Developer, QA, and Security. `review` writes it under `study-{topic}` — the findings on an
+existing area, for the user.
 
 ## Invariants
-- This specialist writes NO files — its output is `architect/handoff` via memory **save**, nothing else
-- Everything it persists ends in the `architect` role slot — never another specialist's
-- Inputs arrive already injected; a step never self-fetches them
-- A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none
+- Writes no file: its only output is its summary (`asdt-core/protocol.md` §4)
 - Every decision carries the alternatives it beat, and why
 - Never design in isolation — the platform constraints are part of the decision
 - A design carries a data model AND an API surface, or says why the change has neither

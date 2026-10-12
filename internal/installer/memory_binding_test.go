@@ -4,8 +4,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/vitualizz/asdt/skill"
 )
@@ -18,22 +21,21 @@ var fakeMemoryProvider = ProviderDescriptor{
 	Name:        "Acme Memory",
 	Description: "Test-only provider.",
 	ConfigValue: "acme",
-	Tools: map[MemoryVerb]MemoryTool{
-		MemorySave:   {Name: "acme_put", Usage: "pass the key as `slot`"},
-		MemorySearch: {Name: "acme_find", Usage: "pass the query as `q`; each match carries its key as `slot`"},
-		MemoryGet:    {Name: "acme_fetch", Usage: "pass the id as `ref`"},
+	Tools: map[MemoryVerb][]MemoryTool{
+		MemoryRemember: {{Name: "acme_put", Usage: "pass the subject as `slot` and the note as `body`"}},
+		MemoryRecall:   {{Name: "acme_ask", Usage: "pass the query as `q`; each answer is a full note"}},
 	},
 	ClaudeToolPrefixes: []string{"mcp__acme__"},
 	// No Detect.Binary: a hosted provider with nothing to probe locally.
 }
 
 // boundFiles are the installed files (SkillsDir-relative) that must carry a
-// bound memory-binding region: the four that own one, plus every routed
-// SKILL.md, which receives protocol.md's copy through the specialist-header
-// splice.
+// bound memory-binding region: the three orchestrator-facing files that own
+// one, plus every routed SKILL.md, which receives protocol.md's copy through
+// the specialist-header splice. The executor header is not among them: a
+// sub-agent never reaches memory.
 var boundFiles = []string{
 	"asdt-core/protocol.md",
-	"asdt-core/executor-header.md",
 	"asdt-init/SKILL.md",
 	"asdt/SKILL.md",
 	"asdt-pm/SKILL.md",
@@ -46,7 +48,8 @@ var boundFiles = []string{
 }
 
 // installWithProvider installs the real embedded skill tree for one throwaway
-// assistant bound to provider and returns its SkillsDir.
+// assistant bound to provider (the zero ProviderDescriptor: no memory) and
+// returns its SkillsDir.
 func installWithProvider(t *testing.T, provider ProviderDescriptor) string {
 	t.Helper()
 
@@ -55,6 +58,13 @@ func installWithProvider(t *testing.T, provider ProviderDescriptor) string {
 	results := InstallWithModels([]AssistantDescriptor{a}, provider, skill.FS(), "", nil, InstallOptions{})
 	if results[0].Err != nil {
 		t.Fatalf("install with provider %q: %v", provider.ID, results[0].Err)
+	}
+	meta, err := ReadInstallMeta(a)
+	if err != nil {
+		t.Fatalf("read install meta: %v", err)
+	}
+	if want := provider.MetaValue(); meta.Memory != want {
+		t.Errorf("install meta Memory = %q, want %q", meta.Memory, want)
 	}
 	return skillsDir
 }
@@ -82,7 +92,7 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 		name     string
 		provider ProviderDescriptor
 		want     []string // substrings every bound region must carry
-		neutral  bool     // no installed file may name a shipped provider, even inside a region
+		neutral  bool     // no installed file may name a shipped provider outside a region
 	}{
 		{
 			name:     "engram binds today's tool names",
@@ -90,10 +100,9 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 			want: []string{
 				"**Memory provider: Engram.**",
 				"`memory.provider: engram`",
-				"- **save** → `mem_save` — pass the key as `topic_key`",
-				"`type: \"decision\"`",
-				"- **search** → `mem_search`",
-				"- **get** → `mem_get_observation`",
+				"- **remember** → `mem_save` — pass `project: {project}`, `topic_key: {project}/notes/{subject}`",
+				"- **recall** → `mem_search` — pass the query as `query`",
+				"; then `mem_get_observation` — pass a match's `id` as `id`",
 				"`mcp__plugin_engram_engram__mem_save` or `mcp__engram__mem_save`",
 			},
 		},
@@ -103,10 +112,22 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 			want: []string{
 				"**Memory provider: Acme Memory.**",
 				"`memory.provider: acme`",
-				"- **save** → `acme_put` — pass the key as `slot`.",
-				"- **search** → `acme_find` — pass the query as `q`; each match carries its key as `slot`.",
-				"- **get** → `acme_fetch` — pass the id as `ref`.",
+				"- **remember** → `acme_put` — pass the subject as `slot` and the note as `body`.",
+				"- **recall** → `acme_ask` — pass the query as `q`; each answer is a full note.",
 				"`mcp__acme__acme_put`",
+			},
+			neutral: true,
+		},
+		{
+			// protocol.md §2 and asdt-init/SKILL.md read a binding that names no
+			// provider as "Memory unavailable"; init then passes
+			// memory_provider: none and writes no memory.provider key.
+			name:     "no memory binds no provider",
+			provider: ProviderDescriptor{},
+			want: []string{
+				"**No memory provider bound.**",
+				`"Memory unavailable"`,
+				"Re-running the ASDT installer with a provider selected connects one.",
 			},
 			neutral: true,
 		},
@@ -116,11 +137,24 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			skillsDir := installWithProvider(t, c.provider)
 
+			header, err := os.ReadFile(filepath.Join(skillsDir, "asdt-core", "executor-header.md"))
+			if err != nil {
+				t.Fatalf("read installed executor header: %v", err)
+			}
+			if strings.Contains(string(header), memoryBindingBeginMarker) || strings.Contains(string(header), memoryBindingEndMarker) {
+				t.Errorf("installed executor-header.md carries a memory-binding region; sub-agents never reach memory")
+			}
+
 			for _, rel := range boundFiles {
 				region := bindingRegion(t, filepath.Join(skillsDir, filepath.FromSlash(rel)))
 				for _, w := range c.want {
 					if !strings.Contains(region, w) {
 						t.Errorf("%s binding region missing %q\nregion:%s", rel, w, region)
+					}
+				}
+				if c.provider.IsNone() {
+					if hits := providerNameHits(region, append(shippedProviderNames(), "memory provider:", "memory.provider:"), nil); len(hits) > 0 {
+						t.Errorf("%s no-memory binding names %v; it must bind no provider\nregion:%s", rel, hits, region)
 					}
 				}
 			}
@@ -166,7 +200,9 @@ func shippedProviderNames() []string {
 		add(p.Name)
 		add(p.Detect.Binary)
 		for _, verb := range memoryVerbs {
-			add(p.Tools[verb].Name)
+			for _, tool := range p.Tools[verb] {
+				add(tool.Name)
+			}
 		}
 	}
 	return names
@@ -222,11 +258,12 @@ func providerNameHits(content string, forbidden, allowedMCP []string) []string {
 
 // TestPromptsAreProviderNeutral asserts no prompt text names a memory provider
 // or its tools outside a memory-binding region. Prompts speak the memory
-// interface (asdt-core/protocol.md §0); the installer binds it to the selected
+// interface (asdt-core/protocol.md §2); the installer binds it to the selected
 // provider, so a provider is added in Go alone. It covers every source of
-// prompt text: the embedded skill tree, the executor agents generated for a
-// non-shipped provider (Claude Code and OpenCode, codegraph guidance on), the
-// Go prompt-prose constants, and the AGENTS.md template and personas.
+// prompt text: the embedded skill tree, the generated executor agents (Claude
+// Code and OpenCode, codegraph guidance on — they name no memory tool at all),
+// the Go prompt-prose constants, and the AGENTS.md template and personas. An
+// agent's frontmatter is configuration, so only its body is scanned.
 func TestPromptsAreProviderNeutral(t *testing.T) {
 	type source struct {
 		name, content string
@@ -254,15 +291,22 @@ func TestPromptsAreProviderNeutral(t *testing.T) {
 	readAll(assetsFS, "assets/personas", "", nil)
 	readAll(assetsFS, "assets/agents-template.md", "", nil)
 
-	for name, generate := range map[string]func(fs.FS, string, ProviderDescriptor, InstallOptions) ([]string, error){
+	for name, generate := range map[string]func(fs.FS, string, InstallOptions) ([]string, error){
 		"claude":   generateClaudeAgents,
 		"opencode": generateOpenCodeAgents,
 	} {
 		agentRoot := filepath.Join(t.TempDir(), name)
-		if _, err := generate(skill.FS(), agentRoot, fakeMemoryProvider, InstallOptions{CodegraphFound: true}); err != nil {
+		if _, err := generate(skill.FS(), agentRoot, InstallOptions{CodegraphFound: true}); err != nil {
 			t.Fatalf("generate %s agents: %v", name, err)
 		}
-		readAll(os.DirFS(agentRoot), ".", name+" agent ", fakeMemoryProvider.ClaudeToolPrefixes)
+		first := len(sources)
+		readAll(os.DirFS(agentRoot), ".", name+" agent ", nil)
+		// The frontmatter is configuration, not prompt text: OpenCode's
+		// permission block must name the memory tools it denies, and
+		// TestGenerateAgents_NoMemoryAccess guards it. Only the body is prose.
+		for i := first; i < len(sources); i++ {
+			sources[i].content = stripFrontmatter(sources[i].content)
+		}
 	}
 
 	for name, prose := range map[string]string{
@@ -275,75 +319,94 @@ func TestPromptsAreProviderNeutral(t *testing.T) {
 
 	for _, src := range sources {
 		for _, hit := range providerNameHits(src.content, shippedProviderNames(), src.allowedMCP) {
-			t.Errorf("%s names %q outside a memory-binding region — speak the memory interface (memory **save** / **search** / **get**) instead", src.name, hit)
+			t.Errorf("%s names %q outside a memory-binding region — speak the memory interface (memory **remember** / **recall**) instead", src.name, hit)
 		}
 	}
 }
 
-// TestGenerateAgents_MemoryGrantsFollowProvider asserts the executor agents'
-// memory grants and baked-in binding come from the selected provider, against
-// the REAL executor header (agentFixtureFS carries no binding region).
-func TestGenerateAgents_MemoryGrantsFollowProvider(t *testing.T) {
-	cases := []struct {
-		name        string
-		provider    ProviderDescriptor
-		analystLine string
-		builderLine string
-		bodyWant    string
-	}{
-		{
-			name:        "engram",
-			provider:    Providers[0],
-			analystLine: analystBaseToolsLine,
-			builderLine: builderBaseToolsLine,
-			bodyWant:    "- **save** → `mem_save`",
-		},
-		{
-			name:        "fake provider",
-			provider:    fakeMemoryProvider,
-			analystLine: "tools: Read, Glob, Grep, Bash, mcp__acme__acme_put, mcp__acme__acme_find, mcp__acme__acme_fetch",
-			builderLine: "tools: Read, Glob, Grep, Bash, Edit, Write, mcp__acme__acme_put, mcp__acme__acme_find, mcp__acme__acme_fetch",
-			bodyWant:    "- **save** → `acme_put`",
-		},
+// stripFrontmatter returns content after its leading `---` frontmatter block,
+// or content unchanged when it has none.
+func stripFrontmatter(content string) string {
+	const delim = "---\n"
+	if !strings.HasPrefix(content, delim) {
+		return content
+	}
+	if _, body, ok := strings.Cut(content[len(delim):], "\n"+delim); ok {
+		return body
+	}
+	return content
+}
+
+// TestGenerateAgents_NoMemoryAccess asserts the executor agents, generated
+// from the REAL executor header, hold no memory tool and no binding region:
+// the orchestrator alone remembers and recalls (protocol.md §0, §2), so a
+// sub-agent that could reach memory would reopen the second writer the
+// ownership rule closes.
+func TestGenerateAgents_NoMemoryAccess(t *testing.T) {
+	agentRoot := filepath.Join(t.TempDir(), "agents")
+	if _, err := generateClaudeAgents(skill.FS(), agentRoot, InstallOptions{}); err != nil {
+		t.Fatalf("generateClaudeAgents: %v", err)
+	}
+	for file, line := range map[string]string{"asdt-analyst.md": analystBaseToolsLine, "asdt-builder.md": builderBaseToolsLine} {
+		data, err := os.ReadFile(filepath.Join(agentRoot, file))
+		if err != nil {
+			t.Fatalf("read %s: %v", file, err)
+		}
+		content := string(data)
+		if !strings.Contains(content, line+"\n") {
+			t.Errorf("%s missing EXACT tools line\nwant: %s\ngot:\n%s", file, line, content)
+		}
+		if strings.Contains(content, memoryBindingBeginMarker) || strings.Contains(content, memoryBindingEndMarker) {
+			t.Errorf("%s carries a memory-binding region; executors never reach memory", file)
+		}
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			agentRoot := filepath.Join(t.TempDir(), "agents")
-			if _, err := generateClaudeAgents(skill.FS(), agentRoot, c.provider, InstallOptions{}); err != nil {
-				t.Fatalf("generateClaudeAgents: %v", err)
+	// OpenCode hands MCP tools to subagents implicitly, so the only guard is
+	// an explicit deny for every tool of every known provider.
+	ocRoot := filepath.Join(t.TempDir(), "opencode-agents")
+	if _, err := generateOpenCodeAgents(skill.FS(), ocRoot, InstallOptions{}); err != nil {
+		t.Fatalf("generateOpenCodeAgents: %v", err)
+	}
+	for _, file := range []string{"asdt-analyst.md", "asdt-builder.md"} {
+		fm, body := parseOpenCodeAgentFile(t, filepath.Join(ocRoot, file))
+		if strings.Contains(body, memoryBindingBeginMarker) || strings.Contains(body, memoryBindingEndMarker) {
+			t.Errorf("OpenCode %s carries a memory-binding region; executors never reach memory", file)
+		}
+		for _, p := range Providers {
+			for _, verb := range memoryVerbs {
+				for _, tool := range p.Tools[verb] {
+					key := "*_" + tool.Name
+					if got := fm.Permission.Tools[key]; got != "deny" {
+						t.Errorf("OpenCode %s permission[%q] = %v, want deny: provider %q's %s tool stays reachable", file, key, got, p.ID, verb)
+					}
+				}
 			}
-			for file, line := range map[string]string{"asdt-analyst.md": c.analystLine, "asdt-builder.md": c.builderLine} {
-				data, err := os.ReadFile(filepath.Join(agentRoot, file))
-				if err != nil {
-					t.Fatalf("read %s: %v", file, err)
-				}
-				content := string(data)
-				if !strings.Contains(content, line+"\n") {
-					t.Errorf("%s missing EXACT tools line\nwant: %s\ngot:\n%s", file, line, content)
-				}
-				if !strings.Contains(bindingRegion(t, filepath.Join(agentRoot, file)), c.bodyWant) {
-					t.Errorf("%s body binding region missing %q", file, c.bodyWant)
-				}
-			}
-		})
+		}
 	}
 }
 
 func TestBindMemory(t *testing.T) {
 	const begin, end = memoryBindingBeginMarker, memoryBindingEndMarker
 	incomplete := fakeMemoryProvider
-	incomplete.Tools = map[MemoryVerb]MemoryTool{MemorySave: fakeMemoryProvider.Tools[MemorySave]}
+	incomplete.Tools = map[MemoryVerb][]MemoryTool{MemoryRemember: fakeMemoryProvider.Tools[MemoryRemember]}
+	noName := fakeMemoryProvider
+	noName.Tools = map[MemoryVerb][]MemoryTool{
+		MemoryRemember: fakeMemoryProvider.Tools[MemoryRemember],
+		MemoryRecall:   {fakeMemoryProvider.Tools[MemoryRecall][0], {Usage: "read the note"}},
+	}
 	noUsage := fakeMemoryProvider
-	noUsage.Tools = map[MemoryVerb]MemoryTool{
-		MemorySave:   fakeMemoryProvider.Tools[MemorySave],
-		MemorySearch: {Name: "acme_find"},
-		MemoryGet:    fakeMemoryProvider.Tools[MemoryGet],
+	noUsage.Tools = map[MemoryVerb][]MemoryTool{
+		MemoryRemember: fakeMemoryProvider.Tools[MemoryRemember],
+		MemoryRecall:   {{Name: "acme_ask"}},
 	}
 	noPrefixes := fakeMemoryProvider
 	noPrefixes.ClaudeToolPrefixes = nil
 	emptyPrefix := fakeMemoryProvider
 	emptyPrefix.ClaudeToolPrefixes = []string{""}
+	noID := fakeMemoryProvider
+	noID.ID = ""
+	configNone := fakeMemoryProvider
+	configNone.ConfigValue = MemoryNone
 	probeWithoutURL := fakeMemoryProvider
 	probeWithoutURL.Detect = ProviderDetect{Binary: "acme"}
 
@@ -353,14 +416,21 @@ func TestBindMemory(t *testing.T) {
 		provider ProviderDescriptor
 		wantErr  string // substring; "" = success
 		wantSame bool   // content must pass through unchanged
+		wantText string // substring the bound content must carry ("" = the remember tool)
+		lackText string // substring the bound content must NOT carry
 	}{
-		{name: "marker-free content passes through, even for an empty provider", content: "# plain\n", provider: ProviderDescriptor{}, wantSame: true},
+		{name: "marker-free content passes through, even with no provider", content: "# plain\n", provider: ProviderDescriptor{}, wantSame: true},
+		{name: "no memory binds the no-provider body", content: begin + end, provider: ProviderDescriptor{}, wantText: "**No memory provider bound.**", lackText: "Memory provider:"},
+		{name: "provider without ID fails", content: begin + end, provider: noID, wantErr: "no ID, Name or ConfigValue"},
+		{name: "ConfigValue none fails", content: begin + end, provider: configNone, wantErr: "which means no provider"},
 		{name: "empty region is bound", content: "a\n" + begin + "\n" + end + "\nb\n", provider: fakeMemoryProvider},
 		{name: "begin marker without end fails", content: begin + "\n", provider: fakeMemoryProvider, wantErr: "end marker"},
 		{name: "duplicated region fails", content: begin + end + begin + end, provider: fakeMemoryProvider, wantErr: "appears 2 times"},
-		{name: "provider missing a verb fails", content: begin + end, provider: incomplete, wantErr: `binds no tool to verb "search"`},
-		{name: "verb without Usage fails", content: begin + end, provider: noUsage, wantErr: `gives verb "search" no Usage`},
-		{name: "provider without Claude prefixes fails", content: begin + end, provider: noPrefixes, wantErr: "has no ClaudeToolPrefixes"},
+		{name: "provider missing a verb fails", content: begin + end, provider: incomplete, wantErr: `binds no tool to verb "recall"`},
+		{name: "recipe tool without Name fails", content: begin + end, provider: noName, wantErr: `binds a tool with no Name to verb "recall"`},
+		{name: "tool without Usage fails", content: begin + end, provider: noUsage, wantErr: `gives verb "recall" tool "acme_ask" no Usage`},
+		{name: "provider without Claude prefixes binds without the prefix sentence", content: begin + end, provider: noPrefixes, lackText: "A host may prefix"},
+		{name: "multi-call recipe binds in order", content: begin + end, provider: Providers[0], wantText: "`mem_search` — pass the query as `query` and `project: {project}`; each match is a truncated preview with its `id` — a preview is never the note; then `mem_get_observation`"},
 		{name: "empty Claude prefix fails", content: begin + end, provider: emptyPrefix, wantErr: "empty ClaudeToolPrefixes entry"},
 		{name: "probe without install URL fails", content: begin + end, provider: probeWithoutURL, wantErr: "no Detect.InstallURL"},
 	}
@@ -387,9 +457,123 @@ func TestBindMemory(t *testing.T) {
 			if err != nil || string(again) != string(got) {
 				t.Errorf("bindMemory is not idempotent: err=%v\nfirst:  %q\nsecond: %q", err, got, again)
 			}
-			if !strings.Contains(string(got), "`acme_put`") {
-				t.Errorf("bound content missing the save tool: %q", got)
+			want := c.wantText
+			if want == "" {
+				want = "`" + c.provider.Tools[MemoryRemember][0].Name + "`"
+			}
+			if !strings.Contains(string(got), want) {
+				t.Errorf("bound content missing %q: %q", want, got)
+			}
+			if c.lackText != "" && strings.Contains(string(got), c.lackText) {
+				t.Errorf("bound content carries %q: %q", c.lackText, got)
 			}
 		})
+	}
+}
+
+// bindingStripRule is the heading of the protocol.md §5 rule that makes the
+// orchestrator delete every memory-binding region from text it injects into a
+// sub-agent prompt.
+const bindingStripRule = "**Strip the memory binding.**"
+
+// stripInjectedBinding applies the protocol.md §5 strip rule as worded: the
+// explanatory `memory-binding:` comment above a region, its opening and closing
+// comments, and everything between them go.
+func stripInjectedBinding(content string) string {
+	for {
+		begin := strings.Index(content, memoryBindingBeginMarker)
+		end := strings.Index(content, memoryBindingEndMarker)
+		if begin < 0 || end < begin {
+			return content
+		}
+		start := begin
+		if note := strings.LastIndex(content[:begin], "<!-- memory-binding:"); note >= 0 && !strings.Contains(content[note:begin], "-->\n\n") {
+			start = note
+		}
+		content = content[:start] + content[end+len(memoryBindingEndMarker):]
+	}
+}
+
+// TestSubagentInjectionStripsMemoryBinding guards the one path by which a
+// binding could reach a sub-agent: protocol.md is a reference skill of most
+// sub-agent steps, and the installed copy carries the bound region. The region
+// must stay (the orchestrator reads it), so the guard is the §5 rule: it must
+// exist and name the markers whenever any injected file carries a region, and
+// applying it as worded must leave no provider name behind. No step file may
+// lean on the binding either — a value a step needs from it arrives in its
+// payload (asdt-init/clarify's memory_provider).
+func TestSubagentInjectionStripsMemoryBinding(t *testing.T) {
+	skillsDir := installWithProvider(t, Providers[0])
+
+	protocol, err := os.ReadFile(filepath.Join(skillsDir, "asdt-core", "protocol.md"))
+	if err != nil {
+		t.Fatalf("read installed protocol.md: %v", err)
+	}
+	sec5Start := strings.Index(string(protocol), "## 5.")
+	sec5End := strings.Index(string(protocol), "## 6.")
+	if sec5Start < 0 || sec5End < sec5Start {
+		t.Fatal("installed protocol.md has no §5 followed by §6")
+	}
+	sec5 := string(protocol)[sec5Start:sec5End]
+	ruleIdx := strings.Index(sec5, bindingStripRule)
+	if ruleIdx < 0 {
+		t.Fatalf("protocol.md §5 lacks %q; the bound region would reach every sub-agent that loads protocol.md", bindingStripRule)
+	}
+	rule, _, _ := strings.Cut(sec5[ruleIdx:], "\n\n")
+	for _, want := range []string{"ASDT:GENERATED:memory-binding", "`memory-binding:` comment", "sub-agent prompt"} {
+		if !strings.Contains(rule, want) {
+			t.Errorf("protocol.md §5 strip rule does not name %q:\n%s", want, rule)
+		}
+	}
+
+	stepFileWord := regexp.MustCompile(`(?i)\bbinding\b`)
+	workflows, err := filepath.Glob(filepath.Join(skillsDir, "*", "workflow.yaml"))
+	if err != nil || len(workflows) == 0 {
+		t.Fatalf("glob installed workflow.yaml: %v (found %d)", err, len(workflows))
+	}
+	carriers := 0
+	for _, wfPath := range workflows {
+		dir := filepath.Dir(wfPath)
+		data, err := os.ReadFile(wfPath)
+		if err != nil {
+			t.Fatalf("read %s: %v", wfPath, err)
+		}
+		var wf workflowFile
+		if err := yaml.Unmarshal(data, &wf); err != nil {
+			t.Fatalf("parse %s: %v", wfPath, err)
+		}
+		for _, step := range wf.Steps {
+			if step.Execution != "subagent" {
+				continue
+			}
+			if step.Skill != "" {
+				body, err := os.ReadFile(filepath.Join(dir, step.Skill))
+				if err != nil {
+					t.Fatalf("read %s step file: %v", step.Name, err)
+				}
+				if hit := stepFileWord.FindString(string(body)); hit != "" {
+					t.Errorf("%s/%s step file mentions %q; a sub-agent never sees the binding, so pass the value in its payload", filepath.Base(dir), step.Skill, hit)
+				}
+			}
+			for _, ref := range step.ReferenceSkills {
+				body, err := os.ReadFile(filepath.Join(dir, ref))
+				if err != nil {
+					t.Fatalf("read %s reference %s: %v", step.Name, ref, err)
+				}
+				if !strings.Contains(string(body), memoryBindingBeginMarker) {
+					continue
+				}
+				carriers++
+				if hits := providerNameHits(stripInjectedBinding(string(body)), shippedProviderNames(), nil); len(hits) > 0 {
+					t.Errorf("%s step %q reference %s still names %v after the §5 strip", filepath.Base(dir), step.Name, ref, hits)
+				}
+				if strings.Contains(stripInjectedBinding(string(body)), "Memory provider:") {
+					t.Errorf("%s step %q reference %s keeps the binding body after the §5 strip", filepath.Base(dir), step.Name, ref)
+				}
+			}
+		}
+	}
+	if carriers == 0 {
+		t.Error("no sub-agent reference skill carries a bound region; if protocol.md stopped being injected, retire this test deliberately")
 	}
 }

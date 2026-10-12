@@ -13,7 +13,7 @@ locale: en
 
 The Security Specialist performs threat modeling and security analysis using STRIDE and the OWASP Top 10. It maps the attack surface, identifies threats systematically, and produces a prioritized hardening checklist where every finding has a concrete, actionable mitigation — not "monitor it" or "add logging."
 
-The critical invariant: **Security has no required predecessor.** It can run at any stage — on a fresh project with no prior artifacts, mid-development, or after launch. If upstream artifacts exist (architecture decisions, implementation), it reads them. If they don't, it works from the platform context and request alone, noting gaps in `open_items` and proceeding.
+The critical invariant: **Security has no required predecessor.** It can run at any stage — on a fresh project with no prior work, mid-development, or after launch. If upstream summaries exist (the Architect's design, the Developer's plan or build), it reads them. If they don't, it works from the platform context, the codebase, and the request, noting gaps in `Open items` and proceeding.
 
 Depth is gated by the risk surface, not complexity — the specialist judges it from what the change touches: authentication, secrets, data handling, external integrations. This is the only specialist where the question isn't "how complex is the feature?" but "how large is the attack surface?" The risk surface sets how deep the pass goes; both steps, `assess` and `harden`, run every time.
 
@@ -39,18 +39,18 @@ It maps the surface, judges it, and leaves you prioritized findings with a concr
 
 ## Pipeline position
 
-**No required predecessor** — invoke at any point. For maximum impact, run it after the Architect (it reads `architect/handoff` for the API surface and trust boundaries, and `developer/handoff` for the code that changed, when they exist). Given a Developer plan that isn't built yet, it maps the planned surface from the files the plan declares and records that nothing is built yet. For a quick threat model early in design, run it before architecture is finalized to surface design-level risks before they're baked in.
+**No required predecessor** — invoke at any point. For maximum impact, run it after the Architect (it reads the Architect's summary for the API surface and trust boundaries, and the Developer's summary for the code that changed, when they exist). Once the change is built, the change's files come from git, the authority on what was built: every path `git status --porcelain` shows modified or untracked, plus `git diff --name-only {base}...HEAD` against the default branch, joined with the paths under the Developer summary's `Files changed` and `Prior delivery`, which also say where to read first. Given a Developer plan that isn't built yet, it maps the planned surface from the files the plan declares and records that nothing is built yet. For a quick threat model early in design, run it before architecture is finalized to surface design-level risks before they're baked in.
 
-Its hand-off is read by the Architect, the Developer, and QA.
+Its summary is read by the Architect, the Developer, and QA.
 
 ## What it produces
 
-`security/handoff` — findings and hardening checklist as sections of ONE artifact (`{project}/study/{topic}/security` when the run audits what already exists):
+Security's summary (`security`), written from `harden` — findings and hardening checklist as sections of ONE summary (under `study-{topic}` when the run audits what already exists):
 
 - **Findings** — highest severity first, each with a one-word severity (`high`, `medium`, `low`), what an attacker gains, the evidence that grounds it, and the concrete mitigation that closes it
 - **Hardening checklist** — ordered items, each verifiable as done, plus where the mitigations land
 
-Consumed by: **Architect** (a finding that reshapes a boundary is a design constraint), **Developer** (each mitigation that lands in the change's files becomes a constraint on the spec), **QA** (every finding gets a test case that proves its mitigation holds; a `high` whose mitigation leaves no trace in the Developer's changed or planned files is a `no-go`).
+Consumed by: **Architect** (a finding that reshapes a boundary is a design constraint), **Developer** (each mitigation that lands in the change's files becomes a constraint on the spec), **QA** (every finding gets a test case that proves its mitigation holds; a `high` whose mitigation leaves no trace in the change's files, earlier deliveries included, or in the Developer's planned files is a `no-go`).
 
 ## Common patterns
 
@@ -66,7 +66,7 @@ Consumed by: **Architect** (a finding that reshapes a boundary is a design const
 
 ```
 /asdt-security Quick security pass before the v2 launch
-# → No prior artifacts needed — runs from platform context alone
+# → No prior work needed — runs from the platform context and the codebase
 ```
 
 ## Limits — what it does NOT do

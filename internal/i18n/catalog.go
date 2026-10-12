@@ -74,27 +74,25 @@ type InstallerStrings struct {
 	MenuQuit      string
 
 	// Keyboard hint descriptions (what a key does)
-	HintNavigate         string
-	HintSelect           string
-	HintQuit             string
-	HintToggle           string
-	HintAllNone          string
-	HintBack             string
-	HintBackToMenu       string
-	HintCycleMode        string
-	HintCycleModel       string
-	HintExpand           string
-	HintResetDefault     string
-	HintContinue         string
-	HintChecking         string
-	HintEnvironment      string
-	HintProviderRequired string
+	HintNavigate     string
+	HintSelect       string
+	HintQuit         string
+	HintToggle       string
+	HintAllNone      string
+	HintBack         string
+	HintBackToMenu   string
+	HintCycleMode    string
+	HintCycleModel   string
+	HintExpand       string
+	HintResetDefault string
+	HintContinue     string
+	HintChecking     string
+	HintEnvironment  string
 
 	// Hint group labels
-	HintGroupNav      string
-	HintGroupActions  string
-	HintGroupStatus   string
-	HintGroupRequired string
+	HintGroupNav     string
+	HintGroupActions string
+	HintGroupStatus  string
 
 	// Inline confirm buttons (full label including brackets)
 	BtnContinue string
@@ -141,7 +139,7 @@ type InstallerStrings struct {
 
 	// Review screen labels
 	LabelAssistants string
-	LabelProvider   string
+	LabelMemory     string
 	LabelPersona    string
 	LabelEmojis     string
 	LabelConfig     string
@@ -165,16 +163,26 @@ type InstallerStrings struct {
 	SectionMemoryProvider  string
 	SectionAIEnhancements  string
 
-	// Memory-provider recovery block, shown per required provider whose probe
-	// binary is not on PATH (preflight when none is usable; provider selection
-	// for the selected one).
-	PrefProviderRequired string // printf format: %s = provider Name
-	PrefProviderInstall  string // printf format: %s = provider Detect.InstallURL
-	PrefProviderRestart  string
+	// Memory provider selection. A provider is optional: the "No memory" row
+	// sits after every installer.Providers entry, and a selected provider whose
+	// probe binary is not on PATH shows a warning with its install hint but
+	// never blocks Continue. The Review row reads ValueMemoryNone for "No
+	// memory" and ValueMemoryMissing for an undetected provider.
+	OptionNoMemory      string
+	DescNoMemory        string
+	WarnProviderMissing string // printf format: %s = provider Name
+	PrefProviderInstall string // printf format: %s = provider Detect.InstallURL
+	// DetailProviderNotFound is the preflight row detail for a provider whose
+	// probe binary is not on PATH (a soft warning, never a block).
+	DetailProviderNotFound string // printf format: %s = provider Detect.InstallURL
+	ValueMemoryNone        string // printf format: %s = provider Names, joined by " / "
+	ValueMemoryMissing     string // printf format: %s = provider Name, %s = provider Detect.InstallURL
 }
 
 // DashboardStrings holds user-visible strings for the dashboard TUI.
 type DashboardStrings struct {
 	LabelInstalled string // "Installed" — prefix for the install date
 	LabelPersona   string // "Persona" — prefix for the configured persona name
+	LabelMemory    string // "Memory" — prefix for the bound memory provider
+	ValueNoMemory  string // shown after LabelMemory for a "no memory" install
 }

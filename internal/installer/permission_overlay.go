@@ -170,7 +170,7 @@ func injectSelfProtection(overlay map[string]any, home string) {
 //   - deny: the previously-managed overlay rules (prevManaged) are PRUNED first,
 //     then the current managed set is unioned in (keep-first dedup). Anything not
 //     in prevManaged — the user's own deny rules — always survives. This makes the
-//     overlay self-healing: stale entries (e.g. a verb no longer shipped) are
+//     overlay self-healing: stale entries (rules the current set does not ship) are
 //     cleaned and the current rules re-placed on every run.
 //   - defaultMode / skipDangerousModePermissionPrompt: forced under Overwrite;
 //     set only-if-absent under Append (preserving the user's existing value).
@@ -471,7 +471,7 @@ func toStringSlice(v any) []string {
 
 // subtract returns the entries of a not present in remove, preserving a's order.
 // It strips the previously-written overlay-managed deny rules before the current
-// set is re-applied, so a rule that is no longer shipped (e.g. a removed verb) is
+// set is re-applied, so a rule the current set does not ship is
 // cleaned on the next run while the user's own rules — never in remove — survive.
 func subtract(a, remove []string) []string {
 	if len(remove) == 0 {

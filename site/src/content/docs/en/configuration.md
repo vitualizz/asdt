@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Reference for .asdt/config.yaml, .asdt/knowledge/knowledge.yaml, and all configuration options.
+description: Reference for .asdt/config.yaml, the one file that holds your project's facts.
 order: 2
 locale: en
 ---
@@ -9,25 +9,36 @@ locale: en
 
 ## Project config — `.asdt/config.yaml`
 
-Running `/asdt-init` (inside your assistant) creates `.asdt/config.yaml`. Keys you add by hand survive a later re-init.
+`.asdt/config.yaml` is the one place your project's facts live. Running `/asdt-init` (inside your assistant) detects them with bounded scans of the repo, settles the ambiguous ones with you, and writes this file. Every specialist reads it: the inline `platform-analysis` step turns it into a short platform block (stack, conventions, design fingerprint, design surface), so no specialist re-detects the stack.
 
 ```yaml
 memory:
   provider: engram
-strict_tdd: false              # optional
+strict_tdd: false              # optional — never added by /asdt-init
 code_intelligence: codegraph   # only when detected
 primary_design_surface: mobile # only when answered
+stack: [typescript]
+file_structure: "src/ for application code, tests/ alongside"
+is_monorepo: { value: "false", source: detected, confidence: high }
+test_runner: { value: "vitest", source: detected, confidence: high }
+naming_style: { value: "kebab-case", source: detected, confidence: medium }
+architectural_style: { value: "layered", source: manual, confidence: high }
+design_fingerprint:
+  css_approach: { value: "tailwind", source: detected, confidence: high }
+  ci_cd: { value: "github-actions", source: detected, confidence: high }
 ```
+
+Treat the detected fields as owned by `/asdt-init`: re-run it to recalibrate rather than editing them by hand. A recalibration shows you a table of every value that would change, plus every value already marked `source: manual`, and asks once whether to accept all or review key by key. A value you set that differs from the one offered is recorded as `source: manual` and never silently overwritten. Re-confirming a value never marks it manual: picking the detected value records the detected entry, and accepting a value you had set by hand keeps it as it is. For a key you set by hand earlier, that value, not the detected one, is the default `/asdt-init` offers. Keys you add by hand that `/asdt-init` doesn't recognize are carried forward untouched, and a re-run that changes nothing leaves the file byte-identical.
 
 ### `memory.provider`
 
-The memory backend used by all specialists to persist and retrieve hand-offs. Only `engram` is supported today. `/asdt-init` writes the value of the provider your install is bound to, and every specialist checks it against that binding before it runs — so a project initialized for one provider stops with "Memory provider not configured" under an install bound to another, until you re-run `/asdt-init`.
+The memory provider your install is bound to. Only `engram` is supported today. `/asdt-init` writes the value of the provider your install is bound to, even over an existing value. When no provider is bound (a **No memory** install), it writes no `memory` block and leaves an existing one as it is. If the project names a different provider than your install, specialists treat memory as unavailable: they still run, working from the session scratchpad, and nothing is recalled or remembered until you re-run `/asdt-init`. See [Scratchpad & Memory](/asdt/docs/memory-and-engram).
 
 ### `strict_tdd`
 
 When `true`, the Developer's `implement` step writes tests in the same pass as the code, inside the same approved file list. There is no separate test step, and `implement` never runs the tests: the `verify` gate that follows offers you the check commands (never one that would rewrite files) and runs them only if you say yes. You can also ask for tests in the request without setting the flag.
 
-Default: absent, which means `false`.
+Default: absent, which means `false`. `/asdt-init` carries it forward but never adds it.
 
 ### `code_intelligence`
 
@@ -38,39 +49,17 @@ Written by `/asdt-init` only when it detects a code-intelligence index (today, `
 The surface UX/UI designs for first: `mobile`, `tablet`, `desktop`, or `none`. `/asdt-init` asks for it once (default `mobile`); a re-init lets you change it.
 
 - **Absent** — the question was never asked (for example, a non-interactive run). The specialists that design or build UI (UX/UI and the Developer) treat it as `mobile` and record one `ASSUMED:` entry saying so.
-- **`none`** — the project has no visual surface at all (a CLI, a library, a backend service). UX/UI then skips its spec and saves a short hand-off saying there is nothing to design, so downstream specialists read an explicit "no UI" instead of a silent gap. The Developer adds no responsive layer.
+- **`none`** — the project has no visual surface at all (a CLI, a library, a backend service). UX/UI then skips its design steps and writes a short summary saying there is nothing to design, so downstream specialists read an explicit "no UI" instead of a silent gap. The Developer adds no responsive layer.
 
-## Project knowledge — `.asdt/knowledge/knowledge.yaml`
+### Detected facts
 
-Generated by `/asdt-init` from bounded scans of the repo. It is the only knowledge file specialists read: the inline `platform-analysis` step turns it into a short summary (stack, conventions, design fingerprint, plus the design surface from `config.yaml`) so no specialist re-detects the stack.
+`stack`, `file_structure`, the four decision fields (`is_monorepo`, `test_runner`, `naming_style`, `architectural_style`), and the `design_fingerprint` concerns (`i18n`, `css_approach`, `orm`, `state_management`, `ci_cd`, `lint`) are what `/asdt-init` detects. The decision fields and fingerprint concerns are stored as `{value, source, confidence}`; specialists read only the `value`. A fingerprint concern probed and found absent is stored as `none`, so a later run can tell "probed, absent" from "never probed".
 
-```yaml
-schema_version: "2"
-scanned_at: 2026-05-04T12:00:00Z
-stack: [typescript]
-file_structure: "src/ for application code, tests/ alongside"
-design_fingerprint:
-  css_approach: tailwind
-  ci_cd: github-actions
-is_monorepo: { value: "false", source: "detected", confidence: "high" }
-test_runner: { value: "vitest", source: "detected", confidence: "high" }
-naming_style: { value: "kebab-case", source: "detected", confidence: "medium" }
-architectural_style: { value: "layered", source: "manual", confidence: "high" }
-# ASDT:NUANCE:BEGIN
-human_nuance:
-  - topic: "legacy-css"
-    type: repo_practice
-    note: "legacy CSS in styles/; new work uses Tailwind utilities"
-    source: manual
-    origin: user
-# ASDT:NUANCE:END
-```
+## What is not in the config
 
-Treat it as owned by `/asdt-init`: re-run it to recalibrate rather than editing detected fields by hand. A field you set during a recalibration review is marked `source: manual` and is never silently overwritten.
+**Things you say about the project** — a convention, a gotcha a newcomer would miss — are not configuration. They go to memory as notes, never into a file: `/asdt-init` asks a few optional questions about non-obvious code and remembers your answers, and any specialist remembers what you tell it ("remember that…"). Notes reach a step as separate, labelled project notes, never mixed into the detected platform block. See [Scratchpad & Memory](/asdt/docs/memory-and-engram).
 
-`human_nuance` is the exception — it holds the things no scan can detect, in your words. It is filled from `/asdt-init`'s optional questions, or when you tell a specialist to remember something durable ("remember that…"). A specialist that notices such a fact on its own proposes it in one line and saves it only on your yes. These notes are never mixed into the detected summary: they reach a step as separate, labelled project notes, and only when relevant.
-
-`/asdt-init` also writes `.asdt/knowledge/provenance.yaml`, a sidecar recording where each detected value came from. Only a later `/asdt-init` reads it.
+**Working files** — each specialist's summary — live in the session scratchpad, outside your repository, never under `.asdt/`.
 
 ## Environment variables
 
@@ -78,4 +67,4 @@ ASDT reads no environment variables directly. The binary uses the AI assistant's
 
 ## Multiple projects
 
-Each project has its own `.asdt/` directory. Switch projects by opening your AI assistant in a different directory — ASDT reads configuration from the nearest `.asdt/config.yaml` walking up from the current working directory.
+Each project has its own `.asdt/` directory. Switch projects by opening your AI assistant in a different directory — ASDT reads configuration from the nearest `.asdt/config.yaml` walking up from the current working directory. Memory is kept apart per project too: notes are scoped by the project's directory name plus a hash of its git remote (see [Scratchpad & Memory](/asdt/docs/memory-and-engram#the-scratchpad-working-summaries)).

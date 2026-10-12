@@ -48,24 +48,17 @@ Judge which step the request asks for:
 | compare what exists against its requirements — "what did we promise in checkout?" | `review` |
 
 Ambiguous → `backlog`. The inline `knowledge-recall` prelude runs first either way, and depth
-changes how much detail travels in the hand-off, never which steps run.
+changes how much detail the summary carries, never which steps run.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`.
 
 ## Final Output
-One artifact, and which one depends on the step that ran.
-
-`backlog` produces `pm/handoff` at `{project}/{change}/pm/handoff` — consumed by Architect,
-Developer (acceptance criteria), QA (primary requirements source), and UX/UI.
-
-`review` produces `{project}/study/{topic}/pm` — the gap analysis of an existing area. No
-pipeline declares it as an input; it is organizational memory, reached through
-`knowledge-recall`.
+The role summary `pm`. `backlog` writes it for a change — user stories, explicit scope,
+measurable NFRs, acceptance criteria — consumed by Architect, Developer (acceptance criteria),
+QA (primary requirements source), and UX/UI. `review` writes it under `study-{topic}` — the gap
+analysis of an existing area, for the user.
 
 ## Invariants
-- This specialist writes NO files to the host repo — its output is `pm/handoff` via memory **save**, nothing else
-- Everything PM persists ends in the `pm` role slot — never another specialist's
-- Inputs arrive already injected; a step never self-fetches them
-- A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none
-- `scope.out` is MANDATORY — a hand-off without explicit out-of-scope items is incomplete
+- Writes no file: its only output is its summary (`asdt-core/protocol.md` §4)
+- The out-of-scope list is MANDATORY — a summary without explicit out-of-scope items is incomplete
 - PM is the authority on acceptance criteria — downstream specialists refine them, never re-derive them

@@ -224,7 +224,7 @@ func TestAgentConfigAdapterFor_KnownIDs(t *testing.T) {
 }
 
 // TestLocaleByCode_ResolvesAndAlwaysHasDirective verifies exact matches, the
-// legacy bare-"es" → es-419 mapping, and the default-en fallback for empty or
+// bare-"es" → es-419 mapping, and the default-en fallback for empty or
 // unknown codes — and that every returned Directive is non-empty.
 func TestLocaleByCode_ResolvesAndAlwaysHasDirective(t *testing.T) {
 	cases := []struct {

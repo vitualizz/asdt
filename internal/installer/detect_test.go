@@ -104,6 +104,6 @@ func TestDetect_SkillsRootExistsButASDTAbsent(t *testing.T) {
 		t.Fatalf("Detect returned unexpected error: %v", err)
 	}
 	if skillsPresent {
-		t.Error("skillsPresent should be false when the skills root exists but ASDT's own \"asdt\" directory does not — SkillsDir existing is no longer evidence that ASDT is installed")
+		t.Error("skillsPresent should be false when the skills root exists but ASDT's own \"asdt\" directory does not — an existing SkillsDir is not evidence that ASDT is installed")
 	}
 }

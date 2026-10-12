@@ -11,11 +11,11 @@ locale: es
 
 ## Qué hace
 
-El PM corre un solo paso y entrega un solo artefacto. Toma lo que pediste y lo convierte en de 3 a 6 historias de usuario, cada una con uno o dos criterios de aceptación en lenguaje llano.
+El PM corre un solo paso y devuelve un solo resumen. Toma lo que pediste y lo convierte en de 3 a 6 historias de usuario, cada una con uno o dos criterios de aceptación en lenguaje llano.
 
 **El orden de las historias es la prioridad.** La primera es la que se entrega primero. No hay ratings MoSCoW, ni un campo de prioridad aparte, ni una matriz que mantener: si querés cambiar la prioridad, cambiás el orden.
 
-**El alcance fuera es obligatorio.** Un hand-off que no dice explícitamente qué queda afuera está incompleto — no "no había nada que excluir". La ambigüedad de alcance es de donde sale casi todo el scope creep, y nombrar lo adyacente es lo que la corta.
+**El alcance fuera es obligatorio.** Un resumen que no dice explícitamente qué queda afuera está incompleto — no "no había nada que excluir". La ambigüedad de alcance es de donde sale casi todo el scope creep, y nombrar lo adyacente es lo que la corta.
 
 Los NFRs solo entran si el feature realmente los implica y si son medibles. "p95 bajo 200ms, medido con k6" es un NFR; "que sea rápido" no es nada.
 
@@ -45,16 +45,16 @@ Se le habla en lenguaje natural. No hay flags: si querés más o menos profundid
 
 ## Qué produce
 
-Un único hand-off en `{project}/{change}/pm/handoff`:
+Un único resumen, `pm`, archivado en el scratchpad de la sesión como `{scratchpad}/asdt/{change}/pm.md`:
 
-| Campo | Qué lleva |
+| Parte | Qué lleva |
 |---|---|
-| `what` | El cambio en una frase |
-| `decisions` | Las historias en orden de entrega |
-| `constraints` | Alcance dentro, alcance fuera, y los NFRs medibles |
-| `acceptance_criteria` | Given/When/Then, máximo 5 |
-| `risks` | `{riesgo, mitigación}`, una línea cada uno |
-| `open_items` | Huecos reales, con prefijo `ASSUMED:` cuando el PM asumió una respuesta |
+| primera línea | El cambio en una frase |
+| `Decisions` | Las historias en orden de entrega |
+| `Constraints` | Alcance dentro, alcance fuera, y los NFRs medibles |
+| `Acceptance criteria` | Given/When/Then, máximo 5 |
+| `Risks` | `riesgo → mitigación`, una línea cada uno |
+| `Open items` | Huecos reales, con prefijo `ASSUMED:` cuando el PM asumió una respuesta |
 
 **El PM es la autoridad de los criterios de aceptación.** Quien viene después los refina —el Developer los lleva a granularidad de implementación, QA busca lo que les falta— pero nadie los reescribe desde cero.
 
@@ -70,7 +70,7 @@ También sirve para ordenar lo que ya existe sin abrir un cambio:
 
 ## Qué consume
 
-La petición cruda, las convenciones detectadas del proyecto, y —si el Researcher corrió antes— su `researcher/handoff`: la dirección recomendada le da el punto de partida, y las direcciones descartadas alimentan el alcance fuera.
+La petición cruda, las notas del proyecto que recuerda la memoria, y —si el Researcher corrió antes— el resumen del Researcher: la dirección recomendada le da el punto de partida, y las direcciones descartadas alimentan el alcance fuera.
 
 Si no hay nada de eso, arranca igual desde la petición y lo deja registrado.
 
@@ -79,4 +79,4 @@ Si no hay nada de eso, arranca igual desde la petición y lo deja registrado.
 - No escribe decisiones de arquitectura ni ADRs
 - No escribe código ni diseños técnicos
 - No escribe flujos de UX ni specs de componentes
-- No produce un hand-off sin alcance fuera explícito
+- No produce un resumen sin alcance fuera explícito

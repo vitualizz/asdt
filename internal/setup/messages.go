@@ -14,6 +14,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/vitualizz/asdt/internal/i18n"
 	"github.com/vitualizz/asdt/internal/installer"
 	"github.com/vitualizz/asdt/internal/setup/components"
 )
@@ -65,12 +66,12 @@ type EnvironmentCheckProgressMsg struct {
 }
 
 // EnvironmentCheckMsg is the terminal message sent after ALL probes in
-// EnvironmentCheckCmd have resolved. Carries the gate flags needed to
-// decide whether Continue is enabled.
+// EnvironmentCheckCmd have resolved. Continue is enabled once it arrives.
 type EnvironmentCheckMsg struct {
 	// ProvidersFound maps each installer.Providers ID to whether that memory
-	// provider is usable: its Detect.Binary is on PATH, or it has no probe. A
-	// missing ID reads as not found.
+	// provider was found: its Detect.Binary is on PATH, or it has no probe. A
+	// missing ID reads as not found. It picks the provider screen's default
+	// and its warnings; it never gates Continue.
 	ProvidersFound map[installer.ProviderID]bool
 	CodegraphFound bool
 }
@@ -193,11 +194,11 @@ const environmentCheckTimeout = 5 * time.Second
 // EnvironmentCheckCmd fans out environment probes concurrently.
 // Each probe sends an EnvironmentCheckProgressMsg immediately when it
 // resolves. Uses context.WithTimeout(5s) for all async probes to prevent
-// TUI hang on slow PATH resolution.
-func EnvironmentCheckCmd() tea.Cmd {
+// TUI hang on slow PATH resolution. s localizes the probe row details.
+func EnvironmentCheckCmd(s i18n.InstallerStrings) tea.Cmd {
 	cmds := []tea.Cmd{osProbeCmd(), shellProbeCmd()}
 	for _, p := range installer.Providers {
-		cmds = append(cmds, providerProbeCmd(p))
+		cmds = append(cmds, providerProbeCmd(p, s))
 	}
 	cmds = append(cmds, codegraphProbeCmd())
 	return tea.Batch(cmds...)
@@ -228,10 +229,11 @@ func shellProbeCmd() tea.Cmd {
 	}
 }
 
-// providerProbeCmd resolves p's preflight row, labeled p.Name: an error when
-// p.Detect.Binary is not on PATH, OK with its path when it is, and OK with an
-// informational detail when p has no local probe — such a provider never blocks.
-func providerProbeCmd(p installer.ProviderDescriptor) tea.Cmd {
+// providerProbeCmd resolves p's preflight row, labeled p.Name: a soft warning
+// with its install hint when p.Detect.Binary is not on PATH, OK with its path
+// when it is, and OK with an informational detail when p has no local probe.
+// No outcome blocks: a memory provider is optional but recommended.
+func providerProbeCmd(p installer.ProviderDescriptor, s i18n.InstallerStrings) tea.Cmd {
 	return func() tea.Msg {
 		if p.Detect.Binary == "" {
 			return EnvironmentCheckProgressMsg{
@@ -246,8 +248,9 @@ func providerProbeCmd(p installer.ProviderDescriptor) tea.Cmd {
 		if err != nil {
 			return EnvironmentCheckProgressMsg{
 				RowLabel: p.Name,
-				Status:   components.CheckStatusError,
-				Detail:   "not found — install: " + p.Detect.InstallURL,
+				Status:   components.CheckStatusWarning,
+				Detail:   fmt.Sprintf(s.DetailProviderNotFound, p.Detect.InstallURL),
+				SoftWarn: true,
 			}
 		}
 		return EnvironmentCheckProgressMsg{
