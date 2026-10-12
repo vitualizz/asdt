@@ -22,15 +22,17 @@ const (
 	// StateEnvironmentCheck is shown after the user selects "Install / Update
 	// Skills". It fans out environment probes (OS, Shell, every memory
 	// provider in installer.Providers, Codegraph) concurrently; Continue is
-	// gated until all probes resolve and at least one provider is usable.
+	// gated only until all probes resolve. A missing memory provider is a
+	// warning, never a block: memory is optional.
 	StateEnvironmentCheck
 	// StateDashboard shows the dashboard overview with per-assistant status.
 	StateDashboard
 	// StateSelectAssistants allows the user to choose assistants to install.
 	// Shows present/missing status badges alongside checkboxes.
 	StateSelectAssistants
-	// StateSelectProvider allows the user to choose a memory provider.
-	// Continue is gated on the selected provider being usable.
+	// StateSelectProvider allows the user to choose a memory provider, or "No
+	// memory" (the last row). It never gates Continue: an undetected provider
+	// shows its install hint as a warning.
 	StateSelectProvider
 	// StateAgentSetup shows the persona selection step (optional).
 	StateAgentSetup
@@ -79,8 +81,14 @@ type preflightState struct {
 
 // wizardState holds install-wizard state across SelectAssistants → Installing → Done.
 type wizardState struct {
-	selected        map[int]bool
-	provider        int
+	selected map[int]bool
+	// provider indexes installer.Providers; noMemoryChoice() (one past the
+	// last provider) is "No memory". The environment check sets it to the
+	// first provider found, else "No memory".
+	provider int
+	// providerChosen is set once the user reaches the provider screen; a
+	// late EnvironmentCheckMsg then leaves provider alone.
+	providerChosen  bool
 	results         []installer.InstallResult
 	agentResults    []installer.AgentConfigResult
 	installExpected int  // number of per-assistant install Cmds fired
@@ -233,7 +241,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if allProbesDone(m.preflight.sections) {
 			providersFound := make(map[installer.ProviderID]bool, len(installer.Providers))
 			for _, p := range installer.Providers {
-				providersFound[p.ID] = !rowHasStatus(m.preflight.sections, p.Name, components.CheckStatusError)
+				providersFound[p.ID] = !rowHasStatus(m.preflight.sections, p.Name, components.CheckStatusWarning)
 			}
 			codegraphFound := !rowHasStatus(m.preflight.sections, "Codegraph", components.CheckStatusWarning)
 			return m, func() tea.Msg {
@@ -246,6 +254,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.preflight.done = true
 		m.preflight.providersFound = msg.ProvidersFound
 		m.preflight.codegraphFound = msg.CodegraphFound
+		if !m.wizard.providerChosen {
+			m.wizard.provider = m.defaultProviderChoice()
+		}
 		return m, nil
 
 	case LanguagePrefMsg:
@@ -385,9 +396,8 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleEnvironmentCheck handles keys for the pre-flight check screen.
-// Enter proceeds to StateSelectAssistants only when preflight is done and at
-// least one memory provider is usable; StateSelectProvider then gates on the
-// one the user picks.
+// Enter proceeds to StateSelectAssistants once every probe has resolved,
+// whatever it found: a missing memory provider never blocks.
 // All assistants are pre-selected on first entry so the default is visible.
 // Esc returns to StateMainMenu at any point.
 // q and ctrl+c always quit.
@@ -396,7 +406,7 @@ func (m Model) handleEnvironmentCheck(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case tea.KeyCtrlC:
 		return m, tea.Quit
 	case tea.KeyEnter:
-		if m.preflight.done && len(m.missingProviders()) < len(installer.Providers) {
+		if m.preflight.done {
 			m.state = StateSelectAssistants
 			if len(m.wizard.selected) == 0 {
 				for i := range installer.Descriptors {
@@ -469,7 +479,7 @@ func (m Model) handleLanguageSelect(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.preflight.providersFound = nil
 		m.state = StateEnvironmentCheck
 		m.cursor = 0
-		return m, tea.Batch(EnvironmentCheckCmd(), m.spinner.Tick)
+		return m, tea.Batch(EnvironmentCheckCmd(m.catalog.Installer), m.spinner.Tick)
 	case tea.KeyEsc:
 		m.state = StateMainMenu
 		m.cursor = 0
@@ -526,7 +536,8 @@ func (m Model) handleSelectAssistants(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case tea.KeyEnter:
 		m.state = StateSelectProvider
-		m.cursor = 0
+		m.wizard.providerChosen = true
+		m.cursor = m.wizard.provider
 	case tea.KeyEsc:
 		m.state = StateEnvironmentCheck
 		m.cursor = 0
@@ -534,27 +545,31 @@ func (m Model) handleSelectAssistants(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// handleSelectProvider handles keys for the memory provider screen: one radio
+// row per installer.Providers entry, then "No memory", then the confirm
+// button. Up/Down move only the cursor — the selection changes on Space or
+// Enter on a row (SelectAssistants / ModelSetup idiom), so walking past "No
+// memory" to the button never silently replaces the chosen provider. Enter on
+// a row selects it and continues; Enter on the button continues with the
+// current selection. An undetected provider is a warning, never a block.
 func (m Model) handleSelectProvider(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	count := len(installer.Providers)
+	count := noMemoryChoice() + 1 // every provider plus "No memory"
 	switch msg.Type {
 	case tea.KeyUp:
 		if m.cursor > 0 {
 			m.cursor--
-			if m.cursor < count {
-				m.wizard.provider = m.cursor // live-track selection so confirm button works correctly
-			}
 		}
 	case tea.KeyDown:
 		if m.cursor < count { // confirm button sits at index count
 			m.cursor++
-			if m.cursor < count {
-				m.wizard.provider = m.cursor
-			}
+		}
+	case tea.KeySpace:
+		if m.cursor < count {
+			m.wizard.provider = m.cursor
 		}
 	case tea.KeyEnter:
-		// m.wizard.provider already reflects the live selection; no cursor assignment needed.
-		if !m.preflight.providersFound[installer.Providers[m.wizard.provider].ID] {
-			return m, nil // the recovery block under the list says what to install
+		if m.cursor < count {
+			m.wizard.provider = m.cursor
 		}
 		return m.enterModelGate(), nil
 	case tea.KeyEsc:
@@ -605,7 +620,7 @@ func (m Model) handleModelGate(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyEsc:
 		m.state = StateSelectProvider
-		m.cursor = 0
+		m.cursor = m.wizard.provider
 	}
 	return m, nil
 }
@@ -1044,7 +1059,7 @@ func (m Model) handleDone(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) buildInstallCmd() tea.Cmd {
 	assistants := m.selectedAssistants()
-	provider := installer.Providers[m.wizard.provider]
+	provider := m.SelectedProvider()
 	lang := languageOptions[m.language.selected].Code
 	opts := installer.InstallOptions{CodegraphFound: m.preflight.codegraphFound}
 
@@ -1176,17 +1191,30 @@ func allProbesDone(sections []components.SectionGroup) bool {
 	return true
 }
 
-// missingProviders returns the memory providers the environment check did not
-// find, in installer.Providers order. A provider with no local probe is never
-// missing.
-func (m Model) missingProviders() []installer.ProviderDescriptor {
-	var missing []installer.ProviderDescriptor
-	for _, p := range installer.Providers {
-		if !m.preflight.providersFound[p.ID] {
-			missing = append(missing, p)
+// noMemoryChoice is the provider-screen index of the "No memory" row: one past
+// the last installer.Providers entry.
+func noMemoryChoice() int { return len(installer.Providers) }
+
+// defaultProviderChoice is the provider-screen default: the first provider the
+// environment check found (a provider with no local probe counts as found),
+// else "No memory".
+func (m Model) defaultProviderChoice() int {
+	for i, p := range installer.Providers {
+		if m.preflight.providersFound[p.ID] {
+			return i
 		}
 	}
-	return missing
+	return noMemoryChoice()
+}
+
+// SelectedProvider returns the chosen memory provider, or the zero
+// ProviderDescriptor — the installer's "no memory" selection — when "No
+// memory" is chosen. Exported for tests.
+func (m Model) SelectedProvider() installer.ProviderDescriptor {
+	if m.wizard.provider < noMemoryChoice() {
+		return installer.Providers[m.wizard.provider]
+	}
+	return installer.ProviderDescriptor{}
 }
 
 func rowHasStatus(sections []components.SectionGroup, label string, status components.CheckStatus) bool {

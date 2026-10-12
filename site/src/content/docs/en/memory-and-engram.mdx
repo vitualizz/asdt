@@ -104,12 +104,14 @@ Follow the [Engram setup guide](https://github.com/Gentleman-Programming/engram)
 
 ### Without memory
 
-Memory is optional. If no provider is connected, or `memory.provider` in `.asdt/config.yaml` names a different provider than your install is bound to, ASDT still works:
+Memory is optional, but recommended. If you installed with **No memory**, the provider isn't connected, or `memory.provider` in `.asdt/config.yaml` names a different provider than your install is bound to, ASDT still works:
 
-- Each specialist starts with a one-line notice: "Memory isn't connected, so this session works from its scratchpad and nothing carries over to the next one."
+- Each specialist starts with a one-line notice: "Memory isn't connected, so this session works from its scratchpad and nothing carries over to the next one. Connecting a memory provider keeps the project's key knowledge between sessions."
 - Within the session, everything flows through the scratchpad as usual. Nothing is recalled or remembered.
 - In a later session, the orchestrator asks you to restate the context a recall would have supplied.
-- `/asdt-init` still detects your stack and writes the config. It only skips its optional note questions.
+- `/asdt-init` still detects your stack and writes the config. It only skips its optional note questions. On a **No memory** install it writes no `memory` block (an existing one is kept as it is); otherwise it writes the provider your install is bound to, replacing a mismatched `memory.provider`.
+
+What you lose is continuity: decisions, debate conclusions, conventions, and lessons stay in the session that produced them, so you restate them next time. To connect a provider later, set it up and re-run `asdt-tui`, picking it on the memory step. The install rebinds every skill to it; nothing else changes, and the next session remembers and recalls.
 
 ## Picking up another day
 

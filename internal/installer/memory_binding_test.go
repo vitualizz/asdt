@@ -48,7 +48,8 @@ var boundFiles = []string{
 }
 
 // installWithProvider installs the real embedded skill tree for one throwaway
-// assistant bound to provider and returns its SkillsDir.
+// assistant bound to provider (the zero ProviderDescriptor: no memory) and
+// returns its SkillsDir.
 func installWithProvider(t *testing.T, provider ProviderDescriptor) string {
 	t.Helper()
 
@@ -57,6 +58,13 @@ func installWithProvider(t *testing.T, provider ProviderDescriptor) string {
 	results := InstallWithModels([]AssistantDescriptor{a}, provider, skill.FS(), "", nil, InstallOptions{})
 	if results[0].Err != nil {
 		t.Fatalf("install with provider %q: %v", provider.ID, results[0].Err)
+	}
+	meta, err := ReadInstallMeta(a)
+	if err != nil {
+		t.Fatalf("read install meta: %v", err)
+	}
+	if want := provider.MetaValue(); meta.Memory != want {
+		t.Errorf("install meta Memory = %q, want %q", meta.Memory, want)
 	}
 	return skillsDir
 }
@@ -84,7 +92,7 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 		name     string
 		provider ProviderDescriptor
 		want     []string // substrings every bound region must carry
-		neutral  bool     // no installed file may name a shipped provider, even inside a region
+		neutral  bool     // no installed file may name a shipped provider outside a region
 	}{
 		{
 			name:     "engram binds today's tool names",
@@ -110,6 +118,19 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 			},
 			neutral: true,
 		},
+		{
+			// protocol.md §2 and asdt-init/SKILL.md read a binding that names no
+			// provider as "Memory unavailable"; init then passes
+			// memory_provider: none and writes no memory.provider key.
+			name:     "no memory binds no provider",
+			provider: ProviderDescriptor{},
+			want: []string{
+				"**No memory provider bound.**",
+				`"Memory unavailable"`,
+				"Re-running the ASDT installer with a provider selected connects one.",
+			},
+			neutral: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -129,6 +150,11 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 				for _, w := range c.want {
 					if !strings.Contains(region, w) {
 						t.Errorf("%s binding region missing %q\nregion:%s", rel, w, region)
+					}
+				}
+				if c.provider.IsNone() {
+					if hits := providerNameHits(region, append(shippedProviderNames(), "memory provider:", "memory.provider:"), nil); len(hits) > 0 {
+						t.Errorf("%s no-memory binding names %v; it must bind no provider\nregion:%s", rel, hits, region)
 					}
 				}
 			}
@@ -377,6 +403,10 @@ func TestBindMemory(t *testing.T) {
 	noPrefixes.ClaudeToolPrefixes = nil
 	emptyPrefix := fakeMemoryProvider
 	emptyPrefix.ClaudeToolPrefixes = []string{""}
+	noID := fakeMemoryProvider
+	noID.ID = ""
+	configNone := fakeMemoryProvider
+	configNone.ConfigValue = MemoryNone
 	probeWithoutURL := fakeMemoryProvider
 	probeWithoutURL.Detect = ProviderDetect{Binary: "acme"}
 
@@ -389,7 +419,10 @@ func TestBindMemory(t *testing.T) {
 		wantText string // substring the bound content must carry ("" = the remember tool)
 		lackText string // substring the bound content must NOT carry
 	}{
-		{name: "marker-free content passes through, even for an empty provider", content: "# plain\n", provider: ProviderDescriptor{}, wantSame: true},
+		{name: "marker-free content passes through, even with no provider", content: "# plain\n", provider: ProviderDescriptor{}, wantSame: true},
+		{name: "no memory binds the no-provider body", content: begin + end, provider: ProviderDescriptor{}, wantText: "**No memory provider bound.**", lackText: "Memory provider:"},
+		{name: "provider without ID fails", content: begin + end, provider: noID, wantErr: "no ID, Name or ConfigValue"},
+		{name: "ConfigValue none fails", content: begin + end, provider: configNone, wantErr: "which means no provider"},
 		{name: "empty region is bound", content: "a\n" + begin + "\n" + end + "\nb\n", provider: fakeMemoryProvider},
 		{name: "begin marker without end fails", content: begin + "\n", provider: fakeMemoryProvider, wantErr: "end marker"},
 		{name: "duplicated region fails", content: begin + end + begin + end, provider: fakeMemoryProvider, wantErr: "appears 2 times"},

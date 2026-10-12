@@ -32,7 +32,7 @@ Treat the detected fields as owned by `/asdt-init`: re-run it to recalibrate rat
 
 ### `memory.provider`
 
-The memory provider your install is bound to. Only `engram` is supported today. `/asdt-init` writes the value of the provider your install is bound to, even over an existing value. When no provider is bound, it leaves any existing `memory` block as it is. If the project names a different provider than your install, specialists treat memory as unavailable: they still run, working from the session scratchpad, and nothing is recalled or remembered until you re-run `/asdt-init`. See [Scratchpad & Memory](/asdt/docs/memory-and-engram).
+The memory provider your install is bound to. Only `engram` is supported today. `/asdt-init` writes the value of the provider your install is bound to, even over an existing value. When no provider is bound (a **No memory** install), it writes no `memory` block and leaves an existing one as it is. If the project names a different provider than your install, specialists treat memory as unavailable: they still run, working from the session scratchpad, and nothing is recalled or remembered until you re-run `/asdt-init`. See [Scratchpad & Memory](/asdt/docs/memory-and-engram).
 
 ### `strict_tdd`
 

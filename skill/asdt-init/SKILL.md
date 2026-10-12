@@ -33,13 +33,13 @@ Step identity, model, inputs, and outputs: workflow.yaml. Detection mechanics be
 
 Run first, before launching anything. Both checks read only your own context and the filesystem.
 
-**Memory.** The binding below names the bound provider and the tools behind **remember** and **recall** (protocol §2). Look for both on your OWN tool list, under whatever prefix your host adds. A sub-agent carries a different tool list, so never delegate this check.
+**Memory.** The binding below names the bound provider and the tools behind **remember** and **recall**, or says that no provider is bound (protocol §2). Look for both on your OWN tool list, under whatever prefix your host adds. A sub-agent carries a different tool list, so never delegate this check.
 
 <!-- ASDT:GENERATED:memory-binding -->
 <!-- /ASDT:GENERATED:memory-binding -->
 
-- **Available**: both tools are on your list. Continue. Init recalls nothing: it only remembers what the human tells it.
-- **Unavailable** (protocol §2): say in one line that memory isn't connected, so init still detects and writes the config, but it skips the note questions. Continue. Missing memory never stops init.
+- **Available**: the binding names a provider and both of its tools are on your list. Continue. Init recalls nothing: it only remembers what the human tells it.
+- **Unavailable** (protocol §2): the binding names no provider (it says none is bound, or it is empty), or a bound tool is missing from your list. Say in one line that memory isn't connected, so init still detects and writes the config but skips the note questions, and that connecting a memory provider keeps the project's key knowledge between sessions. Continue. Missing memory never stops init.
 
 **Prior state.** The project is already initialized when `.asdt/config.yaml` exists. Then ask once: recalibrate, or leave it as-is? "Leave" ends the run with nothing launched. With no human to answer, leave it: a recalibration needs a yes. A project without it is fresh and proceeds.
 
@@ -74,7 +74,7 @@ Clarify resolves explore's ambiguities and enrichment's questions with the human
 # Init answers: init
 
 skipped: {true|false}
-memory_provider: {the `memory.provider` value the binding above names, or none when it is empty}
+memory_provider: {the `memory.provider` value the binding above names, or `none` when it names no provider}
 
 ## Answers
 - {field}: {value} ({user|accepted|default})

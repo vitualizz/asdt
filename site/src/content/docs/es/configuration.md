@@ -32,7 +32,7 @@ Tratá los campos detectados como propiedad de `/asdt-init`: volvé a ejecutarlo
 
 ### `memory.provider`
 
-El memory provider al que está vinculada tu instalación. Hoy solo se soporta `engram`. `/asdt-init` escribe el valor del provider de tu instalación, incluso sobre un valor existente. Cuando no hay ningún provider vinculado, deja como está el bloque `memory` que exista. Si el proyecto nombra un provider distinto al de tu instalación, los especialistas tratan la memoria como no disponible: igual corren, trabajando desde el scratchpad de la sesión, y no se consulta ni se recuerda nada hasta que vuelvas a ejecutar `/asdt-init`. Ver [Scratchpad y memoria](/asdt/es/docs/memory-and-engram).
+El memory provider al que está vinculada tu instalación. Hoy solo se soporta `engram`. `/asdt-init` escribe el valor del provider de tu instalación, incluso sobre un valor existente. Cuando no hay ningún provider vinculado (una instalación **Sin memoria**), no escribe ningún bloque `memory` y deja como está el que exista. Si el proyecto nombra un provider distinto al de tu instalación, los especialistas tratan la memoria como no disponible: igual corren, trabajando desde el scratchpad de la sesión, y no se consulta ni se recuerda nada hasta que vuelvas a ejecutar `/asdt-init`. Ver [Scratchpad y memoria](/asdt/es/docs/memory-and-engram).
 
 ### `strict_tdd`
 

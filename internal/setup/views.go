@@ -223,14 +223,21 @@ func renderSelectAssistants(m Model) string {
 	return frame(s.TitleSelectAssistants, strings.TrimRight(b.String(), "\n"), footer, true)
 }
 
+// renderSelectProvider renders the memory provider screen: one radio row per
+// installer.Providers entry, then "No memory" with why a provider is still
+// recommended. A selected provider the environment check did not find gets a
+// warning and its install hint under the list; Continue stays enabled.
 func renderSelectProvider(m Model) string {
 	s := m.catalog.Installer
 	var b strings.Builder
 	fmt.Fprintf(&b, "  %s\n\n", stepLine(s, 3, 6))
 
-	for i, p := range installer.Providers {
+	for i := 0; i <= noMemoryChoice(); i++ {
+		name, desc := s.OptionNoMemory, s.DescNoMemory
+		if i < noMemoryChoice() {
+			name, desc = installer.Providers[i].Name, installer.Providers[i].Description
+		}
 		focused := i == m.cursor
-		selected := i == m.wizard.provider
 
 		cursor := "  "
 		if focused {
@@ -238,7 +245,7 @@ func renderSelectProvider(m Model) string {
 		}
 
 		var radioStr string
-		if selected {
+		if i == m.wizard.provider {
 			radioStr = styles.Default.Cursor.Render("(•)")
 		} else {
 			radioStr = styles.Default.Dim.Render("( )")
@@ -246,16 +253,21 @@ func renderSelectProvider(m Model) string {
 
 		var nameStr string
 		if focused {
-			nameStr = styles.Default.Cursor.Render(p.Name)
+			nameStr = styles.Default.Cursor.Render(name)
 		} else {
-			nameStr = styles.Default.Dim.Render(p.Name)
+			nameStr = styles.Default.Dim.Render(name)
 		}
 
-		fmt.Fprintf(&b, "  %s%s %s — %s\n", cursor, radioStr, nameStr, p.Description)
+		fmt.Fprintf(&b, "  %s%s %s — %s\n", cursor, radioStr, nameStr, desc)
+	}
+
+	if p := m.SelectedProvider(); !p.IsNone() && !m.preflight.providersFound[p.ID] {
+		fmt.Fprintf(&b, "\n  %s\n", styles.Default.Warning.Render(fmt.Sprintf(s.WarnProviderMissing, p.Name)))
+		fmt.Fprintf(&b, "  %s\n", styles.Default.Dim.Render(fmt.Sprintf(s.PrefProviderInstall, p.Detect.InstallURL)))
 	}
 
 	b.WriteString("\n")
-	if m.cursor == len(installer.Providers) {
+	if m.cursor == noMemoryChoice()+1 {
 		fmt.Fprintf(&b, "  %s %s\n", cursorChar, styles.Default.Cursor.Render(s.BtnContinue))
 	} else {
 		fmt.Fprintf(&b, "      %s\n", styles.Default.Dim.Render(s.BtnContinue))
@@ -263,17 +275,13 @@ func renderSelectProvider(m Model) string {
 
 	footer := panels.RenderKeyboardFooter([]panels.HintGroup{
 		{Label: s.HintGroupActions, Hints: []panels.Hint{
+			{Key: "↑↓", Description: s.HintNavigate},
+			{Key: "space", Description: s.HintSelect},
+			{Key: "enter", Description: s.HintContinue},
 			{Key: "esc", Description: s.HintBack},
 			{Key: "q", Description: s.HintQuit},
 		}},
 	}, m.width)
-	if selected := installer.Providers[m.wizard.provider]; !m.preflight.providersFound[selected.ID] {
-		missing := []installer.ProviderDescriptor{selected}
-		writeProviderRecovery(&b, s, missing)
-		footer = panels.RenderKeyboardFooter([]panels.HintGroup{
-			{Label: s.HintGroupRequired, Hints: providerRequiredHints(s, missing)},
-		}, m.width)
-	}
 	return frame(s.TitleSelectProvider, strings.TrimRight(b.String(), "\n"), footer, true)
 }
 
@@ -475,6 +483,26 @@ func modelsReviewValue(m Model) string {
 	return fmt.Sprintf(s.ValueModelsPreset, label)
 }
 
+// memoryReviewValue formats the Memory row for the Review screen: the chosen
+// provider's name, flagged with its install hint when the environment check
+// did not find it, or "none" with the recommended providers.
+func memoryReviewValue(m Model) string {
+	s := m.catalog.Installer
+	p := m.SelectedProvider()
+	switch {
+	case p.IsNone():
+		names := make([]string, len(installer.Providers))
+		for i, provider := range installer.Providers {
+			names[i] = provider.Name
+		}
+		return fmt.Sprintf(s.ValueMemoryNone, strings.Join(names, " / "))
+	case !m.preflight.providersFound[p.ID]:
+		return styles.Default.Warning.Render(fmt.Sprintf(s.ValueMemoryMissing, p.Name, p.Detect.InstallURL))
+	default:
+		return p.Name
+	}
+}
+
 func renderReview(m Model) string {
 	s := m.catalog.Installer
 	var b strings.Builder
@@ -493,9 +521,7 @@ func renderReview(m Model) string {
 	}
 	fmt.Fprintf(&b, "  %s  %s\n", styles.Default.Dim.Render(s.LabelAssistants), strings.Join(names, " · "))
 
-	if m.wizard.provider < len(installer.Providers) {
-		fmt.Fprintf(&b, "  %s  %s\n", styles.Default.Dim.Render(s.LabelProvider), installer.Providers[m.wizard.provider].Name)
-	}
+	fmt.Fprintf(&b, "  %s  %s\n", styles.Default.Dim.Render(s.LabelMemory), memoryReviewValue(m))
 
 	modelsVal := modelsReviewValue(m)
 	fmt.Fprintf(&b, "  %s  %s\n", styles.Default.Dim.Render(s.LabelModels), modelsVal)
@@ -640,8 +666,26 @@ func renderSummaryLine(d installer.AssistantDescriptor, meta installer.InstallMe
 	if meta.Persona != "" {
 		metaParts = append(metaParts, s.LabelPersona+": "+meta.Persona)
 	}
+	if meta.Memory != "" {
+		metaParts = append(metaParts, s.LabelMemory+": "+memoryMetaName(meta.Memory, s))
+	}
 	metaLine := "    " + styles.Default.Dim.Render(strings.Join(metaParts, "  ·  "))
 	return line + "\n" + metaLine
+}
+
+// memoryMetaName returns the display name of an install's recorded memory
+// provider: the provider's Name, s.ValueNoMemory for installer.MemoryNone, or
+// the raw value when no known provider has that ID.
+func memoryMetaName(value string, s i18n.DashboardStrings) string {
+	if value == installer.MemoryNone {
+		return s.ValueNoMemory
+	}
+	for _, p := range installer.Providers {
+		if p.ID == value {
+			return p.Name
+		}
+	}
+	return value
 }
 
 func renderDone(m Model) string {

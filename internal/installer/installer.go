@@ -24,7 +24,8 @@ type InstallOptions struct {
 }
 
 // InstallWithModels copies skill files from skillsFS into each assistant's
-// SkillsDir, binds every memory-binding region to provider, and returns one
+// SkillsDir, binds every memory-binding region to provider (the zero
+// ProviderDescriptor binds none: a "no memory" install), and returns one
 // result per assistant. A failure for one assistant does not abort
 // the others. lang is the language code chosen in the TUI; it is recorded in
 // each assistant's install metadata (an empty lang preserves the existing
@@ -145,6 +146,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 			Persona:     existing.Persona,
 			Emojis:      existing.Emojis,
 			Language:    lang,
+			Memory:      provider.MetaValue(),
 			AgentTypes:  AgentTypeNames,
 			Files:       relWritten,
 		})

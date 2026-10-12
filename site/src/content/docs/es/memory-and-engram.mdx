@@ -104,12 +104,14 @@ Seguí la [guía de instalación de Engram](https://github.com/Gentleman-Program
 
 ### Sin memoria
 
-La memoria es opcional. Si no hay ningún provider conectado, o si `memory.provider` en `.asdt/config.yaml` nombra un provider distinto al de tu instalación, ASDT igual funciona:
+La memoria es opcional, pero recomendada. Si instalaste con **Sin memoria**, si el provider no está conectado, o si `memory.provider` en `.asdt/config.yaml` nombra un provider distinto al de tu instalación, ASDT igual funciona:
 
-- Cada especialista arranca con un aviso de una línea: la memoria no está conectada, así que esta sesión trabaja desde su scratchpad y nada pasa a la siguiente.
+- Cada especialista arranca con un aviso de una línea: la memoria no está conectada, así que esta sesión trabaja desde su scratchpad y nada pasa a la siguiente; conectar un memory provider conserva el conocimiento clave del proyecto entre sesiones.
 - Dentro de la sesión, todo fluye por el scratchpad como siempre. No se consulta ni se recuerda nada.
 - En una sesión posterior, el orquestador te pide que repitas el contexto que habría aportado una consulta a la memoria.
-- `/asdt-init` igual detecta tu stack y escribe la configuración. Solo se saltea sus preguntas opcionales de notas.
+- `/asdt-init` igual detecta tu stack y escribe la configuración. Solo se saltea sus preguntas opcionales de notas. En una instalación **Sin memoria** no escribe ningún bloque `memory` (deja como está el que exista); si no, escribe el provider al que está vinculada tu instalación, reemplazando un `memory.provider` que no coincida.
+
+Lo que perdés es continuidad: las decisiones, las conclusiones de un debate, las convenciones y las lecciones se quedan en la sesión que las produjo, y la próxima vez las tenés que repetir. Para conectar un provider más adelante, configuralo y volvé a ejecutar `asdt-tui`, eligiéndolo en el paso de memoria. La instalación vuelve a vincular cada skill a él; nada más cambia, y la sesión siguiente ya recuerda y consulta.
 
 ## Retomar otro día
 

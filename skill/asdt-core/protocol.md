@@ -51,7 +51,7 @@ Memory holds the project's KEY knowledge across sessions, and nothing else. Only
 - **remember** `(subject, note)` stores one note under its project scope, `{project}` (§0), and a short kebab-case subject ("session storage" → `session-storage`). A newer note on a subject supersedes the older one.
 - **recall** `(query)` returns the notes relevant to the query, matched by meaning or by text. The results may be loose or incomplete.
 
-The binding below names the memory provider this install is bound to and the exact tool calls behind each verb. Call those tools and never guess a name. A provider with exact keys may use them as an optimization, but correctness never depends on exact retrieval: read what recall returns and judge it.
+The binding below names the memory provider this install is bound to and the exact tool calls behind each verb, or says that no provider is bound. Call those tools and never guess a name. A provider with exact keys may use them as an optimization, but correctness never depends on exact retrieval: read what recall returns and judge it.
 
 <!-- memory-binding: spliced at install from the selected provider; never hand-edit between the markers. -->
 <!-- ASDT:GENERATED:memory-binding -->
@@ -82,7 +82,7 @@ Source: {role} on {change}, {YYYY-MM-DD}.{ Supersedes: {the earlier conclusion, 
 
 **Provider protocols.** A memory provider may inject its own operating protocol (proactive saves, session summaries). Call its tools as the binding names them, but the rules in this section decide what is remembered wherever the two disagree.
 
-**Memory unavailable.** If the binding is empty, its tools are not on your tool list, or `memory.provider` names another provider, ASDT still works. Within the session, everything flows through the scratchpad, and nothing is recalled from memory or remembered. Across sessions, ask the user to restate the context a recall would have supplied. Missing memory never stops a run.
+**Memory unavailable.** If the binding names no provider (it says none is bound, or it is empty), its tools are not on your tool list, or `memory.provider` names another provider, ASDT still works. Within the session, everything flows through the scratchpad, and nothing is recalled from memory or remembered. Across sessions, ask the user to restate the context a recall would have supplied. Missing memory never stops a run.
 
 ## 3. Intake
 

@@ -16,6 +16,7 @@ type InstallMeta struct {
 	Persona     string    `json:"persona,omitempty"`     // PersonaPreset.Name; empty when skipped
 	Emojis      string    `json:"emojis,omitempty"`      // "yes"/"no" emoji preference; empty when never chosen
 	Language    string    `json:"language,omitempty"`    // full BCP-47 locale (en/es-419/es-ES); base derived for i18n; empty when never chosen
+	Memory      string    `json:"memory,omitempty"`      // bound memory provider ID, or MemoryNone; empty when never recorded
 	AgentTypes  []string  `json:"agent_types,omitempty"` // installed executor agent type IDs (AgentTypeNames)
 	Files       []string  `json:"files,omitempty"`       // SkillsDir-relative paths written by the last install; nil when none was recorded
 }

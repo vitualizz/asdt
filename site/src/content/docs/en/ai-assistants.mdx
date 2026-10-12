@@ -51,7 +51,7 @@ ASDT uses a **memory provider** to carry the project's key knowledge (non-obviou
 
 Memory is wired per assistant through **MCP configuration** — you add the Engram MCP server to whichever assistant you're using, following Engram's own setup guide. Only the orchestrator, your main assistant, uses it, so the Engram tools only need to be on its tool list. The installer writes the binding (for Engram, `mem_save` behind **remember**, `mem_search` then `mem_get_observation` behind **recall**) into the orchestrator-facing skill files, noting the plugin-scoped and bare MCP names Claude Code may expose them under. The tool names never reach a sub-agent: the orchestrator strips the binding out of any shared file it places in a sub-agent's prompt (see [Memory providers](/asdt/docs/memory-and-engram#memory-providers)).
 
-ASDT does not hard-code an MCP config path for you: the exact file where MCP servers are declared is the assistant's concern, so follow your assistant's MCP setup docs. If Engram isn't reachable in a session, specialists say so in one line and keep working from the scratchpad; nothing is recalled or remembered.
+ASDT does not hard-code an MCP config path for you: the exact file where MCP servers are declared is the assistant's concern, so follow your assistant's MCP setup docs. If Engram isn't reachable in a session, or you installed with **No memory**, specialists say so in one line and keep working from the scratchpad; nothing is recalled or remembered.
 
 ## After installing: reload your assistant
 

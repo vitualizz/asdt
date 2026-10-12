@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/vitualizz/asdt/internal/i18n"
 	"github.com/vitualizz/asdt/internal/installer"
 	"github.com/vitualizz/asdt/internal/setup"
 	"github.com/vitualizz/asdt/internal/setup/components"
@@ -38,15 +39,18 @@ func TestUpdate_EnvironmentCheckMsg_EngramFound_EntersSelectAssistantsOnEnter(t 
 	}
 }
 
-func TestUpdate_EnvironmentCheckMsg_EngramMissing_BlocksContinue(t *testing.T) {
+// TestUpdate_EnvironmentCheckMsg_EngramMissing_StillContinues asserts a
+// missing memory provider never blocks the environment check: memory is
+// optional.
+func TestUpdate_EnvironmentCheckMsg_EngramMissing_StillContinues(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
 	next, _ := m.Update(envCheckMsg(false))
 	m2 := next.(setup.Model)
 	m3 := updateKey(t, m2, tea.KeyEnter)
-	if m3.State() != setup.StateEnvironmentCheck {
-		t.Errorf("Enter with engram missing should be no-op, state = %v, want StateEnvironmentCheck", m3.State())
+	if m3.State() != setup.StateSelectAssistants {
+		t.Errorf("Enter with engram missing: state = %v, want StateSelectAssistants", m3.State())
 	}
 }
 
@@ -83,13 +87,15 @@ func envCheckMsg(found bool) setup.EnvironmentCheckMsg {
 	return setup.EnvironmentCheckMsg{ProvidersFound: providers}
 }
 
-// TestEnvironmentCheckCmd_ProbesEveryProvider runs the real probes and asserts
-// every provider gets a row labeled with its Name, and that a provider with no
-// local probe resolves OK, never blocking.
+// TestEnvironmentCheckCmd_ProbesEveryProvider runs the real probes with an
+// empty PATH and asserts every provider gets a row labeled with its Name: a
+// probed provider that is missing is a soft warning carrying its install hint,
+// and a provider with no local probe resolves OK. Neither blocks.
 func TestEnvironmentCheckCmd_ProbesEveryProvider(t *testing.T) {
 	withHostedProvider(t)
+	t.Setenv("PATH", "")
 
-	batch, ok := setup.EnvironmentCheckCmd()().(tea.BatchMsg)
+	batch, ok := setup.EnvironmentCheckCmd(i18n.ForCode("en").Installer)().(tea.BatchMsg)
 	if !ok {
 		t.Fatal("EnvironmentCheckCmd did not return a batch")
 	}
@@ -105,27 +111,31 @@ func TestEnvironmentCheckCmd_ProbesEveryProvider(t *testing.T) {
 			t.Errorf("no preflight row labeled %q", p.Name)
 		}
 	}
+	engram := installer.Providers[0]
+	if got := rows[engram.Name]; got.Status != components.CheckStatusWarning || !got.SoftWarn || !strings.Contains(got.Detail, engram.Detect.InstallURL) {
+		t.Errorf("missing %s row = %+v, want a soft warning naming %s", engram.Name, got, engram.Detect.InstallURL)
+	}
 	if got := rows[hostedProvider.Name]; got.Status != components.CheckStatusOK {
 		t.Errorf("unprobed provider row status = %v, want CheckStatusOK (informational)", got.Status)
 	}
 }
 
-// TestUpdate_ProviderGating walks preflight and provider selection with Engram
-// found or missing, alone or beside a provider with no probe. Preflight
-// continues while ANY provider is usable; provider selection continues only on
-// a usable one.
-func TestUpdate_ProviderGating(t *testing.T) {
+// TestUpdate_ProviderSelection walks preflight and provider selection with
+// Engram found or missing, alone or beside a provider with no probe. Nothing
+// about providers gates: preflight always continues and Enter on every row —
+// each provider and "No memory" — reaches the model gate. The default is the
+// first provider found, else "No memory" (the zero ProviderDescriptor).
+func TestUpdate_ProviderSelection(t *testing.T) {
 	cases := []struct {
-		name           string
-		hosted         bool
-		engramFound    bool
-		wantPreflight  setup.ViewState   // after Enter on the environment check
-		wantOnProvider []setup.ViewState // after Enter on each provider, in order
+		name        string
+		hosted      bool
+		engramFound bool
+		wantDefault installer.ProviderID // "" = No memory
 	}{
-		{name: "engram found", engramFound: true, wantPreflight: setup.StateSelectAssistants, wantOnProvider: []setup.ViewState{setup.StateModelGate}},
-		{name: "engram missing blocks preflight", wantPreflight: setup.StateEnvironmentCheck},
-		{name: "engram missing beside a hosted provider", hosted: true, wantPreflight: setup.StateSelectAssistants, wantOnProvider: []setup.ViewState{setup.StateSelectProvider, setup.StateModelGate}},
-		{name: "engram found beside a hosted provider", hosted: true, engramFound: true, wantPreflight: setup.StateSelectAssistants, wantOnProvider: []setup.ViewState{setup.StateModelGate, setup.StateModelGate}},
+		{name: "engram found", engramFound: true, wantDefault: installer.ProviderEngram},
+		{name: "engram missing", wantDefault: ""},
+		{name: "engram missing beside a hosted provider", hosted: true, wantDefault: hostedProvider.ID},
+		{name: "engram found beside a hosted provider", hosted: true, engramFound: true, wantDefault: installer.ProviderEngram},
 	}
 
 	for _, c := range cases {
@@ -141,24 +151,112 @@ func TestUpdate_ProviderGating(t *testing.T) {
 			m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
 			next, _ := m.Update(msg)
 			m = updateKey(t, next.(setup.Model), tea.KeyEnter)
-			if m.State() != c.wantPreflight {
-				t.Fatalf("Enter on the environment check: state = %v, want %v", m.State(), c.wantPreflight)
-			}
-			if len(c.wantOnProvider) == 0 {
-				return
+			if m.State() != setup.StateSelectAssistants {
+				t.Fatalf("Enter on the environment check: state = %v, want StateSelectAssistants", m.State())
 			}
 
 			m = updateKey(t, m, tea.KeyEnter) // SelectAssistants → SelectProvider
-			for i, want := range c.wantOnProvider {
-				at := m
-				for range i {
-					at = updateKey(t, at, tea.KeyDown)
+			if got := m.SelectedProvider(); got.ID != c.wantDefault {
+				t.Errorf("default provider = %q, want %q", got.ID, c.wantDefault)
+			}
+
+			// Walk to the top, then visit every row: each provider in order,
+			// then "No memory". Moving never changes the selection; Space
+			// and Enter on a row select it.
+			for range installer.Providers {
+				m = updateKey(t, m, tea.KeyUp)
+			}
+			for i := 0; i <= len(installer.Providers); i++ {
+				want := installer.ProviderID("")
+				if i < len(installer.Providers) {
+					want = installer.Providers[i].ID
 				}
-				if got := updateKey(t, at, tea.KeyEnter).State(); got != want {
-					t.Errorf("Enter on %s: state = %v, want %v", installer.Providers[i].Name, got, want)
+				if got := m.SelectedProvider(); got.ID != c.wantDefault {
+					t.Errorf("moving to row %d changed the selection to %q, want %q", i, got.ID, c.wantDefault)
 				}
+				if got := updateKey(t, m, tea.KeySpace).SelectedProvider(); got.ID != want || got.IsNone() != (want == "") {
+					t.Errorf("Space on row %d selects %q, want %q", i, got.ID, want)
+				}
+				entered := updateKey(t, m, tea.KeyEnter)
+				if entered.State() != setup.StateModelGate {
+					t.Errorf("Enter on row %d (%q): state = %v, want StateModelGate", i, want, entered.State())
+				}
+				if got := entered.SelectedProvider(); got.ID != want || got.IsNone() != (want == "") {
+					t.Errorf("Enter on row %d selects %q, want %q", i, got.ID, want)
+				}
+				m = updateKey(t, m, tea.KeyDown)
 			}
 		})
+	}
+}
+
+// TestUpdate_SelectProvider_ButtonKeepsSelection is the regression for
+// "No memory" sitting above the confirm button: walking Down from the chosen
+// row to the button must not select "No memory" on the way. Whatever was
+// chosen — Engram or No memory — survives the walk (and an Esc round-trip)
+// and is what Enter on the button hands to the install (SelectedProvider).
+func TestUpdate_SelectProvider_ButtonKeepsSelection(t *testing.T) {
+	cases := []struct {
+		name   string
+		choose int // provider-screen row selected with Space
+		want   installer.ProviderID
+	}{
+		{name: "engram", choose: 0, want: installer.ProviderEngram},
+		{name: "no memory", choose: len(installer.Providers), want: ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			m := advanceToSelectProvider(t, setup.New(fstest.MapFS{}, "dev"))
+			for range installer.Providers {
+				m = updateKey(t, m, tea.KeyUp)
+			}
+			for i := 0; i < c.choose; i++ {
+				m = updateKey(t, m, tea.KeyDown)
+			}
+			m = updateKey(t, m, tea.KeySpace)
+
+			// Down past every row onto the button (and bump the bottom).
+			for i := 0; i <= len(installer.Providers)+2; i++ {
+				m = updateKey(t, m, tea.KeyDown)
+			}
+			if got := m.SelectedProvider(); got.ID != c.want || got.IsNone() != (c.want == "") {
+				t.Fatalf("on the button: selected %q, want %q", got.ID, c.want)
+			}
+
+			m = updateKey(t, m, tea.KeyEnter) // button → ModelGate
+			if m.State() != setup.StateModelGate {
+				t.Fatalf("Enter on the button: state = %v, want StateModelGate", m.State())
+			}
+			if got := m.SelectedProvider(); got.ID != c.want || got.IsNone() != (c.want == "") {
+				t.Errorf("Enter on the button installs %q, want %q", got.ID, c.want)
+			}
+
+			// Esc back to the provider screen and back again keeps it.
+			m = updateKey(t, m, tea.KeyEsc) // ModelGate → SelectProvider
+			m = updateKey(t, m, tea.KeyEsc) // SelectProvider → SelectAssistants
+			m = updateKey(t, m, tea.KeyEnter)
+			m = updateKey(t, m, tea.KeyEnter)
+			if got := m.SelectedProvider(); m.State() != setup.StateModelGate || got.ID != c.want {
+				t.Errorf("after Esc round-trip: state %v, selected %q, want ModelGate %q", m.State(), got.ID, c.want)
+			}
+		})
+	}
+}
+
+// TestUpdate_LatePreflightKeepsProviderChoice: a preflight result that lands
+// after the user reached the provider screen must not reset the choice to
+// the default.
+func TestUpdate_LatePreflightKeepsProviderChoice(t *testing.T) {
+	m := advanceToSelectProvider(t, setup.New(fstest.MapFS{}, "dev")) // Engram found → default Engram
+	for range installer.Providers {
+		m = updateKey(t, m, tea.KeyDown)
+	}
+	m = updateKey(t, m, tea.KeySpace) // choose "No memory"
+	m = updateKey(t, m, tea.KeyEsc)   // back to SelectAssistants (provider screen left)
+	next, _ := m.Update(envCheckMsg(true))
+	m = next.(setup.Model)
+	if got := m.SelectedProvider(); !got.IsNone() {
+		t.Errorf("late preflight reset the choice to %q, want No memory", got.ID)
 	}
 }
 

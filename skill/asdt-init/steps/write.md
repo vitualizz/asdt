@@ -28,7 +28,7 @@ Each arrives as a path to read. Both are required: see Processing step 1.
    - `stack`, `file_structure`: the answer when there is one, else the detection. `stack` is always written, `[]` when empty. `file_structure` is omitted when neither has a value.
    - `code_intelligence`: `codegraph` when detected, otherwise the key is removed. Never `none`, never `unknown`.
    - `primary_design_surface`: the answer (`mobile`, `tablet`, `desktop`, or `none`), else the prior value, else omitted. An omitted key means "never asked" and consumers default it to `mobile`; `none` is the human's answer that there is no visual surface. Never write one in place of the other.
-   - `memory.provider`: the payload's `memory_provider`, even over an existing value. When it is `none` or absent, keep the existing `memory` block as-is.
+   - `memory.provider`: the payload's `memory_provider`, even over an existing value. When it is `none` or absent, keep the existing `memory` block as-is, or omit the block when there is none: `none` is never written.
    - `strict_tdd`: carried forward byte-for-byte when present, never added.
    - Every key this step does not recognize: carried forward byte-for-byte.
 

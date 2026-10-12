@@ -133,7 +133,7 @@ Invoke any of these from inside your AI assistant:
 ## Requirements
 
 - [Claude Code](https://claude.com/claude-code) or [OpenCode](https://opencode.ai), installed and authenticated
-- A memory provider so key decisions carry across sessions — default is [Engram](https://github.com/Gentleman-Programming/engram), which the installer checks for. Without it connected, ASDT still works within a session
+- Optional, recommended: a memory provider, so key project knowledge (decisions, conventions, lessons) carries across sessions. The installer offers [Engram](https://github.com/Gentleman-Programming/engram) or **No memory**; without a provider, ASDT still works within each session
 - A terminal (bash or zsh)
 
 > Want to build from source instead of the installer? You'll need Go 1.22+. The one-line installer needs nothing.

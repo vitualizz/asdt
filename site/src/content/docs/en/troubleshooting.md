@@ -43,6 +43,8 @@ The `-x` flag prints each command as it runs. Look for the first line that fails
 
 ASDT remembers the project's key knowledge (decisions, conventions, lessons) in Engram. If Engram isn't connected, specialists still run: each one says in one line that memory isn't connected, works from the session scratchpad, and recalls and remembers nothing, so nothing carries over to the next session.
 
+If you installed with **No memory**, first re-run `asdt-tui` and pick Engram on the memory step.
+
 **Fix:**
 1. Confirm Engram is wired into your assistant's MCP (Model Context Protocol — the connector protocol that lets your assistant talk to Engram; see [Scratchpad & Memory](/asdt/docs/memory-and-engram) for how it fits together) configuration. Claude Code and OpenCode each configure MCP servers differently, so follow the MCP setup for the assistant you use (and the [Engram setup guide](https://github.com/Gentleman-Programming/engram)). Both connect to the same Engram server; only the wiring location differs.
 2. Restart your assistant after editing the MCP config — both Claude Code and OpenCode start the configured MCP servers on launch.

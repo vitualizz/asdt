@@ -5,7 +5,7 @@
 Nothing here stops a run. Before the first step, check two things and give a one-line notice for each that holds:
 
 - **`.asdt/config.yaml` is missing**: "No ASDT config here. Run `/asdt-init` to record the project's facts; until then I work from the code." The platform block degrades on its own (`asdt-core/references/platform-context.md`).
-- **Memory is unavailable** (`asdt-core/protocol.md` §2): "Memory isn't connected, so this session works from its scratchpad and nothing carries over to the next one."
+- **Memory is unavailable** (`asdt-core/protocol.md` §2): "Memory isn't connected, so this session works from its scratchpad and nothing carries over to the next one. Connecting a memory provider keeps the project's key knowledge between sessions."
 
 > **ORCHESTRATOR GATE**: This file is a PLAN, not an executable pipeline. The
 > calling assistant (Claude Code / OpenCode) is the SOLE orchestrator. For every

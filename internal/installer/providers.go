@@ -39,13 +39,18 @@ type MemoryTool struct {
 // ProviderDescriptor describes a known memory provider: everything the
 // installer needs to bind the prompts' memory interface to it. Adding a
 // provider is a new entry in Providers — no prompt edits.
+//
+// The zero ProviderDescriptor is the "no memory" selection: installing with it
+// binds no provider (see IsNone). A memory provider is optional; ASDT works
+// without one (protocol.md §2, "Memory unavailable").
 type ProviderDescriptor struct {
 	ID          ProviderID
 	Name        string
 	Description string
 	// ConfigValue is what /asdt-init writes to `memory.provider` in
 	// .asdt/config.yaml. protocol.md §2 ("Memory unavailable") treats memory as
-	// unavailable when that config value names a different provider.
+	// unavailable when that config value names a different provider. It is
+	// never MemoryNone: that value means no provider is bound.
 	ConfigValue string
 	// Tools binds every verb in memoryVerbs to its recipe: one or more tool
 	// calls, made in order (recall may need a search, then a full read).
@@ -101,6 +106,31 @@ var Providers = []ProviderDescriptor{
 	},
 }
 
+// MemoryNone is the value that stands for "no memory provider": it is what
+// /asdt-init passes as `memory_provider` when the binding names none (and then
+// writes no `memory.provider` key), and what install metadata records.
+const MemoryNone = "none"
+
+// IsNone reports whether p is the "no memory" selection: the zero
+// ProviderDescriptor. A descriptor with any identity or tool set is a provider,
+// and must Validate.
+func (p ProviderDescriptor) IsNone() bool {
+	return p.ID == "" && p.Name == "" && p.ConfigValue == "" && len(p.Tools) == 0
+}
+
+// MetaValue is what install metadata records for p: its ID, or MemoryNone.
+func (p ProviderDescriptor) MetaValue() string {
+	if p.IsNone() {
+		return MemoryNone
+	}
+	return p.ID
+}
+
+// noProviderBinding is the binding region body of a "no memory" install. Its
+// opening phrase is what protocol.md §2 ("Memory unavailable") and
+// asdt-init/SKILL.md test for: a binding that names no provider.
+const noProviderBinding = "\n**No memory provider bound.** This install has no memory: nothing is remembered or recalled, even when a memory tool is on your tool list (`asdt-core/protocol.md` §2, \"Memory unavailable\"). Re-running the ASDT installer with a provider selected connects one.\n"
+
 // Memory-binding generated-region markers. They bound the provider binding in
 // every orchestrator-facing skill file that reaches memory
 // (asdt-core/protocol.md, and through it every routed SKILL.md;
@@ -113,13 +143,16 @@ const (
 	memoryBindingEndMarker   = "<!-- /ASDT:GENERATED:memory-binding -->"
 )
 
-// Validate reports the first gap that would install a broken binding: no
-// Name or ConfigValue, a verb with no tool or a tool with no Name or Usage, an
-// empty Claude Code prefix, or a probe Binary with nowhere to point a user who
-// lacks it.
+// Validate reports the first gap that would install a broken binding: no ID,
+// Name or ConfigValue, a ConfigValue of MemoryNone, a verb with no tool or a
+// tool with no Name or Usage, an empty Claude Code prefix, or a probe Binary
+// with nowhere to point a user who lacks it.
 func (p ProviderDescriptor) Validate() error {
-	if p.Name == "" || p.ConfigValue == "" {
-		return fmt.Errorf("memory provider %q has no Name or ConfigValue", p.ID)
+	if p.ID == "" || p.Name == "" || p.ConfigValue == "" {
+		return fmt.Errorf("memory provider %q has no ID, Name or ConfigValue", p.ID)
+	}
+	if p.ConfigValue == MemoryNone {
+		return fmt.Errorf("memory provider %q has ConfigValue %q, which means no provider", p.ID, MemoryNone)
 	}
 	for _, verb := range memoryVerbs {
 		tools := p.Tools[verb]
@@ -147,9 +180,13 @@ func (p ProviderDescriptor) Validate() error {
 }
 
 // renderMemoryBinding emits the binding region body for p — the bytes strictly
-// between the memory-binding markers. It fails when p does not Validate: a
-// partial binding would leave a prompt with a verb it cannot call.
+// between the memory-binding markers. The "no memory" selection renders
+// noProviderBinding. Any other p must Validate: a partial binding would leave a
+// prompt with a verb it cannot call.
 func renderMemoryBinding(p ProviderDescriptor) (string, error) {
+	if p.IsNone() {
+		return noProviderBinding, nil
+	}
 	if err := p.Validate(); err != nil {
 		return "", err
 	}
