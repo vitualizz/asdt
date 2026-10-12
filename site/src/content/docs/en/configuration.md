@@ -15,7 +15,7 @@ locale: en
 memory:
   provider: engram
 strict_tdd: false              # optional — never added by /asdt-init
-code_intelligence: codegraph   # only when detected
+code_intelligence: codegraph   # only when the project is indexed
 primary_design_surface: mobile # only when answered
 stack: [typescript]
 file_structure: "src/ for application code, tests/ alongside"
@@ -42,7 +42,7 @@ Default: absent, which means `false`. `/asdt-init` carries it forward but never 
 
 ### `code_intelligence`
 
-Written by `/asdt-init` only when it detects a code-intelligence index (today, `codegraph`). Specialists then prefer it over grep-and-read loops. Never written as `none` — when nothing is detected, the key is removed.
+Written by `/asdt-init` only when your install is bound to a code-intelligence provider (today, `codegraph`) and the project carries that provider's index (for Codegraph, a `.codegraph` directory at the repository root). The value is the provider's name in config. It reaches every step as the platform line `Tooling: {value} index available`, which tells specialists to query the index instead of looping on grep and read. Never written as `none` — when nothing is detected, the key is removed. Code intelligence is optional: without it, specialists grep and read. See [Development](/asdt/docs/development#adding-a-code-intelligence-provider) for how providers plug in.
 
 ### `primary_design_surface`
 

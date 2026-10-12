@@ -11,15 +11,19 @@ import (
 )
 
 // initialPreflightSections returns the seed state for the pre-flight check screen.
-// Every memory provider row is a soft warning: a provider is optional, so a
-// missing one never blocks Continue.
+// Every provider row — memory or code intelligence — is a soft warning: a
+// provider is optional, so a missing one never blocks Continue.
 // Section titles come from the active catalog; row labels are kept as constants
-// — a memory provider's row is its Name — because they also serve as lookup
-// keys in rowHasStatus and in probe messages.
+// — a provider's row is its Name — because they also serve as lookup keys in
+// rowHasStatus and in probe messages.
 func initialPreflightSections(s i18n.InstallerStrings) []components.SectionGroup {
 	providerRows := make([]components.CheckRow, len(installer.Providers))
 	for i, p := range installer.Providers {
 		providerRows[i] = components.CheckRow{Label: p.Name, Status: components.CheckStatusPending, SoftWarn: true}
+	}
+	codeIntelRows := make([]components.CheckRow, len(installer.CodeIntelProviders))
+	for i, p := range installer.CodeIntelProviders {
+		codeIntelRows[i] = components.CheckRow{Label: p.Name, Status: components.CheckStatusPending, SoftWarn: true}
 	}
 	return []components.SectionGroup{
 		{
@@ -34,10 +38,8 @@ func initialPreflightSections(s i18n.InstallerStrings) []components.SectionGroup
 			Rows:  providerRows,
 		},
 		{
-			Title: s.SectionAIEnhancements,
-			Rows: []components.CheckRow{
-				{Label: "Codegraph", Status: components.CheckStatusPending, SoftWarn: true},
-			},
+			Title: s.SectionCodeIntelligence,
+			Rows:  codeIntelRows,
 		},
 	}
 }

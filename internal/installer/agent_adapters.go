@@ -18,10 +18,8 @@ const executorHeaderPath = "asdt-core/executor-header.md"
 type agentTypeSpec struct {
 	ID          string   // "analyst" | "builder"; agent file name is "asdt-"+ID
 	Description string   // one-line summary emitted into the frontmatter
-	ClaudeTools []string // Claude Code tools allowlist before codegraph grants
+	ClaudeTools []string // Claude Code tools allowlist before code-intelligence grants
 	Constraints string   // English constraint prose appended after the executor header
-	Guidance    string   // gated section body appended after constraints; empty by
-	// default, set only by withCodegraphGuidance when CodegraphFound.
 }
 
 // AgentTypeNames lists the canonical ASDT agent type IDs in render order.
@@ -76,70 +74,24 @@ var agentTypeSpecs = []agentTypeSpec{
 	},
 }
 
-// codegraphClaudeTools are the read-only codegraph MCP tools appended to executor
-// agent grants when the installer detects codegraph. Single namespace (codegraph
-// ships as a binary MCP, not a plugin), all read-only.
-var codegraphClaudeTools = []string{
-	"mcp__codegraph__codegraph_explore",
-	"mcp__codegraph__codegraph_search",
-	"mcp__codegraph__codegraph_callers",
-	"mcp__codegraph__codegraph_callees",
-	"mcp__codegraph__codegraph_impact",
-	"mcp__codegraph__codegraph_node",
-	"mcp__codegraph__codegraph_files",
-	"mcp__codegraph__codegraph_status",
-}
-
-// codeIntelligenceGuidance is the shared "## Code intelligence" body appended
-// to an executor agent when codegraph is detected. Both agent types receive it
-// verbatim — it teaches the codegraph read-only tools and where Bash still wins.
-const codeIntelligenceGuidance = `## Code intelligence
-
-This repository is indexed by codegraph, and you hold its read-only tools.
-Query the index for anything symbol- or structure-shaped instead of
-scanning files by hand:
-
-- codegraph_explore FIRST for symbol, architecture, or "how does this
-  work" questions — one call returns the relevant source grouped by file.
-- codegraph_callers and codegraph_callees for call-graph questions ("what
-  calls this", "what does this call").
-- codegraph_impact for "what breaks if I change this".
-- codegraph_search to locate a symbol, codegraph_node to read one
-  definition in full; the remaining codegraph_* tools cover files and
-  index status.
-
-Bash grep and read stay the right tool for text the index does not model:
-schemas like Rails db/schema.rb, configs, locales, generated DSL. Reach for
-them there without hesitation.
-`
-
-// withCodegraphTools returns spec extended with the codegraph tool grants when
-// codegraph was detected, and spec unchanged otherwise. The extended copy gets
-// a freshly allocated ClaudeTools slice: a range copy of an agentTypeSpec still
+// withCodeIntelTools returns spec extended with the bound code-intelligence
+// provider's Claude Code tool grants, and spec unchanged for the "no code
+// intelligence" selection. The grant is global (agent definitions serve every
+// project) and harmless: the tools are read-only, and the executor header uses
+// them only on a project the provider has indexed. The extended copy gets a
+// freshly allocated ClaudeTools slice: a range copy of an agentTypeSpec still
 // aliases the global agentTypeSpecs backing array, so appending in place would
 // mutate the shared specs.
-func withCodegraphTools(spec agentTypeSpec, opts InstallOptions) agentTypeSpec {
-	if !opts.CodegraphFound {
+func withCodeIntelTools(spec agentTypeSpec, codeIntel CodeIntelDescriptor) agentTypeSpec {
+	grants := codeIntel.claudeTools()
+	if len(grants) == 0 {
 		return spec
 	}
 
-	tools := make([]string, 0, len(spec.ClaudeTools)+len(codegraphClaudeTools))
+	tools := make([]string, 0, len(spec.ClaudeTools)+len(grants))
 	tools = append(tools, spec.ClaudeTools...)
-	tools = append(tools, codegraphClaudeTools...)
+	tools = append(tools, grants...)
 	spec.ClaudeTools = tools
-	return spec
-}
-
-// withCodegraphGuidance returns spec extended with the "## Code intelligence"
-// section body when codegraph was detected, and spec unchanged otherwise.
-// Unlike withCodegraphTools, Guidance is a plain string field: setting it on
-// the value copy carries no aliasing hazard (no shared backing array to mutate).
-func withCodegraphGuidance(spec agentTypeSpec, opts InstallOptions) agentTypeSpec {
-	if !opts.CodegraphFound {
-		return spec
-	}
-
-	spec.Guidance = codeIntelligenceGuidance
 	return spec
 }
 
@@ -168,15 +120,16 @@ func renderClaudeAgent(spec agentTypeSpec, executorHeader string) string {
 	b.WriteString(strings.Join(spec.ClaudeTools, ", "))
 	b.WriteString("\n")
 	b.WriteString("---\n\n")
-	writeAgentBody(&b, executorHeader, spec.Constraints, spec.Guidance)
+	writeAgentBody(&b, executorHeader, spec.Constraints)
 
 	return b.String()
 }
 
 // renderOpenCodeAgent renders one agent type as an OpenCode subagent
 // definition with a structural permission block. It ignores ClaudeTools by
-// design: the codegraph grant is Claude-only; OpenCode subagents receive MCP
-// tools implicitly, except the memory tools writeOpenCodePermissions denies.
+// design: OpenCode subagents receive MCP tools implicitly — a bound
+// code-intelligence provider's included — except the memory tools
+// writeOpenCodePermissions denies.
 func renderOpenCodeAgent(spec agentTypeSpec, executorHeader string) string {
 	var b strings.Builder
 
@@ -188,7 +141,7 @@ func renderOpenCodeAgent(spec agentTypeSpec, executorHeader string) string {
 	b.WriteString("permission:\n")
 	writeOpenCodePermissions(&b, spec.ID)
 	b.WriteString("---\n\n")
-	writeAgentBody(&b, executorHeader, spec.Constraints, spec.Guidance)
+	writeAgentBody(&b, executorHeader, spec.Constraints)
 
 	return b.String()
 }
@@ -262,10 +215,10 @@ func openCodeMemoryToolPatterns() []string {
 	return patterns
 }
 
-// writeAgentBody emits the shared agent body in fixed order: the executor
-// header VERBATIM, one blank line, the agent type's constraint prose, then —
-// when non-empty — one blank line and the gated guidance section.
-func writeAgentBody(b *strings.Builder, executorHeader, constraints, guidance string) {
+// writeAgentBody emits the shared agent body in fixed order: the bound
+// executor header VERBATIM, one blank line, then the agent type's constraint
+// prose.
+func writeAgentBody(b *strings.Builder, executorHeader, constraints string) {
 	b.WriteString(executorHeader)
 	if !strings.HasSuffix(executorHeader, "\n") {
 		b.WriteString("\n")
@@ -274,13 +227,6 @@ func writeAgentBody(b *strings.Builder, executorHeader, constraints, guidance st
 	b.WriteString(constraints)
 	if !strings.HasSuffix(constraints, "\n") {
 		b.WriteString("\n")
-	}
-	if guidance != "" {
-		b.WriteString("\n")
-		b.WriteString(guidance)
-		if !strings.HasSuffix(guidance, "\n") {
-			b.WriteString("\n")
-		}
 	}
 }
 
@@ -341,10 +287,12 @@ func generateOpenCodeAgents(skillsFS fs.FS, agentRoot string, opts InstallOption
 }
 
 // generateAgentFiles writes one agent definition file per agent type spec
-// under agentRoot, baking the shared executor header into every body. Executors
-// never reach memory — the orchestrator alone does — so no binding is spliced,
-// the Claude Code allowlist grants no memory tool, and the OpenCode permission
-// block denies every known provider's memory tools. A
+// under agentRoot, baking the shared executor header — its code-intel-binding
+// region bound to opts.CodeIntel — into every body, and granting that
+// provider's tools. Executors never reach memory — the orchestrator alone
+// does — so no memory binding is spliced, the Claude Code allowlist grants no
+// memory tool, and the OpenCode permission block denies every known provider's
+// memory tools. A
 // skillsFS without the executor header (a partial fixture) generates nothing
 // — the embedded production FS is guaranteed to carry it. Per-file failures
 // are isolated: the first error is reported, the remaining specs still write.
@@ -356,6 +304,10 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, r
 		}
 		return nil, fmt.Errorf("read %s: %w", executorHeaderPath, readErr)
 	}
+	header, bindErr := bindCodeIntel(header, opts.CodeIntel)
+	if bindErr != nil {
+		return nil, fmt.Errorf("bind code-intelligence provider into %s: %w", executorHeaderPath, bindErr)
+	}
 
 	if mkErr := os.MkdirAll(agentRoot, 0o755); mkErr != nil {
 		return nil, fmt.Errorf("mkdir %s: %w", agentRoot, mkErr)
@@ -366,8 +318,7 @@ func generateAgentFiles(skillsFS fs.FS, agentRoot string, opts InstallOptions, r
 
 	for _, spec := range agentTypeSpecs {
 		target := filepath.Join(agentRoot, "asdt-"+spec.ID+".md")
-		effSpec := withCodegraphGuidance(withCodegraphTools(spec, opts), opts)
-		content := render(effSpec, string(header))
+		content := render(withCodeIntelTools(spec, opts.CodeIntel), string(header))
 
 		if writeErr := os.WriteFile(target, []byte(content), 0o644); writeErr != nil {
 			if firstErr == nil {

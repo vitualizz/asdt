@@ -223,3 +223,33 @@ func TestMemoryBindingRegions(t *testing.T) {
 		}
 	}
 }
+
+// Package skill cannot import internal/installer, so these two literals are a
+// hand-copy of codeIntelBindingBeginMarker / codeIntelBindingEndMarker in
+// internal/installer/code_intel.go. Change both copies together.
+const (
+	codeIntelBindingBegin = "<!-- ASDT:GENERATED:code-intel-binding -->"
+	codeIntelBindingEnd   = "<!-- /ASDT:GENERATED:code-intel-binding -->"
+)
+
+// TestCodeIntelBindingRegions asserts every file that calls a
+// code-intelligence verb still carries its code-intel-binding region,
+// committed EMPTY. Dropping a region is silent at install time — bindCodeIntel
+// passes marker-free files through — and the file would then ship telling a
+// model to call a verb with no tool behind it.
+func TestCodeIntelBindingRegions(t *testing.T) {
+	owners := []string{
+		"asdt-core/executor-header.md", // every sub-agent, asdt-init/explore's index probe included
+		"asdt-init/SKILL.md",           // enrichment calls explore
+	}
+	for _, p := range owners {
+		data, err := fs.ReadFile(FS(), p)
+		if err != nil {
+			t.Errorf("%s missing from embedded FS: %v", p, err)
+			continue
+		}
+		if !strings.Contains(string(data), codeIntelBindingBegin+"\n"+codeIntelBindingEnd) {
+			t.Errorf("%s must carry the code-intel-binding region committed empty (%q immediately followed by %q)", p, codeIntelBindingBegin, codeIntelBindingEnd)
+		}
+	}
+}

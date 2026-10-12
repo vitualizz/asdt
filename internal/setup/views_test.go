@@ -659,9 +659,10 @@ func TestView_ReviewMemoryRow(t *testing.T) {
 		{name: "no memory by default", want: "Memory:      none (recommended: Engram, to keep key project knowledge between sessions)"},
 		{name: "engram chosen while missing", downs: -1, want: "Engram (not found — install: https://github.com/Gentleman-Programming/engram)"},
 		{name: "no memory chosen beside engram", engramFound: true, downs: 1, want: "none (recommended: Engram"},
-		// Walking past "No memory" onto [ Continue → ] keeps the default.
-		{name: "engram kept on the button", engramFound: true, downs: 2, want: "Memory:      Engram"},
-		{name: "no memory kept on the button", downs: 1, want: "Memory:      none (recommended: Engram"},
+		// Walking past "No memory" and the code-intelligence group onto
+		// [ Continue → ] keeps the default.
+		{name: "engram kept on the button", engramFound: true, downs: providerScreenRows, want: "Memory:      Engram"},
+		{name: "no memory kept on the button", downs: providerScreenRows, want: "Memory:      none (recommended: Engram"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -678,6 +679,103 @@ func TestView_ReviewMemoryRow(t *testing.T) {
 			}
 			for range -c.downs {
 				m = updateKey(t, m, tea.KeyUp)
+			}
+			m = updateKey(t, m, tea.KeyEnter) // → ModelGate
+			m = updateKey(t, m, tea.KeyEnter) // → AgentSetup
+			for range installer.PersonaPresets {
+				m = updateKey(t, m, tea.KeyDown) // → [ Skip → ]
+			}
+			m = updateKey(t, m, tea.KeyEnter) // → PermissionConsent
+			m = updateKey(t, m, tea.KeyEnter) // → Review
+			if m.State() != setup.StateReview {
+				t.Fatalf("state = %v, want StateReview", m.State())
+			}
+			if view := m.View(); !strings.Contains(view, c.want) {
+				t.Errorf("review missing %q, got:\n%s", c.want, view)
+			}
+		})
+	}
+}
+
+// providerScreenRows is the number of radio rows on the provider screen: each
+// group's providers plus its "No …" row. That many Down presses from any row
+// reach the confirm button.
+var providerScreenRows = len(installer.Providers) + len(installer.CodeIntelProviders) + 2
+
+// TestView_CodeIntelOnProviderScreen asserts the provider screen carries the
+// code-intelligence group — every provider plus "No code intelligence" — and
+// warns, with its install hint, only while a selected provider was not found.
+func TestView_CodeIntelOnProviderScreen(t *testing.T) {
+	codegraph := installer.CodeIntelProviders[0]
+	missing := codegraph.Name + " was not found. ASDT installs bound to it; specialists use grep and read until you install it and index a project."
+	for _, found := range []bool{true, false} {
+		t.Run(fmt.Sprintf("found=%v", found), func(t *testing.T) {
+			m := setup.New(fstest.MapFS{}, "dev")
+			m = updateKey(t, m, tea.KeyEnter) // → LanguageSelect
+			m = updateKey(t, m, tea.KeyEnter) // → EnvironmentCheck
+			msg := envCheckMsg(true)
+			msg.CodeIntelFound[codegraph.ID] = found
+			next, _ := m.Update(msg)
+			m = updateKey(t, next.(setup.Model), tea.KeyEnter) // → SelectAssistants
+			m = updateKey(t, m, tea.KeyEnter)                  // → SelectProvider
+
+			view := m.View()
+			for _, want := range []string{"Code Intelligence", codegraph.Name, codegraph.Description, "No code intelligence"} {
+				if !strings.Contains(view, want) {
+					t.Errorf("provider screen missing %q, got:\n%s", want, view)
+				}
+			}
+			if strings.Contains(view, missing) {
+				t.Errorf("default selection must show no code-intelligence warning (missing defaults to none), got:\n%s", view)
+			}
+
+			// Select Codegraph explicitly: the warning follows found.
+			for i := 0; i <= len(installer.Providers); i++ {
+				m = updateKey(t, m, tea.KeyDown)
+			}
+			view = updateKey(t, m, tea.KeySpace).View()
+			if got := strings.Contains(view, missing) && strings.Contains(view, "Install: "+codegraph.Detect.InstallURL); got == found {
+				t.Errorf("Codegraph selected (found=%v): warning shown = %v, want %v\n%s", found, got, !found, view)
+			}
+		})
+	}
+}
+
+// TestView_ReviewCodeIntelRow asserts the Review screen's code-intelligence
+// row: the chosen provider's name, a not-found flag with its install hint, or
+// "none".
+func TestView_ReviewCodeIntelRow(t *testing.T) {
+	codegraph := installer.CodeIntelProviders[0]
+	cases := []struct {
+		name   string
+		found  bool
+		choose bool // Space on the Codegraph row
+		want   string
+	}{
+		{name: "found by default", found: true, want: "Code intel:  " + codegraph.Name},
+		{name: "none by default", want: "Code intel:  none (grep and read)"},
+		{name: "chosen while missing", choose: true, want: codegraph.Name + " (not found — install: " + codegraph.Detect.InstallURL + ")"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Setenv("HOME", t.TempDir())
+			t.Setenv("XDG_CONFIG_HOME", "")
+			m := setup.New(fstest.MapFS{}, "dev")
+			m = updateKey(t, m, tea.KeyEnter) // → LanguageSelect
+			m = updateKey(t, m, tea.KeyEnter) // → EnvironmentCheck
+			msg := envCheckMsg(true)
+			msg.CodeIntelFound[codegraph.ID] = c.found
+			next, _ := m.Update(msg)
+			m = updateKey(t, next.(setup.Model), tea.KeyEnter) // → SelectAssistants
+			m = updateKey(t, m, tea.KeyEnter)                  // → SelectProvider
+			if c.choose {
+				for i := 0; i <= len(installer.Providers); i++ {
+					m = updateKey(t, m, tea.KeyDown)
+				}
+				m = updateKey(t, m, tea.KeySpace)
+			}
+			for range providerScreenRows {
+				m = updateKey(t, m, tea.KeyDown) // → [ Continue → ]
 			}
 			m = updateKey(t, m, tea.KeyEnter) // → ModelGate
 			m = updateKey(t, m, tea.KeyEnter) // → AgentSetup

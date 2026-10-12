@@ -23,7 +23,7 @@ Setup-class: invoked by name only, never routed (`skill/SKILL.md`), and always t
 |------|-----------|------|
 | memory-check | inline | Checks this session for the bound memory tools; settles fresh vs recalibration |
 | explore | subagent | Detects the stack, context fields, and design fingerprint; returns them with the questions to ask |
-| enrichment | inline | Surfaces up to 3 central, non-obvious symbols as skippable note questions |
+| enrichment | inline | Surfaces up to 3 central, non-obvious symbols as skippable note questions, through code intelligence |
 | clarify | inline | Asks the questions, previews the write, takes the consent; produces the answers write applies |
 | write | subagent | Writes `.asdt/config.yaml`, preserving manual values |
 
@@ -47,12 +47,16 @@ Run first, before launching anything. Both checks read only your own context and
 
 Surface the few symbols a newcomer would misread: structurally central yet non-obvious from the name. Each becomes one skippable question whose answer you remember as a convention note. Skip this step entirely when memory is unavailable: an answer with nowhere to go wastes the human's time. Enrichment is positive-evidence-only, never fails, and never blocks.
 
-Take the first rung your OWN tool list supports:
+Take the first rung that holds:
 
-1. **codegraph** (any `mcp__codegraph__*` tool): call `codegraph_explore` with "which symbols are the most central to this codebase yet the least self-explanatory from their name?". Rank chunks by caller+callee degree, skip trivially named getters, setters, and plain DTOs, and break ties by file path, then symbol name. Keep a candidate only at architecture altitude: its non-obviousness spans 2 or more files, a module boundary, or a cross-cutting invariant. Never a single-function gotcha. Keep at most 3.
-2. **No codegraph**: surface nothing. A parse tree shows syntax, not centrality.
+1. **Code intelligence**: the binding below names a provider, its **explore** tool is on your OWN tool list, and explore's `## Detection` table carries a `code_intelligence` row (this project is indexed). Call **explore** (`asdt-core/executor-header.md`, Code intelligence) with "which symbols are the most central to this codebase yet the least self-explanatory from their name?". Rank the returned symbols by how many places reference them (when the binding also lists **callers**/**callees**, use their counts), skip trivially named getters, setters, and plain DTOs, and break ties by file path, then symbol name. Keep a candidate only at architecture altitude: its non-obviousness spans 2 or more files, a module boundary, or a cross-cutting invariant. Never a single-function gotcha. Keep at most 3.
+2. **Otherwise**: surface nothing. A parse tree shows syntax, not centrality.
 
 Each kept symbol becomes the question `nuance.{symbol}`: "What makes `{symbol}` non-obvious: its role, an invariant, a gotcha a newcomer would miss?", free-form, default empty, always skippable, never blocking.
+
+<!-- code-intel-binding: spliced at install from the selected provider; never hand-edit between the markers. -->
+<!-- ASDT:GENERATED:code-intel-binding -->
+<!-- /ASDT:GENERATED:code-intel-binding -->
 
 ## clarify — ask, preview, consent (inline)
 

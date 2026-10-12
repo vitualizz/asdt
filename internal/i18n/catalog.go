@@ -140,6 +140,7 @@ type InstallerStrings struct {
 	// Review screen labels
 	LabelAssistants string
 	LabelMemory     string
+	LabelCodeIntel  string
 	LabelPersona    string
 	LabelEmojis     string
 	LabelConfig     string
@@ -159,9 +160,9 @@ type InstallerStrings struct {
 	MsgStaleRemoved       string // printf format: %d = count of pruned stale files
 
 	// Preflight section group titles (display only; row labels are lookup keys)
-	SectionYourEnvironment string
-	SectionMemoryProvider  string
-	SectionAIEnhancements  string
+	SectionYourEnvironment  string
+	SectionMemoryProvider   string
+	SectionCodeIntelligence string
 
 	// Memory provider selection. A provider is optional: the "No memory" row
 	// sits after every installer.Providers entry, and a selected provider whose
@@ -177,6 +178,18 @@ type InstallerStrings struct {
 	DetailProviderNotFound string // printf format: %s = provider Detect.InstallURL
 	ValueMemoryNone        string // printf format: %s = provider Names, joined by " / "
 	ValueMemoryMissing     string // printf format: %s = provider Name, %s = provider Detect.InstallURL
+
+	// Code-intelligence provider selection, on the same screen as memory. A
+	// provider is optional: the "No code intelligence" row sits after every
+	// installer.CodeIntelProviders entry, and a selected provider whose probe
+	// binary is not on PATH shows a warning with its install hint
+	// (PrefProviderInstall) but never blocks Continue.
+	OptionNoCodeIntel       string
+	DescNoCodeIntel         string
+	WarnCodeIntelMissing    string // printf format: %s = provider Name
+	DetailCodeIntelNotFound string // printf format: %s = provider Detect.InstallURL
+	ValueCodeIntelNone      string
+	ValueCodeIntelMissing   string // printf format: %s = provider Name, %s = provider Detect.InstallURL
 }
 
 // DashboardStrings holds user-visible strings for the dashboard TUI.
@@ -185,4 +198,8 @@ type DashboardStrings struct {
 	LabelPersona   string // "Persona" — prefix for the configured persona name
 	LabelMemory    string // "Memory" — prefix for the bound memory provider
 	ValueNoMemory  string // shown after LabelMemory for a "no memory" install
+	// LabelCodeIntel prefixes the bound code-intelligence provider;
+	// ValueNoCodeIntel follows it for an install with none.
+	LabelCodeIntel   string
+	ValueNoCodeIntel string
 }

@@ -2,6 +2,7 @@ package setup_test
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -61,7 +62,7 @@ var hostedProvider = installer.ProviderDescriptor{
 	Name:        "Acme Memory",
 	Description: "Test-only hosted provider.",
 	ConfigValue: "acme",
-	Tools: map[installer.MemoryVerb][]installer.MemoryTool{
+	Tools: map[installer.MemoryVerb][]installer.ProviderTool{
 		installer.MemoryRemember: {{Name: "acme_put", Usage: "pass the subject as `slot` and the note as `body`"}},
 		installer.MemoryRecall:   {{Name: "acme_ask", Usage: "pass the query as `q`; each answer is a full note"}},
 	},
@@ -78,13 +79,17 @@ func withHostedProvider(t *testing.T) {
 }
 
 // envCheckMsg ends the environment check with every provider in
-// installer.Providers found, or none.
+// installer.Providers and installer.CodeIntelProviders found, or none.
 func envCheckMsg(found bool) setup.EnvironmentCheckMsg {
 	providers := make(map[installer.ProviderID]bool, len(installer.Providers))
 	for _, p := range installer.Providers {
 		providers[p.ID] = found
 	}
-	return setup.EnvironmentCheckMsg{ProvidersFound: providers}
+	codeIntel := make(map[installer.ProviderID]bool, len(installer.CodeIntelProviders))
+	for _, p := range installer.CodeIntelProviders {
+		codeIntel[p.ID] = found
+	}
+	return setup.EnvironmentCheckMsg{ProvidersFound: providers, CodeIntelFound: codeIntel}
 }
 
 // TestEnvironmentCheckCmd_ProbesEveryProvider runs the real probes with an
@@ -117,6 +122,80 @@ func TestEnvironmentCheckCmd_ProbesEveryProvider(t *testing.T) {
 	}
 	if got := rows[hostedProvider.Name]; got.Status != components.CheckStatusOK {
 		t.Errorf("unprobed provider row status = %v, want CheckStatusOK (informational)", got.Status)
+	}
+	for _, p := range installer.CodeIntelProviders {
+		got, ok := rows[p.Name]
+		if !ok {
+			t.Errorf("no preflight row labeled %q (code intelligence)", p.Name)
+			continue
+		}
+		if got.Status != components.CheckStatusWarning || !got.SoftWarn || !strings.Contains(got.Detail, p.Detect.InstallURL) {
+			t.Errorf("missing %s row = %+v, want a soft warning naming %s", p.Name, got, p.Detect.InstallURL)
+		}
+	}
+}
+
+// TestUpdate_CodeIntelSelection walks the code-intelligence group of the
+// provider screen. Its default is the first provider the environment check
+// found, else "No code intelligence"; Space or Enter on one of its rows
+// selects it without touching the memory choice; walking onto the button
+// changes nothing; and the choice is what the install binds.
+func TestUpdate_CodeIntelSelection(t *testing.T) {
+	for _, found := range []bool{true, false} {
+		t.Run(fmt.Sprintf("found=%v", found), func(t *testing.T) {
+			m := setup.New(fstest.MapFS{}, "dev")
+			m = updateKey(t, m, tea.KeyEnter) // MainMenu → LanguageSelect
+			m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
+			next, _ := m.Update(envCheckMsg(found))
+			m = updateKey(t, next.(setup.Model), tea.KeyEnter) // → SelectAssistants
+			m = updateKey(t, m, tea.KeyEnter)                  // → SelectProvider
+
+			wantDefault := installer.ProviderID("")
+			if found {
+				wantDefault = installer.CodeIntelProviders[0].ID
+			}
+			if got := m.SelectedCodeIntel(); got.ID != wantDefault || got.IsNone() != !found {
+				t.Fatalf("default code intelligence = %q, want %q", got.ID, wantDefault)
+			}
+			memory := m.SelectedProvider().ID
+
+			// Top of the screen, then past the memory group onto the first
+			// code-intelligence row.
+			for range installer.Providers {
+				m = updateKey(t, m, tea.KeyUp)
+			}
+			for i := 0; i <= len(installer.Providers); i++ {
+				m = updateKey(t, m, tea.KeyDown)
+			}
+			for i := 0; i <= len(installer.CodeIntelProviders); i++ {
+				want := installer.ProviderID("")
+				if i < len(installer.CodeIntelProviders) {
+					want = installer.CodeIntelProviders[i].ID
+				}
+				if got := m.SelectedCodeIntel(); got.ID != wantDefault {
+					t.Errorf("moving to code-intelligence row %d changed the selection to %q, want %q", i, got.ID, wantDefault)
+				}
+				spaced := updateKey(t, m, tea.KeySpace)
+				if got := spaced.SelectedCodeIntel(); got.ID != want || got.IsNone() != (want == "") {
+					t.Errorf("Space on code-intelligence row %d selects %q, want %q", i, got.ID, want)
+				}
+				if got := spaced.SelectedProvider().ID; got != memory {
+					t.Errorf("Space on code-intelligence row %d changed memory to %q, want %q", i, got, memory)
+				}
+				entered := updateKey(t, m, tea.KeyEnter)
+				if entered.State() != setup.StateModelGate || entered.SelectedCodeIntel().ID != want {
+					t.Errorf("Enter on code-intelligence row %d: state %v, selected %q, want ModelGate %q", i, entered.State(), entered.SelectedCodeIntel().ID, want)
+				}
+				m = updateKey(t, m, tea.KeyDown)
+			}
+
+			// m now sits on the button: Enter keeps the default.
+			m = updateKey(t, m, tea.KeyDown) // bump the bottom
+			m = updateKey(t, m, tea.KeyEnter)
+			if got := m.SelectedCodeIntel(); m.State() != setup.StateModelGate || got.ID != wantDefault {
+				t.Errorf("Enter on the button: state %v, selected %q, want ModelGate %q", m.State(), got.ID, wantDefault)
+			}
+		})
 	}
 }
 

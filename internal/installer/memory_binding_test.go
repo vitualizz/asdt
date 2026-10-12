@@ -21,7 +21,7 @@ var fakeMemoryProvider = ProviderDescriptor{
 	Name:        "Acme Memory",
 	Description: "Test-only provider.",
 	ConfigValue: "acme",
-	Tools: map[MemoryVerb][]MemoryTool{
+	Tools: map[MemoryVerb][]ProviderTool{
 		MemoryRemember: {{Name: "acme_put", Usage: "pass the subject as `slot` and the note as `body`"}},
 		MemoryRecall:   {{Name: "acme_ask", Usage: "pass the query as `q`; each answer is a full note"}},
 	},
@@ -65,6 +65,9 @@ func installWithProvider(t *testing.T, provider ProviderDescriptor) string {
 	}
 	if want := provider.MetaValue(); meta.Memory != want {
 		t.Errorf("install meta Memory = %q, want %q", meta.Memory, want)
+	}
+	if meta.CodeIntel != CodeIntelNone {
+		t.Errorf("install meta CodeIntel = %q, want %q", meta.CodeIntel, CodeIntelNone)
 	}
 	return skillsDir
 }
@@ -182,11 +185,12 @@ func TestInstall_MemoryBindingReachesInstalledFiles(t *testing.T) {
 	}
 }
 
-// shippedProviderNames is every name a shipped provider is known by — its
-// Name, probe binary, and tool names — plus `mem_`, Engram's whole tool family
+// shippedProviderNames is every name a shipped provider — memory or code
+// intelligence — is known by: its Name, probe binary, tool names, and (code
+// intelligence) index marker, plus `mem_`, Engram's whole tool family
 // (mem_update, mem_context…), none of which the prompts may reach for. Derived
-// from Providers, so a new provider's names are forbidden in the same commit
-// that adds its descriptor.
+// from Providers and CodeIntelProviders, so a new provider's names are
+// forbidden in the same commit that adds its descriptor.
 func shippedProviderNames() []string {
 	names := []string{"mem_"}
 	seen := map[string]bool{"mem_": true}
@@ -205,26 +209,24 @@ func shippedProviderNames() []string {
 			}
 		}
 	}
+	for _, p := range CodeIntelProviders {
+		add(p.Name)
+		add(p.Detect.Binary)
+		add(p.IndexMarker)
+		for _, tool := range p.Tools {
+			add(tool.Name)
+		}
+	}
 	return names
 }
 
-// codegraphMCPPrefix is the one MCP namespace prompt prose may name: codegraph
-// is not a memory provider, and /asdt-init detects it by this prefix.
-const codegraphMCPPrefix = "mcp__codegraph__"
-
-// providerNameHits returns what content names outside its memory-binding
-// regions that only a binding may name: a forbidden substring (lowercase,
-// matched case-insensitively), or an MCP tool name (`mcp__…`) whose namespace is
-// neither codegraph's nor in allowedMCP.
+// providerNameHits returns what content names outside its binding regions
+// (memory and code intelligence) that only a binding may name: a forbidden
+// substring (lowercase, matched case-insensitively), or an MCP tool name
+// (`mcp__…`) whose namespace is not in allowedMCP.
 func providerNameHits(content string, forbidden, allowedMCP []string) []string {
-	for {
-		begin := strings.Index(content, memoryBindingBeginMarker)
-		end := strings.Index(content, memoryBindingEndMarker)
-		if begin < 0 || end < begin {
-			break
-		}
-		content = content[:begin] + content[end+len(memoryBindingEndMarker):]
-	}
+	content = stripRegions(content, memoryBindingBeginMarker, memoryBindingEndMarker)
+	content = stripRegions(content, codeIntelBindingBeginMarker, codeIntelBindingEndMarker)
 	lower := strings.ToLower(content)
 
 	var hits []string
@@ -233,7 +235,6 @@ func providerNameHits(content string, forbidden, allowedMCP []string) []string {
 			hits = append(hits, f)
 		}
 	}
-	allowed := append([]string{codegraphMCPPrefix}, allowedMCP...)
 	for rest := lower; ; {
 		i := strings.Index(rest, "mcp__")
 		if i < 0 {
@@ -241,7 +242,7 @@ func providerNameHits(content string, forbidden, allowedMCP []string) []string {
 		}
 		rest = rest[i:]
 		ok := false
-		for _, a := range allowed {
+		for _, a := range allowedMCP {
 			if strings.HasPrefix(rest, strings.ToLower(a)) {
 				ok = true
 				break
@@ -256,14 +257,29 @@ func providerNameHits(content string, forbidden, allowedMCP []string) []string {
 	return hits
 }
 
-// TestPromptsAreProviderNeutral asserts no prompt text names a memory provider
-// or its tools outside a memory-binding region. Prompts speak the memory
-// interface (asdt-core/protocol.md §2); the installer binds it to the selected
-// provider, so a provider is added in Go alone. It covers every source of
-// prompt text: the embedded skill tree, the generated executor agents (Claude
-// Code and OpenCode, codegraph guidance on — they name no memory tool at all),
-// the Go prompt-prose constants, and the AGENTS.md template and personas. An
-// agent's frontmatter is configuration, so only its body is scanned.
+// stripRegions returns content without any begin…end marker region, markers
+// included.
+func stripRegions(content, begin, end string) string {
+	for {
+		b := strings.Index(content, begin)
+		e := strings.Index(content, end)
+		if b < 0 || e < b {
+			return content
+		}
+		content = content[:b] + content[e+len(end):]
+	}
+}
+
+// TestPromptsAreProviderNeutral asserts no prompt text names a provider —
+// memory or code intelligence — or its tools outside a binding region. Prompts
+// speak the memory interface (asdt-core/protocol.md §2) and the
+// code-intelligence interface (asdt-core/executor-header.md); the installer
+// binds each to the selected provider, so a provider is added in Go alone. It
+// covers every source of prompt text: the embedded skill tree, the generated
+// executor agents (Claude Code and OpenCode, Codegraph bound — its binding
+// region is the one place its names may appear), the Go prompt-prose
+// constants, and the AGENTS.md template and personas. An agent's frontmatter
+// is configuration, so only its body is scanned.
 func TestPromptsAreProviderNeutral(t *testing.T) {
 	type source struct {
 		name, content string
@@ -296,7 +312,7 @@ func TestPromptsAreProviderNeutral(t *testing.T) {
 		"opencode": generateOpenCodeAgents,
 	} {
 		agentRoot := filepath.Join(t.TempDir(), name)
-		if _, err := generate(skill.FS(), agentRoot, InstallOptions{CodegraphFound: true}); err != nil {
+		if _, err := generate(skill.FS(), agentRoot, InstallOptions{CodeIntel: CodeIntelProviders[0]}); err != nil {
 			t.Fatalf("generate %s agents: %v", name, err)
 		}
 		first := len(sources)
@@ -310,16 +326,15 @@ func TestPromptsAreProviderNeutral(t *testing.T) {
 	}
 
 	for name, prose := range map[string]string{
-		"analystConstraints":       analystConstraints,
-		"builderConstraints":       builderConstraints,
-		"codeIntelligenceGuidance": codeIntelligenceGuidance,
+		"analystConstraints": analystConstraints,
+		"builderConstraints": builderConstraints,
 	} {
 		sources = append(sources, source{"const " + name, prose, nil})
 	}
 
 	for _, src := range sources {
 		for _, hit := range providerNameHits(src.content, shippedProviderNames(), src.allowedMCP) {
-			t.Errorf("%s names %q outside a memory-binding region — speak the memory interface (memory **remember** / **recall**) instead", src.name, hit)
+			t.Errorf("%s names %q outside a binding region — speak the provider-neutral interface (memory **remember** / **recall**, code intelligence **explore** …) instead", src.name, hit)
 		}
 	}
 }
@@ -388,14 +403,14 @@ func TestGenerateAgents_NoMemoryAccess(t *testing.T) {
 func TestBindMemory(t *testing.T) {
 	const begin, end = memoryBindingBeginMarker, memoryBindingEndMarker
 	incomplete := fakeMemoryProvider
-	incomplete.Tools = map[MemoryVerb][]MemoryTool{MemoryRemember: fakeMemoryProvider.Tools[MemoryRemember]}
+	incomplete.Tools = map[MemoryVerb][]ProviderTool{MemoryRemember: fakeMemoryProvider.Tools[MemoryRemember]}
 	noName := fakeMemoryProvider
-	noName.Tools = map[MemoryVerb][]MemoryTool{
+	noName.Tools = map[MemoryVerb][]ProviderTool{
 		MemoryRemember: fakeMemoryProvider.Tools[MemoryRemember],
 		MemoryRecall:   {fakeMemoryProvider.Tools[MemoryRecall][0], {Usage: "read the note"}},
 	}
 	noUsage := fakeMemoryProvider
-	noUsage.Tools = map[MemoryVerb][]MemoryTool{
+	noUsage.Tools = map[MemoryVerb][]ProviderTool{
 		MemoryRemember: fakeMemoryProvider.Tools[MemoryRemember],
 		MemoryRecall:   {{Name: "acme_ask"}},
 	}
@@ -501,7 +516,9 @@ func stripInjectedBinding(content string) string {
 // exist and name the markers whenever any injected file carries a region, and
 // applying it as worded must leave no provider name behind. No step file may
 // lean on the binding either — a value a step needs from it arrives in its
-// payload (asdt-init/clarify's memory_provider).
+// payload (asdt-init/clarify's memory_provider). The code-intelligence binding
+// is different: the executor header carries it to every sub-agent, so a step
+// file may lean on it (asdt-init/explore probes its index marker).
 func TestSubagentInjectionStripsMemoryBinding(t *testing.T) {
 	skillsDir := installWithProvider(t, Providers[0])
 
@@ -526,7 +543,7 @@ func TestSubagentInjectionStripsMemoryBinding(t *testing.T) {
 		}
 	}
 
-	stepFileWord := regexp.MustCompile(`(?i)\bbinding\b`)
+	stepFileWord := regexp.MustCompile(`(?i)memory[- ]binding|\bmemory\b[^.\n]*\bbinding\b|\bbinding\b[^.\n]*\bmemory\b`)
 	workflows, err := filepath.Glob(filepath.Join(skillsDir, "*", "workflow.yaml"))
 	if err != nil || len(workflows) == 0 {
 		t.Fatalf("glob installed workflow.yaml: %v (found %d)", err, len(workflows))
@@ -552,7 +569,7 @@ func TestSubagentInjectionStripsMemoryBinding(t *testing.T) {
 					t.Fatalf("read %s step file: %v", step.Name, err)
 				}
 				if hit := stepFileWord.FindString(string(body)); hit != "" {
-					t.Errorf("%s/%s step file mentions %q; a sub-agent never sees the binding, so pass the value in its payload", filepath.Base(dir), step.Skill, hit)
+					t.Errorf("%s/%s step file mentions %q; a sub-agent never sees the memory binding, so pass the value in its payload", filepath.Base(dir), step.Skill, hit)
 				}
 			}
 			for _, ref := range step.ReferenceSkills {
