@@ -86,7 +86,7 @@ confident prose and no signal. Step 8 fixes the design; it reports nothing.
 ## Output
 Produces: `ux-ui/handoff`
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`. ONE artifact — flows, screens, component designs, visual
 foundation, and accessibility are sections of it. `brief`, `surface`, `entry_point`, `flows`,
 and `components` are carried verbatim from `ux-flows`; `decisions` and `open_items` carry its

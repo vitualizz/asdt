@@ -15,7 +15,7 @@ flowchart TD
     B -->|subagent| D["steps/step-name.md\nexecutor-only · never delegates"]
 
     D -.->|"output: context\nintermediate payloads stay in the thread"| B
-    D <-->|"mem_save / mem_search\ntopic_key: project/change/role/handoff"| E[(Engram)]
+    D <-->|"memory save / search / get\nkey: project/change/role/handoff"| E[(Memory provider\nbound at install)]
 ```
 
 **Meta-orchestrator** (`skill/SKILL.md`) — the `/asdt` command only. Reads the request and answers one of three ways: a specialist chain, a single specialist, or — when the question is about the STATE of the work ("what did we decide about X?") — the answer itself, read inline from memory. It never executes a specialist step; the only thing it writes is knowledge the user dictates to it (`asdt-core/protocol.md` §1).
@@ -24,7 +24,11 @@ flowchart TD
 
 **Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. No specialist requires another's work: every cross-specialist input is optional and degrades, which is what lets any of them run alone. Each step does one thing and returns. A specialist persists ONE hand-off key per change; a step whose payload only feeds the next step declares `output: context` and hands it back to the orchestrator, which injects it there. A role that delivers in stages — the Developer's plan, then its build — writes each stage to that same key. Steps never delegate further.
 
-The full contract — what gets persisted, how inputs arrive, how a step degrades when one is missing — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
+The full contract — how memory is reached, what gets persisted, how inputs arrive, how a step degrades when one is missing — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
+
+## Memory Provider Binding
+
+No prompt names a memory provider or its tools. Prompts speak three verbs — memory **save** (upsert by key), **search** (by key prefix or free text), and **get** (one full record by id) — defined once in `asdt-core/protocol.md` §0. The binding lives in a `<!-- ASDT:GENERATED:memory-binding -->` region committed EMPTY — in `asdt-core/protocol.md` (and so in every routed SKILL.md the protocol is spliced into), and in each file that reaches memory without the protocol in hand: `asdt-core/executor-header.md`, `asdt-init/SKILL.md`, and the root `SKILL.md`. At install, the Go installer splices the selected provider's binding into each one — its name, its `memory.provider` config value, the tool behind each verb, and how to call it — and grants the same tools to the generated `asdt-analyst` / `asdt-builder` agents. Both come from the provider's `ProviderDescriptor` in `internal/installer/providers.go`; Engram is the provider ASDT ships today. Never write a provider's name or tool names into a prompt — `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails if one appears outside a binding region.
 
 ## Directory Structure
 
@@ -59,8 +63,8 @@ Every step in `workflow.yaml` has an `execution:` field:
 **Inline steps** run in the orchestrator's own context, never as a sub-agent. Preludes (`knowledge-recall`, `platform-analysis`) name the reference they follow in `skill:` and enrich the context for the steps after them. Gates (the Developer's `approve` and `verify`) have no `skill:` — their contract is a section of the specialist's `SKILL.md`, and they re-launch only the sub-agent steps that section names — and one that persists its outcome declares `output_topic_key`. No inline step declares `inputs:`.
 
 **Subagent steps** each declare:
-- `inputs:` — topic keys to retrieve from Engram before starting
-- `output_topic_key` — where to save the hand-off in Engram
+- `inputs:` — keys the orchestrator retrieves from memory and injects before the step starts
+- `output_topic_key` — the key the step's hand-off is saved under
 - `output: context` — declared *instead of* `output_topic_key`: the step persists nothing, and the orchestrator keeps its payload and injects it into the next step
 - `context_inputs:` — payloads produced earlier in the same run, each named by its producer's `Produces:` line (a step file's `## Output`, or an inline gate's SKILL.md section) and injected as `### INPUT {name}` blocks
 - `reference_skills:` — which shared skill files to load as guidelines
@@ -68,7 +72,7 @@ Every step in `workflow.yaml` has an `execution:` field:
 
 ## Artifact Topic Keys
 
-Every artifact is stored in Engram under a structured key:
+Every artifact is stored in memory under a structured key:
 
 ```
 {project}/{change}/{role}/handoff
@@ -81,7 +85,7 @@ Examples:
 
 One key per role per change. That is the whole address space for delivering a change: a specialist looking for upstream work knows exactly what to ask for, and a run that finds nothing there proceeds and says so.
 
-The router's sharpened request is not one of these keys: it names no key, no field, and no file of its own — it lives only inside the quotes of the `/asdt-*` command the router emits, and it never reaches Engram.
+The router's sharpened request is not one of these keys: it names no key, no field, and no file of its own — it lives only inside the quotes of the `/asdt-*` command the router emits, and it never reaches memory.
 
 A run that EXAMINES what already exists — an audit, a review, an assessment with nothing to deliver — persists under a second namespace instead:
 
@@ -95,7 +99,7 @@ Examples:
 
 Which namespace applies is judged from the invocation, never declared: same schema, same load rules, same degradation. A past study is organizational memory — no step declares it as an input, and later runs meet it through the `knowledge-recall` prelude. The full contract is `asdt-core/protocol.md` §1.
 
-A run that made a non-obvious decision also appends one line to `{project}/journal`. Nothing else is written.
+A run that made a non-obvious decision also saves one journal entry — its own one-line record at `{project}/journal/{change}/{role}/{subject}`, so no entry overwrites another. Nothing else is written.
 
 ## Adding a New Specialist
 

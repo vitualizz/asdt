@@ -45,11 +45,14 @@ If a tier is arguable, take the lower defensible one and say you did — an unde
 
 When the question is about the state of the work — "how are we doing on X?", "what did we decide about Y?", "what's still open?" — do NOT propose a chain. Answer it yourself.
 
-One `mem_search` over `{project}/{change}`, or `{project}/study/{topic}` for a past audit, plus `{project}/journal` for the decision log. Read whatever hand-offs came back and narrate it in prose: who worked on it, what was decided, what stayed `ASSUMED:`, and QA's verdict if there is one. Inline, in your own context — no sub-agents, nothing persisted.
+One memory **search** over `{project}/{change}`, or `{project}/study/{topic}` for a past audit, plus one for the prefix `{project}/journal/{change}` — or `{project}/journal` plus the question's topic terms when it spans changes — the decision log, one entry per record; memory **get** the records that bear on the question, picked by exact key. The verbs are defined in `asdt-core/protocol.md` §0; the binding below names the tool behind each. Read whatever hand-offs came back and narrate it in prose: who worked on it, what was decided, what stayed `ASSUMED:`, and QA's verdict if there is one. Inline, in your own context — no sub-agents, nothing persisted.
+
+<!-- ASDT:GENERATED:memory-binding -->
+<!-- /ASDT:GENERATED:memory-binding -->
 
 If memory holds nothing for it, say so plainly and suggest where to start.
 
-The same applies when the user dictates knowledge straight to you — `/asdt "remember that we use conventional commits"`. Save it yourself, in whichever home the rule in `asdt-core/protocol.md` §1 picks, and confirm it in one line. That is the second verb you execute rather than recommend, alongside reading memory to answer a status question.
+The same applies when the user dictates knowledge straight to you — `/asdt "remember that we use conventional commits"`. Save it yourself, in whichever home the rule in `asdt-core/protocol.md` §1 picks, and confirm it in one line. That is the second action you execute rather than recommend, alongside reading memory to answer a status question.
 
 ## Sharpen the request
 

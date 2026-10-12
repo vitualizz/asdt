@@ -63,7 +63,7 @@ func TestView_SelectAssistantsShowsBothNames(t *testing.T) {
 	m = sendEngramFound(t, m)         // no-op, already at MainMenu
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m2 := updateKey(t, m, tea.KeyEnter) // preflightDone → StateSelectAssistants
 	view := m2.View()
@@ -79,7 +79,7 @@ func TestView_SelectAssistantsSelectedItemHasCursor(t *testing.T) {
 	m = sendEngramFound(t, m)         // no-op, already at MainMenu
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m2 := updateKey(t, m, tea.KeyEnter) // preflightDone → StateSelectAssistants
 	view := m2.View()
@@ -98,7 +98,7 @@ func TestView_SelectAssistantsUsesBadgeForStatus(t *testing.T) {
 	m = sendEngramFound(t, m)         // no-op, already at MainMenu
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m2 := updateKey(t, m, tea.KeyEnter) // preflightDone → StateSelectAssistants
 	view := m2.View()
@@ -116,7 +116,7 @@ func TestView_SelectAssistantsShowsCheckboxes(t *testing.T) {
 	m = sendEngramFound(t, m)
 	m = updateKey(t, m, tea.KeyEnter) // → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m2 := updateKey(t, m, tea.KeyEnter) // → StateSelectAssistants
 	view := m2.View()
@@ -172,7 +172,7 @@ func stateView(t *testing.T, target string) string {
 	// Install path: cursor-0 Enter → StateEnvironmentCheck → EnvironmentCheckMsg → Enter → StateSelectAssistants.
 	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m = updateKey(t, m, tea.KeyEnter) // preflightDone → StateSelectAssistants
 	if target == "SelectAssistants" {
@@ -230,7 +230,7 @@ func stateView(t *testing.T, target string) string {
 		m2 := setup.New(fstest.MapFS{}, "dev")
 		m2 = updateKey(t, m2, tea.KeyEnter) // MainMenu → LanguageSelect
 		m2 = updateKey(t, m2, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
-		next2, _ := m2.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+		next2, _ := m2.Update(envCheckMsg(true))
 		m2 = next2.(setup.Model)
 		m2 = updateKey(t, m2, tea.KeyEnter) // EnvironmentCheck → SelectAssistants
 		m2 = updateKey(t, m2, tea.KeyEnter) // SelectAssistants → SelectProvider
@@ -553,7 +553,7 @@ func TestView_ReviewOmitsEmojiRowWhenSkipped(t *testing.T) {
 	m := setup.New(fstest.MapFS{}, "dev")
 	m = updateKey(t, m, tea.KeyEnter) // MainMenu → LanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: true})
+	next, _ := m.Update(envCheckMsg(true))
 	m = next.(setup.Model)
 	m = updateKey(t, m, tea.KeyEnter) // EnvironmentCheck → SelectAssistants
 	m = updateKey(t, m, tea.KeyEnter) // SelectAssistants → SelectProvider
@@ -590,11 +590,46 @@ func TestView_PreflightCheckShowsEngramRecovery(t *testing.T) {
 	m = updateKey(t, m, tea.KeyEnter) // → StateLanguageSelect
 	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
 	// Inject EnvironmentCheckMsg with Engram missing
-	next, _ := m.Update(setup.EnvironmentCheckMsg{EngramFound: false})
+	next, _ := m.Update(envCheckMsg(false))
 	m2 := next.(setup.Model)
 	view := m2.View()
-	if !strings.Contains(view, "Engram") {
-		t.Errorf("preflight view missing Engram recovery section, got:\n%s", view)
+	for _, want := range []string{
+		"Engram is required for memory persistence across AI sessions.",
+		"Install: https://github.com/Gentleman-Programming/engram",
+		"After installing, restart asdt-tui.",
+	} {
+		if !strings.Contains(view, want) {
+			t.Errorf("preflight view missing Engram recovery line %q, got:\n%s", want, view)
+		}
+	}
+}
+
+// TestView_ProviderRecoveryFollowsSelection asserts that beside a usable
+// provider, a missing Engram no longer blocks preflight — its row still
+// reports it — and its recovery block moves to provider selection, shown only
+// while Engram is the selected provider.
+func TestView_ProviderRecoveryFollowsSelection(t *testing.T) {
+	withHostedProvider(t)
+	const required = "Engram is required for memory persistence across AI sessions."
+
+	m := setup.New(fstest.MapFS{}, "dev")
+	m = updateKey(t, m, tea.KeyEnter) // → StateLanguageSelect
+	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
+	msg := envCheckMsg(true)
+	msg.ProvidersFound[installer.ProviderEngram] = false
+	next, _ := m.Update(msg)
+	m = next.(setup.Model)
+	if view := m.View(); strings.Contains(view, required) || !strings.Contains(view, hostedProvider.Name) {
+		t.Errorf("preflight with a usable provider must list %q and show no recovery block, got:\n%s", hostedProvider.Name, view)
+	}
+
+	m = updateKey(t, m, tea.KeyEnter) // → SelectAssistants
+	m = updateKey(t, m, tea.KeyEnter) // → SelectProvider (Engram selected)
+	if view := m.View(); !strings.Contains(view, required) || !strings.Contains(view, "Install: https://github.com/Gentleman-Programming/engram") {
+		t.Errorf("provider selection on a missing Engram must show its recovery block, got:\n%s", view)
+	}
+	if view := updateKey(t, m, tea.KeyDown).View(); strings.Contains(view, required) {
+		t.Errorf("provider selection on a usable provider must show no recovery block, got:\n%s", view)
 	}
 }
 

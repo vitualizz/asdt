@@ -35,7 +35,7 @@ stays visible.
 ## Output
 Produces: `security/handoff`
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`. Findings and checklist are SECTIONS of this one
 hand-off — there is no second artifact and no second key.
 

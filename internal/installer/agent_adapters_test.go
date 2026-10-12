@@ -38,9 +38,14 @@ var headerlessFS = fstest.MapFS{
 // so any drift in the production var is caught here.
 const codegraphToolsSuffix = ", mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_callers, mcp__codegraph__codegraph_callees, mcp__codegraph__codegraph_impact, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_files, mcp__codegraph__codegraph_status"
 
+// The base tools lines pin the Engram binding's grants (Providers[0]), hardcoded
+// rather than derived from claudeMemoryTools so drift in the descriptor is caught
+// here. Both agent types get the same three verbs per namespace — the builder no
+// longer holds mem_update: no prompt ever called it, and the memory interface
+// (protocol.md §0) has no update verb.
 const analystBaseToolsLine = "tools: Read, Glob, Grep, Bash, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation"
 
-const builderBaseToolsLine = "tools: Read, Glob, Grep, Bash, Edit, Write, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_update, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_update"
+const builderBaseToolsLine = "tools: Read, Glob, Grep, Bash, Edit, Write, mcp__plugin_engram_engram__mem_save, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__engram__mem_save, mcp__engram__mem_search, mcp__engram__mem_get_observation"
 
 // codeIntelligenceHeading is the H2 that marks the gated codegraph guidance
 // section. Hardcoded (NOT derived from codeIntelligenceGuidance) so any drift
@@ -105,7 +110,7 @@ func TestGenerateClaudeAgents_ExactFrontmatterAndBody(t *testing.T) {
 			}
 
 			agentRoot := filepath.Join(t.TempDir(), "agents")
-			written, err := generateClaudeAgents(agentFixtureFS, agentRoot, branch.opts)
+			written, err := generateClaudeAgents(agentFixtureFS, agentRoot, Providers[0], branch.opts)
 			if err != nil {
 				t.Fatalf("generateClaudeAgents returned error: %v", err)
 			}
@@ -140,12 +145,12 @@ func TestGenerateClaudeAgents_ExactFrontmatterAndBody(t *testing.T) {
 // appended grants into a later codegraph-absent generation.
 func TestGenerateClaudeAgents_CodegraphDoesNotMutateSpecs(t *testing.T) {
 	withRoot := filepath.Join(t.TempDir(), "agents-with")
-	if _, err := generateClaudeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true}); err != nil {
+	if _, err := generateClaudeAgents(agentFixtureFS, withRoot, Providers[0], InstallOptions{CodegraphFound: true}); err != nil {
 		t.Fatalf("codegraph-enabled run: %v", err)
 	}
 
 	withoutRoot := filepath.Join(t.TempDir(), "agents-without")
-	if _, err := generateClaudeAgents(agentFixtureFS, withoutRoot, InstallOptions{}); err != nil {
+	if _, err := generateClaudeAgents(agentFixtureFS, withoutRoot, Providers[0], InstallOptions{}); err != nil {
 		t.Fatalf("codegraph-absent run: %v", err)
 	}
 
@@ -259,7 +264,7 @@ func parseOpenCodeAgentFile(t *testing.T, path string) (openCodeAgentFrontmatter
 
 func TestGenerateOpenCodeAgents_StructuralPermissions(t *testing.T) {
 	agentRoot := filepath.Join(t.TempDir(), "agents")
-	written, err := generateOpenCodeAgents(agentFixtureFS, agentRoot, InstallOptions{})
+	written, err := generateOpenCodeAgents(agentFixtureFS, agentRoot, Providers[0], InstallOptions{})
 	if err != nil {
 		t.Fatalf("generateOpenCodeAgents returned error: %v", err)
 	}
@@ -328,10 +333,10 @@ func TestGenerateAgents_IdempotentDoubleGenerate(t *testing.T) {
 		generate func(skillsFS fstest.MapFS, agentRoot string) ([]string, error)
 	}{
 		{name: "claude", generate: func(fsys fstest.MapFS, root string) ([]string, error) {
-			return generateClaudeAgents(fsys, root, InstallOptions{})
+			return generateClaudeAgents(fsys, root, Providers[0], InstallOptions{})
 		}},
 		{name: "opencode", generate: func(fsys fstest.MapFS, root string) ([]string, error) {
-			return generateOpenCodeAgents(fsys, root, InstallOptions{})
+			return generateOpenCodeAgents(fsys, root, Providers[0], InstallOptions{})
 		}},
 	}
 
@@ -372,12 +377,12 @@ func TestGenerateAgents_IdempotentDoubleGenerate(t *testing.T) {
 // (the sole difference is the appended "## Code intelligence" section).
 func TestGenerateOpenCodeAgents_CodegraphStructuralNeutrality(t *testing.T) {
 	withoutRoot := filepath.Join(t.TempDir(), "agents-without")
-	if _, err := generateOpenCodeAgents(agentFixtureFS, withoutRoot, InstallOptions{CodegraphFound: false}); err != nil {
+	if _, err := generateOpenCodeAgents(agentFixtureFS, withoutRoot, Providers[0], InstallOptions{CodegraphFound: false}); err != nil {
 		t.Fatalf("codegraph-absent run: %v", err)
 	}
 
 	withRoot := filepath.Join(t.TempDir(), "agents-with")
-	if _, err := generateOpenCodeAgents(agentFixtureFS, withRoot, InstallOptions{CodegraphFound: true}); err != nil {
+	if _, err := generateOpenCodeAgents(agentFixtureFS, withRoot, Providers[0], InstallOptions{CodegraphFound: true}); err != nil {
 		t.Fatalf("codegraph-enabled run: %v", err)
 	}
 
@@ -412,7 +417,7 @@ func TestGenerateOpenCodeAgents_CodegraphStructuralNeutrality(t *testing.T) {
 func TestGenerateAgentFiles_MissingExecutorHeaderIsNoOp(t *testing.T) {
 	agentRoot := filepath.Join(t.TempDir(), "agents")
 
-	written, err := generateClaudeAgents(headerlessFS, agentRoot, InstallOptions{})
+	written, err := generateClaudeAgents(headerlessFS, agentRoot, Providers[0], InstallOptions{})
 	if err != nil {
 		t.Fatalf("expected nil error for a fixture FS without the executor header, got: %v", err)
 	}

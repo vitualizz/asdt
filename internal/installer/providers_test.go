@@ -25,15 +25,45 @@ func TestProviders_EngramEntry(t *testing.T) {
 	}
 }
 
-func TestProviders_CustomizeSkillIdentity(t *testing.T) {
+// TestProviders_BindEveryVerb guards the data every provider must carry for the
+// installer to bind the prompts' memory interface: a config value for
+// /asdt-init to write, a tool Name and Usage for every verb the prompts speak,
+// and the Claude Code prefixes the executor agents are granted those tools
+// under. A gap here would install a prompt with a verb it cannot call, or
+// agents with no memory grant. The failure modes are TestBindMemory's cases.
+func TestProviders_BindEveryVerb(t *testing.T) {
 	for _, p := range installer.Providers {
-		if p.ID == installer.ProviderEngram {
-			got := p.CustomizeSkill("hello")
-			if got != "hello" {
-				t.Errorf("engram CustomizeSkill(%q) = %q, want %q", "hello", got, "hello")
+		t.Run(p.ID, func(t *testing.T) {
+			if err := p.Validate(); err != nil {
+				t.Errorf("provider %q does not validate: %v", p.ID, err)
 			}
-			return
-		}
+		})
 	}
-	t.Fatal("engram provider not found")
+}
+
+// TestProviders_UniqueIdentity guards the keys the TUI and /asdt-init look
+// providers up by: two providers sharing an ID, Name, or ConfigValue would
+// collide in preflight rows, in the selection screen, or in the
+// Prerequisites check that matches memory.provider against the binding.
+func TestProviders_UniqueIdentity(t *testing.T) {
+	fields := []struct {
+		name string
+		of   func(installer.ProviderDescriptor) string
+	}{
+		{"ID", func(p installer.ProviderDescriptor) string { return p.ID }},
+		{"Name", func(p installer.ProviderDescriptor) string { return p.Name }},
+		{"ConfigValue", func(p installer.ProviderDescriptor) string { return p.ConfigValue }},
+	}
+	for _, f := range fields {
+		t.Run(f.name, func(t *testing.T) {
+			seen := make(map[string]string, len(installer.Providers))
+			for _, p := range installer.Providers {
+				v := f.of(p)
+				if prev, dup := seen[v]; dup {
+					t.Errorf("providers %q and %q share %s %q", prev, p.ID, f.name, v)
+				}
+				seen[v] = p.ID
+			}
+		})
+	}
 }

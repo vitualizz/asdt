@@ -23,7 +23,7 @@ the inline `clarify` step and the answers were injected into this prompt.
   ```
 
 ## Recalibration contract
-The Engram gate already passed PRE-EXPLORE (the orchestrator checked its own tool
+The memory provider gate already passed PRE-EXPLORE (the orchestrator checked its own tool
 list before launching explore). You do not re-run it.
 
 **Preserve `source: manual` fields. NEVER silently overwrite them.** When
@@ -50,11 +50,13 @@ proceeds normally.
 `.asdt/` holds static reference data — bootstrapped once and refreshed only on a
 deliberate recalibration, never per-change.
 
-1. **`.asdt/config.yaml`** — write `memory.provider: engram` plus any preserved
-   settings carried forward from an existing config. Preserve `memory.provider`,
-   `strict_tdd`, and EVERY unknown key byte-wise via the same preservation path
-   that carries `strict_tdd` forward today — this step never drops a key it does
-   not recognize.
+1. **`.asdt/config.yaml`** — write `memory.provider:` set to the config value the
+   memory binding names (your executor header and `asdt-core/protocol.md` §0 carry
+   it) — always the bound value, even over an existing one — plus any preserved
+   settings carried forward from an existing config. Preserve `strict_tdd` and
+   EVERY unknown key byte-wise via the same preservation path that carries
+   `strict_tdd` forward today — this step never drops a key it does not
+   recognize.
 
    `code_intelligence` is a top-level scalar, **positive-evidence-only**,
    modeled on `strict_tdd`'s placement:
@@ -86,7 +88,7 @@ deliberate recalibration, never per-change.
 
    ```yaml
    memory:
-     provider: engram
+     provider: {provider}         # the memory binding's config value
    strict_tdd: false            # preserved byte-wise when present
    code_intelligence: codegraph # positive evidence only; key removed when absent
    primary_design_surface: mobile # asked, not detected; key removed when never answered
@@ -272,7 +274,7 @@ not a reason to leave the project half-configured.
 ## Output
 Produces: `init/write-summary`
 
-Persist via mem_save under this step's output_topic_key in workflow.yaml; return the payload above with open_items populated.
+Persist via memory **save** under this step's `output_topic_key` in `workflow.yaml`; return the payload above with open_items populated.
 
 ```yaml
 payload:
@@ -285,7 +287,7 @@ payload:
   open_items: []
 ```
 
-If the `mem_save` call fails, record the failure in `open_items` — the files on
+If the memory **save** fails, record the failure in `open_items` — the files on
 disk are authoritative and the writes already succeeded. Do NOT halt or roll back
 on a persistence failure; the config is the durable outcome, the summary is the
 audit trail.

@@ -19,7 +19,7 @@ Initialize ASDT for the current project: detect the stack, collect the configura
 
 | Step | File | Execution | Reads | Writes |
 |------|------|-----------|-------|--------|
-| knowledge-gate | *(inline — no step file)* | inline | *(orchestrator's own tool list)* | *(no artifact — Engram presence gate)* |
+| knowledge-gate | *(inline — no step file)* | inline | *(orchestrator's own tool list)* | *(no artifact — memory provider presence gate)* |
 | explore | steps/explore.md | subagent | *(raw project tree — `inputs: []`)* | `init/stack-detection` |
 | enrichment | *(inline — no step file)* | inline | *(codegraph MCP survey — no artifact)* | *(no artifact — injects `nuance.*` ambiguities into clarify)* |
 | clarify | *(inline — no step file)* | inline | `init/stack-detection.ambiguities[]` + enrichment's `nuance.*` | *(no artifact — injects `answers{}` into write's prompt)* |
@@ -27,12 +27,15 @@ Initialize ASDT for the current project: detect the stack, collect the configura
 
 Setup-class flow: this table stays, unlike the routed specialists', because three of these steps have NO step file — the sections below are their only contract. `workflow.yaml` stays authoritative if the two ever disagree. The detection and file-writing mechanics belong to `steps/explore.md` and `steps/write.md` and are not restated here. Launch each `subagent` step as the `asdt-{agent}` sub-agent its `agent:` field names (`asdt-core/protocol.md` §4).
 
-## knowledge-gate — Engram presence (inline)
+## knowledge-gate — memory provider presence (inline)
 
-Resolve Engram presence yourself, first, before delegating anything. "Does THIS session have Engram's memory tools" is a question about your own tool list — the one every other specialist will depend on. A sub-agent carries a different tool list, so asking it risks a false "absent"; checking yourself costs nothing, since you are inspecting your own tools, not running commands. Look for `mem_save`, `mem_search`, `mem_context` (Claude Code exposes them as `mcp__plugin_engram_engram__mem_*`; other hosts may use a different prefix or none).
+Resolve the memory provider's presence yourself, first, before delegating anything. ASDT reaches memory through the verbs **save**, **search**, and **get** (`asdt-core/protocol.md` §0); the binding below names the provider this install is bound to, the exact tool behind each verb, and the config value that identifies it. "Does THIS session hold those tools" is a question about your own tool list — the one every other specialist will depend on. A sub-agent carries a different tool list, so asking it risks a false "absent"; checking yourself costs nothing, since you are inspecting your own tools, not running commands. Look for the binding's save, search, and get tools, under whatever prefix your host adds — the binding says which prefixes to expect.
 
-- **Present** → say so and continue, passing "Engram confirmed present" into explore's prompt as an established fact.
-- **Absent** → tell the user Engram is required for ASDT's cross-session memory and is not reachable in this session, explain how to connect it, and STOP. NEVER write `.asdt/config.yaml` with `provider: engram` when the provider is not actually there — that silently points every future specialist at a memory backend that does not exist.
+<!-- ASDT:GENERATED:memory-binding -->
+<!-- /ASDT:GENERATED:memory-binding -->
+
+- **Present** — all three tools are on your list → say so and continue, passing "memory provider confirmed present" into explore's prompt as an established fact.
+- **Absent** — any of them is missing, or the binding above is empty → tell the user that the provider the binding names is required for ASDT's cross-session memory and is not reachable in this session, explain how to connect it, and STOP. NEVER write `.asdt/config.yaml` with that provider's `memory.provider` value when the provider is not actually there — that silently points every future specialist at a memory backend that does not exist.
 
 **Recalibration gate, in the same breath.** Before launching explore, check for an existing `.asdt/config.yaml`. If it exists, this project was already initialized: settle recalibrate-vs-leave with the user before any detection runs. "Leave as-is" → stop without launching explore. Only a chosen recalibration, or a fresh project with no config, proceeds.
 
@@ -86,12 +89,10 @@ When write returns, tell the user which files landed, surface anything it report
 
 ## Artifact Persistence
 
-Both artifacts are saved via `mem_save`, never as files under `.asdt/artifacts/` or any local path:
+Both artifacts are saved via memory **save** (`asdt-core/protocol.md` §0), never as files under `.asdt/artifacts/` or any local path:
 
-- `title`: `"{change-name}/init/{artifact-type}"`
-- `topic_key`: `"{project}/{change}/init/{artifact-type}"` — one key per artifact type (`stack-detection`, `write-summary`)
-- `type`: `"decision"`
-- `content`: structured `What` / `Why` / `Where`
+- key: `"{project}/{change}/init/{artifact-type}"` — one key per artifact type (`stack-detection`, `write-summary`)
+- record: structured `What` / `Why` / `Where`
 
 The `.asdt` files themselves are project state, not artifacts — that carve-out belongs to init alone and covers only the three paths listed under Pending writes.
 

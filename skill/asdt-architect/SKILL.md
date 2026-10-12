@@ -68,7 +68,7 @@ pipeline declares it as an input; it is organizational memory, and later runs me
 `knowledge-recall`.
 
 ## Invariants
-- This specialist writes NO files — its output is `architect/handoff` via `mem_save`, nothing else
+- This specialist writes NO files — its output is `architect/handoff` via memory **save**, nothing else
 - Everything it persists ends in the `architect` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none

@@ -40,7 +40,7 @@ discovery — requirements derived from the raw request` in `open_items`.
 ## Output
 Produces: `pm/handoff`
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`:
 
 - `what` — the change in one sentence

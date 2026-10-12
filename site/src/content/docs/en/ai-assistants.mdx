@@ -47,7 +47,7 @@ Both agents also get the memory tools they need to save and retrieve artifacts (
 
 ASDT depends on a **memory provider** for cross-session, cross-specialist continuity. Today that provider is **Engram**, an MCP (Model Context Protocol) server. See [Knowledge Base & Memory](/asdt/docs/memory-and-engram) for the full model.
 
-Memory is wired per assistant through **MCP configuration** — you add the Engram MCP server to whichever assistant you're using, following Engram's own setup guide. Once it's connected, the generated executor agents already reference the memory tools (`mem_save`, `mem_search`, `mem_get_observation`, and — for the builder — `mem_update`) under both the plugin-scoped and bare MCP names, so they resolve regardless of how Engram is registered.
+Memory is wired per assistant through **MCP configuration** — you add the Engram MCP server to whichever assistant you're using, following Engram's own setup guide. Once it's connected, the generated executor agents already hold the memory tools the installer bound them to — for Engram, `mem_save`, `mem_search`, and `mem_get_observation`, under both the plugin-scoped and bare MCP names, so they resolve regardless of how Engram is registered. The tool names are not written into the prompts: the installer derives them from the provider you selected and binds them into each agent's definition (see [How ASDT talks to memory](/asdt/docs/memory-and-engram#how-asdt-talks-to-memory)).
 
 ASDT does not hard-code an MCP config path for you: the exact file where MCP servers are declared is the assistant's concern, so follow your assistant's MCP setup docs. What ASDT guarantees is that once Engram is reachable, every specialist step can persist and retrieve its one artifact by key.
 

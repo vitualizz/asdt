@@ -21,7 +21,7 @@ primary_design_surface: mobile # only when answered
 
 ### `memory.provider`
 
-The memory backend used by all specialists to persist and retrieve hand-offs. Only `engram` is supported today.
+The memory backend used by all specialists to persist and retrieve hand-offs. Only `engram` is supported today. `/asdt-init` writes the value of the provider your install is bound to, and every specialist checks it against that binding before it runs — so a project initialized for one provider stops with "Memory provider not configured" under an install bound to another, until you re-run `/asdt-init`.
 
 ### `strict_tdd`
 

@@ -42,7 +42,7 @@ ALREADY INJECTED — never self-fetch.
 Produces: `{project}/study/{topic}/ux-ui`, with `{topic}` derived from the request in short
 kebab-case.
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`:
 
 - `what` — the state of this experience in one sentence

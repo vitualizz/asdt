@@ -74,21 +74,21 @@ type InstallerStrings struct {
 	MenuQuit      string
 
 	// Keyboard hint descriptions (what a key does)
-	HintNavigate       string
-	HintSelect         string
-	HintQuit           string
-	HintToggle         string
-	HintAllNone        string
-	HintBack           string
-	HintBackToMenu     string
-	HintCycleMode      string
-	HintCycleModel     string
-	HintExpand         string
-	HintResetDefault   string
-	HintContinue       string
-	HintChecking       string
-	HintEnvironment    string
-	HintEngramRequired string
+	HintNavigate         string
+	HintSelect           string
+	HintQuit             string
+	HintToggle           string
+	HintAllNone          string
+	HintBack             string
+	HintBackToMenu       string
+	HintCycleMode        string
+	HintCycleModel       string
+	HintExpand           string
+	HintResetDefault     string
+	HintContinue         string
+	HintChecking         string
+	HintEnvironment      string
+	HintProviderRequired string
 
 	// Hint group labels
 	HintGroupNav      string
@@ -165,10 +165,12 @@ type InstallerStrings struct {
 	SectionMemoryProvider  string
 	SectionAIEnhancements  string
 
-	// Preflight Engram recovery block (shown when engram is not found)
-	PrefEngramRequired string
-	PrefEngramInstall  string
-	PrefEngramRestart  string
+	// Memory-provider recovery block, shown per required provider whose probe
+	// binary is not on PATH (preflight when none is usable; provider selection
+	// for the selected one).
+	PrefProviderRequired string // printf format: %s = provider Name
+	PrefProviderInstall  string // printf format: %s = provider Detect.InstallURL
+	PrefProviderRestart  string
 }
 
 // DashboardStrings holds user-visible strings for the dashboard TUI.

@@ -47,7 +47,7 @@ execute them. If measuring would settle a question, name the command the USER ca
 Produces: `{project}/study/{topic}/qa`, with `{topic}` derived from the request in short
 kebab-case.
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`:
 
 - `what` — the health of this area's suite in one sentence

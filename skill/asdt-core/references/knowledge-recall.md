@@ -18,18 +18,21 @@ Any step that makes an architectural, UX, security, or quality **decision**:
 
 1. **Formulate a query** from the step's topic — use 3-5 words from the change
    name and specialist role (e.g. `"auth session strategy"`, `"ux payment flow"`).
-2. Call `mem_search(query)` yourself and treat the top results as the Organizational
-   Context for this step.
+2. Run two memory **search**es yourself (`asdt-core/protocol.md` §0): the query,
+   and the journal prefix `{project}/journal` narrowed by the same query terms (the
+   decision log, protocol §1 — the bare prefix outgrows any result cap). Memory
+   **get** the records among them that bear on this step and treat them as the
+   Organizational Context for this step.
 3. **If Organizational Context is present**:
    - Treat prior decisions as defaults — deviate only with explicit rationale.
    - If your current direction **conflicts** with a prior decision, surface it
-     in `open_items` as: `"conflicts with prior decision: {title}"`.
+     in `open_items` as: `"conflicts with prior decision: {key}"`.
    - Do not blindly repeat prior decisions — evaluate whether they still apply.
 4. **If absent**, proceed normally — memory recall is best-effort and non-blocking.
 
 Organizational memory includes the `{project}/study/` namespace: a past audit or review of this area is exactly the kind of prior knowledge this prelude exists to surface.
 
-**Soft recall hint**: a prior `researcher/handoff` (topic_key
+**Soft recall hint**: a prior `researcher/handoff` (key
 `{project}/{change}/researcher/handoff`) MAY be recalled when a Researcher
 handoff preceded this run — it gives richer context, but it is NOT a required
 input.

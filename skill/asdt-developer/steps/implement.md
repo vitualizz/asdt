@@ -101,7 +101,7 @@ generating the code, walk `dev-spec.acceptance_criteria[]`: for each one no file
 append a single line to `open_items` — `AC not covered: {ac text}`. Warnings, never a halt.
 
 ## Output
-Produces: `developer/handoff` — persist via `mem_save` under this step's `output_topic_key`,
+Produces: `developer/handoff` — persist via memory **save** under this step's `output_topic_key`,
 using the canonical hand-off schema from `asdt-core/protocol.md`, with `stage: implemented`. This
 record REPLACES the persisted spec under the same key (`asdt-core/protocol.md` §1), so carry
 `scope` and `acceptance_criteria` forward verbatim from `dev-spec` — QA tests against them. Set

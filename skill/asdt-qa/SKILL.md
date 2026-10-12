@@ -66,7 +66,7 @@ the verdict is for the human, and after a `no-go` the next step is whoever fixes
 declares it as an input; it is organizational memory, reached through `knowledge-recall`.
 
 ## Invariants
-- This specialist writes NO files — its output is `qa/handoff` via `mem_save`, nothing else
+- This specialist writes NO files — its output is `qa/handoff` via memory **save**, nothing else
 - Everything it persists ends in the `qa` role slot — never another specialist's
 - Inputs arrive already injected; a step never self-fetches them
 - A missing input never fails a step — it degrades to an `ASSUMED:` entry in `open_items`, unless the step file says its absence needs none

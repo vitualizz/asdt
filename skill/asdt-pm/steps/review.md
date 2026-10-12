@@ -41,7 +41,7 @@ build about it is a change, and a change starts at `backlog`.
 Produces: `{project}/study/{topic}/pm`, with `{topic}` derived from the request in short
 kebab-case.
 
-Persist via `mem_save` under this step's `output_topic_key`, using the canonical hand-off
+Persist via memory **save** under this step's `output_topic_key`, using the canonical hand-off
 schema from `asdt-core/protocol.md`:
 
 - `what` — how well this area matches its requirements, in one sentence

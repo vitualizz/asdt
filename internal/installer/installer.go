@@ -24,8 +24,8 @@ type InstallOptions struct {
 }
 
 // InstallWithModels copies skill files from skillsFS into each assistant's
-// SkillsDir, applies provider.CustomizeSkill to each file's content, and
-// returns one result per assistant. A failure for one assistant does not abort
+// SkillsDir, binds every memory-binding region to provider, and returns one
+// result per assistant. A failure for one assistant does not abort
 // the others. lang is the language code chosen in the TUI; it is recorded in
 // each assistant's install metadata (an empty lang preserves the existing
 // value). models maps "{specialist}/{step}" to the model value injected into
@@ -124,7 +124,7 @@ func installOne(assistant AssistantDescriptor, provider ProviderDescriptor, skil
 	}
 
 	generateCommands(assistant, skillsFS, &result)
-	generateAgents(assistant, skillsFS, opts, &result)
+	generateAgents(assistant, skillsFS, provider, opts, &result)
 
 	if result.Err == nil {
 		// Preserve existing persona, emoji preference, and language so a
@@ -224,9 +224,10 @@ func copyEntry(skillsFS fs.FS, entry fs.DirEntry, srcRoot, destDir string, provi
 	return written, nil
 }
 
-// writeSkillFile reads srcPath from skillsFS, applies the provider's content
-// customization — plus per-step model injection for workflow.yaml files —
-// and writes the result to target, creating any needed parent directories.
+// writeSkillFile reads srcPath from skillsFS, splices its generated regions —
+// plus per-step model injection for workflow.yaml files — binds its memory
+// interface to provider, and writes the result to target, creating any needed
+// parent directories.
 func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDescriptor, models map[string]string, removeModels bool) error {
 	data, readErr := fs.ReadFile(skillsFS, srcPath)
 	if readErr != nil {
@@ -276,13 +277,21 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 		data = headed
 	}
 
-	content := provider.CustomizeSkill(string(data))
+	// The memory binding runs LAST, over every file: the specialist-header
+	// splice above copies protocol.md's still-empty binding region into each
+	// routed SKILL.md, and this one pass binds that copy and every standalone
+	// region (protocol.md, executor-header.md, asdt-init/SKILL.md, the root
+	// SKILL.md) alike. Marker-free files pass through unchanged.
+	bound, bindErr := bindMemory(data, provider)
+	if bindErr != nil {
+		return fmt.Errorf("bind memory provider into %s: %w", srcPath, bindErr)
+	}
 
 	if mkErr := os.MkdirAll(filepath.Dir(target), 0o755); mkErr != nil {
 		return fmt.Errorf("mkdir for %s: %w", target, mkErr)
 	}
 
-	if writeErr := os.WriteFile(target, []byte(content), 0o644); writeErr != nil {
+	if writeErr := os.WriteFile(target, bound, 0o644); writeErr != nil {
 		return fmt.Errorf("write %s: %w", target, writeErr)
 	}
 

@@ -44,7 +44,7 @@ dependency audits, or any other command.
 
 ## Output
 Produces: `security-assessment` — retained in the orchestrator's context, NOT persisted.
-This step declares `output: context` in `workflow.yaml`: do NOT call `mem_save`. Return the
+This step declares `output: context` in `workflow.yaml`: do NOT call memory **save**. Return the
 payload below; the orchestrator injects it into `harden`.
 
 ```yaml
