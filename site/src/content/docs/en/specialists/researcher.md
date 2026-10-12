@@ -38,18 +38,18 @@ Plain language, no flags. If you want it to go deeper or lighter, say so in the 
 
 ## What it produces
 
-A single hand-off at `{project}/{change}/researcher/handoff`:
+A single summary, `researcher`, filed in the session scratchpad as `{scratchpad}/asdt/{change}/researcher.md`:
 
-| Field | What it carries |
+| Part | What it carries |
 |---|---|
-| `what` | The recommended direction in one sentence |
-| `decisions` | The recommendation first, then every discarded direction as `rejected: {direction} — {why}` |
-| `constraints` | What any implementation of that direction has to respect |
-| `files_hint` | The code it actually read while judging feasibility |
-| `risks` | `{risk, mitigation}` for the recommended direction |
-| `open_items` | Verdicts it couldn't ground in evidence, prefixed `ASSUMED:` |
+| first line | The recommended direction in one sentence |
+| `Decisions` | The recommendation first, then every discarded direction as `rejected: {direction} — {why}` |
+| `Constraints` | What any implementation of that direction has to respect |
+| `Files hint` | The code it actually read while judging feasibility |
+| `Risks` | `risk → mitigation` for the recommended direction |
+| `Open items` | Verdicts it couldn't ground in evidence, prefixed `ASSUMED:` |
 
-`decisions` is where the exploration survives: not just what it picked, but what it looked at and set down.
+`Decisions` is where the exploration survives: not just what it picked, but what it looked at and set down.
 
 Consumed by **PM** as an optional input: the recommended direction becomes its starting point, and the rejected ones seed its out-of-scope list. The **Architect** reads it too — and when PM is skipped, the direction frames the design in PM's place, with the rejected directions out of scope.
 

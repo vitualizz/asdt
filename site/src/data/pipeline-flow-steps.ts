@@ -47,7 +47,7 @@ export const pipelineFlows: PipelineFlow[] = [
     steps: [
       {
         id: 'developer',
-        command: "/asdt-developer Implement based on the Architect's ADR",
+        command: "/asdt-developer Implement based on the Architect's design",
         specialistId: 'developer',
       },
       {

@@ -13,7 +13,7 @@ locale: es
 
 El especialista de Seguridad realiza modelado de amenazas y análisis de seguridad usando STRIDE y el OWASP Top 10. Mapea la superficie de ataque, identifica amenazas sistemáticamente y produce un checklist de hardening priorizado donde cada hallazgo tiene una mitigación concreta y accionable — no "monitorearlo" ni "agregar logging."
 
-El invariante crítico: **Seguridad no tiene predecesor requerido.** Puede correr en cualquier etapa — en un proyecto nuevo sin artefactos previos, a mitad del desarrollo o después del lanzamiento. Si existen artefactos previos (decisiones de arquitectura, implementación), los lee. Si no, trabaja desde el contexto de plataforma y la petición sola, notando las brechas en `open_items` y continuando.
+El invariante crítico: **Seguridad no tiene predecesor requerido.** Puede correr en cualquier etapa — en un proyecto nuevo sin trabajo previo, a mitad del desarrollo o después del lanzamiento. Si existen resúmenes previos (el diseño del Arquitecto, el plan o la construcción del Developer), los lee. Si no, trabaja desde el contexto de plataforma, el código y la petición, notando las brechas en `Open items` y continuando.
 
 La profundidad está controlada por la superficie de riesgo, no por complejidad — el especialista la juzga según lo que toca el cambio: autenticación, secretos, manejo de datos, integraciones externas. Este es el único especialista donde la pregunta no es "¿qué tan compleja es la feature?" sino "¿qué tan grande es la superficie de ataque?" La superficie de riesgo define qué tan profundo va el análisis; los dos pasos, `assess` y `harden`, corren siempre.
 
@@ -39,18 +39,18 @@ Mapea la superficie, la evalúa y te deja hallazgos priorizados con mitigación 
 
 ## Posición en el pipeline
 
-**Sin predecesor requerido** — invocalo en cualquier punto. Para máximo impacto, correlo después del Arquitecto (lee `architect/handoff` para la superficie de API y los límites de confianza, y `developer/handoff` para el código que cambió, cuando existen). Si recibe un plan del Developer todavía sin construir, mapea la superficie planificada a partir de los archivos que declara el plan y registra que todavía no hay nada construido. Para un modelo de amenazas temprano en el diseño, correlo antes de que la arquitectura esté finalizada para exponer riesgos a nivel de diseño antes de que queden incorporados.
+**Sin predecesor requerido** — invocalo en cualquier punto. Para máximo impacto, correlo después del Arquitecto (lee el resumen del Arquitecto para la superficie de API y los límites de confianza, y el resumen del Developer para el código que cambió, cuando existen). Una vez construido el cambio, los archivos del cambio salen de git, la autoridad sobre lo construido: cada ruta que `git status --porcelain` muestra modificada o sin seguimiento, más `git diff --name-only {base}...HEAD` contra la rama por defecto, unidas a las rutas de `Files changed` y `Prior delivery` del resumen del Developer, que además dicen por dónde empezar a leer. Si recibe un plan del Developer todavía sin construir, mapea la superficie planificada a partir de los archivos que declara el plan y registra que todavía no hay nada construido. Para un modelo de amenazas temprano en el diseño, correlo antes de que la arquitectura esté finalizada para exponer riesgos a nivel de diseño antes de que queden incorporados.
 
-Su hand-off lo leen el Arquitecto, el Developer y QA.
+Su resumen lo leen el Arquitecto, el Developer y QA.
 
 ## Qué produce
 
-`security/handoff` — hallazgos y checklist de hardening como secciones de UN solo artefacto (`{project}/study/{topic}/security` cuando la corrida audita algo que ya existe):
+El resumen de Security (`security`), escrito por `harden` — hallazgos y checklist de hardening como secciones de UN solo resumen (bajo `study-{topic}` cuando la corrida audita algo que ya existe):
 
 - **Hallazgos** — de mayor a menor severidad, cada uno con una severidad de una palabra (`high`, `medium`, `low`), qué gana un atacante, la evidencia que lo respalda y la mitigación concreta que lo cierra
 - **Checklist de hardening** — ítems ordenados, cada uno verificable como hecho, más dónde caen las mitigaciones
 
-Consumido por: **Arquitecto** (un hallazgo que redefine un límite es una restricción de diseño), **Developer** (cada mitigación que cae en los archivos del cambio se vuelve una restricción del spec), **QA** (cada hallazgo recibe un caso de prueba que demuestra que su mitigación se sostiene; un `high` cuya mitigación no deja rastro en los archivos cambiados o planificados del Developer es un `no-go`).
+Consumido por: **Arquitecto** (un hallazgo que redefine un límite es una restricción de diseño), **Developer** (cada mitigación que cae en los archivos del cambio se vuelve una restricción del spec), **QA** (cada hallazgo recibe un caso de prueba que demuestra que su mitigación se sostiene; un `high` cuya mitigación no deja rastro en los archivos del cambio, entregas anteriores incluidas, ni en los planificados del Developer es un `no-go`).
 
 ## Patrones comunes
 
@@ -66,7 +66,7 @@ Consumido por: **Arquitecto** (un hallazgo que redefine un límite es una restri
 
 ```
 /asdt-security Revisión de seguridad rápida antes del lanzamiento de v2
-# → No se necesitan artefactos previos — corre solo desde el contexto de plataforma
+# → No se necesita trabajo previo — corre desde el contexto de plataforma y el código
 ```
 
 ## Límites — qué NO hace

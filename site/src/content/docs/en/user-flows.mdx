@@ -33,10 +33,10 @@ Recommended specialists:
 Suggested order:
   /asdt-pm → /asdt-architect → /asdt-developer → /asdt-security
 
-Proceed with this plan? (yes / modify / no)
+Run this chain? I'll pause after each specialist.
 ```
 
-Confirm the plan. ASDT then gives you the exact commands to run, in order, each carrying the same sharpened version of your request. **You run them — ASDT does not execute specialists automatically.**
+Each command carries the same sharpened version of your request. Say yes and `/asdt` runs the chain one specialist at a time, **pausing after each one**: you can debate the result, and it moves on only on your go (or to whichever specialist the debate made more urgent). Or run the commands yourself, in order. **Nothing runs without your yes.**
 
 <FlowWalkerBlock flow={fullFeatureFlow} lang="en" />
 
@@ -50,25 +50,25 @@ When you already know what you need, skip `/asdt` and invoke the specialist dire
 /asdt-security Audit the OAuth integration
 ```
 
-Each specialist judges which of its own steps the request needs — the Developer, for example, stops at `explore` for a question, at `spec` for a plan, and only goes on to `approve → implement → verify` when you ask it to build — and saves its one hand-off to the knowledge base. Its report opens with what it built on and closes proposing the next specialist.
+Each specialist judges which of its own steps the request needs — the Developer, for example, stops at `explore` for a question, at `spec` for a plan, and only goes on to `approve → implement → verify` when you ask it to build — and returns its one summary, which the orchestrator writes to the session scratchpad for the next specialist. Its report opens with what it built on and closes proposing the next specialist.
 
 ## Picking up mid-pipeline
 
-If you ran some specialists and want to continue later, just invoke the next one. It reads prior artifacts from the knowledge base automatically — even from a previous session:
+If you ran some specialists and want to continue, just invoke the next one. In the same session, it reads the earlier summaries from the scratchpad:
 
 ```
-/asdt-developer Implement based on the Architect's ADR
+/asdt-developer Implement based on the Architect's design
 ```
 
-The Developer reads the Architect's hand-off from the knowledge base. You don't pass context manually.
+The Developer gets the Architect's summary as an input. You don't pass context manually. In a later session the scratchpad may be gone, which is normal: the Developer works from the code, git, and the key decisions memory recalls, and asks you for anything else it needs.
 
-The same goes for a Developer plan. Ask for a plan and it is saved; come back later with `/asdt-developer "implement the plan we approved"` and it resumes at the approval gate instead of starting over.
+The same goes for a Developer plan. Ask for a plan and the run stops there; come back later with `/asdt-developer "implement the plan we approved"` and it resumes at the approval gate instead of starting over. If the session ended in between, it rebuilds the plan from git, memory, and your words, and you approve the rebuilt plan.
 
 <FlowWalkerBlock flow={midPipelineFlow} lang="en" />
 
 ## Memory and continuity
 
-ASDT uses a memory provider to persist artifacts between specialists and across sessions. A memory provider is **required** for the pipeline to function. The default implementation is [Engram](https://github.com/Gentleman-Programming/engram). More providers are planned.
+Within a session, specialists hand work to each other through summaries in the session scratchpad. Across sessions, a memory provider keeps only the key project knowledge: non-obvious decisions, debate conclusions, conventions, lessons, and audit findings. The current provider is [Engram](https://github.com/Gentleman-Programming/engram). Without a connected provider, ASDT still works within the session; nothing carries over. See [Scratchpad & Memory](/asdt/docs/memory-and-engram).
 
 ## Supported AI assistants
 

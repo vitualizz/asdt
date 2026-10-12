@@ -44,11 +44,11 @@ const { t, lang } = Astro.props
             <div class="t-line" style="--d:3.8s;">{'  '}<span class="t-dot" style="background:var(--c-qa);"></span><span style="color:var(--c-qa);">qa        </span> <span class="t-mut">plan de pruebas         </span> <span class="t-dim">/asdt-qa</span></div>
             <div class="t-line" style="--d:4.2s;">&nbsp;</div>
             <div class="t-line t-dim" style="--d:4.4s;">{'  '}Cada paso retoma lo que dejó el anterior.</div>
-            <div class="t-line t-dim" style="--d:4.9s;">{'  '}Ejecútalos en orden — o salta directo a uno.</div>
+            <div class="t-line t-dim" style="--d:4.9s;">{'  '}Di que sí y los corro de a uno — o salta directo a uno.</div>
             <div class="t-line" style="--d:5.4s;">&nbsp;</div>
             <div class="t-line" style="--d:6.0s;"><span class="t-acc">&gt;</span> <span class="t-type t-cmd" style="--w:8ch; --tf:steps(8); --tt:0.5s; --d:6.2s;">/asdt-pm</span></div>
             <div class="t-line t-eph" style="--d:7.0s; --d2:8.0s;">{'  '}<span class="t-spin"></span> <span style="color:var(--c-pm);">pm</span> <span class="t-shim">está explorando el código…</span></div>
-            <div class="t-line" style="--d:8.1s;">{'  '}<span class="t-acc">✓</span> <span style="color:var(--c-pm);">pm</span> <span class="t-mut">— historias de usuario guardadas</span> <span class="t-dim">· base de conocimientos</span></div>
+            <div class="t-line" style="--d:8.1s;">{'  '}<span class="t-acc">✓</span> <span style="color:var(--c-pm);">pm</span> <span class="t-mut">— historias de usuario listas</span> <span class="t-dim">· resumen archivado</span></div>
             <div class="t-line" style="--d:8.7s;">{'  '}<span class="t-dim">→ siguiente:</span> <span style="color:var(--c-arch);">/asdt-architect</span> <span class="caret"></span></div>
           </div>
 
@@ -61,9 +61,9 @@ const { t, lang } = Astro.props
             <div class="t-line" style="--d:2.75s;">{'  '}<span style="color:var(--c-pm);">◆ pm</span> <span class="t-mut">— 2 pasos</span></div>
             <div class="t-line" style="--d:2.75s;">&nbsp;</div>
             <div class="t-line" style="--d:3.0s;">{'  '}<span class="t-step"></span> <span class="t-cmd">knowledge-recall      </span><span class="t-mut">memoria previa        </span><span class="t-dim">contexto</span></div>
-            <div class="t-line" style="--d:3.6s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog               </span><span class="t-mut">3 historias + alcance </span><span class="t-dim">pm/handoff</span></div>
+            <div class="t-line" style="--d:3.6s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog               </span><span class="t-mut">3 historias + alcance </span><span class="t-dim">resumen pm</span></div>
             <div class="t-line" style="--d:5.5s;">&nbsp;</div>
-            <div class="t-line t-dim" style="--d:5.7s;">{'  '}El handoff queda en la base de conocimientos.</div>
+            <div class="t-line t-dim" style="--d:5.7s;">{'  '}El resumen queda en el scratchpad para el siguiente.</div>
             <div class="t-line" style="--d:6.2s;">{'  '}<span class="t-dim">→ siguiente:</span> <span style="color:var(--c-arch);">/asdt-architect</span> <span class="caret"></span></div>
           </div>
 
@@ -77,8 +77,8 @@ const { t, lang } = Astro.props
             <div class="t-line" style="--d:3.3s;">&nbsp;</div>
             <div class="t-line" style="--d:3.6s;">{'  '}<span class="t-step"></span> <span class="t-cmd">knowledge-recall      </span><span class="t-mut">hallazgos previos     </span><span class="t-dim">contexto</span></div>
             <div class="t-line" style="--d:4.2s;">{'  '}<span class="t-step"></span> <span class="t-cmd">platform-analysis     </span><span class="t-mut">stack + convenciones  </span><span class="t-dim">contexto</span></div>
-            <div class="t-line" style="--d:4.8s;">{'  '}<span class="t-step"></span> <span class="t-cmd">assess                </span><span class="t-mut">6 amenazas · A01 A07  </span><span class="t-dim">contexto</span></div>
-            <div class="t-line" style="--d:5.4s;">{'  '}<span class="t-step"></span> <span class="t-cmd">harden                </span><span class="t-mut">1 high · 4 medium     </span><span class="t-dim">security/handoff</span></div>
+            <div class="t-line" style="--d:4.8s;">{'  '}<span class="t-step"></span> <span class="t-cmd">assess                </span><span class="t-mut">6 amenazas · A01 A07  </span><span class="t-dim">security/assess</span></div>
+            <div class="t-line" style="--d:5.4s;">{'  '}<span class="t-step"></span> <span class="t-cmd">harden                </span><span class="t-mut">1 high · 4 medium     </span><span class="t-dim">resumen security</span></div>
             <div class="t-line" style="--d:6.1s;">&nbsp;</div>
             <div class="t-line" style="--d:6.3s;">{'  '}<span class="t-dim">→ siguiente:</span> <span style="color:var(--c-dev);">/asdt-developer</span> <span class="t-mut">para aplicar los fixes</span> <span class="caret"></span></div>
           </div>
@@ -109,11 +109,11 @@ const { t, lang } = Astro.props
             <div class="t-line" style="--d:3.8s;">{'  '}<span class="t-dot" style="background:var(--c-qa);"></span><span style="color:var(--c-qa);">qa        </span> <span class="t-mut">test plan              </span> <span class="t-dim">/asdt-qa</span></div>
             <div class="t-line" style="--d:4.2s;">&nbsp;</div>
             <div class="t-line t-dim" style="--d:4.4s;">{'  '}Each step picks up where the previous left off.</div>
-            <div class="t-line t-dim" style="--d:4.9s;">{'  '}Run them in order — or jump straight to one.</div>
+            <div class="t-line t-dim" style="--d:4.9s;">{'  '}Say yes and I run them one by one — or jump straight to one.</div>
             <div class="t-line" style="--d:5.4s;">&nbsp;</div>
             <div class="t-line" style="--d:6.0s;"><span class="t-acc">&gt;</span> <span class="t-type t-cmd" style="--w:8ch; --tf:steps(8); --tt:0.5s; --d:6.2s;">/asdt-pm</span></div>
             <div class="t-line t-eph" style="--d:7.0s; --d2:8.0s;">{'  '}<span class="t-spin"></span> <span style="color:var(--c-pm);">pm</span> <span class="t-shim">exploring the codebase…</span></div>
-            <div class="t-line" style="--d:8.1s;">{'  '}<span class="t-acc">✓</span> <span style="color:var(--c-pm);">pm</span> <span class="t-mut">— user stories saved</span> <span class="t-dim">· knowledge base</span></div>
+            <div class="t-line" style="--d:8.1s;">{'  '}<span class="t-acc">✓</span> <span style="color:var(--c-pm);">pm</span> <span class="t-mut">— user stories ready</span> <span class="t-dim">· summary filed</span></div>
             <div class="t-line" style="--d:8.7s;">{'  '}<span class="t-dim">→ next:</span> <span style="color:var(--c-arch);">/asdt-architect</span> <span class="caret"></span></div>
           </div>
 
@@ -126,9 +126,9 @@ const { t, lang } = Astro.props
             <div class="t-line" style="--d:2.75s;">{'  '}<span style="color:var(--c-pm);">◆ pm</span> <span class="t-mut">— 2 steps</span></div>
             <div class="t-line" style="--d:2.75s;">&nbsp;</div>
             <div class="t-line" style="--d:3.0s;">{'  '}<span class="t-step"></span> <span class="t-cmd">knowledge-recall      </span><span class="t-mut">prior memory          </span><span class="t-dim">context</span></div>
-            <div class="t-line" style="--d:3.6s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog               </span><span class="t-mut">3 stories + scope     </span><span class="t-dim">pm/handoff</span></div>
+            <div class="t-line" style="--d:3.6s;">{'  '}<span class="t-step"></span> <span class="t-cmd">backlog               </span><span class="t-mut">3 stories + scope     </span><span class="t-dim">pm summary</span></div>
             <div class="t-line" style="--d:5.5s;">&nbsp;</div>
-            <div class="t-line t-dim" style="--d:5.7s;">{'  '}The hand-off is saved to the shared knowledge base.</div>
+            <div class="t-line t-dim" style="--d:5.7s;">{'  '}The summary goes to the scratchpad for the next one.</div>
             <div class="t-line" style="--d:6.2s;">{'  '}<span class="t-dim">→ next:</span> <span style="color:var(--c-arch);">/asdt-architect</span> <span class="caret"></span></div>
           </div>
 
@@ -142,8 +142,8 @@ const { t, lang } = Astro.props
             <div class="t-line" style="--d:3.2s;">&nbsp;</div>
             <div class="t-line" style="--d:3.5s;">{'  '}<span class="t-step"></span> <span class="t-cmd">knowledge-recall      </span><span class="t-mut">prior findings        </span><span class="t-dim">context</span></div>
             <div class="t-line" style="--d:4.1s;">{'  '}<span class="t-step"></span> <span class="t-cmd">platform-analysis     </span><span class="t-mut">stack + conventions   </span><span class="t-dim">context</span></div>
-            <div class="t-line" style="--d:4.7s;">{'  '}<span class="t-step"></span> <span class="t-cmd">assess                </span><span class="t-mut">6 threats · A01 A07   </span><span class="t-dim">context</span></div>
-            <div class="t-line" style="--d:5.3s;">{'  '}<span class="t-step"></span> <span class="t-cmd">harden                </span><span class="t-mut">1 high · 4 medium     </span><span class="t-dim">security/handoff</span></div>
+            <div class="t-line" style="--d:4.7s;">{'  '}<span class="t-step"></span> <span class="t-cmd">assess                </span><span class="t-mut">6 threats · A01 A07   </span><span class="t-dim">security/assess</span></div>
+            <div class="t-line" style="--d:5.3s;">{'  '}<span class="t-step"></span> <span class="t-cmd">harden                </span><span class="t-mut">1 high · 4 medium     </span><span class="t-dim">security summary</span></div>
             <div class="t-line" style="--d:6.0s;">&nbsp;</div>
             <div class="t-line" style="--d:6.2s;">{'  '}<span class="t-dim">→ next:</span> <span style="color:var(--c-dev);">/asdt-developer</span> <span class="t-mut">to apply the fixes</span> <span class="caret"></span></div>
           </div>
@@ -349,51 +349,51 @@ const { t, lang } = Astro.props
 
   const STR = {
     es: {
-      verbs: ['Pensando…', 'Leyendo el contexto…', 'Trazando la ruta…', 'Consultando la base de conocimientos…'],
+      verbs: ['Pensando…', 'Leyendo el contexto…', 'Trazando la ruta…', 'Consultando la memoria del proyecto…'],
       devInfo: {
         'knowledge-recall': ['memoria del equipo',     '2 decisiones previas'],
         'platform-analysis': ['stack + superficie',    'contexto'],
-        explore:            ['exploración',            'contexto'],
-        spec:               ['plan · 3 archivos',      'developer/handoff · spec'],
+        explore:            ['exploración',            'developer/explore'],
+        spec:               ['plan · 3 archivos',      'resumen developer · spec'],
         approve:            ['aprobado por vos',       'visto bueno'],
-        implement:          ['+84 −12 · 3 archivos',   'developer/handoff'],
+        implement:          ['+84 −12 · 3 archivos',   'resumen developer'],
         verify:             ['corrido con tu sí',      '6 passing'],
       },
       devFlow: '— 7 pasos · con tu aprobación',
       pmInfo: {
         'knowledge-recall': ['memoria previa',         'contexto'],
-        backlog:            ['3 historias + alcance',  'pm/handoff'],
+        backlog:            ['3 historias + alcance',  'resumen pm'],
       },
       pmFlow: '— 2 pasos',
       archInfo: {
         'knowledge-recall':  ['decisiones previas',    'contexto'],
         'platform-analysis': ['stack + convenciones',  'contexto'],
-        design:              ['3 alternativas · ADR',  'architect/handoff'],
+        design:              ['3 alternativas · ADR',  'resumen architect'],
       },
       archFlow: '— 3 pasos',
       secInfo: {
         'knowledge-recall':  ['hallazgos previos',     'contexto'],
         'platform-analysis': ['stack + convenciones',  'contexto'],
-        assess:              ['6 amenazas · A01 A07',  'contexto'],
-        harden:              ['1 high · 4 medium',     'security/handoff'],
+        assess:              ['6 amenazas · A01 A07',  'security/assess'],
+        harden:              ['1 high · 4 medium',     'resumen security'],
       },
       secFlow: '— 4 pasos · STRIDE',
       qaInfo: {
         'knowledge-recall': ['memoria previa',         'contexto'],
-        'test-plan':        ['2 huecos · 24 casos · go','qa/handoff'],
+        'test-plan':        ['2 huecos · 24 casos · go','resumen qa'],
       },
       qaFlow: '— 2 pasos',
       uxInfo: {
         'knowledge-recall':  ['decisiones de UX',      'contexto'],
         'platform-analysis': ['design system · mobile','contexto'],
-        'ux-spec':           ['3 flujos · 6 componentes','contexto'],
-        'ui-design':         ['4 pantallas · 2 componentes','ux-ui/handoff'],
+        'ux-spec':           ['3 flujos · 6 componentes','ux-ui/ux-spec'],
+        'ui-design':         ['4 pantallas · 2 componentes','resumen ux-ui'],
       },
       uxFlow: '— 4 pasos',
-      done: '→ handoff guardado · siguiente:',
+      done: '→ resumen archivado · siguiente:',
       routeLabel: 'Ruta recomendada',
       routeStart: (r: string) => `Ejecutá <span class="t-cmd">/asdt-${r}</span> para empezar — aquí mismo, si querés.`,
-      cycleEnd: '→ ciclo completo. El equipo no olvidó nada.',
+      cycleEnd: '→ ciclo completo. El equipo recuerda lo que importa.',
       helpTitle: 'Comandos disponibles',
       helpLines: [
         '/asdt &lt;pedido&gt;  <span class="t-dim">el asesor sugiere una ruta</span>',
@@ -402,51 +402,51 @@ const { t, lang } = Astro.props
       ],
     },
     en: {
-      verbs: ['Thinking…', 'Reading context…', 'Mapping the route…', 'Consulting the knowledge base…'],
+      verbs: ['Thinking…', 'Reading context…', 'Mapping the route…', 'Recalling project memory…'],
       devInfo: {
         'knowledge-recall': ['team memory',            '2 prior decisions'],
         'platform-analysis': ['stack + surface',       'context'],
-        explore:            ['exploration',            'context'],
-        spec:               ['plan · 3 files',         'developer/handoff · spec'],
+        explore:            ['exploration',            'developer/explore'],
+        spec:               ['plan · 3 files',         'developer summary · spec'],
         approve:            ['approved by you',        'go-ahead'],
-        implement:          ['+84 −12 · 3 files',      'developer/handoff'],
+        implement:          ['+84 −12 · 3 files',      'developer summary'],
         verify:             ['ran on your yes',        '6 passing'],
       },
       devFlow: '— 7 steps · gated on your approval',
       pmInfo: {
         'knowledge-recall': ['prior memory',           'context'],
-        backlog:            ['3 stories + scope',      'pm/handoff'],
+        backlog:            ['3 stories + scope',      'pm summary'],
       },
       pmFlow: '— 2 steps',
       archInfo: {
         'knowledge-recall':  ['prior decisions',       'context'],
         'platform-analysis': ['stack + conventions',   'context'],
-        design:              ['3 approaches · ADR',    'architect/handoff'],
+        design:              ['3 approaches · ADR',    'architect summary'],
       },
       archFlow: '— 3 steps',
       secInfo: {
         'knowledge-recall':  ['prior findings',        'context'],
         'platform-analysis': ['stack + conventions',   'context'],
-        assess:              ['6 threats · A01 A07',   'context'],
-        harden:              ['1 high · 4 medium',     'security/handoff'],
+        assess:              ['6 threats · A01 A07',   'security/assess'],
+        harden:              ['1 high · 4 medium',     'security summary'],
       },
       secFlow: '— 4 steps · STRIDE',
       qaInfo: {
         'knowledge-recall': ['prior memory',           'context'],
-        'test-plan':        ['2 gaps · 24 cases · go', 'qa/handoff'],
+        'test-plan':        ['2 gaps · 24 cases · go', 'qa summary'],
       },
       qaFlow: '— 2 steps',
       uxInfo: {
         'knowledge-recall':  ['prior UX decisions',    'context'],
         'platform-analysis': ['design system · mobile','context'],
-        'ux-spec':           ['3 flows · 6 components','context'],
-        'ui-design':         ['4 screens · 2 components','ux-ui/handoff'],
+        'ux-spec':           ['3 flows · 6 components','ux-ui/ux-spec'],
+        'ui-design':         ['4 screens · 2 components','ux-ui summary'],
       },
       uxFlow: '— 4 steps',
-      done: '→ hand-off saved · next:',
+      done: '→ summary filed · next:',
       routeLabel: 'Recommended route',
       routeStart: (r: string) => `Run <span class="t-cmd">/asdt-${r}</span> to start — right here if you want.`,
-      cycleEnd: '→ full cycle complete. The team forgot nothing.',
+      cycleEnd: '→ full cycle complete. The team remembers what matters.',
       helpTitle: 'Available commands',
       helpLines: [
         '/asdt &lt;request&gt;  <span class="t-dim">advisor suggests a route</span>',

@@ -33,7 +33,7 @@ Slash Commands — commands you type directly into your AI assistant, prefixed w
 
 ### `/asdt-init`
 
-Initialize ASDT in the current project. Detects your stack, asks which surface the project designs for first (mobile, tablet, desktop, or none), and creates `.asdt/config.yaml` and `.asdt/knowledge/knowledge.yaml`. Run it inside your assistant, in your project folder.
+Initialize ASDT in the current project. Detects your stack, asks which surface the project designs for first (mobile, tablet, desktop, or none), and writes everything it detected to `.asdt/config.yaml`. On a project an earlier version initialized, it offers to fold the legacy `.asdt/knowledge/` files into the config. Run it inside your assistant, in your project folder.
 
 ```
 /asdt-init
@@ -41,13 +41,13 @@ Initialize ASDT in the current project. Detects your stack, asks which surface t
 
 ### `/asdt`
 
-Ask the team. Describe what you want built and it recommends which specialists to involve and in what order, waiting for your confirmation before listing the commands to run.
+Ask the team. Describe what you want built and it recommends which specialists to involve and in what order, as commands you could run yourself. On your yes, it runs that chain one specialist at a time, pausing after each so you can debate the result before the next one starts.
 
 ```
 /asdt "add email verification to the signup flow"
 ```
 
-It also answers questions about the state of the work, straight from what the team already worked out — no specialists are run:
+It also answers questions about the state of the work, from the session scratchpad, git, and what memory recalls — no specialists are run:
 
 ```
 /asdt "what did we decide about the password hashing?"

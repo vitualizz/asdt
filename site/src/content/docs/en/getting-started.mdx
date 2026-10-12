@@ -14,7 +14,7 @@ import ModelPresetTierCard from '@components/ModelPresetTierCard.astro'
 Before using ASDT, you need:
 
 - **Claude Code** or **OpenCode** — installed and authenticated (these are the only assistants ASDT targets today)
-- **[Engram](https://github.com/Gentleman-Programming/engram)** — the memory provider, required for cross-session persistence. It must be on your `PATH` before you install
+- **[Engram](https://github.com/Gentleman-Programming/engram)** — the memory provider that carries key project knowledge across sessions. The installer requires it on your `PATH`
 - A terminal (bash or zsh)
 
 > **Building from source?** Go 1.22+ is required. Running the one-line installer downloads a pre-built binary — no compiler needed.
@@ -68,7 +68,7 @@ It detects your stack, asks a couple of questions, and writes `.asdt/config.yaml
 /asdt Add user authentication with email and password
 ```
 
-ASDT analyzes the request and recommends a specialist sequence — for example: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Confirm the plan, then run each command. Each specialist saves its output to the knowledge base so the next one picks up where the previous left off.
+ASDT analyzes the request and recommends a specialist sequence — for example: `/asdt-pm` → `/asdt-architect` → `/asdt-developer`. Say yes and it runs that chain one specialist at a time, pausing after each so you can push back; or run each command yourself. Each specialist's summary goes to the session scratchpad, so the next one picks up where the previous left off.
 
 ## Running individual specialists
 
@@ -80,6 +80,6 @@ ASDT analyzes the request and recommends a specialist sequence — for example: 
 
 ## Next steps
 
-- Learn how memory persists across sessions in [Memory & Engram](/asdt/docs/memory-and-engram).
+- Learn where working summaries live and what memory keeps across sessions in [Scratchpad & Memory](/asdt/docs/memory-and-engram).
 - Browse the full command set in [Commands](/asdt/docs/commands).
 - Hit a snag? See [Troubleshooting](/asdt/docs/troubleshooting).

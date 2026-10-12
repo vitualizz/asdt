@@ -1,7 +1,7 @@
 ---
 // Inline SVG: how this talk was built with ASDT (deck slide 10).
-// Six specialist nodes in sequence, each producing one artifact, with a
-// human gate marker in every handoff gap. No props, no JS. All labels are
+// Six specialist nodes in sequence, each returning one summary, with a
+// human gate marker in every hand-off gap. No props, no JS. All labels are
 // real <text> nodes for a11y + search. Artifact labels per orchestrator spec.
 const nodes = [
   { name: 'Researcher', fill: '#7AA89F', text: '#1c212c', artifact: 'discovery brief' },
@@ -31,12 +31,12 @@ const step = NODE_W + GAP
   >
   <desc id="dogfood-desc"
     >Timeline of six specialist nodes: Researcher, PM, Architect, Developer, QA,
-    and UX/UI. Each specialist produced one artifact; a human gate sits between
-    each handoff.</desc
+    and UX/UI. Each specialist returned one summary; a human gate sits between
+    each hand-off.</desc
   >
 
   <!-- top annotation -->
-  <text x="490" y="44" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="16">Each specialist read one artifact, produced one artifact, then returned.</text>
+  <text x="490" y="44" text-anchor="middle" fill="#A1AABB" font-family="var(--dk-font-body, serif)" font-size="16">Each specialist read the summary before it, returned one summary, then paused.</text>
 
   {
     nodes.map((node, i) => {
@@ -106,7 +106,7 @@ const step = NODE_W + GAP
   }
 
   <!-- bottom note -->
-  <text x="490" y="278" text-anchor="middle" fill="#8394A3" font-family="var(--dk-font-body, serif)" font-size="12">No information was lost between steps. Each artifact persisted and was available to the next specialist.</text>
+  <text x="490" y="278" text-anchor="middle" fill="#8394A3" font-family="var(--dk-font-body, serif)" font-size="12">No information was lost between steps. Each summary was handed to the next specialist.</text>
 </svg>
 
 <style>

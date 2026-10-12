@@ -34,24 +34,24 @@ No hace falta un cambio en marcha. Apúntalo a lo que ya existe y lo juzga en ve
 /asdt-architect "¿qué decisiones de este diseño ya son caras de revertir?"
 ```
 
-Lo que encuentre queda guardado, así que la próxima corrida sobre esa área arranca sabiéndolo.
+Sus hallazgos clave se recuerdan como notas, así que la próxima corrida sobre esa área arranca sabiéndolos.
 
 ## Posición en el pipeline
 
-Típicamente corre **después del PM** y **antes del Developer** (el Developer lee `architect/handoff`). Lee lo que exista antes que él: `pm/handoff` (los requisitos que el diseño satisface), `ux-ui/handoff` (los flujos y huecos de componentes que la superficie de API tiene que servir), `security/handoff` (un hallazgo que redefine un límite se vuelve una restricción de diseño) y `researcher/handoff` — que enmarca el problema solo cuando se salteó el PM; si el PM corrió, manda el PM. Todos son opcionales. En cambios simples no se invoca — de eso se encarga el Developer directamente. Cuando corre, corre un solo paso, `design`, y qué tan profundo va lo decide él mismo.
+Típicamente corre **después del PM** y **antes del Developer** (el Developer lee su resumen). Lee los resúmenes anteriores que existan: el del PM (los requisitos que el diseño satisface), el de UX/UI (los flujos y huecos de componentes que la superficie de API tiene que servir), el de Security (un hallazgo que redefine un límite se vuelve una restricción de diseño) y el del Researcher — que enmarca el problema solo cuando se salteó el PM; si el PM corrió, manda el PM. Todos son opcionales. En cambios simples no se invoca — de eso se encarga el Developer directamente. Cuando corre, corre un solo paso, `design`, y qué tan profundo va lo decide él mismo.
 
 ## Qué produce
 
-`architect/handoff` — la decisión y el diseño de sistema que se desprende de ella, en UN solo hand-off:
+El resumen del Arquitecto (`architect`) — la decisión y el diseño de sistema que se desprende de ella, en UN solo resumen:
 
 - **La decisión** — primero el enfoque elegido, después cada alternativa descartada con el porqué
 - **El diseño** — el modelo de datos y la superficie de API (o por qué el cambio no tiene ninguno), las restricciones que la implementación tiene que respetar, dónde cae en el codebase y los riesgos con sus mitigaciones
 
-Juzgar lo que ya existe corre `review` y guarda `{project}/study/{topic}/architect`.
+Juzgar lo que ya existe corre `review` y escribe su resumen bajo `study-{topic}`.
 
 Consumido por: **Developer** (la decisión ya está tomada — su spec la reformula al nivel de implementación), **QA** (el diseño y sus riesgos declarados), **Security** (la superficie de API y los límites de confianza).
 
-Los presupuestos de NFR, si el PM fijó alguno, llegan dentro de `pm/handoff.constraints` y el diseño tiene que caber en ellos. Si el PM no corrió, el diseño sigue igual y anota el faltante en vez de inventar un presupuesto.
+Los presupuestos de NFR, si el PM fijó alguno, llegan dentro de el resumen del PM (en sus `Constraints`) y el diseño tiene que caber en ellos. Si el PM no corrió, el diseño sigue igual y anota el faltante en vez de inventar un presupuesto.
 
 ## Patrones comunes
 

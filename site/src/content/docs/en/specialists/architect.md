@@ -34,24 +34,24 @@ No change in flight required. Point it at what already exists and it judges it i
 /asdt-architect "which decisions here are already expensive to reverse?"
 ```
 
-What it finds is kept, so the next run over that area starts already knowing it.
+Its key findings are remembered as notes, so the next run over that area starts already knowing them.
 
 ## Pipeline position
 
-Typically runs **after PM** and **before Developer** (Developer reads `architect/handoff`). It reads whatever exists upstream: `pm/handoff` (the requirements the design satisfies), `ux-ui/handoff` (the flows and component gaps the API surface has to serve), `security/handoff` (findings that reshape a boundary become design constraints), and `researcher/handoff` — which frames the problem only when PM was skipped; when PM ran, PM wins. All are optional. On simple changes it is not called at all — the Developer handles those directly. When it does run, it runs one step, `design`, and how deep that step goes is its own call.
+Typically runs **after PM** and **before Developer** (the Developer reads its summary). It reads whichever upstream summaries exist: PM's (the requirements the design satisfies), UX/UI's (the flows and component gaps the API surface has to serve), Security's (findings that reshape a boundary become design constraints), and the Researcher's — which frames the problem only when PM was skipped; when PM ran, PM wins. All are optional. On simple changes it is not called at all — the Developer handles those directly. When it does run, it runs one step, `design`, and how deep that step goes is its own call.
 
 ## What it produces
 
-`architect/handoff` — the decision and the system design that follows from it, in ONE hand-off:
+The Architect's summary (`architect`) — the decision and the system design that follows from it, in ONE summary:
 
 - **The decision** — the chosen approach first, then each rejected alternative with why it lost
 - **The design** — the data model and the API surface (or why the change has neither), the constraints the implementation has to respect, where in the codebase it lands, and the risks with their mitigations
 
-Judging what already exists runs `review` instead and saves `{project}/study/{topic}/architect`.
+Judging what already exists runs `review` instead and writes its summary under `study-{topic}`.
 
 Consumed by: **Developer** (the decision is settled — its spec restates it at implementation granularity), **QA** (the design and its declared risks), **Security** (the API surface and trust boundaries).
 
-NFR budgets, when PM set any, arrive inside `pm/handoff.constraints` and the design has to live within them. When PM never ran, the design proceeds and records the gap rather than inventing a budget.
+NFR budgets, when PM set any, arrive inside PM's summary (its `Constraints`) and the design has to live within them. When PM never ran, the design proceeds and records the gap rather than inventing a budget.
 
 ## Common patterns
 

@@ -16,8 +16,10 @@ El especialista QA encuentra lo que los criterios de aceptación pasaron por alt
 1. **Brechas en los ACs** — cada criterio heredado se juzga por atomicidad, medibilidad y caso negativo. Un criterio que ningún test podría observar es una brecha bloqueante.
 2. **Casos borde** — el trabajo de verdad: casos de input, estado, concurrencia y falla de dependencias que los criterios nunca mencionaron. Si corrió UX/UI, cada bifurcación de flujo y cada estado vacío, de carga y de error que nombró es un caso candidato.
 3. **Estrategia** — el reparto unitario / integración / e2e para este cambio, en tres líneas.
-4. **Casos de prueba** — Given/When/Then; si hay hand-off del Developer, cada uno apunta al archivo construido o planificado que ejercita. Si corrió Security, cada hallazgo recibe un caso que prueba que su mitigación se sostiene; una mitigación que ningún test puede observar se convierte en un chequeo que podés correr vos.
-5. **Veredicto** — `go` o `no-go`, con dos líneas de por qué. Una brecha bloqueante en los ACs, un camino crítico sin cubrir o — cuando hay hand-off del Developer — un `high` de Security cuya mitigación no deja rastro en sus archivos (los archivos cambiados una vez construido, los planificados si es un plan) es un `no-go`. Sobre un plan todavía no hay nada construido, así que el veredicto es `no-go — not built yet`, y el razonamiento dice si el plan está listo para construirse.
+4. **Casos de prueba** — Given/When/Then; si hay resumen del Developer, cada uno apunta al archivo construido o planificado que ejercita. Si corrió Security, cada hallazgo recibe un caso que prueba que su mitigación se sostiene; una mitigación que ningún test puede observar se convierte en un chequeo que podés correr vos.
+5. **Veredicto** — `go` o `no-go`, con dos líneas de por qué. Una brecha bloqueante en los ACs, un camino crítico sin cubrir o — cuando hay resumen del Developer — un `high` de Security cuya mitigación no deja rastro en sus archivos (una vez construido, los archivos del cambio, entregas anteriores incluidas; los planificados si es un plan) es un `no-go`. Sobre un plan todavía no hay nada construido, así que el veredicto es `no-go — not built yet`, y el razonamiento dice si el plan está listo para construirse.
+
+Una vez construido el cambio, los archivos del cambio salen de git, la autoridad sobre lo construido: cada ruta que `git status --porcelain` muestra modificada o sin seguimiento, más `git diff --name-only {base}...HEAD` contra la rama por defecto, unidas a las rutas de `Files changed` y `Prior delivery` del resumen del Developer, que además dicen por dónde empezar a leer.
 
 QA no ejecuta nada. Nunca reporta un pass o un fail sobre algo que no se corrió: un objetivo NFR se convierte en un comando que podés correr para medirlo.
 
@@ -37,17 +39,17 @@ No necesita que alguien acabe de programar. Apúntalo a lo que ya está:
 /asdt-qa "revisa la cobertura del carrito y dame un veredicto"
 ```
 
-Trabaja con lo que encuentre —hand-offs previos si los hay, el código si no— y cierra igual con go/no-go.
+Trabaja con lo que encuentre —resúmenes previos si los hay, el código si no— y cierra igual con go/no-go.
 
 ## Posición en el pipeline
 
-Típicamente corre **después del Developer** y es el sign-off final antes de mergear. Lee cada hand-off que exista: `pm/handoff` (criterios de aceptación y objetivos NFR), `developer/handoff` (el plan, o lo construido y si sus chequeos pasaron), `architect/handoff` (el diseño y sus riesgos declarados), `ux-ui/handoff` (bifurcaciones y copy de los flujos, estados y extremos de datos de las pantallas, y los estados disabled, loading y error de los componentes diseñados) y `security/handoff` (las mitigaciones a probar). Puede correr antes — contra el hand-off del PM o un plan guardado del Developer — para detectar problemas en los criterios de aceptación antes de que empiece la implementación. Ese pase temprano ahorra mucho más que encontrar las brechas con el código ya escrito. Toda entrada es opcional: sin ninguna, trabaja desde la petición y el código.
+Típicamente corre **después del Developer** y es el sign-off final antes de mergear. Lee cada resumen que exista: el del PM (criterios de aceptación y objetivos NFR), el del Developer (el plan, o lo construido y si sus chequeos pasaron), el del Arquitecto (el diseño y sus riesgos declarados), el de UX/UI (bifurcaciones y copy de los flujos, estados y extremos de datos de las pantallas, y los estados disabled, loading y error de los componentes diseñados) y el de Security (las mitigaciones a probar). Puede correr antes — contra el resumen del PM o un plan del Developer — para detectar problemas en los criterios de aceptación antes de que empiece la implementación. Ese pase temprano ahorra mucho más que encontrar las brechas con el código ya escrito. Toda entrada es opcional: sin ninguna, trabaja desde la petición y el código.
 
 ## Qué produce
 
-`qa/handoff` — brechas en los ACs, casos borde, estrategia, casos de prueba, los chequeos que te ofrece y el veredicto, como UN solo artefacto. Auditar una suite existente corre `review` y guarda `{project}/study/{topic}/qa`.
+El resumen de QA (`qa`) — brechas en los ACs, casos borde, estrategia, casos de prueba, los chequeos que te ofrece y el veredicto, como UN solo resumen. Auditar una suite existente corre `review` y escribe su resumen bajo `study-{topic}`.
 
-Ningún especialista lo declara como input: es el registro de sign-off. Después de un `no-go`, el reporte cierra proponiendo a quien arregla lo encontrado — normalmente el Developer.
+Lo consume el **Developer**: después de un `no-go`, el reporte cierra proponiendo a quien arregla lo encontrado — normalmente el Developer, cuyo `spec` lee el veredicto, los casos borde y los casos de prueba.
 
 ## Patrones comunes
 
@@ -58,7 +60,7 @@ Ningún especialista lo declara como input: es el registro de sign-off. Después
 
 ```
 /asdt-qa Validar criterios de aceptación antes de que empiece la implementación
-# → Correr QA contra pm/handoff para detectar problemas en los ACs temprano
+# → Correr QA contra el resumen del PM para detectar problemas en los ACs temprano
 ```
 
 ```

@@ -11,11 +11,11 @@ locale: en
 
 ## What it does
 
-PM runs one step and hands back one artifact. It takes what you asked for and turns it into 3 to 6 user stories, each carrying one or two acceptance criteria in plain language.
+PM runs one step and returns one summary. It takes what you asked for and turns it into 3 to 6 user stories, each carrying one or two acceptance criteria in plain language.
 
 **The order of the stories is the priority.** The first one ships first. No MoSCoW ratings, no separate priority field, no matrix to keep in sync: to change the priority, change the order.
 
-**Out-of-scope is mandatory.** A hand-off that does not say explicitly what is excluded is incomplete — not "there was nothing to exclude". Scope ambiguity is where most scope creep comes from, and naming the adjacent thing is what stops it.
+**Out-of-scope is mandatory.** A summary that does not say explicitly what is excluded is incomplete — not "there was nothing to exclude". Scope ambiguity is where most scope creep comes from, and naming the adjacent thing is what stops it.
 
 NFRs only make the cut when the feature genuinely implies them and they are measurable. "p95 under 200ms, measured with k6" is an NFR; "it should be fast" is nothing.
 
@@ -45,16 +45,16 @@ You talk to it. There are no flags: if you want more or less depth, say so insid
 
 ## What it produces
 
-A single hand-off at `{project}/{change}/pm/handoff`:
+A single summary, `pm`, filed in the session scratchpad as `{scratchpad}/asdt/{change}/pm.md`:
 
-| Field | What it carries |
+| Part | What it carries |
 |---|---|
-| `what` | The change in one sentence |
-| `decisions` | The stories, in delivery order |
-| `constraints` | Scope in, scope out, and the measurable NFRs |
-| `acceptance_criteria` | Given/When/Then, max 5 |
-| `risks` | `{risk, mitigation}`, one line each |
-| `open_items` | Real gaps, prefixed `ASSUMED:` where PM answered its own question |
+| first line | The change in one sentence |
+| `Decisions` | The stories, in delivery order |
+| `Constraints` | Scope in, scope out, and the measurable NFRs |
+| `Acceptance criteria` | Given/When/Then, max 5 |
+| `Risks` | `risk → mitigation`, one line each |
+| `Open items` | Real gaps, prefixed `ASSUMED:` where PM answered its own question |
 
 **PM is the authority on acceptance criteria.** Everyone downstream refines them — Developer takes them to implementation granularity, QA hunts for what they missed — but nobody rewrites them from scratch.
 
@@ -70,7 +70,7 @@ It also serves to make sense of what already exists, without opening a change:
 
 ## What it consumes
 
-The raw request, the project's detected conventions, and — when Researcher ran first — its `researcher/handoff`: the recommended direction becomes the starting point, and the rejected directions seed out-of-scope.
+The raw request, the project notes recalled from memory, and — when Researcher ran first — the Researcher's summary: the recommended direction becomes the starting point, and the rejected directions seed out-of-scope.
 
 With none of that available, it works from the request alone and says so.
 
@@ -79,4 +79,4 @@ With none of that available, it works from the request alone and says so.
 - Doesn't write architecture decisions or ADRs
 - Doesn't write code or technical designs
 - Doesn't write UX flows or component specs
-- Never produces a hand-off without explicit out-of-scope items
+- Never produces a summary without explicit out-of-scope items

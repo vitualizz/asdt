@@ -27,10 +27,10 @@ Especialistas recomendados:
 Orden sugerido:
   /asdt-pm → /asdt-architect → /asdt-developer → /asdt-security
 
-¿Continuar con este plan? (yes / modify / no)
+¿Corro esta cadena? Hago una pausa después de cada especialista.
 ```
 
-Confirmá el plan. ASDT te da los comandos exactos a ejecutar, en orden, cada uno con la misma versión afinada de tu pedido. **Los ejecutas tú — ASDT no corre los especialistas automáticamente.**
+Cada comando lleva la misma versión afinada de tu pedido. Si decís que sí, `/asdt` corre la cadena de a un especialista por vez y **hace una pausa después de cada uno**: podés debatir el resultado, y solo sigue cuando le das el visto bueno (o pasa al especialista que el debate volvió más urgente). O ejecutás vos los comandos, en orden. **Nada corre sin tu sí.**
 
 ## Ejecutar especialistas directamente
 
@@ -42,23 +42,23 @@ Cuando ya sabes lo que necesitas, salteate `/asdt` e invocá el especialista dir
 /asdt-security Auditar la integración OAuth
 ```
 
-Cada especialista juzga qué pasos propios necesita el pedido — el Developer, por ejemplo, se queda en `explore` ante una pregunta, en `spec` ante un plan, y solo sigue a `approve → implement → verify` cuando le pedís construir — y guarda su único hand-off en la base de conocimiento. Su reporte arranca contando sobre qué trabajó y cierra proponiendo el siguiente especialista.
+Cada especialista juzga qué pasos propios necesita el pedido — el Developer, por ejemplo, se queda en `explore` ante una pregunta, en `spec` ante un plan, y solo sigue a `approve → implement → verify` cuando le pedís construir — y devuelve su único resumen, que el orquestador escribe en el scratchpad de la sesión para el siguiente especialista. Su reporte arranca contando sobre qué trabajó y cierra proponiendo el siguiente especialista.
 
 ## Retomar en mitad del pipeline
 
-Si ejecutaste algunos especialistas y quieres continuar después, invocá el siguiente. Lee los artefactos previos de la base de conocimiento automáticamente — incluso de una sesión anterior:
+Si ejecutaste algunos especialistas y querés continuar, invocá el siguiente. En la misma sesión, lee los resúmenes anteriores desde el scratchpad:
 
 ```
-/asdt-developer Implementar basándose en el ADR del Arquitecto
+/asdt-developer Implementar basándose en el diseño del Arquitecto
 ```
 
-El Developer lee el hand-off del Arquitecto desde la base de conocimiento. No pasas contexto manualmente.
+El Developer recibe el resumen del Arquitecto como input. No pasás contexto manualmente. En una sesión posterior puede que el scratchpad ya no esté, y es normal: el Developer trabaja a partir del código, de git y de las decisiones clave que recuerda la memoria, y te pide lo que le falte.
 
-Lo mismo vale para un plan del Developer. Si le pedís un plan, queda guardado; volvé más tarde con `/asdt-developer "implementá el plan que aprobamos"` y retoma en la compuerta de aprobación en lugar de empezar de cero.
+Lo mismo vale para un plan del Developer. Si le pedís un plan, la corrida termina ahí; volvé más tarde con `/asdt-developer "implementá el plan que aprobamos"` y retoma en la compuerta de aprobación en lugar de empezar de cero. Si la sesión terminó en el medio, reconstruye el plan a partir de git, la memoria y tus palabras, y vos aprobás el plan reconstruido.
 
 ## Memoria y continuidad
 
-ASDT usa un memory provider para persistir artefactos entre especialistas y a través de sesiones. Un memory provider es **requerido** para que el pipeline funcione. La implementación por defecto es [Engram](https://github.com/Gentleman-Programming/engram). Más providers están planificados.
+Dentro de una sesión, los especialistas se pasan el trabajo mediante resúmenes en el scratchpad de la sesión. Entre sesiones, un memory provider guarda solo el conocimiento clave del proyecto: decisiones no obvias, conclusiones de debates, convenciones, lecciones y hallazgos de auditorías. El provider actual es [Engram](https://github.com/Gentleman-Programming/engram). Sin un provider conectado, ASDT igual funciona dentro de la sesión; simplemente no pasa nada a la siguiente. Ver [Scratchpad y memoria](/asdt/es/docs/memory-and-engram).
 
 ## Asistentes de IA compatibles
 
