@@ -14,7 +14,7 @@ Read these keys, values only, and nothing else in the file. A key stored as `{va
 | `naming_style`, `file_structure` | `Conventions` |
 | `architectural_style` | `Architecture` |
 | `is_monorepo` | `Monorepo` |
-| `test_runner` | `Tests` |
+| `test_runner`, `strict_tdd` | `Tests` |
 | `design_fingerprint.{i18n, css_approach, state_management, orm, ci_cd, lint}` | one line each |
 | `code_intelligence` | `Tooling` |
 | `primary_design_surface` | `Design surface` |
@@ -30,7 +30,7 @@ Stack: {stack, comma-separated}
 Conventions: {naming_style}{ | file_structure}
 Architecture: {architectural_style}
 Monorepo: yes
-Tests: {test_runner}
+Tests: {test_runner}{ — strict TDD}
 i18n: {design_fingerprint.i18n}
 CSS: {design_fingerprint.css_approach}
 State: {design_fingerprint.state_management}
@@ -41,7 +41,7 @@ Tooling: {code_intelligence} index available — prefer code intelligence over g
 Design surface: {primary_design_surface}
 ```
 
-`Conventions` joins its two parts with ` | ` only when both are present. With one part, emit it alone; with neither, drop the line. `Monorepo: yes` is emitted only when `is_monorepo` is true. The `Tooling` line is emitted with exactly this wording, and only when `code_intelligence` is present: it is how a step learns this project is indexed (`asdt-core/executor-header.md`, Code intelligence).
+`Conventions` joins its two parts with ` | ` only when both are present. With one part, emit it alone; with neither, drop the line. `Monorepo: yes` is emitted only when `is_monorepo` is true. `strict TDD` joins the `Tests` line only when `strict_tdd` is true (`Tests: strict TDD` with no runner). The `Tooling` line is emitted with exactly this wording, and only when `code_intelligence` is present: it is how a step learns this project is indexed (`asdt-core/executor-header.md`, Code intelligence).
 
 **`Design surface` is the one line that is never dropped.** `mobile`, `tablet`, or `desktop` is emitted as-is. An absent key (the question was never asked) emits `Design surface: mobile (default — never asked)`. `none` emits `Design surface: none — no visual surface`. What a step does with this line lives in that step's own file.
 

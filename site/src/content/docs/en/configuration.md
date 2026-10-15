@@ -36,7 +36,7 @@ The memory provider your install is bound to. Only `engram` is supported today. 
 
 ### `strict_tdd`
 
-When `true`, the Developer's `implement` step writes tests in the same pass as the code, inside the same approved file list. There is no separate test step, and `implement` never runs the tests: the `verify` gate that follows offers you the check commands (never one that would rewrite files) and runs them only if you say yes. You can also ask for tests in the request without setting the flag.
+When `true`, the Developer's spec declares a test for every unit the change adds or alters. Otherwise it declares tests only where new logic earns one, for QA's test cases, or when you ask for them in the request. Either way the tests are files in the plan you approve, and `implement` writes them in the same pass as the code. There is no separate test step, and `implement` never runs the tests: the `verify` gate that follows offers you the check commands (never one that would rewrite files) and runs them only if you say yes.
 
 Default: absent, which means `false`. `/asdt-init` carries it forward but never adds it.
 

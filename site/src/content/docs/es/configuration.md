@@ -36,7 +36,7 @@ El memory provider al que está vinculada tu instalación. Hoy solo se soporta `
 
 ### `strict_tdd`
 
-Cuando es `true`, el paso `implement` del Developer escribe los tests en la misma pasada que el código, dentro de la misma lista de archivos aprobada. No hay un paso de tests aparte, e `implement` nunca los corre: el gate `verify` que sigue te ofrece los comandos de chequeo (nunca uno que reescriba archivos) y los corre solo si decís que sí. También podés pedir tests en el propio pedido sin activar el flag.
+Cuando es `true`, el spec del Developer declara un test para cada unidad que el cambio agrega o modifica. Si no, declara tests solo donde la lógica nueva lo amerita, para los casos de prueba de QA, o cuando los pedís en el propio pedido. En ambos casos los tests son archivos del plan que aprobás, e `implement` los escribe en la misma pasada que el código. No hay un paso de tests aparte, e `implement` nunca los corre: el gate `verify` que sigue te ofrece los comandos de chequeo (nunca uno que reescriba archivos) y los corre solo si decís que sí.
 
 Por defecto: ausente, que equivale a `false`. `/asdt-init` lo conserva pero nunca lo agrega.
 

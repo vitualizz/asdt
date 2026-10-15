@@ -9,15 +9,24 @@ Language-neutral defaults for writing code and tests. Optional reference for Dev
 - Use the identifier casing already dominant in the project. Never introduce a new casing style without a reason.
 - Place new files beside their peers, following the existing layout. A feature does not belong in a generic utilities folder.
 - Match the project's module, import, and export style.
-- Prefer libraries already in the dependency manifest before adding one.
 
 ## Simplicity first
 
-Favor the simplest, most direct solution to the problem in front of you.
+The smallest change that FULLY solves the problem. Take the first rung of this ladder that fully works, and name a rung by its name, never a number:
 
-- Simplicity trims STRUCTURE, never COVERAGE. Handle every contract input, error path, and boundary condition first, then simplify the shape.
-- Prefer the direct fix over the clever one. A few explicit lines beat an abstraction that hides what is happening.
-- Prefer deleting to adding. If a line, a branch, or a parameter is not earning its place, remove it.
+- **not needed** — a feature, option, or flexibility nobody asked for is not built; it is out of scope.
+- **exists in the codebase** — a helper, component, service, or pattern: use it the way the surrounding code does.
+- **stdlib or platform**.
+- **installed dependency** — one already in the manifest. Never add a dependency for what a few lines do.
+- **one line** — when a reader gets it at a glance; a one-liner that needs decoding is not one.
+- **minimum new code** — otherwise: no wrapper, option, config, or "for later" code nobody asked for.
+
+At every rung:
+
+- Simplicity trims STRUCTURE, never COVERAGE. Handle every contract input, error path, and boundary condition first, then simplify the shape. **Never cut**: validation at a trust boundary, error handling that prevents data loss, security, accessibility, anything the user asked for.
+- Prefer the direct fix over the clever one: a few explicit lines beat an abstraction that hides what is happening. Prefer deleting to adding: a line, branch, or parameter that is not earning its place goes.
+- Fix a bug once, at its root in the shared code — never in one caller while the shared code stays broken.
+- Code you move or merge keeps its error handling and validation.
 - Apply the rule of three: do not extract shared behavior on the first or second occurrence. Premature abstraction couples code that only looked alike by coincidence.
 - Invest rigor up front only where the surface is hard to reverse or externally observable — a public API shape, data schema, wire format, auth model. Leaving one of those simple is a decision that needs justifying, exactly like adding an abstraction does.
 
@@ -46,4 +55,5 @@ Favor the simplest, most direct solution to the problem in front of you.
 - **Test behavior, not internals.** Assert the returned value, the surfaced error, or the state a collaborator was left in — not that a private method was called or a counter incremented. If renaming a private variable breaks a test, the test is testing implementation.
 - **Assertion messages locate the failure**: what was expected, what arrived, in what context. Where the framework already prints a rich diff, let it.
 - **No real filesystem or network in unit tests.** Temp directories via the project's helper, in-memory filesystems where available, HTTP test doubles instead of real calls, and never the user's home directory.
+- **Which logic earns a test**: new non-trivial logic — a branch, a parser, money, security, a data write, a bug fix — gets a small test that fails when that logic breaks. Wiring and configuration get none.
 - **Minimum per unit of work**: one happy path, plus one failure test per distinct error condition the implementation documents.

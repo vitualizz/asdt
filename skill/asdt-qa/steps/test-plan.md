@@ -56,7 +56,8 @@ Each arrives as a path to read — never look for anything else.
 4. **Test cases.** Given/When/Then for each AC and for each edge case worth a test — not
    every edge case earns one, and saying which ones you dropped is part of the plan. When
    the developer summary arrived, name the path each case exercises — from the change's files,
-   or the `Edit targets` at `Stage: spec` — so a reader can go from case to code without guessing.
+   or the `Edit targets` at `Stage: spec`, whose `AC{n}` tags (on `Files changed` too) say which
+   file serves which criterion — so a reader can go from case to code without guessing.
    When the Security summary arrived, every finding gets a case that proves its mitigation
    holds — the attack attempted, and refused — naming the finding it mitigates. A mitigation
    no test can observe (a rotated secret, a policy) goes to `Measurement offered` instead, as
