@@ -32,11 +32,10 @@ metadata:
 ---
 ```
 
-**Three verbatim blocks follow, in this order.** The Go installer depends on all three; copy them from any existing specialist without editing:
+**Two verbatim blocks follow, in this order.** The Go installer depends on both; copy them from any existing specialist without editing:
 
 1. The `FIRST ACTION — self-load the header` blockquote.
 2. The generated region — the HTML comment, then `<!-- ASDT:GENERATED:specialist-header -->` immediately followed by `<!-- /ASDT:GENERATED:specialist-header -->`, committed with an EMPTY body. The installer splices `asdt-core/specialist-header.md` between the markers. Never hand-edit inside them, and never place them at or above the closing frontmatter `---` (a marker inside the frontmatter breaks the parser and the OpenCode wrapper). Dropping the region is SILENT — with both markers absent the splice is a no-op and the specialist installs with no header, which is why `skill/embedded_test.go` greps for both literals.
-3. The `ORCHESTRATOR GATE` blockquote.
 
 **Body**, in this order:
 
@@ -108,7 +107,7 @@ Four sections. Nothing else.
                   path to read — never look for anything else. Then one DEGRADATION line
                   per optional input.
 ## Processing     Numbered steps. Reasoning and judgment, not bureaucracy.
-## Output         "Return this summary:" — the protocol §6 schema, naming the sections
+## Output         "Return this summary:" — the `asdt-core/references/summary-schema.md` schema, naming the sections
                   this step fills and any role-specific section it adds.
 ```
 
@@ -118,7 +117,7 @@ No numeric context budgets. No per-input degradation paragraph — one line each
 
 ## 5. Summary contract
 
-One role summary per role per change: `{scratchpad}/asdt/{change}/{role}.md`. Its schema is defined once, in `asdt-core/protocol.md` §6 — reference it, never restate it. A role omits sections that do not apply, and never adds sections about the process itself.
+One role summary per role per change: `{scratchpad}/asdt/{change}/{role}.md`. Its schema is defined once, in `asdt-core/references/summary-schema.md` — reference it, never restate it. A role omits sections that do not apply, and never adds sections about the process itself.
 
 ## 6. Registering a new specialist
 

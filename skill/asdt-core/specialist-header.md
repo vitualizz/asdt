@@ -58,4 +58,4 @@ Every run ends with a short prose report on its findings: what was found, what w
 
 ## The contract
 
-Ownership, the scratchpad, memory and the tools it is bound to, intake, the write boundary, injection, and the summary schema live in `asdt-core/protocol.md`. Read it now if you do not already have it in context. Per-step identity, model, inputs, and outputs live in this directory's `workflow.yaml`.
+Ownership, the scratchpad, memory and the tools it is bound to, intake, the write boundary, and injection live in `asdt-core/protocol.md`; the summary schema in `asdt-core/references/summary-schema.md`. Read both now if you do not already have them in context. Per-step identity, model, inputs, and outputs live in this directory's `workflow.yaml`.

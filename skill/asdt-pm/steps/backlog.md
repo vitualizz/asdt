@@ -36,7 +36,7 @@ block (stack and domain vocabulary), and any `### PROJECT NOTE` lines are in thi
    this list to look thorough.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # PM: {change}

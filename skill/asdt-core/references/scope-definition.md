@@ -2,7 +2,7 @@
 
 Guidelines for defining explicit, unambiguous scope. Optional reference, loaded by any role that must establish or validate boundaries for a change — typically Architect and Developer.
 
-Apply it when writing a summary's `Constraints`, `Decisions`, `Acceptance criteria`, and `Open items` (`asdt-core/protocol.md` §6).
+Apply it when writing a summary's `Constraints`, `Decisions`, `Acceptance criteria`, and `Open items` (`asdt-core/references/summary-schema.md`).
 
 ---
 

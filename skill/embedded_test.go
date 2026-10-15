@@ -152,8 +152,7 @@ func TestRoutedSpecialistInvariants(t *testing.T) {
 	}
 
 	const (
-		soleOrchestrator = "SOLE orchestrator"
-		firstAction      = "FIRST ACTION — self-load the header"
+		firstAction = "FIRST ACTION — self-load the header"
 
 		// Package skill cannot import internal/installer (the installer imports
 		// this package), so these two literals are a hand-copy of
@@ -170,9 +169,6 @@ func TestRoutedSpecialistInvariants(t *testing.T) {
 			continue
 		}
 		body := string(data)
-		if !strings.Contains(body, soleOrchestrator) {
-			t.Errorf("%s/SKILL.md missing required phrase %q", dir, soleOrchestrator)
-		}
 		if !strings.Contains(body, firstAction) {
 			t.Errorf("%s/SKILL.md missing required phrase %q", dir, firstAction)
 		}

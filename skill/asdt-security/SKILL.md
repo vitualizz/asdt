@@ -23,14 +23,6 @@ metadata:
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
-> **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
-> calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
-> as the `asdt-{agent}` sub-agent its `agent:` field names, via your native delegation
-> primitive (Agent/Task) — never run subagent steps inline; run
-> `inline` steps in your own context. If you run a subagent step inline anyway, its write
-> boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
-> `asdt-init/write`.
-
 # Security Specialist
 
 ## Role
@@ -63,6 +55,6 @@ mitigation, and the hardening checklist. Consumed by Developer, Architect, and Q
 ## Invariants
 - **Write scope**: writes no file — never the host source tree, never `.asdt/`, never any local path. Its only output is its summary (`asdt-core/protocol.md` §4)
 - **No required predecessor**: run at any stage — fresh project, mid-development, or after launch. Read whatever summaries exist
-- **Analysis only**: reason over the change and inspect the repository for evidence; never run scanners, dependency audits, or any command beyond the read-only git inspection of `asdt-core/protocol.md` §6
+- **Analysis only**: reason over the change and inspect the repository for evidence; never run scanners, dependency audits, or any command beyond the read-only git inspection of `asdt-core/references/summary-schema.md`
 - Every finding MUST have a concrete mitigation
 - Severity is one word — `high`, `medium`, or `low`. No CVSS, no numeric scores

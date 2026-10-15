@@ -1,7 +1,7 @@
 # Write — Init Specialist
 
 ## Purpose
-Write `.asdt/config.yaml` from the detection and the human's answers, never silently overwriting a manual value. This is one of the two steps that write files (protocol §4), and it writes only this one.
+Write `.asdt/config.yaml` from the detection and the human's answers, never silently overwriting a manual value. This is one of the two steps the write boundary lets write files, and it writes only this one.
 
 ## Inputs
 - `### INPUT asdt-init/explore`: the detection. Read its `## Detection` section (stack, lang roots, file structure, the key table) and nothing else.
@@ -60,7 +60,7 @@ Each arrives as a path to read. Both are required: see Processing step 1.
 6. **Self-check.** Re-read the file: it parses, and its keys follow the canonical order. Re-reading what this step wrote is a read, and it is required. Record any mismatch in `Open items` and report the file as written anyway: the bytes on disk are authoritative, so never halt or roll back here.
 
 ## Output
-Return this summary (protocol §6), with `Open items` and these role sections:
+Return this summary (`asdt-core/references/summary-schema.md`), with `Open items` and these role sections:
 
 ```markdown
 # Init: init

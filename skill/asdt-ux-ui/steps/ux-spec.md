@@ -65,7 +65,7 @@ No self-critique section. Judging your own design without a user in front of it 
 confident prose and no signal.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # UX/UI: {change}

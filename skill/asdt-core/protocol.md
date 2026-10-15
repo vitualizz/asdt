@@ -1,6 +1,6 @@
 # ASDT Protocol
 
-The one shared skill every run loads. It defines who owns what, where working files live, what memory is for, how inputs reach a step, what a step may write, and what a summary looks like.
+The one shared skill every run loads. It defines who owns what, where working files live, what memory is for, how inputs reach a step, what a step may write, and where the summary schema lives.
 
 ## 0. Ownership and authority
 
@@ -128,42 +128,10 @@ and otherwise:
 
 **The rest of the prompt.** Inject each declared reference skill as a `### REFERENCE SKILL {path}` block carrying its text, the platform block (`asdt-core/references/platform-context.md`), and the recalled notes that bear on this step, one `### PROJECT NOTE: {note}` line each (`asdt-core/references/knowledge-recall.md`).
 
-**Strip the memory binding.** A sub-agent never learns which memory provider is bound or what its tools are called. Whenever you place a file's text in a sub-agent prompt (a reference skill such as this protocol, the executor header, a host skill), delete from it every memory-binding region: the `ASDT:GENERATED:memory-binding` comment that opens it, the comment that closes it, everything between them, and the explanatory `memory-binding:` comment just above it. A value a step needs from the binding reaches it through its payload instead (`asdt-init/clarify` carries `memory_provider`).
+**Strip the memory binding.** A sub-agent never learns which memory provider is bound or what its tools are called. Whenever you place a file's text in a sub-agent prompt (a reference skill, the executor header, a host skill), delete from it every memory-binding region: the `ASDT:GENERATED:memory-binding` comment that opens it, the comment that closes it, everything between them, and the explanatory `memory-binding:` comment just above it. A value a step needs from the binding reaches it through its payload instead (`asdt-init/clarify` carries `memory_provider`).
 
 **Host skills.** A step's `host_skills:` names skills the HOST assistant may have installed, never ASDT files. For each name, check your own live skill list. If that skill is available, or an obvious equivalent under another name (a frontend or visual-design skill for `frontend-design`), read its skill file and inject the text as a `### HOST SKILL {name}` block under the declared name. Never invoke it in your own context, where it would take over your orchestration. If it is not available, skip it silently. **A host skill is never required: its absence changes nothing and is never an `Open items` entry.** The step file says when it applies and what outranks it. A host skill never overrides the step's contract.
 
 ## 6. Summary schema
 
-A step returns a concise Markdown summary, with no envelope and no YAML. The orchestrator writes it to the scratchpad unchanged (§1). Use these parts in this order, omit every one that does not apply, and never add one about the process itself:
-
-```markdown
-# {Role}: {change}
-
-{What, in one sentence.}
-
-**Stage:** {stage}
-**Verification:** ran: {true|false}, passed: {true|false}. {summary}
-
-## Decisions
-## Constraints
-## Files hint
-## Acceptance criteria
-## Risks
-## Data model
-## API surface
-## Open items
-```
-
-- **Decisions**: one-line imperatives, with the rejected alternative in parentheses.
-- **Files hint**: code anchors, meaning where to look first.
-- **Acceptance criteria**: Given/When/Then, at most 5. PM is the authority on acceptance criteria.
-- **Risks**: `risk → mitigation`, one line each.
-- **Data model**, **API surface**: architect and developer only, when they apply.
-- **Open items**: real gaps only. Assumptions carry the `ASSUMED:` prefix.
-- A role adds a section of its own only where its step file defines one (the Developer's files changed, the UX/UI designer's screens).
-
-**Stage and Verification** are for staged roles only. `Stage` names the stage the summary holds, and a stage before the last is a plan, not a delivery (the Developer's `spec`, then `implemented`). The gate that ran the checks adds `Verification`. Its summary is the observed result, or why nothing ran, in one line. On a failure, it carries each failing command's trimmed output. Both live only in the scratchpad. Across sessions, git answers what was built, and verification is run again, never recalled.
-
-**The change's files.** A step that reviews a built change (`Stage: implemented`, writing mode) takes its files from git, the authority on what was built (§0), never from one summary section alone. Its git answer is every path `git status --porcelain` shows modified or untracked, plus `git diff --name-only {base}...HEAD`, where `{base}` is the default branch (`origin/HEAD`, else `main` or `master`; skip this half when `HEAD` is that branch). The change's files are the union of that answer with the paths under the Developer summary's `Files changed` and `Prior delivery`, which also say where to read first. A git path that neither list names and the change's code never reaches is unrelated work: set it aside in one `Open items` line. These read-only git commands are inspection, allowed on every step.
-
-**Golden rule: if a part does not change what the consumer does, it does not belong in the summary.**
+The shape of every summary — its parts, `Stage` and `Verification`, and how a review finds the change's files — lives in `references/summary-schema.md`, the one reference every sub-agent step loads. Read it with this file.

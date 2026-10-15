@@ -15,4 +15,4 @@ steps:
     output: summary
     reference_skills:
       - ../asdt-core/references/platform-context.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md

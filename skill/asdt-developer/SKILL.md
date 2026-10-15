@@ -23,14 +23,6 @@ metadata:
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
-> **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
-> calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
-> as the `asdt-{agent}` sub-agent its `agent:` field names, via your native delegation
-> primitive (Agent/Task) — never run subagent steps inline; run
-> `inline` steps in your own context. If you run a subagent step inline anyway, its write
-> boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
-> `asdt-init/write`.
-
 # Developer Specialist
 
 ## Role
@@ -40,11 +32,11 @@ code. You do NOT produce architecture decisions, UX specs, or test plans.
 ## Orchestration Plan
 
 Judge your own chain from the request; the inline preludes run first on every chain. Ambiguous
-between a plan and a build → the plan: building it later is a resume, re-approved at the gate.
+between a plan and a build → the plan: building it later is a resume, re-approved at the gate. A
+pure question about the code is answered from the code, with no step.
 
 | The request is | Chain |
 |---|---|
-| a pure question or a sanity check | `explore` *(the report is the answer; no summary is handed on)* |
 | a plan — "how would you do this?", "propose the approach" | `explore → spec` *(the plan is the role summary and the run stops — no code is written)* |
 | a request to build it | `explore → spec → approve → implement → verify` |
 | a resume — "implement the plan we approved", "verify what you built" | `approve → implement → verify`, or `verify` alone *(below)* |
@@ -64,18 +56,14 @@ confirmation question picks), read the role summary `developer`:
 **No summary** — the scratchpad is gone, which is normal (`asdt-core/protocol.md` §1). Rebuild
 from git, the recall, and the user's words; never from memory alone:
 
-- A plan to build → run `explore → spec` on what the user wants built, with the recalled
-  notes; git shows what already exists. The upstream summaries are gone too, so the run's one
-  clarification turn (`asdt-core/protocol.md` §3) asks which specialists shaped the plan
-  (Product, Architect, UX/UI, Security, QA) and offers to re-run them first; on a yes, stop
-  and propose that chain (`Next:` line) instead of planning without them. The same turn asks
-  the user to restate the plan when the request and the recall do not say what it was. Carry
-  both answers into the request `spec` receives, so it marks each upstream summary the plan
-  relied on and could not read (`steps/spec.md`). `approve`
-  then shows the rebuilt plan like any other, and the user approves THAT plan.
-- A build to verify → `verify` alone, entering with no summary (step 1 and **Record** say how).
-- When neither the user's words, the recall, nor git identifies the work, say so in one line
-  and stop.
+- A plan to build → the run's one clarification turn (`asdt-core/protocol.md` §3) asks two
+  things: which specialists shaped the plan (Product, Architect, UX/UI, Security, QA) — on a
+  yes, stop and propose re-running them first (`Next:` line) — and, when neither the request
+  nor the recall says what the plan was, to restate it. Then `explore → spec` with both answers
+  in the request, so `spec` marks each upstream summary it relied on and could not read;
+  `approve` shows the rebuilt plan like any other.
+- A build to verify → `verify` alone (its step 1 and **Record** say how it enters with no summary).
+- Neither the user's words, the recall, nor git identifies the work → say so in one line and stop.
 
 Tests are `(test)` edit targets (`steps/spec.md`); approving the plan approves them.
 
@@ -157,7 +145,7 @@ Verification failed, fix round {1 | 2}.
 ````
 
 **Record.** Add the `**Verification:**` line under `**Stage:**` in the role summary yourself,
-never through another `implement` launch; `asdt-core/protocol.md` §6 says what it carries. Then
+never through another `implement` launch; `asdt-core/references/summary-schema.md` says what it carries. Then
 delete the `developer/verify` payload: spent failures never reach a later first pass. Entering with no summary, write a minimal one — the heading, one
 sentence on what git shows was built, `**Stage:** implemented`, the `**Verification:**` line,
 and `## Files changed` from the change's git diff.
@@ -176,6 +164,5 @@ After a build, the report adds one sentence before `Next:` on what was not check
   STOP rule are `steps/implement.md`, the boundary `asdt-core/protocol.md` §4
 - **No host file is written without approval**: `implement` runs only after `approve` returned
   approve in this same run
-- **Shortcuts are remembered once built**: at run close, after a writing-mode `implement`, remember
-  each `shortcut:` line in the summary's `Decisions` as a `decision` note on the area's subject
-  (`asdt-core/protocol.md` §2); a plan never built remembers none
+- **A built `shortcut:` is a decision**: at run close, after a writing-mode `implement`, remember
+  each one (`asdt-core/protocol.md` §2); a plan never built remembers none

@@ -23,6 +23,7 @@ steps:
       - pm # optional — the requirement, its acceptance criteria, and its scope
     reference_skills:
       - ../asdt-core/references/accessibility.md
+      - ../asdt-core/references/summary-schema.md
 
   - name: ui-design
     skill: steps/ui-design.md
@@ -36,7 +37,7 @@ steps:
     reference_skills:
       - ../asdt-core/references/visual-design.md
       - ../asdt-core/references/accessibility.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
     host_skills:
       - frontend-design # raises the craft of the design when the host has it
 
@@ -49,4 +50,4 @@ steps:
     output: summary
     reference_skills:
       - ../asdt-core/references/accessibility.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md

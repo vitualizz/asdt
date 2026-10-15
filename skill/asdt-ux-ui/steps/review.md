@@ -36,7 +36,7 @@ NOTE` lines. Look for nothing else.
    what already works.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # UX/UI: {change}

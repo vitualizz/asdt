@@ -38,7 +38,7 @@ Do NOT design a replacement. Judging what exists and proposing its rewrite are d
 jobs, and mixing them buries the judgment under the proposal.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Architect: {change}

@@ -26,7 +26,7 @@ else.
 Do NOT design the solution: name the reuse candidates, `spec` chooses. Do NOT write code.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Developer: {change}

@@ -25,7 +25,7 @@ flowchart TD
 
 **Step sub-agents** (`skill/asdt-{name}/steps/*.md`) — executor-only. Each does one step, reads the scratchpad paths it was handed and the codebase, and RETURNS a concise Markdown summary. It never reaches memory and writes nothing — except `developer/implement` (host code inside approved roots) and `asdt-init/write` (`.asdt/`). Steps never delegate further. No specialist requires another's work: every cross-specialist input is optional and degrades, which is what lets any of them run alone.
 
-The full contract — ownership and authority, the scratchpad, memory, intake, the write boundary, injection, the summary schema — lives in `asdt-core/protocol.md`. It is the one shared skill every run loads.
+The full contract — ownership and authority, the scratchpad, memory, intake, the write boundary, injection — lives in `asdt-core/protocol.md`; the summary schema in `asdt-core/references/summary-schema.md`. It is the one shared skill every run loads.
 
 ## Working Files: the Session Scratchpad
 
@@ -60,7 +60,7 @@ skill/
 ├── TEMPLATE.md                 ← authoring contract for specialists (repo-only, not installed)
 ├── embedded.go                 ← go:embed — bundles this dir into the binary
 ├── asdt-{name}/                ← one directory per specialist
-│   ├── SKILL.md                ← orchestration plan (ORCHESTRATOR GATE + step table)
+│   ├── SKILL.md                ← orchestration plan (spliced header + step table)
 │   ├── workflow.yaml           ← step registry: name, execution mode, inputs, output
 │   └── steps/                  ← sub-agent prompt files (one per subagent step)
 │       └── {step-name}.md
@@ -97,7 +97,7 @@ The exact schema is `TEMPLATE.md` §3.
 `TEMPLATE.md` in this directory is the normative contract for the steps below — required frontmatter, the fixed `SKILL.md` body order, the step-file layout, the summary contract, and the registration mirrors. Read it before adding or normalizing a specialist. It is repo-only authoring guidance: `embedded.go` bundles `SKILL.md` and `asdt-*`, so nothing else at this level ships to user projects.
 
 1. Create `skill/asdt-{name}/` with `SKILL.md`, `workflow.yaml`, and `steps/`
-2. Add the ORCHESTRATOR GATE block to `SKILL.md` — copy from any existing specialist
+2. Add the `FIRST ACTION` blockquote and the empty generated region to `SKILL.md` — copy from any existing specialist
 3. Declare each step in `workflow.yaml` with `execution:`, `inputs:`, and `output: summary` on the step whose return is the role summary
 4. Write one `steps/{step-name}.md` per `subagent` step — the step file NEVER contains the EXECUTOR block. Those guardrails come from the agent definition (`agent: analyst` / `agent: builder`, which bake `asdt-core/executor-header.md` in) or, in every other case, from the orchestrator prepending that header to the sub-agent prompt. See `asdt-core/protocol.md` for which of the two applies
 5. Register the specialist in the `Registry` section of `skill/SKILL.md`

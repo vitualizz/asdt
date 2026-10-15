@@ -61,7 +61,7 @@ conventions, existing structure) is in this prompt.
 Do NOT write implementation code. Define the technical structure and stop.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Architect: {change}

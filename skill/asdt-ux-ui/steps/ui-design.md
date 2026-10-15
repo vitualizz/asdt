@@ -81,7 +81,7 @@ No self-critique section: judging your own design without a user in front of it 
 confident prose and no signal. Step 8 fixes the design; it reports nothing.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6). Copy `Brief`, `Surface`, `Entry point`,
+Return this summary (`asdt-core/references/summary-schema.md`). Copy `Brief`, `Surface`, `Entry point`,
 `Flows`, and `Components` verbatim from the flows; `Decisions` and `Open items` carry their
 entries plus yours. `Design system` is not carried — a `Visual direction` present says there
 was none. Omit `Visual direction` with a design system. Every `{…}` is filled, and every table

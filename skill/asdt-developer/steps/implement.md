@@ -6,10 +6,9 @@ never leaving the declared edit roots.
 
 ## Inputs
 - `### INPUT developer/spec` — the plan the human approved. Extract `Edit targets`, `Scope`,
-  `Acceptance criteria`, `Decisions`, `Constraints`, and — when present — `Approach`, `Data
-  model`, `API surface`, `Migration notes`, `Flows`, `Screens`, `Component designs`,
+  `Acceptance criteria`, `Decisions`, `Constraints`, and — when present — `Data model`, `API
+  surface`, `Migration notes`, `Flows`, `Screens`, `Component designs`,
   `Accessibility`, `Visual direction`, `Test cases`, `Prior delivery`
-- `### INPUT architect` — OPTIONAL. The architectural decision
 - `### INPUT developer/verify` — OPTIONAL, a fix round only. Extract the round, `Failures` (each
   failing command and its output), and `Files changed` (everything earlier rounds of this run
   wrote)
@@ -21,7 +20,6 @@ this prompt: extract the conventions and the `Design surface:` line's bare value
 (default — never asked)` → `mobile`).
 
 **DEGRADATION**: `developer/spec` UNRESOLVED → there are no approved edit roots, so PLAN-ONLY mode applies; record `ASSUMED:` in `Open items`.
-**DEGRADATION**: `architect` UNRESOLVED → take the design authority from the spec, and record `ASSUMED:` in `Open items`.
 **DEGRADATION**: `developer/verify` UNRESOLVED → this is the first pass; no entry.
 **DEGRADATION**: `Design surface:` default marker, or no such line → `mobile`, plus ONE `ASSUMED:` entry, only when this step produces a UI file.
 **DEGRADATION**: no host skill → build the UI on the conventions alone; no entry.
@@ -37,8 +35,8 @@ this prompt: extract the conventions and the `Design surface:` line's bare value
 3. NON-EMPTY → WRITING MODE: write real files, ONLY to paths within the edit roots.
 
 ### Writing the code
-Build the spec's `Decisions` — its `Approach:` line, plus the `## Approach` section when
-present — as approved, never swapping in the larger option it rejected, within its
+Build the spec's `Approach:` line as approved — with its `Data model`, `API surface`, and
+`Migration notes` when present — never swapping in the larger option it rejected, within its
 `Constraints` and the conventions, whose *one line* and *minimum new code* rungs decide how
 much code each part takes. In writing mode:
 1. Before each write, confirm the target is under an edit root and not under `.asdt/`. If
@@ -49,8 +47,9 @@ much code each part takes. In writing mode:
 3. Write the file via the filesystem write tool, and record it under `Files changed` with its
    action, what its target line names, and its rationale.
 4. Compose `Suggested verification`: the build, lint, and test commands the human may run, and
-   what a healthy run looks like — only commands the `verify` exception of
-   `asdt-core/protocol.md` §4 allows, in their non-writing variant where one exists.
+   what a healthy run looks like — only commands that write no tracked source: no `--fix`,
+   `--write`, or `-u`, no snapshot update, formatter, or codegen; prefer the non-writing
+   variant where one exists (`--ci`, `tsc --noEmit`).
 
 ### UI files
 Applies to every UI file this step produces — a view, a component, a stylesheet or token file —
@@ -61,10 +60,8 @@ that a UI file contradicts the declared surface. When the spec carries a UX/UI d
 file consumes tokens, never literal values: a `Visual direction` is built as the project's first
 tokens; with a design system, each `Proposed token:` in `Constraints` is added under its name and
 value to the token file it names — within the edit roots, like any write — and no other token is
-invented. The `Screens` and `Component designs` ARE the UI's design: build each screen to its
-layout, hierarchy and its type levels, spacing, components, states, extremes, and breakpoints,
-and each designed component to its anatomy, props, variants, sizes, states, tokens, and
-behavior — never re-design what they specify. A `variant of` design adds its option to the
+invented. The `Screens` and `Component designs` ARE the UI's design: build each to every field its
+design specifies, and never re-design what they specify. A `variant of` design adds its option to the
 existing component and leaves every existing variant unchanged.
 
 An injected host skill shapes the visual execution only, and only where the spec leaves room:
@@ -79,9 +76,8 @@ Write or update the tests each `(test)` edit target names, and no others: none d
 test file is touched. A new test covers the ACs its line names, at least the minimum in
 `conventions.md` (Tests); a `Test cases` ID its line names is a test at that row's `Level`,
 named by the `ID`, in the project's framework. Tests obey the SAME mode and edit roots as the
-code — `Code snippets` in plan-only mode, real files in writing mode. NEVER run them, or any
-build, lint, install, or codegen, not even on a fix round: running checks is the human's call
-at the `verify` gate.
+code — `Code snippets` in plan-only mode, real files in writing mode. Running them is the
+human's call at the `verify` gate, on a fix round too.
 
 ### Fix round
 Only when `developer/verify` arrived. Fix what its failures name and nothing else, in the SAME
@@ -100,7 +96,7 @@ plan-only mode) addresses gets one `Open items` line — `AC not covered: {AC id
 Warnings, never a halt.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6); it replaces the plan as the role summary.
+Return this summary (`asdt-core/references/summary-schema.md`); it replaces the plan as the role summary.
 `Prior delivery` stays separate from `Files changed` and drops its `**Verification:**` line.
 
 ````markdown

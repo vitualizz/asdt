@@ -325,7 +325,7 @@ Emit ONE ambiguity per field that is `medium` or `low` confidence, or genuinely 
 
 
 ## Output
-Return this summary (protocol §6), filling `Open items` and the two sections below, which `write` and `clarify` read, so keep their shape exact:
+Return this summary (`asdt-core/references/summary-schema.md`), filling `Open items` and the two sections below, which `write` and `clarify` read, so keep their shape exact:
 
 ```markdown
 # Init detection: init

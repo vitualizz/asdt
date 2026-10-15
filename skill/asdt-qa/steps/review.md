@@ -41,7 +41,7 @@ for nothing else.
 execute them. If measuring would settle a question, name the command the USER can run.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # QA: {change}

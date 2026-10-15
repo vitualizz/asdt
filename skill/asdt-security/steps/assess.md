@@ -7,8 +7,8 @@ the OWASP Top 10. Analysis only — `harden` turns it into findings.
 ## Inputs
 - `### INPUT developer` — OPTIONAL. Developer's summary. Read its `**Stage:**` line first.
   `spec` is a plan, nothing built: map the PLANNED surface from its `Edit targets` and
-  `Decisions` (`Approach:`, plus any `## Approach`), and record `ASSUMED: planned surface — nothing built yet` in `Open items`.
-  `implemented`: the code that changed, the change's files (`asdt-core/protocol.md` §6: git,
+  `Decisions` (its `Approach:` line) and any `Data model`, `API surface`, and `Migration notes`, and record `ASSUMED: planned surface — nothing built yet` in `Open items`.
+  `implemented`: the code that changed, the change's files (`asdt-core/references/summary-schema.md`: git,
   with `Files changed` and `Prior delivery` as hints) — or `Code snippets` when `Edit roots`
   reads `Mode: plan-only`
 - `### INPUT architect` — OPTIONAL. The Architect's summary: the design and its trust boundaries
@@ -41,10 +41,10 @@ OWASP categories are only worth checking where the surface actually reaches them
    the findings that matter.
 
 Reason over the change and inspect the repository for evidence. NEVER run scanners,
-dependency audits, or any command beyond the read-only git inspection of protocol §6.
+dependency audits, or any command beyond the read-only git inspection of `asdt-core/references/summary-schema.md`.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Security: {change}

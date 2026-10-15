@@ -8,8 +8,8 @@ the implementation is allowed to touch.
 - `### INPUT developer/explore` — OPTIONAL. The exploration: `Open questions` (answer them
   here), `Constraints` (the patterns to follow), `Files hint` (each line's reach or `reuse`
   label), `Risks`
-- `### INPUT pm` — OPTIONAL, the acceptance-criteria authority. Extract ONLY its `Acceptance
-  criteria`
+- `### INPUT pm` — OPTIONAL, the acceptance-criteria authority. Extract its `Acceptance
+  criteria` and the In/Out lines of its `Constraints` — the scope Product set
 - `### INPUT architect` — OPTIONAL. Extract `Decisions`, `Constraints`, `Data model`, `API
   surface`, `Files hint` — when it arrived the approach is ALREADY DECIDED, do not re-open it
 - `### INPUT ux-ui` — OPTIONAL. UX/UI's summary. Its `Surface` becomes a `Constraints` entry.
@@ -51,8 +51,8 @@ session — {what you planned without it}` in `Open items`, one per such role.
 ## Processing
 
 1. Answer each of the exploration's open questions.
-2. Define the scope boundary: what IS included and what is explicitly NOT. What the `not
-   needed` rung names is an Out item.
+2. Define the scope boundary — starting from Product's In/Out when it arrived: what IS
+   included and what is explicitly NOT. What the `not needed` rung names is an Out item.
 3. Write at most 5 acceptance criteria, numbered: `AC1: Given …, when …, then …`. Product's
    summary is the AC AUTHORITY: when it arrived, REFINE its criteria into this form, preserving
    each one's intent — never re-derive an independent set.
@@ -64,8 +64,9 @@ session — {what you planned without it}` in `Open items`, one per such role.
      `Open items` entry.
    - `New dependency:` → the manifest joins the edit targets, and `run {install command} —
      lockfile not updated` joins `Open items`: nothing in this chain installs.
-   - `shortcut:` for a known limit the approach accepts; `never-cut: {item} — {why}` in `Open
-     items` for a never-cut item (`conventions.md`) it leaves out.
+   - `shortcut:` for a known limit the approach accepts, and when to revisit it. A never-cut item
+     (`conventions.md`) is never traded for size; when the request itself drops one, `never-cut:
+     {item} — dropped at the user's request` goes to `Open items`, so the gate shows it.
 5. **Declare the edit targets** — real paths relative to the project root, one per line: the
    action, the backticked path, then what it serves (`- modify: \`{path}\` — AC1, AC3`) —
    `implement` writes nothing else. Fold in every path of the Architect's `Files hint` this change creates or
@@ -105,7 +106,7 @@ Do NOT write implementation code here.
 copy it verbatim into `Prior delivery`: it stays part of the change.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6). The orchestrator files it as the role
+Return this summary (`asdt-core/references/summary-schema.md`). The orchestrator files it as the role
 summary and as the payload `implement` builds from. Omit every section that does not apply;
 the design sections, `Test cases`, and `Prior delivery` are copied verbatim, never rewritten.
 
@@ -123,7 +124,7 @@ the design sections, `Test cases`, and `Prior delivery` are copied verbatim, nev
 - {Open question} → {answer}
 
 ## Constraints
-- {What implementation must respect: the surface, each mitigation, each proposed token}
+- {What implementation must respect: the exploration's conventions, the surface, each mitigation, each proposed token}
 
 ## Acceptance criteria
 - AC1: Given {context}, when {action}, then {observable outcome}
@@ -137,9 +138,6 @@ the design sections, `Test cases`, and `Prior delivery` are copied verbatim, nev
 ## Scope
 - In: {item}
 - Out: {item}
-
-## Approach
-{Only for a data-model, API, or migration change: that design, at the depth it earns.}
 
 ## Migration notes
 - {Phase or step}

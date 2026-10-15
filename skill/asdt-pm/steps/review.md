@@ -35,7 +35,7 @@ Do NOT write new requirements for the gaps. Naming a gap is this step's job; dec
 build about it is a change, and a change starts at `backlog`.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # PM: {change}

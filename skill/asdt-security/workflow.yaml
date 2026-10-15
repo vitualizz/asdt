@@ -22,7 +22,7 @@ steps:
       - architect # optional — the design and its trust boundaries
     reference_skills:
       - ../asdt-core/references/owasp.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
 
   - name: harden
     skill: steps/harden.md
@@ -34,4 +34,4 @@ steps:
       - security/assess
     output: summary
     reference_skills:
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md

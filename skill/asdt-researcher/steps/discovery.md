@@ -35,7 +35,7 @@ The recommendation is a direction, not a requirement. PM decides what gets built
 is skipped, the Architect designs from it.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Researcher: {change}

@@ -10,7 +10,7 @@ go/no-go verdict, in one summary.
 - `### INPUT developer` — OPTIONAL. Developer's summary. Read its `**Stage:**` line first.
   `spec` is a plan, nothing built: plan cases against its `Edit targets` and `Acceptance
   criteria` (a `Prior delivery` it carries is an earlier build, not this plan). `implemented`:
-  the change's files (`asdt-core/protocol.md` §6: git, with `Files changed` and `Prior
+  the change's files (`asdt-core/references/summary-schema.md`: git, with `Files changed` and `Prior
   delivery` as hints), or `Code snippets` when `Edit roots` reads `Mode: plan-only`; the carried
   `Acceptance criteria`, `Open items` (including any `AC not covered:` lines), and the
   `**Verification:**` line under `**Stage:**` — never claim a pass it did not record
@@ -65,7 +65,7 @@ Each arrives as a path to read — never look for anything else.
 
 5. **Verdict.** `go` or `no-go`, with two lines of why. A blocking AC gap, an uncovered
    critical path, or — when the developer summary arrived — a Security `high` whose mitigation
-   leaves no trace in its files (at `implemented`, the change's files of protocol §6, earlier
+   leaves no trace in its files (at `implemented`, the change's files of `asdt-core/references/summary-schema.md`, earlier
    deliveries included; at `spec`, the `Edit targets` and any `Prior delivery`) is a `no-go`: a `high` reaches real data or identity, and a fix that is nowhere in the
    change ships the threat with it. Everything else is a shipping condition, not a block. At
    `Stage: spec`, or `implemented` with `Mode: plan-only`, nothing is built, so the verdict is
@@ -73,12 +73,12 @@ Each arrives as a path to read — never look for anything else.
    build.
 
 **Never emit a pass or fail on something you did not run.** This step executes nothing beyond
-the read-only git inspection of protocol §6. If Product's summary carries NFR targets, list the
+the read-only git inspection of `asdt-core/references/summary-schema.md`. If Product's summary carries NFR targets, list the
 command the USER can run to measure each one and what a healthy result looks like — that is an offer, not a result. A performance claim with
 no measurement behind it is worse than no claim.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # QA: {change}

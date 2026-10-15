@@ -34,7 +34,7 @@ Carry any `ASSUMED:` entries from the assessment forward — a threat you could 
 stays visible.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Security: {change}

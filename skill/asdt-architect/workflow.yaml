@@ -26,7 +26,7 @@ steps:
     reference_skills:
       - ../asdt-core/references/api-design.md
       - ../asdt-core/references/scope-definition.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
 
   - name: review
     skill: steps/review.md
@@ -37,4 +37,4 @@ steps:
     output: summary
     reference_skills:
       - ../asdt-core/references/api-design.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
