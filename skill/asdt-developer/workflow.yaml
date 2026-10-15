@@ -24,7 +24,7 @@ steps:
     skill: steps/spec.md
     description: Define scope, numbered acceptance criteria, the smallest approach that fully works, and the files — tests included — implement is allowed to touch
     execution: subagent
-    model: sonnet
+    model: opus
     agent: analyst
     inputs:
       - pm # optional — acceptance-criteria authority
