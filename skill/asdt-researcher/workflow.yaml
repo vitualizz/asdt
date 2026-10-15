@@ -6,6 +6,11 @@ steps:
     description: Recall the project's notes on prior discovery, similar problem framings, and decisions relevant to this exploration
     execution: inline
 
+  - name: platform-analysis
+    skill: ../asdt-core/references/platform-context.md
+    description: Inject the platform block — conventions and the design surface — from .asdt/config.yaml
+    execution: inline
+
   - name: discovery
     skill: steps/discovery.md
     description: Frame the problem, diverge into candidate directions, judge feasibility with evidence, and converge on one recommendation
@@ -14,5 +19,4 @@ steps:
     agent: analyst
     output: summary
     reference_skills:
-      - ../asdt-core/references/platform-context.md
       - ../asdt-core/references/summary-schema.md

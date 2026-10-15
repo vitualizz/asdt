@@ -6,8 +6,7 @@ requirements for a change that has not been built. The product is a gap analysis
 
 ## Inputs
 No `### INPUT` line: this step runs standalone, on the area the request names, the codebase,
-the platform block, and any `### PROJECT NOTE` lines (prior requirements for the area). Look
-for nothing else.
+the platform block, and any `### PROJECT NOTE` lines (prior requirements for the area).
 
 ## Processing
 

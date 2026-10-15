@@ -33,7 +33,7 @@ Every specialist also works standalone — point it at what already exists ("aud
 
 ## How to assess
 
-Judge two axes independently, and judge them — there is no keyword table, and there was never a good one.
+Judge two axes independently; there is no keyword table.
 
 **Complexity** (`trivial | simple | moderate | complex`): how much of the system this touches and how much is genuinely unknown. A one-line change to settled code is trivial. A change with an obvious shape and one owner is simple. Something crossing two or three components, or with a real design choice in it, is moderate. Something reshaping a contract, a data model, or a boundary is complex.
 
@@ -58,7 +58,7 @@ When the user dictates knowledge to you (`/asdt "remember that we use convention
 
 ## Sharpen the request
 
-Before you write any command below, sharpen the request that goes inside its quotes — this always happens once you have a chain or a single specialist to propose, never when the answer was a status report with no command to emit.
+Before you write any command below, sharpen the request that goes inside its quotes (a status report emits no command, so there is nothing to sharpen).
 
 Sharpening means putting the user's own words into their clearest, most concrete form: name the target as precisely as the conversation lets you, keep every scope, urgency, and sensitivity marker they used, and invent none they did not. Never flip what kind of request it is — "audit X" stays an audit, it does not become "implement X" because sharpening made it sound actionable.
 

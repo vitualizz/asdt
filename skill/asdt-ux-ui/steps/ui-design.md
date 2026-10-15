@@ -13,8 +13,7 @@ stand on. Written as text in the ONE role summary, which carries the flows forwa
 - `### HOST SKILL frontend-design` — OPTIONAL. Visual-design craft from the host, injected only
   when it has one
 
-The flows arrive as a path to read — never look for anything else. The platform block is in
-this prompt: extract its `CSS:` line, the styling tool the designs are expressed in.
+The platform block is in this prompt: extract its `CSS:` line, the styling tool the designs are expressed in.
 
 **DEGRADATION**: `ux-ui/ux-spec` UNRESOLVED → derive the flows from the raw request in its shape first — the surface from the platform block's `Design surface:` bare value, `mobile` when it carries none — and record `ASSUMED: no flows from ux-spec — flows derived in ui-design` in `Open items`.
 **DEGRADATION**: no host skill → design on `visual-design.md` alone; no entry.
@@ -35,7 +34,7 @@ them and adds only the procedure below.
      option in the system's language. A value the system lacks becomes a proposed token — name
      it in the system's convention with its value (`--space-7: 28px`), use that name in the
      design, and repeat it in one `Open items` entry, `Proposed token: --space-7: 28px in
-     {token file}`, so `implement` adds it. Never a literal in its place.
+     {token file}`, so `implement` adds it.
    - **Without one, propose the foundation as `Visual direction`** — every field of the schema
      below. Every item is a PROPOSAL the developer builds as the project's first tokens, and
      every design below consumes it by role, level, and step, never by literal. Record it in
@@ -64,8 +63,8 @@ them and adds only the procedure below.
    requirement; a pair you cannot compute stays advisory in `Open items`.
 
 6. **Host skill.** When `### HOST SKILL frontend-design` arrived, use it to raise the intent's
-   distinctiveness and the composition's coherence. Its instructions to write code or files do
-   not apply here — translate what they would build into this schema's text. It never
+   distinctiveness and the composition's coherence. Translate what it would build into this
+   schema's text. It never
    overrides the design system, the flows and their copy, or `accessibility.md`; on taste it
    outranks `visual-design.md`, on a checkable criterion it does not.
 
@@ -76,9 +75,6 @@ them and adds only the procedure below.
 8. **Conformance pass — silent.** Before returning, check every screen and component design
    against each criterion of `visual-design.md` and fix every failure in place. Nothing about
    the check enters the output: no score, no checklist, no notes.
-
-No self-critique section: judging your own design without a user in front of it adds
-confident prose and no signal. Step 8 fixes the design; it reports nothing.
 
 ## Output
 Return this summary (`asdt-core/references/summary-schema.md`). Copy `Brief`, `Surface`, `Entry point`,

@@ -22,18 +22,20 @@ export interface SpecialistConfig {
 export const specialistSteps: Record<string, SpecialistConfig> = {
   researcher: {
     color: '--c-res',
-    chains: [{ steps: ['knowledge-recall', 'discovery'] }],
+    chains: [{ steps: ['knowledge-recall', 'platform-analysis', 'discovery'] }],
     steps: {
       'knowledge-recall': { id: 'knowledge-recall', execution: 'inline' },
+      'platform-analysis': { id: 'platform-analysis', execution: 'inline' },
       discovery: { id: 'discovery', execution: 'subagent' },
     },
   },
 
   pm: {
     color: '--c-pm',
-    chains: [{ steps: ['knowledge-recall', 'backlog'] }],
+    chains: [{ steps: ['knowledge-recall', 'platform-analysis', 'backlog'] }],
     steps: {
       'knowledge-recall': { id: 'knowledge-recall', execution: 'inline' },
+      'platform-analysis': { id: 'platform-analysis', execution: 'inline' },
       backlog: { id: 'backlog', execution: 'subagent' },
     },
   },
@@ -64,7 +66,6 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
     // `build` stays last: StepFlow and AllSpecialistsOverview read the last chain
     // as the full step list.
     chains: [
-      { when: 'question', steps: ['knowledge-recall', 'platform-analysis', 'explore'] },
       { when: 'plan', steps: ['knowledge-recall', 'platform-analysis', 'explore', 'spec'] },
       // A resume of a plan built but never verified runs `verify` alone.
       { when: 'resume', steps: ['knowledge-recall', 'platform-analysis', 'approve', 'implement', 'verify'] },
@@ -94,9 +95,10 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
 
   qa: {
     color: '--c-qa',
-    chains: [{ steps: ['knowledge-recall', 'test-plan'] }],
+    chains: [{ steps: ['knowledge-recall', 'platform-analysis', 'test-plan'] }],
     steps: {
       'knowledge-recall': { id: 'knowledge-recall', execution: 'inline' },
+      'platform-analysis': { id: 'platform-analysis', execution: 'inline' },
       'test-plan': { id: 'test-plan', execution: 'subagent' },
     },
   },

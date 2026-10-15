@@ -6,8 +6,7 @@ for a change. The product is a verdict on the suite's health plus the gaps behin
 
 ## Inputs
 No `### INPUT` line: this step runs standalone, on the area the request names, the codebase,
-the platform block (test framework and conventions), and any `### PROJECT NOTE` lines. Look
-for nothing else.
+the platform block (test framework and conventions), and any `### PROJECT NOTE` lines.
 
 ## Processing
 

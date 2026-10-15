@@ -22,8 +22,6 @@ go/no-go verdict, in one summary.
 - `### INPUT security` — OPTIONAL. Security's summary: each `Risks` finding's severity and
   mitigation, and `Files hint` for where the mitigations land
 
-Each arrives as a path to read — never look for anything else.
-
 **DEGRADATION**: all five UNRESOLVED → work from the raw request and the codebase, and record `ASSUMED: no upstream summary — criteria read from the raw request` in `Open items`. Never block.
 **DEGRADATION**: `ux-ui` UNRESOLVED → find the state cases in the code alone; UX not running is the common case, so no entry.
 **DEGRADATION**: `security` UNRESOLVED → there are no findings to prove and the verdict carries no Security condition; no entry.
@@ -54,7 +52,7 @@ Each arrives as a path to read — never look for anything else.
    cases cannot be unit tests; say which level each group lands on.
 
 4. **Test cases.** Given/When/Then for each AC and for each edge case worth a test — not
-   every edge case earns one, and saying which ones you dropped is part of the plan. When
+   every edge case earns one; say in `Strategy` which ones you dropped. When
    the developer summary arrived, name the path each case exercises — from the change's files,
    or the `Edit targets` at `Stage: spec`, whose `AC{n}` tags (on `Files changed` too) say which
    file serves which criterion — so a reader can go from case to code without guessing.
@@ -111,6 +109,3 @@ Return this summary (`asdt-core/references/summary-schema.md`):
 ## Open items
 - ASSUMED: {what was assumed} — {what would confirm or refute it}
 ```
-
-`Measurement offered` is never a verdict: it lists commands the USER may run. Say in `Strategy`
-which edge cases earned no test case.

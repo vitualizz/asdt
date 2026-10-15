@@ -200,10 +200,11 @@ func TestInitEnrichmentInlineStep(t *testing.T) {
 	}
 }
 
-// TestInitPlanTableMatchesWorkflow asserts the asdt-init SKILL.md Orchestration
-// Plan table Step column is byte-identical, in order, to the workflow.yaml step
-// sequence — so the hand-authored plan cannot drift from the executable flow.
-func TestInitPlanTableMatchesWorkflow(t *testing.T) {
+// TestInitInlineStepsHaveSections asserts every inline step of asdt-init owns
+// a `## {name} —` section in its SKILL.md: inline steps have no step file, so
+// that section is their whole contract (TEMPLATE §2), and workflow.yaml must
+// not declare one the plan never describes.
+func TestInitInlineStepsHaveSections(t *testing.T) {
 	root := skillDir(t)
 
 	wfData, err := os.ReadFile(filepath.Join(root, "asdt-init", "workflow.yaml"))
@@ -214,26 +215,27 @@ func TestInitPlanTableMatchesWorkflow(t *testing.T) {
 	if err := yaml.Unmarshal(wfData, &wf); err != nil {
 		t.Fatalf("parse asdt-init/workflow.yaml: %v", err)
 	}
-	var wfSteps []string
-	for _, s := range wf.Steps {
-		wfSteps = append(wfSteps, s.Name)
-	}
-
 	mdData, err := os.ReadFile(filepath.Join(root, "asdt-init", "SKILL.md"))
 	if err != nil {
 		t.Fatalf("read asdt-init/SKILL.md: %v", err)
 	}
-	tableSteps := initPlanTableSteps(string(mdData))
+	md := string(mdData)
 
-	want := []string{"memory-check", "explore", "enrichment", "clarify", "write"}
-	if !reflect.DeepEqual(wfSteps, want) {
-		t.Errorf("workflow.yaml step order = %v, want %v", wfSteps, want)
+	var order []string
+	for _, s := range wf.Steps {
+		order = append(order, s.Name)
 	}
-	if !reflect.DeepEqual(tableSteps, want) {
-		t.Errorf("SKILL.md plan-table Step column = %v, want %v", tableSteps, want)
+	if want := []string{"memory-check", "explore", "enrichment", "clarify", "write"}; !reflect.DeepEqual(order, want) {
+		t.Errorf("asdt-init/workflow.yaml step order = %v, want %v", order, want)
 	}
-	if !reflect.DeepEqual(wfSteps, tableSteps) {
-		t.Errorf("plan-table drifted from workflow.yaml:\n--- workflow ---\n%v\n--- table ---\n%v", wfSteps, tableSteps)
+
+	for _, s := range wf.Steps {
+		if s.Execution != "inline" {
+			continue
+		}
+		if !regexp.MustCompile("(?m)^## " + regexp.QuoteMeta(s.Name) + " —").MatchString(md) {
+			t.Errorf("asdt-init/SKILL.md has no `## %s —` section; an inline step's section is its whole contract", s.Name)
+		}
 	}
 }
 
@@ -282,45 +284,4 @@ func TestHumanNotesRoutedToMemory(t *testing.T) {
 			}
 		}
 	}
-}
-
-// initPlanTableSteps extracts the ordered Step-column values of the asdt-init
-// SKILL.md Orchestration Plan table (the first column of each data row).
-func initPlanTableSteps(content string) []string {
-	lines := strings.Split(content, "\n")
-	var steps []string
-	inSection := false
-	inTable := false
-	for _, line := range lines {
-		if !inSection {
-			if strings.Contains(line, "## Orchestration Plan") {
-				inSection = true
-			}
-			continue
-		}
-		if !inTable {
-			if strings.Contains(line, "| Step | Execution | Does |") {
-				inTable = true
-			}
-			continue
-		}
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, "|") {
-			if trimmed == "" {
-				break // blank line ends the table
-			}
-			continue
-		}
-		if strings.HasPrefix(trimmed, "|---") || strings.HasPrefix(trimmed, "|--") {
-			continue // separator row
-		}
-		cells := strings.Split(trimmed, "|")
-		if len(cells) < 2 {
-			continue
-		}
-		if name := strings.TrimSpace(cells[1]); name != "" {
-			steps = append(steps, name)
-		}
-	}
-	return steps
 }

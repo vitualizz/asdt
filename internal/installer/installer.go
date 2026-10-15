@@ -287,8 +287,8 @@ func writeSkillFile(skillsFS fs.FS, srcPath, target string, provider ProviderDes
 	// The provider bindings run LAST, over every file: the specialist-header
 	// splice above copies protocol.md's still-empty memory-binding region into
 	// each routed SKILL.md, and this one pass binds that copy and every
-	// standalone region (protocol.md, asdt-init/SKILL.md, the root SKILL.md,
-	// executor-header.md) alike. Marker-free files pass through unchanged.
+	// standalone region (protocol.md, asdt-init/SKILL.md, the root SKILL.md)
+	// alike. Marker-free files pass through unchanged.
 	bound, bindErr := bindMemory(data, provider)
 	if bindErr != nil {
 		return fmt.Errorf("bind memory provider into %s: %w", srcPath, bindErr)

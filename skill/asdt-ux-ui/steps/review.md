@@ -1,14 +1,13 @@
 # Review — UX/UI Specialist
 
 ## Purpose
-This step AUDITS the flows that already ship; `ux-spec → ui-design` designs a change. And it
-audits **the user's product** — it is not the deleted design-critique, which was the model
-grading its own output and produced confident prose with no signal.
+This step AUDITS the flows that already ship — the user's product, never this specialist's own
+design; `ux-spec → ui-design` designs a change.
 
 ## Inputs
 No `### INPUT` line: this step runs standalone, on the screen, flow, or area the request names,
 the codebase, the platform block (detected design system and conventions), and any `### PROJECT
-NOTE` lines. Look for nothing else.
+NOTE` lines.
 
 ## Processing
 

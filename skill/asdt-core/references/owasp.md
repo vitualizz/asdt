@@ -86,4 +86,4 @@ The six questions to ask of any trust boundary. Use them when the OWASP categori
 
 A trust boundary is any point where data crosses between trust zones: internet → application, application → database, service → service, browser → server, admin UI → application. For each one, state what crosses it, in which direction, and what validation happens there.
 
-When a threat has several attack paths, name them explicitly rather than in aggregate — "bypass authentication" splits into stealing a session token (XSS, MITM), forging one (weak JWT secret, algorithm confusion), and credential stuffing (no rate limit on login), and those three have different fixes. Carry the highest-risk paths into `risks` as `{risk, mitigation}`.
+When a threat has several attack paths, name them explicitly rather than in aggregate — "bypass authentication" splits into stealing a session token (XSS, MITM), forging one (weak JWT secret, algorithm confusion), and credential stuffing (no rate limit on login), and those three have different fixes. Carry the highest-risk paths into `Risks`, one `risk → mitigation` line each.

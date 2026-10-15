@@ -17,17 +17,9 @@ Detect the project's facts, settle the configuration decisions with the human, a
 
 ## Orchestration Plan
 
-Setup-class: invoked by name only, never routed (`skill/SKILL.md`), and always the same five steps in order. Init works under `{change}` = `init`, so its scratchpad files live in `{scratchpad}/asdt/init/` (protocol §1).
+Setup-class: invoked by name only, never routed (`skill/SKILL.md`), and always every step of `workflow.yaml`, in its order. Init works under `{change}` = `init`, so its scratchpad files live in `{scratchpad}/asdt/init/` (protocol §1).
 
-| Step | Execution | Does |
-|------|-----------|------|
-| memory-check | inline | Checks this session for the bound memory tools; settles fresh vs recalibration |
-| explore | subagent | Detects the stack, context fields, and design fingerprint; returns them with the questions to ask |
-| enrichment | inline | Surfaces up to 3 central, non-obvious symbols as skippable note questions, through code intelligence |
-| clarify | inline | Asks the questions, previews the write, takes the consent; produces the answers write applies |
-| write | subagent | Writes `.asdt/config.yaml`, preserving manual values |
-
-Step identity, model, inputs, and outputs: workflow.yaml. Detection mechanics belong to `steps/explore.md`, file mechanics to `steps/write.md`. The three inline steps have no step file: the sections below are their whole contract.
+Detection mechanics belong to `steps/explore.md`, file mechanics to `steps/write.md`. The three inline steps have no step file: the sections below are their whole contract.
 
 ## memory-check — memory and prior state (inline)
 
@@ -47,10 +39,7 @@ Run first, before launching anything. Both checks read only your own context and
 
 Surface the few symbols a newcomer would misread: structurally central yet non-obvious from the name. Each becomes one skippable question whose answer you remember as a convention note. Skip this step entirely when memory is unavailable: an answer with nowhere to go wastes the human's time. Enrichment is positive-evidence-only, never fails, and never blocks.
 
-Take the first rung that holds:
-
-1. **Code intelligence**: the binding below names a provider, its **explore** tool is on your OWN tool list, and explore's `## Detection` table carries a `code_intelligence` row (this project is indexed). Call **explore** (`asdt-core/executor-header.md`, Code intelligence) with "which symbols are the most central to this codebase yet the least self-explanatory from their name?". Rank the returned symbols by how many places reference them (when the binding also lists **callers**/**callees**, use their counts), skip trivially named getters, setters, and plain DTOs, and break ties by file path, then symbol name. Keep a candidate only at architecture altitude: its non-obviousness spans 2 or more files, a module boundary, or a cross-cutting invariant. Never a single-function gotcha. Keep at most 3.
-2. **Otherwise**: surface nothing. A parse tree shows syntax, not centrality.
+**With code intelligence** — the binding below names a provider, its **explore** tool is on your OWN tool list, and explore's `## Detection` table carries a `code_intelligence` row (this project is indexed). Call **explore** (`asdt-core/executor-header.md`, Code intelligence) with "which symbols are the most central to this codebase yet the least self-explanatory from their name?". Rank the returned symbols by how many places reference them (when the binding also lists **callers**/**callees**, use their counts), skip trivially named getters, setters, and plain DTOs, and break ties by file path, then symbol name. Keep a candidate only at architecture altitude: its non-obviousness spans 2 or more files, a module boundary, or a cross-cutting invariant. Never a single-function gotcha. Keep at most 3. **Otherwise** surface nothing.
 
 Each kept symbol becomes the question `nuance.{symbol}`: "What makes `{symbol}` non-obvious: its role, an invariant, a gotcha a newcomer would miss?", free-form, default empty, always skippable, never blocking.
 
@@ -60,9 +49,9 @@ Each kept symbol becomes the question `nuance.{symbol}`: "What makes `{symbol}` 
 
 ## clarify — ask, preview, consent (inline)
 
-Clarify resolves explore's ambiguities and enrichment's questions with the human, previews the write, and produces the payload `write` applies. It runs inline because only you can pause for the human.
+Clarify resolves explore's ambiguities and enrichment's questions with the human, previews the write, and produces the payload `write` applies.
 
-**Ceiling.** At most 7 questions in total, the standing design-surface question aside. When more are pending, ask in this order and stop at 7: non-skippable ambiguities, skippable `low`, skippable `medium`, then the `nuance.*` questions, ties in the order explore emitted them. A skippable question past the ceiling takes its default, with origin `default`, and the preview lists it so the human can still correct it. A non-skippable one is never cut.
+**Ceiling.** At most 7 questions in total, the standing design-surface question aside. When more are pending, ask in this order and stop at 7: non-skippable ambiguities, skippable `low`, skippable `medium`, then the `nuance.*` questions, ties in the order explore emitted them. A skippable question past the ceiling takes its default, with origin `default`. A non-skippable one is never cut.
 
 1. **Ambiguities.** Ask explore's ambiguities one at a time, offering its options when it gives them, a free-form value otherwise. The offered default is explore's, except for a key whose prior source is `manual`: then it is that prior value.
 2. **Notes.** Ask the `nuance.*` questions, free-form, with a skip-all shortcut for the whole block. Keep only non-empty answers.
@@ -70,7 +59,7 @@ Clarify resolves explore's ambiguities and enrichment's questions with the human
 4. **Recalibration review**, only on a recalibration. Resolve the prior values (`steps/write.md`, step 2) and show a delta table (key, old value, new value) of every key whose value would change, plus every key whose prior source is `manual`. Ask once: "accept all, or review key by key?" Key by key: accept, reject, or set manually. Accepting over a `manual` prior value is the answer `accepted`; rejecting is the old value as a `user` answer; setting manually is a `user` answer, unless the value equals the detected one (then `accepted`). Human answers always win: a `manual` prior value appears in the table and changes only on an explicit answer.
 5. **Preview and consent.** Show what will land: `.asdt/config.yaml` with its key values and deltas, and every default applied past the ceiling. On a decline, nothing is written and the run ends.
 
-**Origins.** Each answer carries one: `user` (the human typed or chose a value that differs from the offered default, which write records as `source: manual`), `accepted` (the human chose the detected value, by typing it, picking it, or accepting it, which write records as the detected entry unchanged, over a `manual` prior value too), or `default` (a skippable default applied without the human, or the human re-confirming a `manual` prior value, which write keeps unchanged). An answer equal to the offered default is never `user`: re-confirming what is already recorded leaves `.asdt/config.yaml` byte-identical.
+**Origins.** Each answer carries one: `user` (a value that differs from the offered default), `accepted` (the detected value, however the human chose it), or `default` (a skippable default applied without the human, or a `manual` prior value re-confirmed). An answer equal to the offered default is never `user`: re-confirming what is already recorded leaves `.asdt/config.yaml` byte-identical.
 
 **The payload** is the `asdt-init/clarify` file you write on the yes, in this shape, every section present even when empty:
 

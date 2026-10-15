@@ -104,9 +104,9 @@ func TestCoreSourcesCarryWriteBoundaryPhrase(t *testing.T) {
 		return strings.Contains(strings.ToLower(string(body)), phrase)
 	}
 
-	// The protocol is the only text BOTH parties hold: a declared reference skill
-	// on every subagent step, and — via specialist-header.md — spliced into every
-	// routed SKILL.md the orchestrator itself reads.
+	// The protocol reaches the orchestrator through specialist-header.md, which is
+	// spliced into every routed SKILL.md; sub-agents get the write boundary from
+	// the executor header instead.
 	if body, err := fs.ReadFile(FS(), "asdt-core/protocol.md"); err != nil {
 		t.Errorf("asdt-core/protocol.md unreadable in embedded FS: %v", err)
 	} else if !contains(body) {

@@ -15,7 +15,7 @@ never leaving the declared edit roots.
 - `### HOST SKILL frontend-design` — OPTIONAL. Visual-design craft from the host, injected only
   when it has one
 
-Each input arrives as a path to read — never look for anything else. The platform block is in
+The platform block is in
 this prompt: extract the conventions and the `Design surface:` line's bare value (`mobile
 (default — never asked)` → `mobile`).
 

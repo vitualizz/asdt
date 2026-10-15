@@ -31,7 +31,7 @@ code. You do NOT produce architecture decisions, UX specs, or test plans.
 
 ## Orchestration Plan
 
-Judge your own chain from the request; the inline preludes run first on every chain. Ambiguous
+Judge your own chain from the request. Ambiguous
 between a plan and a build → the plan: building it later is a resume, re-approved at the gate. A
 pure question about the code is answered from the code, with no step.
 
@@ -43,8 +43,7 @@ pure question about the code is answered from the code, with no step.
 | a review of code that already exists — "code review X", "how is this module doing?", "review what you built" | `review` |
 
 **A resume starts from the scratchpad, never from an earlier approval.** With `{change}`
-established (`asdt-core/protocol.md` §0 — when several changes could match, its one
-confirmation question picks), read the role summary `developer`:
+established (`asdt-core/protocol.md` §0), read the role summary `developer`:
 
 - `Stage: spec` → `approve → implement → verify`. The gate shows that plan and asks again: an
   approval given in another session never carries over.
@@ -53,8 +52,7 @@ confirmation question picks), read the role summary `developer`:
 - Anything else → say in one line what the summary already holds and stop: there is nothing to
   resume, and a new build needs its own request.
 
-**No summary** — the scratchpad is gone, which is normal (`asdt-core/protocol.md` §1). Rebuild
-from git, the recall, and the user's words; never from memory alone:
+**No summary** — the scratchpad is gone, which is normal. Rebuild it (`asdt-core/protocol.md` §1):
 
 - A plan to build → the run's one clarification turn (`asdt-core/protocol.md` §3) asks two
   things: which specialists shaped the plan (Product, Architect, UX/UI, Security, QA) — on a
@@ -67,8 +65,7 @@ from git, the recall, and the user's words; never from memory alone:
 
 Tests are `(test)` edit targets (`steps/spec.md`); approving the plan approves them.
 
-Step identity, model, inputs, and outputs: `workflow.yaml`. `approve` and `verify` have no step
-file — the two sections below are their whole contract.
+`approve` and `verify` have no step file: the two sections below are their whole contract.
 
 ## approve — the plan gate (inline)
 
@@ -86,8 +83,7 @@ on (`## Narration`'s opening line), then the plan —
 - every `Open items` entry — what the plan assumed, and any conflict it flagged;
 - when the plan carries a `Prior delivery`, that this build lands on top of that earlier one, which stays part of the change.
 
-Ask: approve, adjust (e.g. take the rejected option, drop the tests), or stop. Nothing else
-rides on it.
+Ask: approve, adjust (e.g. take the rejected option, drop the tests), or stop.
 
 - **Approve** → launch `implement`. Its `developer/spec` must be the plan you just showed: on a
   resume, write that payload from the role summary when it is missing or differs. Delete any
@@ -105,15 +101,13 @@ rides on it.
 
 Runs after a writing-mode `implement` — after a plan-only one the run ends, nothing to check — or
 first, in a resume of a build never verified. A consent gate like `approve`; what may run is
-the write boundary's command exception (`asdt-core/protocol.md` §4); `implement` itself never
-runs a command.
+the write boundary's command exception (`asdt-core/protocol.md` §4).
 
-1. **Offer.** Show the summary's `Suggested verification` commands exactly as written, with what
-   a healthy run looks like — and, for each `lockfile not updated` entry in `Open items`, tell
-   the human to run that install BEFORE answering yes — and ask ONE question: run them now? A command outside the §4
-   exception is never offered — tell the human you dropped it and why. Entering with no summary,
-   compose the offer from `.asdt/config.yaml` (`test_runner`, `design_fingerprint.lint`) under
-   the same exception. Nothing left to offer → say so and record `ran: false`.
+1. **Offer.** Show the summary's `Suggested verification` commands verbatim, each with what a
+   healthy run looks like; drop any outside the §4 exception and say why; for each `lockfile not
+   updated` entry in `Open items`, say that install must run before a yes. Entering with no
+   summary, compose the offer from `.asdt/config.yaml` (`test_runner`, `design_fingerprint.lint`).
+   Ask ONE question: run them now? Nothing to offer → say so and record `ran: false`.
 2. **Declined, or no human can answer** → record `ran: false`. Never claim a pass you did not observe.
 3. **Yes** → run exactly those commands, unmodified, and nothing else; the yes covers re-running
    them in the fix loop, any other command needs its own. All pass → record `ran: true, passed:

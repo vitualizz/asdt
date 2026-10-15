@@ -34,7 +34,7 @@ the implementation is allowed to touch.
 - `### INPUT feedback` and `### INPUT previous` — injected only when the human chose adjust at
   the approval gate: `previous` is the plan they were shown, `feedback` their words, verbatim
 
-Each arrives as a path to read — never look for anything else. The platform block is in this
+The platform block is in this
 prompt: extract its `Design surface:` line's bare value (strip any parenthesised marker; `none
 — no visual surface` reads as `none`), and whether its `Tests:` line carries `strict TDD`.
 

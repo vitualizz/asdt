@@ -511,7 +511,7 @@ func stripInjectedBinding(content string) string {
 
 // TestSubagentInjectionStripsMemoryBinding guards the one path by which a
 // binding could reach a sub-agent: a reference skill that carries the bound
-// region. protocol.md no longer is one (sub-agent steps load
+// region. protocol.md is not one (sub-agent steps load
 // references/summary-schema.md instead), so today no carrier exists; the guard
 // stays as the §5 rule — it must exist and name the markers — and, should a
 // carrier reappear, applying it as worded must leave no provider name behind. No step file may

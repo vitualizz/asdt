@@ -6,6 +6,11 @@ steps:
     description: Recall the project's notes on prior requirements, similar features, and scope decisions relevant to this change
     execution: inline
 
+  - name: platform-analysis
+    skill: ../asdt-core/references/platform-context.md
+    description: Inject the platform block — conventions and the design surface — from .asdt/config.yaml
+    execution: inline
+
   - name: backlog
     skill: steps/backlog.md
     description: Turn the raw request into the requirements summary — user stories in delivery order, explicit scope, measurable NFRs, acceptance criteria

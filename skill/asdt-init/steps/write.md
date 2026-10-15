@@ -7,7 +7,7 @@ Write `.asdt/config.yaml` from the detection and the human's answers, never sile
 - `### INPUT asdt-init/explore`: the detection. Read its `## Detection` section (stack, lang roots, file structure, the key table) and nothing else.
 - `### INPUT asdt-init/clarify`: the answers. Read `skipped`, `memory_provider`, `## Answers`, and `## Blocking open items`. Ignore `## Notes to remember`: notes go to memory, through the orchestrator, never into a file.
 
-Each arrives as a path to read. Both are required: see Processing step 1.
+Both are required: see Processing step 1.
 
 ## Processing
 

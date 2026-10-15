@@ -7,7 +7,7 @@ not a design — nothing is being built here.
 ## Inputs
 No `### INPUT` line: this step runs in studies, on the area the request names, the codebase,
 the platform block (stack, conventions, existing structure), and any `### PROJECT NOTE` lines
-(prior work on the area). Look for nothing else.
+(prior work on the area).
 
 ## Processing
 

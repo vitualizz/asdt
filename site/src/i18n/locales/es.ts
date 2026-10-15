@@ -187,7 +187,6 @@ export const es: UIStrings = {
   data: {
     chainsLabel: 'La petición es',
     chains: {
-      question: 'una pregunta',
       plan: 'un plan',
       resume: 'retomar un plan',
       build: 'construirlo',
@@ -197,12 +196,20 @@ export const es: UIStrings = {
         purpose: 'Recuerda descubrimientos previos y decisiones relacionadas antes de explorar',
         produces: 'contexto (inline)',
       },
+      'researcher:platform-analysis': {
+        purpose: 'Carga convenciones de plataforma y la superficie de diseño desde config.yaml',
+        produces: 'contexto (inline)',
+      },
       'researcher:discovery': {
         purpose: 'Encuadra el problema, diverge en direcciones candidatas, juzga factibilidad con evidencia y converge en una recomendación',
         produces: 'resumen researcher',
       },
       'pm:knowledge-recall': {
         purpose: 'Recuerda requisitos y decisiones de alcance previas del proyecto',
+        produces: 'contexto (inline)',
+      },
+      'pm:platform-analysis': {
+        purpose: 'Carga convenciones de plataforma y la superficie de diseño desde config.yaml',
         produces: 'contexto (inline)',
       },
       'pm:backlog': {
@@ -283,6 +290,10 @@ export const es: UIStrings = {
       },
       'qa:knowledge-recall': {
         purpose: 'Recuerda hallazgos de calidad y decisiones de test previas',
+        produces: 'contexto (inline)',
+      },
+      'qa:platform-analysis': {
+        purpose: 'Carga convenciones de plataforma y la superficie de diseño desde config.yaml',
         produces: 'contexto (inline)',
       },
       'qa:test-plan': {

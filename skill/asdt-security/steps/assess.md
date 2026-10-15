@@ -13,7 +13,7 @@ the OWASP Top 10. Analysis only — `harden` turns it into findings.
   reads `Mode: plan-only`
 - `### INPUT architect` — OPTIONAL. The Architect's summary: the design and its trust boundaries
 
-Each arrives as a path to read — never look for anything else. The platform block (stack and
+The platform block (stack and
 conventions) is in this prompt.
 
 **DEGRADATION**: both UNRESOLVED — common, since Security runs at ANY point → assess the repository directly and record `ASSUMED: no upstream summary — surface mapped from the codebase alone` in `Open items`. Never block.
@@ -40,8 +40,7 @@ OWASP categories are only worth checking where the surface actually reaches them
    — walking all ten against a change that adds one pure function is theater, and it buries
    the findings that matter.
 
-Reason over the change and inspect the repository for evidence. NEVER run scanners,
-dependency audits, or any command beyond the read-only git inspection of `asdt-core/references/summary-schema.md`.
+Never run a scanner or a dependency audit: evidence is what you read.
 
 ## Output
 Return this summary (`asdt-core/references/summary-schema.md`):

@@ -7,7 +7,7 @@ judgments with fixes, never a change.
 ## Inputs
 No `### INPUT` line: this step runs standalone, on the area the request names, the codebase,
 the platform block (the project's conventions and structure), and any `### PROJECT NOTE`
-lines. Look for nothing else.
+lines.
 
 ## Processing
 

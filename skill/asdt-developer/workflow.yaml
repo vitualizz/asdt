@@ -17,6 +17,8 @@ steps:
     execution: subagent
     model: sonnet
     agent: analyst
+    reference_skills:
+      - ../asdt-core/references/summary-schema.md
 
   - name: spec
     skill: steps/spec.md
