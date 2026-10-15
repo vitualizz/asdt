@@ -6,7 +6,8 @@ the implementation is allowed to touch.
 
 ## Inputs
 - `### INPUT developer/explore` — OPTIONAL. The exploration: `Open questions` (answer them
-  here), `Constraints` (the patterns to follow), `Files hint`
+  here), `Constraints` (the patterns to follow), `Files hint` (each line's reach or `reuse`
+  label), `Risks`
 - `### INPUT pm` — OPTIONAL, the acceptance-criteria authority. Extract ONLY its `Acceptance
   criteria`
 - `### INPUT architect` — OPTIONAL. Extract `Decisions`, `Constraints`, `Data model`, `API
@@ -35,10 +36,10 @@ the implementation is allowed to touch.
 
 Each arrives as a path to read — never look for anything else. The platform block is in this
 prompt: extract its `Design surface:` line's bare value (strip any parenthesised marker; `none
-— no visual surface` reads as `none`).
+— no visual surface` reads as `none`), and whether its `Tests:` line carries `strict TDD`.
 
 **DEGRADATION**: `pm` UNRESOLVED → author the acceptance criteria from the exploration and the request, and record `ASSUMED:` in `Open items`.
-**DEGRADATION**: `architect` UNRESOLVED → decide the approach here, per step 4.
+**DEGRADATION**: `architect` UNRESOLVED → choose the approach here, per step 4.
 **DEGRADATION**: `ux-ui`, `security`, `qa`, or `developer` UNRESOLVED → proceed without it; no entry.
 **DEGRADATION**: `developer/explore` UNRESOLVED → on a revision, revise `previous` instead of re-deriving the plan; otherwise read the affected code yourself. No entry.
 **DEGRADATION**: no `Design surface:` line → skip the surface check in step 5; no entry.
@@ -50,35 +51,49 @@ session — {what you planned without it}` in `Open items`, one per such role.
 ## Processing
 
 1. Answer each of the exploration's open questions.
-2. Define the scope boundary: what IS included and what is explicitly NOT included.
-3. Write acceptance criteria (Given/When/Then format, max 5 criteria). When Product's summary
-   arrived, REFINE its acceptance criteria into Given/When/Then — PM is the AC AUTHORITY. Do NOT
-   re-derive an independent set; preserve the intent of each PM criterion. Only when it is
-   absent do you author criteria yourself (note this in `Open items`).
-4. **Technical approach — only as deep as this change earns.** For a change whose shape is obvious
-   from the exploration, one paragraph naming the approach is the whole of this section. Go further —
-   data model entities and fields, API signatures, migration notes — only when the change introduces
-   or reshapes them. You judge that here; there is no separate design step gating the call.
+2. Define the scope boundary: what IS included and what is explicitly NOT. What the `not
+   needed` rung names is an Out item.
+3. Write at most 5 acceptance criteria, numbered: `AC1: Given …, when …, then …`. Product's
+   summary is the AC AUTHORITY: when it arrived, REFINE its criteria into this form, preserving
+   each one's intent — never re-derive an independent set.
+4. **Approach — the smallest that fully works.** Walk the `conventions.md` ladder against the
+   exploration's `reuse` hints; stop at the first rung that satisfies every AC.
+   - `Approach:` is the FIRST `Decisions` line, always: what it reuses and the larger option
+     rejected (`rejected: none — no larger option` for a trivial change). With the Architect's
+     summary it RESTATES that decision at implementation granularity; a genuine conflict is an
+     `Open items` entry.
+   - `New dependency:` → the manifest joins the edit targets, and `run {install command} —
+     lockfile not updated` joins `Open items`: nothing in this chain installs.
+   - `shortcut:` for a known limit the approach accepts; `never-cut: {item} — {why}` in `Open
+     items` for a never-cut item (`conventions.md`) it leaves out.
+5. **Declare the edit targets** — real paths relative to the project root, one per line: the
+   action, the backticked path, then what it serves (`- modify: \`{path}\` — AC1, AC3`) —
+   `implement` writes nothing else. Fold in every path of the Architect's `Files hint` this change creates or
+   modifies. Close the list both ways:
+   - every AC is named by a target, and every target names an AC, a `Test cases` ID, its
+     reach label (`reach: caller`), or the decision or input that mandates it (`New
+     dependency`, `Proposed token`, `Visual direction`, `Component designs`, Architect `Files
+     hint`) — never cut those; a target with none is scope creep: cut it (a plan-only `- none`
+     list is exempt);
+   - every exploration hint labelled `change`, `caller`, `test`, `fixture`, `config`, or
+     `export` is a target, an `Open items` entry, or left untouched in one `Scope` Out line
+     with its reason (`Out: callers unchanged — \`{path}\`, \`{path}\`; props unchanged`).
 
-   Default to the simplest, most direct approach that satisfies the acceptance criteria, and do not
-   add layers, patterns, indirection, or extensibility the requirement does not demand. Keep a
-   reversible, two-way-door choice simple; invest day-1 rigor only where the choice is hard to
-   reverse or externally observable — where others depend on the surface and changing it later breaks
-   them (for example a public API shape, data schema, wire format, or auth model; illustrative, not
-   exhaustive). When two options both satisfy the ACs, choose the one with fewer moving parts. Justify
-   not only an abstraction you add, but equally a deliberate choice to leave a hard-to-reverse or
-   externally-observable surface simple. When the Architect's summary arrived, this section RESTATES its
-   decision at implementation granularity — a genuine conflict is an `Open items` entry.
-5. **Declare the edit targets.** List the files to create and to modify — real paths,
-   relative to the project root. Fold in every path of the Architect's `Files hint` this change
-   creates or modifies — the design lands nowhere this list does not name. This list is
-   load-bearing: `implement` resolves its edit roots from it and nothing else, and anything
-   outside it will not be written. An empty list is a deliberate choice meaning "plan only,
-   write nothing", not an oversight — write it as `- none: plan only, nothing is written`. A path under `.asdt/` is never an edit
-   target, whoever asked for it: ASDT's own state changes only through `/asdt-init`, so record
-   `.asdt/ change: {path} — {what was wanted}; run /asdt-init` in `Open items` instead. Under `Design surface: none`, each UI target — a view,
-   a component, a stylesheet or token file — gets one `Open items` entry, `surface conflict:
-   {path} is UI, but the project declares no visual surface`, so the human sees it at approval.
+   Mark every test-file target `(test)` (`- create: \`{path}\` — AC2 (test)`), an existing test
+   the change breaks included (`reach: test`). Add test targets where new logic earns a test
+   (`conventions.md`, Tests), for each `Test cases` row you copied, when the request asks for
+   tests, and, under strict TDD, for every unit the change adds or alters — no others. A row
+   whose `Level` has no framework in the project (the `Tests:` line, the manifest) is no
+   target: `no {Level} framework: {ID} — not tested` in `Open items`. A `feedback` that drops
+   the tests under strict TDD wins: record `strict TDD waived by the human — no tests` in
+   `Open items`.
+
+   An empty list means plan only: write `- none: plan only, nothing is written`. A path under
+   `.asdt/` is never a target, whoever asked — ASDT's own state changes only through
+   `/asdt-init`: record `.asdt/ change: {path} — {what was wanted}; run /asdt-init` in `Open
+   items`. Under `Design surface: none`, each UI target — a view, a component, a stylesheet or
+   token file — gets `surface conflict: {path} is UI, but the project declares no visual
+   surface` in `Open items`, so the human sees it at approval.
 6. **On a revision** (`feedback` arrived), steps 1–5 start from `previous`, not from scratch:
    the human's words OVERRIDE it wherever the two disagree, and everything they did not touch
    stays as it was. Step 5 still runs in full — an adjustment to scope moves the edit
@@ -86,9 +101,8 @@ session — {what you planned without it}` in `Open items`, one per such role.
 
 Do NOT write implementation code here.
 
-**A new iteration never loses the delivery.** When the summary this plan replaces held a
-delivery, copy it verbatim into `Prior delivery`: this plan replaces that summary, and the
-delivery stays part of the change, through this plan and the build on top of it.
+**A new iteration never loses the delivery.** When the summary this plan replaces held one,
+copy it verbatim into `Prior delivery`: it stays part of the change.
 
 ## Output
 Return this summary (`asdt-core/protocol.md` §6). The orchestrator files it as the role
@@ -103,14 +117,16 @@ the design sections, `Test cases`, and `Prior delivery` are copied verbatim, nev
 **Stage:** spec
 
 ## Decisions
-- {Approach-level decision} ({rejected alternative})
+- Approach: {what, naming the reused path or package} (rejected: {the larger option})
+- New dependency: {package} — {why no smaller rung works}
+- shortcut: {the limit} — upgrade when {trigger}
 - {Open question} → {answer}
 
 ## Constraints
 - {What implementation must respect: the surface, each mitigation, each proposed token}
 
 ## Acceptance criteria
-- Given {context}, when {action}, then {observable outcome}
+- AC1: Given {context}, when {action}, then {observable outcome}
 
 ## Risks
 - {Risk} → {mitigation}
@@ -123,14 +139,16 @@ the design sections, `Test cases`, and `Prior delivery` are copied verbatim, nev
 - Out: {item}
 
 ## Approach
-{At the depth this change earns.}
+{Only for a data-model, API, or migration change: that design, at the depth it earns.}
 
 ## Migration notes
 - {Phase or step}
 
 ## Edit targets
-- create: `{path}`
-- modify: `{path}`
+- create: `{path}` — AC1
+- modify: `{path}` — AC2, AC3
+- modify: `{path}` — reach: {caller | test | fixture | config | export}
+- create: `{path}` — AC2 (test)
 
 ## Flows
 ## Screens

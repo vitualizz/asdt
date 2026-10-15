@@ -246,19 +246,19 @@ export const en: UIStrings = {
         produces: 'context (inline)',
       },
       'developer:explore': {
-        purpose: 'Read the area of the codebase that will change, and name the open questions',
+        purpose: 'Map every place the change must reach and what already exists to reuse, and name the open questions',
         produces: 'developer/explore — read by spec',
       },
       'developer:spec': {
-        purpose: 'Define scope, acceptance criteria, the technical approach, and the files implement may touch',
+        purpose: 'Define scope, numbered acceptance criteria, the smallest approach that fully works, and the files implement may touch — tests included',
         produces: 'developer summary (Stage: spec) — shown at the gate and handed to implement',
       },
       'developer:approve': {
-        purpose: 'Show you the scope, the acceptance criteria and the exact files, then wait for approve, adjust or stop before any file is written',
+        purpose: 'Show you the scope, the acceptance criteria, the approach and the exact files — which of them are tests — then wait for approve, adjust or stop before any file is written',
         produces: 'your go-ahead (inline)',
       },
       'developer:implement': {
-        purpose: 'Write the code — and its tests under strict TDD — within the edit roots the approved spec declared; it never runs them',
+        purpose: 'Write the code and the tests the approved spec declares, within its edit roots; it never runs them',
         produces: 'developer summary (Stage: implemented)',
       },
       'developer:verify': {

@@ -246,19 +246,19 @@ export const es: UIStrings = {
         produces: 'contexto (inline)',
       },
       'developer:explore': {
-        purpose: 'Lee la zona del código que va a cambiar y nombra las preguntas abiertas',
+        purpose: 'Mapea cada lugar al que debe llegar el cambio y lo que ya existe para reutilizar, y nombra las preguntas abiertas',
         produces: 'developer/explore — lo lee spec',
       },
       'developer:spec': {
-        purpose: 'Define alcance, criterios de aceptación, el enfoque técnico y los ficheros que implement puede tocar',
+        purpose: 'Define alcance, criterios de aceptación numerados, el enfoque más chico que resuelve todo y los ficheros que implement puede tocar — tests incluidos',
         produces: 'resumen developer (Stage: spec) — se muestra en la compuerta y se le pasa a implement',
       },
       'developer:approve': {
-        purpose: 'Te muestra el alcance, los criterios de aceptación y los ficheros exactos, y espera aprobar, ajustar o parar antes de escribir nada',
+        purpose: 'Te muestra el alcance, los criterios de aceptación, el enfoque y los ficheros exactos — cuáles son tests — y espera aprobar, ajustar o parar antes de escribir nada',
         produces: 'tu visto bueno (inline)',
       },
       'developer:implement': {
-        purpose: 'Escribe el código — y sus tests bajo TDD estricto — dentro de los límites de edición que declaró el spec aprobado; nunca los ejecuta',
+        purpose: 'Escribe el código y los tests que declara el spec aprobado, dentro de sus límites de edición; nunca los ejecuta',
         produces: 'resumen developer (Stage: implemented)',
       },
       'developer:verify': {

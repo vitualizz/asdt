@@ -13,14 +13,14 @@ steps:
 
   - name: explore
     skill: steps/explore.md
-    description: Explore the request and the affected area of the codebase before speccing
+    description: Explore the request, every place the change must reach, and what already exists to reuse, before speccing
     execution: subagent
     model: sonnet
     agent: analyst
 
   - name: spec
     skill: steps/spec.md
-    description: Define scope, acceptance criteria, the technical approach, and the files implement is allowed to touch
+    description: Define scope, numbered acceptance criteria, the smallest approach that fully works, and the files — tests included — implement is allowed to touch
     execution: subagent
     model: sonnet
     agent: analyst
@@ -35,15 +35,16 @@ steps:
     output: summary
     reference_skills:
       - ../asdt-core/references/scope-definition.md
+      - ../asdt-core/references/conventions.md
       - ../asdt-core/protocol.md
 
   - name: approve
-    description: Show the human the spec's scope, acceptance criteria, and exact files, and get approve / adjust / stop before any host file is written
+    description: Show the human the spec's scope, acceptance criteria, approach, exact files, and tests, and get approve / adjust / stop before any host file is written
     execution: inline
 
   - name: implement
     skill: steps/implement.md
-    description: Write the implementation and, under strict TDD, its tests — within the edit roots declared by the spec
+    description: Write the implementation and the tests the spec declares — within the edit roots declared by the spec
     execution: subagent
     model: opus
     agent: builder
@@ -65,7 +66,7 @@ steps:
 
   - name: review
     skill: steps/review.md
-    description: Judge the quality of code that already exists — findings with a one-line fix each, never a write
+    description: Judge the quality of existing code or a built change — numbered findings, each with a case or evidence and a one-line fix, never a write
     execution: subagent
     model: sonnet
     agent: analyst

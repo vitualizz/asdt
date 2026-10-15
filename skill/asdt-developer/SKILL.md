@@ -1,6 +1,6 @@
 ---
 name: asdt-developer
-description: "Turns specs and designs into working code — implementation plans, production code, and test suites — the specialist to bring in once the shape of the solution is settled and it's time to build it."
+description: "Turns specs and designs into working code — a plan you approve, then the smallest change that fully solves it, with tests where the logic earns them — the specialist to bring in once the shape of the solution is settled and it's time to build it."
 user-invocable: true
 specialist-id: developer
 trigger_phrases:
@@ -48,7 +48,7 @@ between a plan and a build → the plan: building it later is a resume, re-appro
 | a plan — "how would you do this?", "propose the approach" | `explore → spec` *(the plan is the role summary and the run stops — no code is written)* |
 | a request to build it | `explore → spec → approve → implement → verify` |
 | a resume — "implement the plan we approved", "verify what you built" | `approve → implement → verify`, or `verify` alone *(below)* |
-| a review of code that already exists — "code review X", "how is this module doing?" | `review` |
+| a review of code that already exists — "code review X", "how is this module doing?", "review what you built" | `review` |
 
 **A resume starts from the scratchpad, never from an earlier approval.** With `{change}`
 established (`asdt-core/protocol.md` §0 — when several changes could match, its one
@@ -77,8 +77,7 @@ from git, the recall, and the user's words; never from memory alone:
 - When neither the user's words, the recall, nor git identifies the work, say so in one line
   and stop.
 
-Tests are not a step: `implement` writes them in the same pass, under the same mode and edit roots,
-when `strict_tdd: true` in `.asdt/config.yaml` or the user asked for them.
+Tests are `(test)` edit targets (`steps/spec.md`); approving the plan approves them.
 
 Step identity, model, inputs, and outputs: `workflow.yaml`. `approve` and `verify` have no step
 file — the two sections below are their whole contract.
@@ -92,12 +91,15 @@ on (`## Narration`'s opening line), then the plan —
 - the visual direction in one line, when the plan carries one;
 - the designed screens and the designed components, one line each listing their names, when
   the plan carries them — never the designs in full;
+- the approach in one line: its `Approach:` (what it reuses, what it rejected), plus any
+  `New dependency:` with its install and any `shortcut:` with its limit;
 - the exact files to create and to modify — or, with none, that nothing will be written and the
-  code comes back as snippets;
+  code comes back as snippets — then one line naming its `(test)` targets, or "no tests";
 - every `Open items` entry — what the plan assumed, and any conflict it flagged;
 - when the plan carries a `Prior delivery`, that this build lands on top of that earlier one, which stays part of the change.
 
-Then ask ONE question: approve, adjust, or stop. Nothing else rides on it.
+Ask: approve, adjust (e.g. take the rejected option, drop the tests), or stop. Nothing else
+rides on it.
 
 - **Approve** → launch `implement`. Its `developer/spec` must be the plan you just showed: on a
   resume, write that payload from the role summary when it is missing or differs. Delete any
@@ -115,11 +117,12 @@ Then ask ONE question: approve, adjust, or stop. Nothing else rides on it.
 
 Runs after a writing-mode `implement` — after a plan-only one the run ends, nothing to check — or
 first, in a resume of a build never verified. A consent gate like `approve`; what may run is
-the write boundary's command exception (`asdt-core/protocol.md` §4), and why `implement` never
-runs commands is its own Tests section.
+the write boundary's command exception (`asdt-core/protocol.md` §4); `implement` itself never
+runs a command.
 
 1. **Offer.** Show the summary's `Suggested verification` commands exactly as written, with what
-   a healthy run looks like, and ask ONE question: run them now? A command outside the §4
+   a healthy run looks like — and, for each `lockfile not updated` entry in `Open items`, tell
+   the human to run that install BEFORE answering yes — and ask ONE question: run them now? A command outside the §4
    exception is never offered — tell the human you dropped it and why. Entering with no summary,
    compose the offer from `.asdt/config.yaml` (`test_runner`, `design_fingerprint.lint`) under
    the same exception. Nothing left to offer → say so and record `ran: false`.
@@ -165,8 +168,14 @@ The role summary `developer`, written in stages: `spec` writes the plan (`Stage:
 `Verification` line. `review` writes it under `study-{topic}` instead. Consumed by QA,
 Security, and this specialist's later resumes and iterations.
 
+After a build, the report adds one sentence before `Next:` on what was not checked — from
+`ran: false`, `AC not covered:` lines, and `Unsafe skipped` — and omits it when none applies.
+
 ## Invariants
 - **Write scope**: only `implement` writes host files, inside the spec's edit roots — its modes and
   STOP rule are `steps/implement.md`, the boundary `asdt-core/protocol.md` §4
 - **No host file is written without approval**: `implement` runs only after `approve` returned
   approve in this same run
+- **Shortcuts are remembered once built**: at run close, after a writing-mode `implement`, remember
+  each `shortcut:` line in the summary's `Decisions` as a `decision` note on the area's subject
+  (`asdt-core/protocol.md` §2); a plan never built remembers none

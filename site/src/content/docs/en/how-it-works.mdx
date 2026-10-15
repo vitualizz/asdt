@@ -41,6 +41,6 @@ ASDT enforces a gate at three points:
 
 1. **After `/asdt`** — the advisor presents a routing plan and waits for your yes before running anything.
 2. **Between specialists** — whether `/asdt` is running the chain or you are, nothing moves to the next specialist without your go. `/asdt` pauses after each one for you to debate the result.
-3. **Before the Developer writes or runs anything** — it shows you its spec (scope, acceptance criteria, the exact files) and waits for approve, adjust, or stop before writing a single file. After implementing, it offers the check commands — never one that would rewrite files — and runs them only on your yes.
+3. **Before the Developer writes or runs anything** — it shows you its spec (scope, acceptance criteria, the approach, the exact files and which of them are tests) and waits for approve, adjust, or stop before writing a single file. After implementing, it offers the check commands — never one that would rewrite files — and runs them only on your yes.
 
 This isn't a limitation. It's the design. AI-generated architecture decisions benefit from human review before a developer acts on them. QA plans benefit from human review before they define what "done" means. ASDT gives you the structure; you apply the judgment.

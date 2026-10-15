@@ -7,7 +7,7 @@ the OWASP Top 10. Analysis only — `harden` turns it into findings.
 ## Inputs
 - `### INPUT developer` — OPTIONAL. Developer's summary. Read its `**Stage:**` line first.
   `spec` is a plan, nothing built: map the PLANNED surface from its `Edit targets` and
-  `Approach`, and record `ASSUMED: planned surface — nothing built yet` in `Open items`.
+  `Decisions` (`Approach:`, plus any `## Approach`), and record `ASSUMED: planned surface — nothing built yet` in `Open items`.
   `implemented`: the code that changed, the change's files (`asdt-core/protocol.md` §6: git,
   with `Files changed` and `Prior delivery` as hints) — or `Code snippets` when `Edit roots`
   reads `Mode: plan-only`
