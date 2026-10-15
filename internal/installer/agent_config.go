@@ -6,13 +6,12 @@ import (
 	"strings"
 )
 
-const agentConfigPlaceholder = "detected at project init"
-
-// htmlCommentRE matches a single HTML comment, non-greedy so multiple or
-// multiline comments each strip cleanly. Used by stripHTMLComments to remove
+// htmlCommentRE matches a single HTML comment and the newlines after it,
+// non-greedy so multiple or multiline comments each strip cleanly without
+// leaving a run of blank lines. Used by stripHTMLComments to remove
 // source-only authoring comments (e.g. the H2-ownership contract) from the
 // rendered agent config before it is wrapped for write.
-var htmlCommentRE = regexp.MustCompile(`<!--[\s\S]*?-->`)
+var htmlCommentRE = regexp.MustCompile(`<!--[\s\S]*?-->\n*`)
 
 // stripHTMLComments removes every HTML comment from s. It runs inside
 // renderAgentConfig only (pre-wrap), never on the write path, so the asdt block
@@ -37,12 +36,12 @@ func AgentConfigAdapterFor(id AssistantID) (AgentConfigAdapterDescriptor, bool) 
 	return AgentConfigAdapterDescriptor{}, false
 }
 
-// renderAgentConfig reads the AGENTS.md template and persona file from the
-// package-private assetsFS (internal/installer/assets/) and substitutes all
-// placeholders with the preset values. Only {{agent_name}},
-// {{agent_description}}, {{persona_block}}, and {{emoji_preference}} receive
-// real values; {{stack}} and {{architectural_style}} receive the sentinel
-// string.
+// renderAgentConfig reads the agent config template and persona file from the
+// package-private assetsFS (internal/installer/assets/) and substitutes every
+// placeholder: {{agent_name}}, {{agent_description}}, {{persona_block}},
+// {{emoji_preference}}, and {{language_directive}}. The result is the body of
+// ASDT's block in each assistant's global config, loaded in every session, so
+// it carries only user-level preferences, never ASDT-operational rules.
 func renderAgentConfig(preset PersonaPreset, useEmojis bool, localeCode string) (string, error) {
 	tmpl, err := fs.ReadFile(assetsFS, "assets/agents-template.md")
 	if err != nil {
@@ -64,8 +63,6 @@ func renderAgentConfig(preset PersonaPreset, useEmojis bool, localeCode string) 
 	}
 	out = strings.ReplaceAll(out, "{{emoji_preference}}", emojiPref)
 	out = strings.ReplaceAll(out, "{{language_directive}}", LocaleByCode(localeCode).Directive)
-	out = strings.ReplaceAll(out, "{{stack}}", agentConfigPlaceholder)
-	out = strings.ReplaceAll(out, "{{architectural_style}}", agentConfigPlaceholder)
 	out = stripHTMLComments(out)
 
 	return out, nil
@@ -82,11 +79,11 @@ func allAssistantsError(assistants []AssistantDescriptor, err error) []AgentConf
 	return results
 }
 
-// InstallAgentConfig renders the AGENTS.md template for the given preset and
-// writes it to the global config location for each selected assistant.
-// modes maps each AssistantID to its AgentWriteMode; assistants absent from
-// the map default to AgentModeOverwrite (clean write, no prior conflict).
-// One result per assistant; per-assistant failure does not abort the others.
+// InstallAgentConfig renders the agent config for the given preset and upserts
+// it as ASDT's marker block into the global config file of each selected
+// assistant. modes maps each AssistantID to its AgentWriteMode; assistants
+// absent from the map default to AgentModeUpdate. One result per assistant; a
+// per-assistant failure does not abort the others.
 func InstallAgentConfig(assistants []AssistantDescriptor, preset PersonaPreset, useEmojis bool, localeCode string, modes map[string]AgentWriteMode) []AgentConfigResult {
 	rendered, err := renderAgentConfig(preset, useEmojis, localeCode)
 	if err != nil {
@@ -95,41 +92,30 @@ func InstallAgentConfig(assistants []AssistantDescriptor, preset PersonaPreset, 
 
 	results := make([]AgentConfigResult, len(assistants))
 	for i, a := range assistants {
-		mode, hasMode := modes[a.ID]
-		if !hasMode {
-			mode = AgentModeOverwrite // non-conflicted assistant: clean write
-		}
-
-		if mode == AgentModeSkip {
-			results[i] = AgentConfigResult{AssistantID: a.ID, Skipped: true}
-			continue
-		}
-
+		results[i] = AgentConfigResult{AssistantID: a.ID}
 		adapter, found := AgentConfigAdapterFor(a.ID)
-		if !found {
-			results[i] = AgentConfigResult{AssistantID: a.ID, Skipped: true}
+		if modes[a.ID] == AgentModeSkip || !found {
+			results[i].Skipped = true
 			continue
 		}
 
-		r, writeErr := adapter.Write(rendered, mode)
-		if writeErr != nil {
-			results[i] = AgentConfigResult{AssistantID: a.ID, Err: writeErr}
+		path := adapter.ConfigPath()
+		if err := writeAgentBlock(path, rendered); err != nil {
+			results[i].Err = err
 			continue
 		}
-		results[i] = r
+		results[i].Written = []string{path}
 
 		// Best-effort: persist persona name and emoji preference so the
 		// dashboard can display them.
-		if !r.Skipped {
-			if meta, merr := ReadInstallMeta(a); merr == nil {
-				meta.Persona = preset.Name
-				if useEmojis {
-					meta.Emojis = "yes"
-				} else {
-					meta.Emojis = "no"
-				}
-				_ = WriteInstallMeta(a, meta)
+		if meta, merr := ReadInstallMeta(a); merr == nil {
+			meta.Persona = preset.Name
+			if useEmojis {
+				meta.Emojis = "yes"
+			} else {
+				meta.Emojis = "no"
 			}
+			_ = WriteInstallMeta(a, meta)
 		}
 	}
 

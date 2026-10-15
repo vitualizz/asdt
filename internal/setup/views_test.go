@@ -796,9 +796,14 @@ func TestView_ReviewCodeIntelRow(t *testing.T) {
 
 func TestView_AgentWriteModeShowsPerAssistantRows(t *testing.T) {
 	view := stateView(t, "AgentWriteMode")
-	// The view should show at least one mode label (Keep is default)
-	if !strings.Contains(view, "Keep") && !strings.Contains(view, "Overwrite") && !strings.Contains(view, "Append") {
-		t.Errorf("agent write mode view missing mode labels, got:\n%s", view)
+	// The default label for an existing file is "Update ASDT block".
+	if !strings.Contains(view, "Update ASDT block") {
+		t.Errorf("agent write mode view missing the update label, got:\n%s", view)
+	}
+	for _, gone := range []string{"Overwrite", "Append", "Keep"} {
+		if strings.Contains(view, gone) {
+			t.Errorf("agent write mode view still offers %q, got:\n%s", gone, view)
+		}
 	}
 }
 

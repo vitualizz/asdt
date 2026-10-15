@@ -37,6 +37,20 @@ type AgentInstallDoneMsg struct {
 	Results []installer.AgentConfigResult
 }
 
+// AgentConfigRemoveDoneMsg is sent when removing ASDT's block from the global
+// config files completes.
+type AgentConfigRemoveDoneMsg struct {
+	Results []installer.AgentConfigResult
+}
+
+// AgentConfigRemoveCmd runs installer.RemoveAgentConfig in a goroutine and
+// sends AgentConfigRemoveDoneMsg when it completes.
+func AgentConfigRemoveCmd(assistants []installer.AssistantDescriptor) tea.Cmd {
+	return func() tea.Msg {
+		return AgentConfigRemoveDoneMsg{Results: installer.RemoveAgentConfig(assistants)}
+	}
+}
+
 // PermissionOverlayDoneMsg is sent when the permission overlay write completes.
 // It carries the full result (including any error or rollback) so the Done
 // screen can report the outcome.
@@ -48,9 +62,9 @@ type PermissionOverlayDoneMsg struct {
 // reports PermissionOverlayDoneMsg when it completes. It mirrors AgentInstallCmd.
 // It is batched into the install only when the user accepted the consent step;
 // declining never fires this command, so nothing is written.
-func PermissionOverlayCmd(mode installer.AgentWriteMode) tea.Cmd {
+func PermissionOverlayCmd() tea.Cmd {
 	return func() tea.Msg {
-		result, _ := installer.WritePermissionOverlay(mode)
+		result, _ := installer.WritePermissionOverlay()
 		return PermissionOverlayDoneMsg{Result: result}
 	}
 }
@@ -183,7 +197,7 @@ func InstallCmd(assistants []installer.AssistantDescriptor, provider installer.P
 // {{emoji_preference}} bullet. localeCode is the full BCP-47 locale whose
 // Directive is injected as {{language_directive}}. modes maps each AssistantID
 // to its write mode; a nil or empty map defaults all assistants to
-// AgentModeOverwrite.
+// AgentModeUpdate.
 func AgentInstallCmd(assistants []installer.AssistantDescriptor, preset installer.PersonaPreset, useEmojis bool, localeCode string, modes map[string]installer.AgentWriteMode) tea.Cmd {
 	return func() tea.Msg {
 		results := installer.InstallAgentConfig(assistants, preset, useEmojis, localeCode, modes)

@@ -17,7 +17,7 @@ Independientemente del asistente, una instalación produce las mismas piezas ló
 
 - **Skills de especialistas** — el árbol de skills de ASDT (Researcher, PM, UX/UI, Architect, Developer, Security, QA, `/asdt-init` y los fragmentos compartidos), copiado en el directorio de skills del asistente.
 - **Agentes ejecutores** — dos definiciones de agente generadas, `asdt-analyst` (solo lectura) y `asdt-builder` (con capacidad de escritura), que llevan a cabo los pasos individuales del pipeline.
-- **Configuración del agente** — tus preferencias de persona e idioma, escritas en la configuración global nativa del asistente.
+- **Configuración del agente** — tus preferencias de persona, emojis e idioma, escritas como un único bloque marcado en el archivo de configuración global del asistente (consulta [La configuración del agente](#la-configuración-del-agente-ambos)).
 - **Un manifiesto de instalación** — un archivo `.install-meta.json` que registra lo que escribió la última instalación, para que volver a ejecutar pueda actualizar de forma limpia y eliminar archivos obsoletos.
 
 Los detalles de cada pieza difieren según el asistente. Aquí está la comparación completa — un par de términos de la tabla merecen una nota en lenguaje simple antes de que te los encuentres: **`XDG_CONFIG_HOME`** es solo la variable estándar de ubicación de carpeta que las herramientas de Linux/macOS revisan antes de usar una ruta de configuración por defecto, y la fila de **capa de permisos** (solo Claude Code, más abajo hay más detalle) es una **fusión estructural JSON** opcional — combinar la configuración de ASDT dentro de tu archivo de configuración existente sin sobrescribir el resto — que activa el **modo bypass**, un ajuste de Claude Code que deja de pedir permiso en cada acción, detrás de una **red de denegación**: la lista fija de archivos y configuraciones que el instalador se niega a tocar incluso cuando esos avisos de permiso se están saltando.
@@ -33,6 +33,25 @@ Claude Code descubre y activa las skills de forma nativa, así que no necesita u
 Como se explicó arriba, la capa es una fusión estructural JSON **opcional** en tu `~/.claude/settings.json` global: activa el modo bypass (`permissions.defaultMode = "bypassPermissions"`) detrás de una red de denegación curada — la lista de denegación es el control real bajo bypass, y protege su propio archivo de configuración y el resto de `~/.claude` de ser editados.
 
 Se escribe de forma segura: se guarda una copia de respaldo previa, la escritura es atómica (archivo temporal + fsync + rename) y el resultado se valida después de escribir — si la validación falla, ASDT revierte a la copia de respaldo para que Claude Code siempre arranque. Volver a ejecutar es idempotente: unifica al mismo conjunto de denegación sin duplicados, y las reglas obsoletas de instalaciones anteriores se eliminan primero. OpenCode no tiene equivalente porque sus agentes ejecutores llevan sus permisos inline (el analyst deniega ediciones y restringe Bash a una lista de solo inspección; el builder permite ediciones pero deniega la delegación y el scratchpad; los dos deniegan las herramientas de memoria).
+
+### La configuración del agente (ambos)
+
+Si eliges una persona, el instalador la escribe en el archivo de configuración global de cada asistente: `~/.claude/CLAUDE.md` para Claude Code y `~/.config/opencode/AGENTS.md` para OpenCode (`$XDG_CONFIG_HOME/opencode/AGENTS.md` cuando esa variable está definida). Los dos reciben el mismo bloque, entre `<!-- asdt:agent-config -->` y `<!-- /asdt:agent-config -->`.
+
+ASDT solo es dueño del texto entre esas marcas:
+
+- **El archivo no existe**: el instalador lo crea solo con el bloque.
+- **Tu propio contenido, sin bloque**: el bloque va al final, después de una línea en blanco. Tu texto queda idéntico, byte por byte.
+- **Ya hay un bloque**: se reemplaza en su lugar y nada fuera de él cambia. Volver a ejecutar con las mismas opciones escribe los mismos bytes.
+- **Marcas dañadas** (una marca sin la otra, una marca repetida o el final antes del inicio): el instalador no escribe nada y reporta el error, para que corrijas las marcas a mano. Nunca agrega un segundo bloque.
+
+Una marca solo cuenta cuando está sola en su propia línea, así que mencionarla dentro de una frase de tu texto no tiene efecto. Las escrituras son atómicas (archivo temporal + fsync + rename), conservan los permisos del archivo y siguen un `CLAUDE.md` / `AGENTS.md` enlazado simbólicamente: el enlace se queda y se actualiza el archivo al que apunta.
+
+Cuando el archivo ya existe, el instalador pregunta por cada asistente: **Actualizar bloque de ASDT** (la opción por defecto) u **Omitir**, que deja el archivo intacto.
+
+El bloque se carga en cada sesión, incluso en proyectos que no usan ASDT, así que solo contiene preferencias de nivel de usuario: la voz de la persona, tus opciones de emojis e idioma, y unas pocas reglas que aplican en cualquier lado (respuestas cortas por defecto, confirmar antes de acciones irreversibles, objetar una vez y luego respetar tu decisión, sin líneas `Co-Authored-By`). Una línea apunta a `/asdt` y sus especialistas para los proyectos con un directorio `.asdt/`. Los especialistas traen sus propias reglas.
+
+Para quitarlo, abre **Dashboard** desde el menú principal, donde los asistentes con bloque muestran la insignia `config del agente`, y presiona `r` y luego `enter` para confirmar. Eso quita el bloque y la línea en blanco que lo precede. El resto del archivo queda idéntico, byte por byte, a como estaba antes de instalar, salvo que se agrega el salto de línea final si faltaba. El archivo en sí se queda, aunque quede vacío.
 
 ### Agentes ejecutores en ambos
 
@@ -63,7 +82,7 @@ El soporte de cada asistente se expresa como un conjunto de pequeños **adaptado
 
 - **`Descriptors`** — la identidad del asistente y su directorio raíz de skills.
 - **`AgentAdapters`** — cómo generar los agentes ejecutores en el formato de agente nativo del asistente.
-- **`AgentConfigAdapters`** — dónde y cómo persistir la configuración del agente (persona/idioma).
+- **`AgentConfigAdapters`** — la ruta del archivo de configuración global del asistente. La lógica compartida del bloque marcado escribe y quita ahí la configuración del agente.
 - **`CommandAdapters`** — opcional; solo los asistentes que necesitan envoltorios de comandos generados llevan una entrada (Claude Code no lleva ninguna).
 
 Cualquier cosa específica de un asistente — como la capa de permisos de Claude Code — vive en su propio archivo detrás de su propia guarda. Como cada aspecto es una lista de adaptadores separada, un nuevo asistente es aditivo: implementas su generación y rutas, lo registras, y la lógica compartida de copia de skills, manifiesto y limpieza (prune) se le aplica sin cambios.

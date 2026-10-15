@@ -1240,31 +1240,23 @@ func TestUpdate_AgentWriteMode_EnterGoesToReview(t *testing.T) {
 	}
 }
 
-func TestUpdate_AgentWriteMode_SpaceCyclesMode(t *testing.T) {
+func TestUpdate_AgentWriteMode_SpaceTogglesUpdateAndSkip(t *testing.T) {
 	m := advanceToAgentWriteMode(t)
-	// Default mode for the conflicted assistant is AgentModeSkip (Keep).
-	// Space cycles: Skip(2) → Overwrite(0).
-	m2 := updateKeyMsg(t, m, tea.KeyMsg{Type: tea.KeySpace})
-	modes := m2.AgentWriteModes()
-	if len(modes) == 0 {
-		t.Fatal("expected agentWriteModes to be non-empty after AgentWriteMode entry")
-	}
-	for _, mode := range modes {
-		if mode != installer.AgentModeOverwrite {
-			t.Errorf("after one Space cycle: mode = %v, want AgentModeOverwrite", mode)
+	// The default for an existing file is Update: the write touches only
+	// ASDT's block. Space toggles Update ↔ Skip; there is no third mode.
+	want := []installer.AgentWriteMode{installer.AgentModeUpdate, installer.AgentModeSkip, installer.AgentModeUpdate}
+	for i, w := range want {
+		if i > 0 {
+			m = updateKeyMsg(t, m, tea.KeyMsg{Type: tea.KeySpace})
 		}
-	}
-}
-
-func TestUpdate_AgentWriteMode_SpaceCyclesAllModes(t *testing.T) {
-	m := advanceToAgentWriteMode(t)
-	// Skip → Overwrite → Append → Skip
-	m = updateKeyMsg(t, m, tea.KeyMsg{Type: tea.KeySpace}) // → Overwrite
-	m = updateKeyMsg(t, m, tea.KeyMsg{Type: tea.KeySpace}) // → Append
-	m = updateKeyMsg(t, m, tea.KeyMsg{Type: tea.KeySpace}) // → Skip
-	for _, mode := range m.AgentWriteModes() {
-		if mode != installer.AgentModeSkip {
-			t.Errorf("after 3 Space cycles: mode = %v, want AgentModeSkip", mode)
+		modes := m.AgentWriteModes()
+		if len(modes) == 0 {
+			t.Fatal("expected agentWriteModes to be non-empty after AgentWriteMode entry")
+		}
+		for _, mode := range modes {
+			if mode != w {
+				t.Errorf("after %d Space press(es): mode = %v, want %v", i, mode, w)
+			}
 		}
 	}
 }

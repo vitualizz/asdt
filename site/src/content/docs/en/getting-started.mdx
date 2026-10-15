@@ -43,9 +43,9 @@ asdt-tui
 3. **Assistants** — choose which to target: **Claude Code**, **OpenCode**, or both. Each shows a present/missing badge.
 4. **Providers** — one screen, two choices. **Memory**: pick Engram or **No memory**. The default is Engram when it is on your `PATH`, otherwise No memory. You can pick Engram before installing it: the installer warns and shows the install link, and memory works once Engram is connected. A provider is recommended because it keeps key project knowledge between sessions. **Code intelligence**: pick Codegraph or **No code intelligence**, defaulting the same way. Specialists query the index only in a project it has indexed; everywhere else they grep and read.
 5. **Model preset** — pick how much model horsepower each specialist step uses (see below).
-6. **Persona** — optionally pick a persona for the installed assistants, and whether they should use emojis. You can skip this entirely.
+6. **Persona** — optionally pick a persona for the installed assistants, and whether they should use emojis. It goes into your global `CLAUDE.md` / `AGENTS.md` as one marked block; the rest of the file is never touched. If the file already exists, you choose per assistant to update ASDT's block or skip it. You can skip this step entirely (see [The agent config](/asdt/docs/ai-assistants#the-agent-config-both)).
 7. **Permissions** — an opt-in gate for the Claude Code permission overlay. Declining is the safe default and writes nothing.
-8. **Review → Install → Done** — confirm your selections, watch the install run, and you're set. A read-only **Dashboard** on the main menu shows per-assistant status any time.
+8. **Review → Install → Done** — confirm your selections, watch the install run, and you're set. The **Dashboard** on the main menu shows per-assistant status any time, and removes ASDT's agent config block (`r`) when you no longer want it.
 
 ### Model presets
 

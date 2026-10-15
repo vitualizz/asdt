@@ -7,307 +7,466 @@ import (
 	"testing"
 )
 
-func TestWriteClaudeAgentConfig_WritesCLAUDEMD(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
+const testBlockBody = "# Agent\nbody"
 
-	rendered := "# Test Agent\nThis is the agent config."
-	result, err := writeClaudeAgentConfig(rendered, AgentModeOverwrite)
-	if err != nil {
-		t.Fatalf("writeClaudeAgentConfig: %v", err)
-	}
-	if result.Skipped {
-		t.Errorf("expected Skipped=false, got true")
-	}
+// testBlock is the exact block upsertAgentBlock writes for testBlockBody.
+var testBlock = asdtBlockStart + "\n" + testBlockBody + "\n" + asdtBlockEnd
 
-	claudePath := filepath.Join(tmpHome, ".claude", "CLAUDE.md")
-	data, readErr := os.ReadFile(claudePath)
-	if readErr != nil {
-		t.Fatalf("CLAUDE.md not found: %v", readErr)
+// malformedBlockCases lists every marker state that must fail loudly.
+var malformedBlockCases = []struct {
+	name    string
+	content string
+}{
+	{"start only", "# Mine\n\n" + asdtBlockStart + "\nold\n"},
+	{"end only", "# Mine\n\nold\n" + asdtBlockEnd + "\n"},
+	{"duplicate blocks", testBlock + "\n\n" + testBlock + "\n"},
+	{"duplicate start", asdtBlockStart + "\n" + testBlock + "\n"},
+	{"reversed", asdtBlockEnd + "\nold\n" + asdtBlockStart + "\n"},
+}
+
+// inlineMarkerProse mentions both markers inside lines of prose. Only a marker
+// alone on its own line is ASDT's, so this is plain user text.
+var inlineMarkerProse = "# Mine\n\nASDT wraps its block in `" + asdtBlockStart + "` ... `" + asdtBlockEnd + "`.\n"
+
+// agentHome points HOME at a fresh temp dir and clears XDG_CONFIG_HOME, so
+// every adapter path resolves under the temp HOME, never the real one.
+func agentHome(t *testing.T) string {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", "")
+	return home
+}
+
+// seedAgentFile writes content to path, creating its directory.
+func seedAgentFile(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(string(data), rendered) {
-		t.Errorf("CLAUDE.md missing rendered content: got %q", string(data))
-	}
-	if !contains(strings.Join(result.Written, ","), claudePath) {
-		t.Errorf("claudePath %q not in Written: %v", claudePath, result.Written)
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestWriteClaudeAgentConfig_CreatesCLAUDEMD_WhenAbsent(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
-
-	_, err := writeClaudeAgentConfig("# Agent", AgentModeOverwrite)
+func readAgentFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatalf("writeClaudeAgentConfig: %v", err)
+		t.Fatalf("read %s: %v", path, err)
 	}
+	return string(data)
+}
 
-	claudePath := filepath.Join(tmpHome, ".claude", "CLAUDE.md")
-	data, readErr := os.ReadFile(claudePath)
-	if readErr != nil {
-		t.Fatalf("CLAUDE.md should have been created: %v", readErr)
+func TestUpsertAgentBlock(t *testing.T) {
+	cases := []struct {
+		name    string
+		content string
+		want    string
+	}{
+		{"empty file", "", testBlock + "\n"},
+		{"user content", "# Mine\n", "# Mine\n\n" + testBlock + "\n"},
+		{"user content without final newline", "# Mine", "# Mine\n\n" + testBlock + "\n"},
+		{"markers quoted inline are user text", inlineMarkerProse, inlineMarkerProse + "\n" + testBlock + "\n"},
+		{
+			"existing block replaced in place",
+			"# Mine\n\n" + asdtBlockStart + "\nold\nlines\n" + asdtBlockEnd + "\n\n# After\n",
+			"# Mine\n\n" + testBlock + "\n\n# After\n",
+		},
+		{
+			"existing block without final newline",
+			"# Mine\n\n" + asdtBlockStart + "\nold\n" + asdtBlockEnd,
+			"# Mine\n\n" + testBlock,
+		},
 	}
-	if !strings.Contains(string(data), "# Agent") {
-		t.Errorf("CLAUDE.md content missing rendered block, got %q", string(data))
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, err := upsertAgentBlock(c.content, testBlockBody+"\n")
+			if err != nil {
+				t.Fatalf("upsertAgentBlock: %v", err)
+			}
+			if got != c.want {
+				t.Errorf("got %q, want %q", got, c.want)
+			}
+			again, err := upsertAgentBlock(got, testBlockBody+"\n")
+			if err != nil || again != got {
+				t.Errorf("second upsert not idempotent: err=%v\n got %q\nwant %q", err, again, got)
+			}
+		})
+	}
+	for _, c := range malformedBlockCases {
+		t.Run("malformed "+c.name, func(t *testing.T) {
+			if _, err := upsertAgentBlock(c.content, testBlockBody); err == nil {
+				t.Errorf("upsertAgentBlock accepted malformed markers in %q", c.content)
+			}
+		})
 	}
 }
 
-func TestWriteClaudeAgentConfig_IdempotentBlockReplacement(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
-
-	claudeDir := filepath.Join(tmpHome, ".claude")
-	if err := os.MkdirAll(claudeDir, 0o755); err != nil {
-		t.Fatal(err)
+func TestRemoveAgentBlock(t *testing.T) {
+	cases := []struct {
+		name      string
+		content   string
+		want      string
+		wantFound bool
+	}{
+		{"no block", "# Mine\n", "# Mine\n", false},
+		{"only the block", testBlock + "\n", "", true},
+		{"block appended after user content", "# Mine\n\n" + testBlock + "\n", "# Mine\n", true},
+		{"block between user content", "# Mine\n\n" + testBlock + "\n\n# After\n", "# Mine\n\n# After\n", true},
+		{"block opening the file", testBlock + "\n\n# After\n", "# After\n", true},
+		{"markers quoted inline are not a block", inlineMarkerProse, inlineMarkerProse, false},
+		{"inline mention beside a real block", inlineMarkerProse + "\n" + testBlock + "\n", inlineMarkerProse, true},
 	}
-	claudePath := filepath.Join(claudeDir, "CLAUDE.md")
-	initial := "# My Config\n\nSome existing content.\n"
-	if err := os.WriteFile(claudePath, []byte(initial), 0o644); err != nil {
-		t.Fatal(err)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got, found, err := removeAgentBlock(c.content)
+			if err != nil {
+				t.Fatalf("removeAgentBlock: %v", err)
+			}
+			if found != c.wantFound || got != c.want {
+				t.Errorf("got (%q, %v), want (%q, %v)", got, found, c.want, c.wantFound)
+			}
+		})
 	}
-
-	// Run twice — idempotent: block should appear only once.
-	_, err := writeClaudeAgentConfig("# Agent", AgentModeOverwrite)
-	if err != nil {
-		t.Fatalf("first run: %v", err)
-	}
-	_, err = writeClaudeAgentConfig("# Agent Updated", AgentModeOverwrite)
-	if err != nil {
-		t.Fatalf("second run: %v", err)
-	}
-
-	data, readErr := os.ReadFile(claudePath)
-	if readErr != nil {
-		t.Fatalf("CLAUDE.md read: %v", readErr)
-	}
-	count := strings.Count(string(data), asdtBlockStart)
-	if count != 1 {
-		t.Errorf("CLAUDE.md contains block start %d time(s), want exactly 1\ncontent:\n%s", count, string(data))
-	}
-	// Updated content must be present.
-	if !strings.Contains(string(data), "# Agent Updated") {
-		t.Errorf("CLAUDE.md missing updated content, got:\n%s", string(data))
+	for _, c := range malformedBlockCases {
+		t.Run("malformed "+c.name, func(t *testing.T) {
+			if _, _, err := removeAgentBlock(c.content); err == nil {
+				t.Errorf("removeAgentBlock accepted malformed markers in %q", c.content)
+			}
+		})
 	}
 }
 
-func TestWriteClaudeAgentConfig_AppendsToCLAUDEMD_WhenRefAbsent(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
+// TestWriteAgentBlock_BothAssistants drives the shared write path through each
+// adapter's real config path: the file ends up holding the user's text
+// byte-identical plus exactly one block, and a second write changes nothing.
+func TestWriteAgentBlock_BothAssistants(t *testing.T) {
+	scenarios := []struct {
+		name     string
+		existing *string // nil: no file
+		want     string
+	}{
+		{"no file", nil, testBlock + "\n"},
+		{"user content", strPtr("# Mine\n\nKeep me.\n"), "# Mine\n\nKeep me.\n\n" + testBlock + "\n"},
+		{
+			"existing block",
+			strPtr("# Mine\n\n" + asdtBlockStart + "\nold\n" + asdtBlockEnd + "\n# Tail\n"),
+			"# Mine\n\n" + testBlock + "\n# Tail\n",
+		},
+	}
+	for _, adapter := range AgentConfigAdapters {
+		for _, sc := range scenarios {
+			t.Run(string(adapter.AssistantID)+"/"+sc.name, func(t *testing.T) {
+				agentHome(t)
+				path := adapter.ConfigPath()
+				if sc.existing != nil {
+					seedAgentFile(t, path, *sc.existing)
+				}
 
-	claudeDir := filepath.Join(tmpHome, ".claude")
-	if err := os.MkdirAll(claudeDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	claudePath := filepath.Join(claudeDir, "CLAUDE.md")
-	existing := "# My Config\n\nSome content here.\n"
-	if err := os.WriteFile(claudePath, []byte(existing), 0o644); err != nil {
-		t.Fatal(err)
-	}
+				if err := writeAgentBlock(path, testBlockBody); err != nil {
+					t.Fatalf("first write: %v", err)
+				}
+				first := readAgentFile(t, path)
+				if first != sc.want {
+					t.Errorf("after write:\n got %q\nwant %q", first, sc.want)
+				}
 
-	result, err := writeClaudeAgentConfig("# Agent", AgentModeOverwrite)
-	if err != nil {
-		t.Fatalf("writeClaudeAgentConfig: %v", err)
-	}
-
-	data, readErr := os.ReadFile(claudePath)
-	if readErr != nil {
-		t.Fatalf("CLAUDE.md read: %v", readErr)
-	}
-	if !strings.Contains(string(data), asdtBlockStart) {
-		t.Errorf("CLAUDE.md should contain block after injection, got:\n%s", string(data))
-	}
-	// CLAUDE.md should be in Written list since it was updated.
-	wroteClaudeMD := false
-	for _, p := range result.Written {
-		if p == claudePath {
-			wroteClaudeMD = true
+				if err := writeAgentBlock(path, testBlockBody); err != nil {
+					t.Fatalf("second write: %v", err)
+				}
+				if second := readAgentFile(t, path); second != first {
+					t.Errorf("second write not byte-identical:\n got %q\nwant %q", second, first)
+				}
+			})
 		}
 	}
-	if !wroteClaudeMD {
-		t.Errorf("CLAUDE.md %q should be in Written list: %v", claudePath, result.Written)
+}
+
+// TestWriteAgentBlock_MalformedMarkersWriteNothing: a malformed marker state is
+// an error and the file is left byte-identical.
+func TestWriteAgentBlock_MalformedMarkersWriteNothing(t *testing.T) {
+	for _, adapter := range AgentConfigAdapters {
+		for _, c := range malformedBlockCases {
+			t.Run(string(adapter.AssistantID)+"/"+c.name, func(t *testing.T) {
+				agentHome(t)
+				path := adapter.ConfigPath()
+				seedAgentFile(t, path, c.content)
+
+				if err := writeAgentBlock(path, testBlockBody); err == nil {
+					t.Fatal("writeAgentBlock accepted malformed markers")
+				}
+				if got := readAgentFile(t, path); got != c.content {
+					t.Errorf("file changed despite the error:\n got %q\nwant %q", got, c.content)
+				}
+			})
+		}
 	}
 }
 
-func TestWriteClaudeAgentConfig_SkipMode_ExistingFileUntouched(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
+func TestOpenCodeConfigPath_RespectsXDGConfigHome(t *testing.T) {
+	agentHome(t)
+	xdg := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", xdg)
 
-	claudeDir := filepath.Join(tmpHome, ".claude")
-	if err := os.MkdirAll(claudeDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	claudePath := filepath.Join(claudeDir, "CLAUDE.md")
-	originalContent := "# Original Content"
-	if err := os.WriteFile(claudePath, []byte(originalContent), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	result, err := writeClaudeAgentConfig("# New Content", AgentModeSkip)
-	if err != nil {
-		t.Fatalf("writeClaudeAgentConfig: %v", err)
-	}
-	if !result.Skipped {
-		t.Errorf("expected Skipped=true when mode=AgentModeSkip")
-	}
-
-	// File must be unchanged.
-	data, readErr := os.ReadFile(claudePath)
-	if readErr != nil {
-		t.Fatalf("read CLAUDE.md: %v", readErr)
-	}
-	if string(data) != originalContent {
-		t.Errorf("CLAUDE.md was modified despite AgentModeSkip: got %q, want %q", string(data), originalContent)
+	adapter, _ := AgentConfigAdapterFor(AssistantOpenCode)
+	if got, want := adapter.ConfigPath(), filepath.Join(xdg, "opencode", "AGENTS.md"); got != want {
+		t.Errorf("ConfigPath = %q, want %q", got, want)
 	}
 }
 
-func TestWriteClaudeAgentConfig_AppendMode_AddsSecondBlock(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
-
-	claudeDir := filepath.Join(tmpHome, ".claude")
-	if err := os.MkdirAll(claudeDir, 0o755); err != nil {
-		t.Fatal(err)
+func TestAgentConfigAdapter_ConfigExistsAndHasBlock(t *testing.T) {
+	cases := []struct {
+		name         string
+		content      *string
+		wantExists   bool
+		wantHasBlock bool
+	}{
+		{"no file", nil, false, false},
+		{"empty file", strPtr(""), false, false},
+		{"user content", strPtr("# Mine\n"), true, false},
+		{"block", strPtr(testBlock + "\n"), true, true},
+		{"lone end marker", strPtr(asdtBlockEnd + "\n"), true, true},
+		{"markers quoted inline", strPtr(inlineMarkerProse), true, false},
+		{"CRLF block", strPtr(asdtBlockStart + "\r\nold\r\n" + asdtBlockEnd + "\r\n"), true, true},
 	}
-	claudePath := filepath.Join(claudeDir, "CLAUDE.md")
-
-	// Write an initial block via Overwrite mode.
-	_, err := writeClaudeAgentConfig("# First Agent", AgentModeOverwrite)
-	if err != nil {
-		t.Fatalf("first write: %v", err)
-	}
-
-	// Append a second block.
-	_, err = writeClaudeAgentConfig("# Second Agent", AgentModeAppend)
-	if err != nil {
-		t.Fatalf("append write: %v", err)
-	}
-
-	data, readErr := os.ReadFile(claudePath)
-	if readErr != nil {
-		t.Fatalf("CLAUDE.md read: %v", readErr)
-	}
-	content := string(data)
-
-	// Both blocks must be present.
-	if !strings.Contains(content, "# First Agent") {
-		t.Errorf("CLAUDE.md missing first block content, got:\n%s", content)
-	}
-	if !strings.Contains(content, "# Second Agent") {
-		t.Errorf("CLAUDE.md missing second (appended) block content, got:\n%s", content)
-	}
-	// Block markers should appear twice (once per block).
-	if count := strings.Count(content, asdtBlockStart); count != 2 {
-		t.Errorf("CLAUDE.md should have 2 block start markers after append, got %d\ncontent:\n%s", count, content)
+	for _, adapter := range AgentConfigAdapters {
+		for _, c := range cases {
+			t.Run(string(adapter.AssistantID)+"/"+c.name, func(t *testing.T) {
+				agentHome(t)
+				if c.content != nil {
+					seedAgentFile(t, adapter.ConfigPath(), *c.content)
+				}
+				if got := adapter.ConfigExists(); got != c.wantExists {
+					t.Errorf("ConfigExists = %v, want %v", got, c.wantExists)
+				}
+				if got := adapter.HasBlock(); got != c.wantHasBlock {
+					t.Errorf("HasBlock = %v, want %v", got, c.wantHasBlock)
+				}
+			})
+		}
 	}
 }
 
-func TestWriteOpenCodeAgentConfig_WritesAgentsMD(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("XDG_CONFIG_HOME", "")
+// TestRemoveAgentConfig_RestoresUserContent: install then remove leaves the
+// user's file byte-identical, for both assistants, except that a missing final
+// newline is added; the file is never deleted.
+func TestRemoveAgentConfig_RestoresUserContent(t *testing.T) {
+	originals := []struct {
+		name    string
+		content *string
+		want    string
+	}{
+		{"user content", strPtr("# Mine\n\nKeep me.\n"), "# Mine\n\nKeep me.\n"},
+		{"user content without final newline gains one", strPtr("# Mine\n\nKeep me."), "# Mine\n\nKeep me.\n"},
+		{"markers quoted inline", strPtr(inlineMarkerProse), inlineMarkerProse},
+		{"no prior file", nil, ""},
+	}
+	for _, o := range originals {
+		t.Run(o.name, func(t *testing.T) {
+			home := agentHome(t)
+			assistants := testAgentAssistants(t, home)
+			for _, a := range AgentConfigAdapters {
+				if o.content != nil {
+					seedAgentFile(t, a.ConfigPath(), *o.content)
+				}
+			}
 
-	rendered := "# Test Agent"
-	result, err := writeOpenCodeAgentConfig(rendered, AgentModeOverwrite)
-	if err != nil {
-		t.Fatalf("writeOpenCodeAgentConfig: %v", err)
-	}
-	if result.Skipped {
-		t.Errorf("expected Skipped=false, got true")
-	}
-
-	agentsPath := filepath.Join(tmpHome, ".config", "opencode", "AGENTS.md")
-	data, readErr := os.ReadFile(agentsPath)
-	if readErr != nil {
-		t.Fatalf("AGENTS.md not found: %v", readErr)
-	}
-	if string(data) != rendered {
-		t.Errorf("AGENTS.md content mismatch: got %q, want %q", string(data), rendered)
-	}
-	_ = result
-}
-
-func TestWriteOpenCodeAgentConfig_RespectsXDGConfigHome(t *testing.T) {
-	tmpXDG := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", tmpXDG)
-
-	rendered := "# XDG Agent"
-	_, err := writeOpenCodeAgentConfig(rendered, AgentModeOverwrite)
-	if err != nil {
-		t.Fatalf("writeOpenCodeAgentConfig: %v", err)
-	}
-
-	agentsPath := filepath.Join(tmpXDG, "opencode", "AGENTS.md")
-	data, readErr := os.ReadFile(agentsPath)
-	if readErr != nil {
-		t.Fatalf("AGENTS.md not found at XDG path: %v", readErr)
-	}
-	if string(data) != rendered {
-		t.Errorf("AGENTS.md content mismatch: got %q, want %q", string(data), rendered)
-	}
-}
-
-func TestWriteOpenCodeAgentConfig_SkipMode_ExistingFileUntouched(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("XDG_CONFIG_HOME", "")
-
-	dir := filepath.Join(tmpHome, ".config", "opencode")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	agentsPath := filepath.Join(dir, "AGENTS.md")
-	originalContent := "# Original"
-	if err := os.WriteFile(agentsPath, []byte(originalContent), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	result, err := writeOpenCodeAgentConfig("# New Content", AgentModeSkip)
-	if err != nil {
-		t.Fatalf("writeOpenCodeAgentConfig: %v", err)
-	}
-	if !result.Skipped {
-		t.Errorf("expected Skipped=true when mode=AgentModeSkip")
-	}
-
-	data, readErr := os.ReadFile(agentsPath)
-	if readErr != nil {
-		t.Fatalf("read AGENTS.md: %v", readErr)
-	}
-	if string(data) != originalContent {
-		t.Errorf("AGENTS.md was modified despite AgentModeSkip")
+			for _, r := range InstallAgentConfig(assistants, PersonaPresets[0], true, "en", nil) {
+				if r.Err != nil || r.Skipped {
+					t.Fatalf("install %s: %+v", r.AssistantID, r)
+				}
+			}
+			results := RemoveAgentConfig(assistants)
+			for i, a := range AgentConfigAdapters {
+				r := results[i]
+				if r.Err != nil || r.Skipped || len(r.Written) != 1 {
+					t.Errorf("remove %s: %+v", r.AssistantID, r)
+				}
+				if got := readAgentFile(t, a.ConfigPath()); got != o.want {
+					t.Errorf("%s after remove:\n got %q\nwant %q", a.AssistantID, got, o.want)
+				}
+				meta, err := ReadInstallMeta(assistants[i])
+				if err != nil {
+					t.Fatalf("read meta: %v", err)
+				}
+				if meta.Persona != "" || meta.Emojis != "" {
+					t.Errorf("%s meta keeps persona after remove: %+v", a.AssistantID, meta)
+				}
+			}
+		})
 	}
 }
 
-func TestWriteOpenCodeAgentConfig_AppendMode_AppendsContent(t *testing.T) {
-	tmpHome := t.TempDir()
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("XDG_CONFIG_HOME", "")
+func TestRemoveAgentConfig_NothingToRemove(t *testing.T) {
+	cases := []struct {
+		name    string
+		content *string
+		wantErr bool
+	}{
+		{"no file", nil, false},
+		{"no block", strPtr("# Mine\n"), false},
+		{"malformed markers", strPtr("# Mine\n\n" + asdtBlockStart + "\n"), true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			home := agentHome(t)
+			for _, a := range AgentConfigAdapters {
+				if c.content != nil {
+					seedAgentFile(t, a.ConfigPath(), *c.content)
+				}
+			}
+			results := RemoveAgentConfig(testAgentAssistants(t, home))
+			for i, a := range AgentConfigAdapters {
+				r := results[i]
+				if (r.Err != nil) != c.wantErr || (!c.wantErr && !r.Skipped) || len(r.Written) != 0 {
+					t.Errorf("%s: %+v, wantErr %v", a.AssistantID, r, c.wantErr)
+				}
+				_, statErr := os.Stat(a.ConfigPath())
+				if c.content == nil {
+					if !os.IsNotExist(statErr) {
+						t.Errorf("%s: remove created a file", a.AssistantID)
+					}
+					continue
+				}
+				if got := readAgentFile(t, a.ConfigPath()); got != *c.content {
+					t.Errorf("%s changed:\n got %q\nwant %q", a.AssistantID, got, *c.content)
+				}
+			}
+		})
+	}
+}
 
-	dir := filepath.Join(tmpHome, ".config", "opencode")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+// testAgentAssistants returns one descriptor per agent config adapter, each with
+// a skills dir under home so install metadata reads and writes stay in the
+// temp tree.
+func testAgentAssistants(t *testing.T, home string) []AssistantDescriptor {
+	t.Helper()
+	out := make([]AssistantDescriptor, 0, len(AgentConfigAdapters))
+	for _, a := range AgentConfigAdapters {
+		dir := filepath.Join(home, "skills-"+string(a.AssistantID))
+		if err := os.MkdirAll(filepath.Join(dir, "asdt"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, AssistantDescriptor{ID: a.AssistantID, Name: string(a.AssistantID), SkillsDir: dir})
+	}
+	return out
+}
+
+func strPtr(s string) *string { return &s }
+
+// TestAgentWriteModes_OnlyUpdateAndSkip pins the write semantics: there is no
+// append mode, so a re-install can never stack a second block.
+func TestAgentWriteModes_OnlyUpdateAndSkip(t *testing.T) {
+	if AgentModeUpdate != 0 || AgentModeSkip != 1 {
+		t.Fatalf("AgentModeUpdate=%d AgentModeSkip=%d, want 0 and 1", AgentModeUpdate, AgentModeSkip)
+	}
+	home := agentHome(t)
+	assistants := testAgentAssistants(t, home)
+	for range 3 {
+		InstallAgentConfig(assistants, PersonaPresets[0], true, "en", map[string]AgentWriteMode{})
+	}
+	for _, a := range AgentConfigAdapters {
+		if n := strings.Count(readAgentFile(t, a.ConfigPath()), asdtBlockStart); n != 1 {
+			t.Errorf("%s holds %d blocks after three installs, want 1", a.AssistantID, n)
+		}
+	}
+}
+
+// TestAgentConfigWrites_FollowSymlink: a symlinked config file stays a symlink
+// through install and remove; the file it points to gets the content.
+func TestAgentConfigWrites_FollowSymlink(t *testing.T) {
+	home := agentHome(t)
+	assistants := testAgentAssistants(t, home)
+	for _, a := range AgentConfigAdapters {
+		real := filepath.Join(home, "dotfiles", string(a.AssistantID)+".md")
+		seedAgentFile(t, real, "# Mine\n")
+		link := a.ConfigPath()
+		if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(real, link); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	assertLink := func(stage string) {
+		t.Helper()
+		for _, a := range AgentConfigAdapters {
+			info, err := os.Lstat(a.ConfigPath())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if info.Mode()&os.ModeSymlink == 0 {
+				t.Errorf("%s after %s: config is no longer a symlink", a.AssistantID, stage)
+			}
+		}
+	}
+
+	for _, r := range InstallAgentConfig(assistants, PersonaPresets[0], true, "en", nil) {
+		if r.Err != nil || r.Skipped {
+			t.Fatalf("install %s: %+v", r.AssistantID, r)
+		}
+	}
+	assertLink("install")
+	for _, a := range AgentConfigAdapters {
+		real := filepath.Join(home, "dotfiles", string(a.AssistantID)+".md")
+		if got := readAgentFile(t, real); !strings.HasPrefix(got, "# Mine\n\n"+asdtBlockStart+"\n") {
+			t.Errorf("%s link target lacks the block: %q", a.AssistantID, got)
+		}
+	}
+
+	for _, r := range RemoveAgentConfig(assistants) {
+		if r.Err != nil || r.Skipped {
+			t.Fatalf("remove %s: %+v", r.AssistantID, r)
+		}
+	}
+	assertLink("remove")
+	for _, a := range AgentConfigAdapters {
+		real := filepath.Join(home, "dotfiles", string(a.AssistantID)+".md")
+		if got := readAgentFile(t, real); got != "# Mine\n" {
+			t.Errorf("%s link target after remove: %q", a.AssistantID, got)
+		}
+	}
+}
+
+// TestAgentConfigWrites_PreserveMode: install and remove keep an existing
+// file's mode; a new file is created 0o644.
+func TestAgentConfigWrites_PreserveMode(t *testing.T) {
+	home := agentHome(t)
+	assistants := testAgentAssistants(t, home)
+	claude, _ := AgentConfigAdapterFor(AssistantClaudeCode)
+	seedAgentFile(t, claude.ConfigPath(), "# Mine\n")
+	if err := os.Chmod(claude.ConfigPath(), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	agentsPath := filepath.Join(dir, "AGENTS.md")
-	originalContent := "# Original Agent"
-	if err := os.WriteFile(agentsPath, []byte(originalContent), 0o644); err != nil {
-		t.Fatal(err)
+	openCode, _ := AgentConfigAdapterFor(AssistantOpenCode) // no prior file
+
+	assertMode := func(stage string, a AgentConfigAdapterDescriptor, want os.FileMode) {
+		t.Helper()
+		info, err := os.Stat(a.ConfigPath())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := info.Mode().Perm(); got != want {
+			t.Errorf("%s after %s: mode %o, want %o", a.AssistantID, stage, got, want)
+		}
 	}
 
-	_, err := writeOpenCodeAgentConfig("# Appended Agent", AgentModeAppend)
+	InstallAgentConfig(assistants, PersonaPresets[0], true, "en", nil)
+	assertMode("install", claude, 0o600)
+	assertMode("install", openCode, 0o644)
+	RemoveAgentConfig(assistants)
+	assertMode("remove", claude, 0o600)
+	assertMode("remove", openCode, 0o644)
+
+	entries, err := os.ReadDir(filepath.Dir(claude.ConfigPath()))
 	if err != nil {
-		t.Fatalf("writeOpenCodeAgentConfig append: %v", err)
+		t.Fatal(err)
 	}
-
-	data, readErr := os.ReadFile(agentsPath)
-	if readErr != nil {
-		t.Fatalf("read AGENTS.md: %v", readErr)
-	}
-	content := string(data)
-
-	if !strings.Contains(content, originalContent) {
-		t.Errorf("AGENTS.md missing original content after append, got:\n%s", content)
-	}
-	if !strings.Contains(content, "# Appended Agent") {
-		t.Errorf("AGENTS.md missing appended content, got:\n%s", content)
+	for _, e := range entries {
+		if strings.Contains(e.Name(), ".asdt-tmp-") {
+			t.Errorf("temp file left behind: %s", e.Name())
+		}
 	}
 }

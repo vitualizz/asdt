@@ -50,7 +50,7 @@ func testOverlay(t *testing.T) map[string]any {
 // TestMergePermissionOverlay_FreshFile: an empty existing file produces a clean
 // write with both activation keys set and the full deny array.
 func TestMergePermissionOverlay_FreshFile(t *testing.T) {
-	out, err := mergePermissionOverlay(nil, testOverlay(t), AgentModeAppend, nil)
+	out, err := mergePermissionOverlay(nil, testOverlay(t), nil)
 	if err != nil {
 		t.Fatalf("merge: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestMergePermissionOverlay_PreservesUserKeys(t *testing.T) {
   "enabledPlugins": ["x"]
 }`)
 
-	out, err := mergePermissionOverlay(existing, testOverlay(t), AgentModeAppend, nil)
+	out, err := mergePermissionOverlay(existing, testOverlay(t), nil)
 	if err != nil {
 		t.Fatalf("merge: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestMergePermissionOverlay_PreservesUserKeys(t *testing.T) {
 		t.Error("permissions.ask not preserved")
 	}
 
-	// Both overlay keys present (set because they were absent — Append).
+	// Both overlay keys present (set because they were absent).
 	if perms[keyDefaultMode] != bypassMode {
 		t.Errorf("defaultMode = %v, want %q", perms[keyDefaultMode], bypassMode)
 	}
@@ -118,43 +118,25 @@ func TestMergePermissionOverlay_PreservesUserKeys(t *testing.T) {
 	}
 }
 
-// TestMergePermissionOverlay_AppendPreservesScalars: in Append mode a user's
-// pre-existing defaultMode and skip values are NOT overwritten.
-func TestMergePermissionOverlay_AppendPreservesScalars(t *testing.T) {
+// TestMergePermissionOverlay_PreservesScalars: a user's pre-existing
+// defaultMode and skip values are NOT overwritten.
+func TestMergePermissionOverlay_PreservesScalars(t *testing.T) {
 	existing := []byte(`{"permissions":{"defaultMode":"default","deny":[]},"skipDangerousModePermissionPrompt":false}`)
-	out, err := mergePermissionOverlay(existing, testOverlay(t), AgentModeAppend, nil)
+	out, err := mergePermissionOverlay(existing, testOverlay(t), nil)
 	if err != nil {
 		t.Fatalf("merge: %v", err)
 	}
 	m := decodeSettings(t, out)
 	perms := m[keyPermissions].(map[string]any)
 	if perms[keyDefaultMode] != "default" {
-		t.Errorf("Append clobbered defaultMode: got %v, want preserved \"default\"", perms[keyDefaultMode])
+		t.Errorf("merge clobbered defaultMode: got %v, want preserved \"default\"", perms[keyDefaultMode])
 	}
 	if skip, _ := m[keySkipDangerous].(bool); skip {
-		t.Error("Append clobbered skipDangerousModePermissionPrompt")
+		t.Error("merge clobbered skipDangerousModePermissionPrompt")
 	}
 	// Deny is still unioned regardless of mode.
 	if len(denyOf(t, m)) == 0 {
-		t.Error("deny not unioned under Append")
-	}
-}
-
-// TestMergePermissionOverlay_OverwriteForcesScalars: Overwrite forces the
-// overlay's activation values over the user's existing ones.
-func TestMergePermissionOverlay_OverwriteForcesScalars(t *testing.T) {
-	existing := []byte(`{"permissions":{"defaultMode":"default","deny":[]},"skipDangerousModePermissionPrompt":false}`)
-	out, err := mergePermissionOverlay(existing, testOverlay(t), AgentModeOverwrite, nil)
-	if err != nil {
-		t.Fatalf("merge: %v", err)
-	}
-	m := decodeSettings(t, out)
-	perms := m[keyPermissions].(map[string]any)
-	if perms[keyDefaultMode] != bypassMode {
-		t.Errorf("Overwrite defaultMode = %v, want %q", perms[keyDefaultMode], bypassMode)
-	}
-	if skip, _ := m[keySkipDangerous].(bool); !skip {
-		t.Error("Overwrite did not force skipDangerousModePermissionPrompt=true")
+		t.Error("deny not unioned")
 	}
 }
 
@@ -164,7 +146,7 @@ func TestMergePermissionOverlay_OverwriteForcesScalars(t *testing.T) {
 // Edit(path) rules and Edit covers ALL file-editing tools (Edit, Write,
 // NotebookEdit), so separate Write/NotebookEdit entries are inert noise.
 func TestOverlayAsset_WriteVerbs(t *testing.T) {
-	out, err := mergePermissionOverlay(nil, testOverlay(t), AgentModeOverwrite, nil)
+	out, err := mergePermissionOverlay(nil, testOverlay(t), nil)
 	if err != nil {
 		t.Fatalf("merge: %v", err)
 	}
@@ -216,11 +198,11 @@ func TestOverlayAsset_WriteVerbs(t *testing.T) {
 // TestMergePermissionOverlay_Idempotent: re-merging the previous output yields
 // identical bytes and an identical deny-set hash (no duplicate entries).
 func TestMergePermissionOverlay_Idempotent(t *testing.T) {
-	first, err := mergePermissionOverlay(nil, testOverlay(t), AgentModeAppend, nil)
+	first, err := mergePermissionOverlay(nil, testOverlay(t), nil)
 	if err != nil {
 		t.Fatalf("first merge: %v", err)
 	}
-	second, err := mergePermissionOverlay(first, testOverlay(t), AgentModeAppend, nil)
+	second, err := mergePermissionOverlay(first, testOverlay(t), nil)
 	if err != nil {
 		t.Fatalf("second merge: %v", err)
 	}
@@ -258,7 +240,7 @@ func TestMergePermissionOverlay_ReconcilesStaleManaged(t *testing.T) {
 	// What the previous (buggy) run wrote and recorded as managed.
 	prevManaged := []string{"MultiEdit(**/.env)", "Edit(**/.env)"}
 
-	out, err := mergePermissionOverlay(existing, testOverlay(t), AgentModeAppend, prevManaged)
+	out, err := mergePermissionOverlay(existing, testOverlay(t), prevManaged)
 	if err != nil {
 		t.Fatalf("merge: %v", err)
 	}
@@ -278,7 +260,7 @@ func TestMergePermissionOverlay_ReconcilesStaleManaged(t *testing.T) {
 // TestMergePermissionOverlay_RefusesInvalidExistingJSON: a present-but-invalid
 // existing file is refused, never clobbered.
 func TestMergePermissionOverlay_RefusesInvalidExistingJSON(t *testing.T) {
-	_, err := mergePermissionOverlay([]byte("{not valid json"), testOverlay(t), AgentModeAppend, nil)
+	_, err := mergePermissionOverlay([]byte("{not valid json"), testOverlay(t), nil)
 	if err == nil {
 		t.Fatal("expected refusal on invalid existing JSON, got nil error")
 	}
@@ -309,7 +291,7 @@ func TestValidateOverlay_RejectsInvalid(t *testing.T) {
 	}
 
 	// A well-formed merged document validates.
-	good, err := mergePermissionOverlay(nil, testOverlay(t), AgentModeOverwrite, nil)
+	good, err := mergePermissionOverlay(nil, testOverlay(t), nil)
 	if err != nil {
 		t.Fatalf("merge: %v", err)
 	}
@@ -339,24 +321,6 @@ func TestSelfProtectionEntries(t *testing.T) {
 	}
 }
 
-// TestWritePermissionOverlay_Skip: AgentModeSkip writes nothing (AC-2 backing).
-func TestWritePermissionOverlay_Skip(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	t.Setenv("SUDO_USER", "")
-
-	res, err := WritePermissionOverlay(AgentModeSkip)
-	if err != nil {
-		t.Fatalf("skip returned error: %v", err)
-	}
-	if !res.Skipped || len(res.Written) != 0 {
-		t.Errorf("skip should write nothing: %+v", res)
-	}
-	if _, err := os.Stat(filepath.Join(home, ".claude", "settings.json")); !os.IsNotExist(err) {
-		t.Errorf("settings.json should not exist after skip, stat err = %v", err)
-	}
-}
-
 // TestWritePermissionOverlay_FreshAndIdempotent: a real write to a temp HOME
 // activates the overlay; a second run is idempotent and produces a backup.
 func TestWritePermissionOverlay_FreshAndIdempotent(t *testing.T) {
@@ -368,7 +332,7 @@ func TestWritePermissionOverlay_FreshAndIdempotent(t *testing.T) {
 	t.Setenv("SUDO_USER", "")
 	path := filepath.Join(home, ".claude", "settings.json")
 
-	res, err := WritePermissionOverlay(AgentModeAppend)
+	res, err := WritePermissionOverlay()
 	if err != nil {
 		t.Fatalf("first write: %v (%+v)", err, res)
 	}
@@ -383,7 +347,7 @@ func TestWritePermissionOverlay_FreshAndIdempotent(t *testing.T) {
 	}
 	first, _ := os.ReadFile(path)
 
-	res2, err := WritePermissionOverlay(AgentModeAppend)
+	res2, err := WritePermissionOverlay()
 	if err != nil {
 		t.Fatalf("second write: %v", err)
 	}
@@ -415,7 +379,7 @@ func TestWritePermissionOverlay_RefusesInvalidExisting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := WritePermissionOverlay(AgentModeAppend)
+	_, err := WritePermissionOverlay()
 	if err == nil {
 		t.Fatal("expected refusal on invalid existing settings.json")
 	}

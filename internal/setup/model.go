@@ -41,8 +41,9 @@ const (
 	// StateEmojiPref asks whether the assistants should use emojis. Only
 	// reached on the non-skip path out of StateAgentSetup.
 	StateEmojiPref
-	// StateAgentWriteMode is shown when conflicts are detected; the user
-	// chooses per-assistant how to handle existing configs (cycle with space).
+	// StateAgentWriteMode is shown when a selected assistant's global config
+	// file already exists; the user toggles per file (space) between updating
+	// ASDT's block and skipping the file.
 	StateAgentWriteMode
 	// StateReview shows a summary of all selections before installation begins.
 	StateReview
@@ -119,9 +120,16 @@ type wizardState struct {
 	expandedGroups  map[string]bool
 }
 
-// dashboardState holds metadata loaded when the user enters StateDashboard.
+// dashboardState holds what the dashboard shows, loaded when the user enters
+// StateDashboard so the render path never performs I/O. hasBlock marks the
+// assistants whose global config file carries ASDT's block; confirmRemove is
+// set while the remove action awaits confirmation; removeResults holds the
+// outcome of the last removal.
 type dashboardState struct {
-	meta map[installer.AssistantID]installer.InstallMeta
+	meta          map[installer.AssistantID]installer.InstallMeta
+	hasBlock      map[installer.AssistantID]bool
+	confirmRemove bool
+	removeResults []installer.AgentConfigResult
 }
 
 // languageState holds state for the StateLanguageSelect screen.
@@ -320,6 +328,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case AgentConfigRemoveDoneMsg:
+		m.dashboard = loadDashboardState()
+		m.dashboard.removeResults = msg.Results
+		return m, nil
+
 	case PermissionOverlayDoneMsg:
 		m.permission.done = true
 		m.permission.result = msg.Result
@@ -507,13 +520,43 @@ func (m Model) syncLanguageSelection() Model {
 	return m
 }
 
+// handleDashboard handles the dashboard keys: r asks to remove ASDT's block
+// from every global config file that carries one, Enter confirms, and Esc
+// cancels a pending confirmation or returns to the main menu.
 func (m Model) handleDashboard(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.dashboard.confirmRemove {
+		switch msg.Type {
+		case tea.KeyEnter:
+			m.dashboard.confirmRemove = false
+			return m, AgentConfigRemoveCmd(m.dashboard.blockAssistants())
+		case tea.KeyEsc:
+			m.dashboard.confirmRemove = false
+		}
+		return m, nil
+	}
 	switch msg.Type {
+	case tea.KeyRunes:
+		if string(msg.Runes) == "r" && len(m.dashboard.blockAssistants()) > 0 {
+			m.dashboard.confirmRemove = true
+			m.dashboard.removeResults = nil
+		}
 	case tea.KeyEsc:
 		m.state = StateMainMenu
 		m.cursor = 0
 	}
 	return m, nil
+}
+
+// blockAssistants returns the assistants whose global config file carries
+// ASDT's block, in installer.Descriptors order.
+func (d dashboardState) blockAssistants() []installer.AssistantDescriptor {
+	var out []installer.AssistantDescriptor
+	for _, a := range installer.Descriptors {
+		if d.hasBlock[a.ID] {
+			out = append(out, a)
+		}
+	}
+	return out
 }
 
 func (m Model) handleSelectAssistants(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -839,8 +882,9 @@ func (m Model) countCustomizedModels() int {
 	return n
 }
 
-// detectAgentConflicts checks which selected assistants already have an AGENTS.md
-// at their global config location.
+// detectAgentConflicts returns the selected assistants whose global config file
+// already exists with content, so the user chooses per file whether ASDT
+// updates its block there or leaves the file alone.
 func (m Model) detectAgentConflicts() []string {
 	var conflicts []string
 	assistants := m.selectedAssistants()
@@ -849,7 +893,7 @@ func (m Model) detectAgentConflicts() []string {
 		if !ok {
 			continue
 		}
-		if adapter.AgentConfigExists() {
+		if adapter.ConfigExists() {
 			conflicts = append(conflicts, a.ID)
 		}
 	}
@@ -928,7 +972,7 @@ func (m Model) handleEmojiPref(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if len(m.agentConfig.conflicts) > 0 {
 			m.agentConfig.writeModes = make(map[string]installer.AgentWriteMode)
 			for _, id := range m.agentConfig.conflicts {
-				m.agentConfig.writeModes[id] = installer.AgentModeSkip // safe default: Keep
+				m.agentConfig.writeModes[id] = installer.AgentModeUpdate // touches only ASDT's block
 			}
 			m.state = StateAgentWriteMode
 			m.cursor = 0
@@ -1021,7 +1065,11 @@ func (m Model) handleAgentWriteMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case tea.KeySpace:
 		if m.cursor < len(m.agentConfig.conflicts) {
 			id := m.agentConfig.conflicts[m.cursor]
-			m.agentConfig.writeModes[id] = (m.agentConfig.writeModes[id] + 1) % 3
+			if m.agentConfig.writeModes[id] == installer.AgentModeSkip {
+				m.agentConfig.writeModes[id] = installer.AgentModeUpdate
+			} else {
+				m.agentConfig.writeModes[id] = installer.AgentModeSkip
+			}
 		}
 	case tea.KeyEnter:
 		m.state = StatePermissionConsent
@@ -1107,11 +1155,9 @@ func (m Model) buildInstallCmd() tea.Cmd {
 		cmds = append(cmds, AgentInstallCmd(assistants, preset, m.agentConfig.useEmojis, lang, m.agentConfig.writeModes))
 	}
 	// The overlay Cmd fires only when the user accepted the consent gate; the
-	// effective merge mode is Append (preserve a user's existing settings),
-	// which the merge promotes to a clean Overwrite for a fresh/no-permissions
-	// file.
+	// merge preserves a user's existing settings values.
 	if m.permission.consent {
-		cmds = append(cmds, PermissionOverlayCmd(installer.AgentModeAppend))
+		cmds = append(cmds, PermissionOverlayCmd())
 	}
 	if len(cmds) == 1 {
 		return cmds[0]
@@ -1171,17 +1217,21 @@ func (m Model) View() string {
 	return renderState(m)
 }
 
-// loadDashboardState reads install metadata for all known assistants.
-// Called once when the user navigates to StateDashboard so the render path
-// never performs I/O.
+// loadDashboardState reads install metadata and agent config block presence
+// for all known assistants. Called when the user navigates to StateDashboard,
+// and after a removal, so the render path never performs I/O.
 func loadDashboardState() dashboardState {
 	meta := make(map[installer.AssistantID]installer.InstallMeta, len(installer.Descriptors))
+	hasBlock := make(map[installer.AssistantID]bool, len(installer.Descriptors))
 	for _, d := range installer.Descriptors {
 		if m, err := installer.ReadInstallMeta(d); err == nil {
 			meta[d.ID] = m
 		}
+		if adapter, ok := installer.AgentConfigAdapterFor(d.ID); ok {
+			hasBlock[d.ID] = adapter.HasBlock()
+		}
 	}
-	return dashboardState{meta: meta}
+	return dashboardState{meta: meta, hasBlock: hasBlock}
 }
 
 // allInstallsDone reports whether both the per-assistant installs and the agent

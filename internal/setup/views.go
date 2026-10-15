@@ -20,14 +20,10 @@ func stepLine(s i18n.InstallerStrings, current, total int) string {
 
 // modeLabel returns the catalog-translated label for an AgentWriteMode.
 func modeLabel(s i18n.InstallerStrings, mode installer.AgentWriteMode) string {
-	switch mode {
-	case installer.AgentModeOverwrite:
-		return s.LabelModeOverwrite
-	case installer.AgentModeAppend:
-		return s.LabelModeAppend
-	default:
-		return s.LabelModeKeep
+	if mode == installer.AgentModeSkip {
+		return s.LabelModeSkip
 	}
+	return s.LabelModeUpdate
 }
 
 func renderState(m Model) string {
@@ -461,7 +457,7 @@ func renderAgentWriteMode(m Model) string {
 	footer := panels.RenderKeyboardFooter([]panels.HintGroup{
 		{Label: s.HintGroupActions, Hints: []panels.Hint{
 			{Key: "↑↓", Description: s.HintNavigate},
-			{Key: "space", Description: s.HintCycleMode},
+			{Key: "space", Description: s.HintToggle},
 			{Key: "esc", Description: s.HintBack},
 		}},
 	}, m.width)
@@ -655,20 +651,55 @@ func renderDashboard(m Model) string {
 	var b strings.Builder
 	for _, desc := range installer.Descriptors {
 		meta := m.dashboard.meta[desc.ID]
-		b.WriteString(renderSummaryLine(desc, meta, d))
+		b.WriteString(renderSummaryLine(desc, meta, m.dashboard.hasBlock[desc.ID], d))
 		b.WriteString("\n")
 	}
 
+	nameFor := make(map[installer.AssistantID]string, len(installer.Descriptors))
+	for _, desc := range installer.Descriptors {
+		nameFor[desc.ID] = desc.Name
+	}
+	if len(m.dashboard.removeResults) > 0 {
+		b.WriteString("\n")
+		for _, r := range m.dashboard.removeResults {
+			name := nameFor[r.AssistantID]
+			switch {
+			case r.Err != nil:
+				fmt.Fprintf(&b, "  %s\n", styles.Default.Error.Render(fmt.Sprintf("✗ %s: %v", name, r.Err)))
+			case r.Skipped:
+				fmt.Fprintf(&b, "  %s\n", styles.Default.Dim.Render(fmt.Sprintf(d.MsgAgentConfigNoBlock, name)))
+			default:
+				fmt.Fprintf(&b, "  %s\n", styles.Default.Success.Render(fmt.Sprintf(d.MsgAgentConfigRemoved, name)))
+			}
+		}
+	}
+
+	targets := m.dashboard.blockAssistants()
+	hints := []panels.Hint{{Key: "esc", Description: s.HintBackToMenu}}
+	if m.dashboard.confirmRemove {
+		paths := make([]string, 0, len(targets))
+		for _, a := range targets {
+			if adapter, ok := installer.AgentConfigAdapterFor(a.ID); ok {
+				paths = append(paths, adapter.ConfigPath())
+			}
+		}
+		fmt.Fprintf(&b, "\n  %s\n", styles.Default.Warning.Render(fmt.Sprintf(d.ConfirmRemoveAgentConfig, strings.Join(paths, ", "))))
+		hints = []panels.Hint{{Key: "enter", Description: d.HintConfirm}, {Key: "esc", Description: d.HintCancel}}
+	} else if len(targets) > 0 {
+		hints = append([]panels.Hint{{Key: "r", Description: d.HintRemoveAgentConfig}}, hints...)
+	}
+
 	footer := panels.RenderKeyboardFooter([]panels.HintGroup{
-		{Label: s.HintGroupNav, Hints: []panels.Hint{{Key: "esc", Description: s.HintBackToMenu}}},
+		{Label: s.HintGroupNav, Hints: hints},
 	}, m.width)
 	return frame(s.TitleDashboard, strings.TrimRight(b.String(), "\n"), footer, true)
 }
 
 // renderSummaryLine renders a dashboard row for one assistant.
-// First line: name + binary/skills badges.
+// First line: name + binary/skills badges, plus the agent config badge when
+// the assistant's global config file carries ASDT's block.
 // Second line (when install metadata exists): install date and persona.
-func renderSummaryLine(d installer.AssistantDescriptor, meta installer.InstallMeta, s i18n.DashboardStrings) string {
+func renderSummaryLine(d installer.AssistantDescriptor, meta installer.InstallMeta, hasBlock bool, s i18n.DashboardStrings) string {
 	bp, sp, _ := installer.Detect(d)
 
 	var parts []string
@@ -682,6 +713,9 @@ func renderSummaryLine(d installer.AssistantDescriptor, meta installer.InstallMe
 		parts = append(parts, panels.NewBadge("skills", panels.ColorSuccess).Render())
 	} else {
 		parts = append(parts, panels.NewBadge("skills", panels.ColorError).Render())
+	}
+	if hasBlock {
+		parts = append(parts, panels.NewBadge(s.BadgeAgentConfig, panels.ColorSuccess).Render())
 	}
 	line := "  " + strings.Join(parts, " ")
 
