@@ -19,7 +19,6 @@ It judges its own chain from what you ask for:
 
 | You ask for | It runs |
 |---|---|
-| a question or a sanity check | `explore` |
 | a plan — "how would you do this?" | `explore → spec` — the plan becomes its summary and the run stops; no code is written |
 | the change itself | `explore → spec → approve → implement → verify` |
 | "implement the plan we approved" | `approve → implement → verify` — the plan in the session scratchpad is shown again instead of re-derived (or rebuilt, when the scratchpad is gone); a plan already built but never verified resumes at `verify` alone |
@@ -58,7 +57,7 @@ Point it at code that already exists and it answers without touching it:
 
 A review reads the code and its callers and reports numbered findings, highest severity first — bugs, error handling, missing tests on risky logic, code that should not exist, structure — each with a concrete case that breaks it (or, beyond bugs and error handling, the evidence — the duplicate's path, the unused symbol's search) and the smallest fix. Reviewing a change opens with a verdict: ship, or which findings to fix first.
 
-A question stops at exploration; asking for a plan reaches the spec; only asking it to build writes files — and only after you approve.
+A question is answered from the code with no step; asking for a plan reaches the spec; only asking it to build writes files — and only after you approve.
 
 ## Pipeline position
 

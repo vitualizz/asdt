@@ -219,7 +219,7 @@ steps:
 	// no inputs at all, so it contributes zero and is absent from this map.
 	wantCounts := map[string]int{
 		"asdt-architect": 4,
-		"asdt-developer": 9,
+		"asdt-developer": 8,
 		"asdt-pm":        1,
 		"asdt-qa":        5,
 		"asdt-security":  2,
@@ -250,7 +250,7 @@ steps:
 		}
 		total += count
 	}
-	if total != 22 {
-		t.Errorf("total optional markers across the tree = %d, want 22", total)
+	if total != 21 {
+		t.Errorf("total optional markers across the tree = %d, want 21", total)
 	}
 }

@@ -23,14 +23,6 @@ metadata:
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
-> **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
-> calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
-> as the `asdt-{agent}` sub-agent its `agent:` field names, via your native delegation
-> primitive (Agent/Task) — never run subagent steps inline; run
-> `inline` steps in your own context. If you run a subagent step inline anyway, its write
-> boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
-> `asdt-init/write`.
-
 # Architect Specialist
 
 ## Role
@@ -39,32 +31,18 @@ that follows from it. You do NOT write implementation code, UX specs, or test pl
 
 ## Orchestration Plan
 
-**Architect is not invoked on simple changes** — the Developer handles those directly.
-
-When it does run, judge which of its two steps the request asks for:
+Judge which of its two steps the request asks for:
 
 | The request asks to | Step |
 |---|---|
 | decide or design a change — "add X", "how should I structure this new Y?" | `design` |
 | judge what already exists — "does this scale?", "audit it", "review the architecture of Z" | `review` |
 
-Ambiguous → `design`. The default intent is a change, matching `## Intent` in the header.
-
-The inline `knowledge-recall` and `platform-analysis` preludes run first either way. Depth
-changes how many alternatives are compared, or how far the review digs — never which steps
-run and never which sections the output carries.
-
-Step identity, model, inputs, and outputs: `workflow.yaml`.
+Ambiguous → `design`. Depth changes how many alternatives are compared, or how far the review
+digs.
 
 ## Final Output
 The role summary `architect`. `design` writes it for a change — the decision, with the
 alternatives it beat, plus the data model and API surface that follow from it — consumed by
 Developer, QA, and Security. `review` writes it under `study-{topic}` — the findings on an
 existing area, for the user.
-
-## Invariants
-- Writes no file: its only output is its summary (`asdt-core/protocol.md` §4)
-- Every decision carries the alternatives it beat, and why
-- Never design in isolation — the platform constraints are part of the decision
-- A design carries a data model AND an API surface, or says why the change has neither
-- A review judges what exists and never designs its replacement — and it names strengths, not only defects

@@ -510,11 +510,11 @@ func stripInjectedBinding(content string) string {
 }
 
 // TestSubagentInjectionStripsMemoryBinding guards the one path by which a
-// binding could reach a sub-agent: protocol.md is a reference skill of most
-// sub-agent steps, and the installed copy carries the bound region. The region
-// must stay (the orchestrator reads it), so the guard is the §5 rule: it must
-// exist and name the markers whenever any injected file carries a region, and
-// applying it as worded must leave no provider name behind. No step file may
+// binding could reach a sub-agent: a reference skill that carries the bound
+// region. protocol.md is not one (sub-agent steps load
+// references/summary-schema.md instead), so today no carrier exists; the guard
+// stays as the §5 rule — it must exist and name the markers — and, should a
+// carrier reappear, applying it as worded must leave no provider name behind. No step file may
 // lean on the binding either — a value a step needs from it arrives in its
 // payload (asdt-init/clarify's memory_provider). The code-intelligence binding
 // is different: the executor header carries it to every sub-agent, so a step
@@ -548,7 +548,6 @@ func TestSubagentInjectionStripsMemoryBinding(t *testing.T) {
 	if err != nil || len(workflows) == 0 {
 		t.Fatalf("glob installed workflow.yaml: %v (found %d)", err, len(workflows))
 	}
-	carriers := 0
 	for _, wfPath := range workflows {
 		dir := filepath.Dir(wfPath)
 		data, err := os.ReadFile(wfPath)
@@ -580,7 +579,6 @@ func TestSubagentInjectionStripsMemoryBinding(t *testing.T) {
 				if !strings.Contains(string(body), memoryBindingBeginMarker) {
 					continue
 				}
-				carriers++
 				if hits := providerNameHits(stripInjectedBinding(string(body)), shippedProviderNames(), nil); len(hits) > 0 {
 					t.Errorf("%s step %q reference %s still names %v after the §5 strip", filepath.Base(dir), step.Name, ref, hits)
 				}
@@ -589,8 +587,5 @@ func TestSubagentInjectionStripsMemoryBinding(t *testing.T) {
 				}
 			}
 		}
-	}
-	if carriers == 0 {
-		t.Error("no sub-agent reference skill carries a bound region; if protocol.md stopped being injected, retire this test deliberately")
 	}
 }

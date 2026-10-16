@@ -66,8 +66,8 @@ If `.asdt/config.yaml` does not exist, do not halt. Record one `Open items` entr
 ASSUMED: .asdt/config.yaml absent — conventions inferred from visible code patterns
 ```
 
-Then proceed with the conventions visible in the code at hand: file naming, import style, directory layout. When the config exists but lacks a key, inject the lines that are present and say nothing about the rest. Either way, the `Design surface` line is still emitted, with its default when the key is absent.
+Then proceed with the conventions visible in the code at hand: file naming, import style, directory layout. When the config exists but lacks a key, inject the lines that are present and say nothing about the rest.
 
 ## Project notes
 
-What the user has said about the project (the thing a newcomer would misread and no scan can detect) does not live in this file. It comes from memory, through the `knowledge-recall` prelude, and reaches a step as its own `### PROJECT NOTE:` lines (`asdt-core/references/knowledge-recall.md`). Never fold a note into the block above, and never rewrite one in the voice of a detected fact: placing a person's note among detected values makes it look like something the scan found.
+What the user has said about the project comes from memory, through the `knowledge-recall` prelude, and reaches a step as its own `### PROJECT NOTE:` lines. Never fold a note into the block above or rewrite it in the voice of a detected fact: among detected values, a person's note looks like something the scan found.

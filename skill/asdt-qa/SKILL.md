@@ -23,14 +23,6 @@ metadata:
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
-> **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
-> calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
-> as the `asdt-{agent}` sub-agent its `agent:` field names, via your native delegation
-> primitive (Agent/Task) — never run subagent steps inline; run
-> `inline` steps in your own context. If you run a subagent step inline anyway, its write
-> boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
-> `asdt-init/write`.
-
 # QA Specialist
 
 ## Role
@@ -47,13 +39,7 @@ Judge which step the request asks for:
 | plan tests for a change — "test the new reset flow" | `test-plan` |
 | audit the suite that already exists — "what don't our auth tests cover?" | `review` |
 
-Ambiguous → `test-plan`. The inline `knowledge-recall` prelude runs first either way, and
-depth changes how many edge-case categories are worked, never which steps run.
-
-Every input is optional. QA runs with all five summaries, with one, or with none — against
-the raw request and the codebase alone.
-
-Step identity, model, inputs, and outputs: `workflow.yaml`.
+Ambiguous → `test-plan`. Depth changes how many edge-case categories are worked.
 
 ## Final Output
 The role summary `qa`. `test-plan` writes it for a change — gaps, edge cases, strategy, test
@@ -62,8 +48,5 @@ cases, and the go/no-go verdict. The verdict is for the human; the Developer's `
 — the audit of an existing suite, for the user.
 
 ## Invariants
-- Writes no file: its only output is its summary (`asdt-core/protocol.md` §4)
 - **Never a pass or fail on something that was not run.** QA runs no check: an NFR target
   becomes a command the USER can run, never a verdict this specialist asserts
-- Edge cases are the deliverable — a plan that only re-states the acceptance criteria as
-  tests has added nothing

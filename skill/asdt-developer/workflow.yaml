@@ -17,12 +17,14 @@ steps:
     execution: subagent
     model: sonnet
     agent: analyst
+    reference_skills:
+      - ../asdt-core/references/summary-schema.md
 
   - name: spec
     skill: steps/spec.md
     description: Define scope, numbered acceptance criteria, the smallest approach that fully works, and the files — tests included — implement is allowed to touch
     execution: subagent
-    model: sonnet
+    model: opus
     agent: analyst
     inputs:
       - pm # optional — acceptance-criteria authority
@@ -36,7 +38,7 @@ steps:
     reference_skills:
       - ../asdt-core/references/scope-definition.md
       - ../asdt-core/references/conventions.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
 
   - name: approve
     description: Show the human the spec's scope, acceptance criteria, approach, exact files, and tests, and get approve / adjust / stop before any host file is written
@@ -49,13 +51,12 @@ steps:
     model: opus
     agent: builder
     inputs:
-      - architect # optional — the design decision, when Architect ran
       - developer/spec
       - developer/verify # optional — only on a fix round launched by verify
     output: summary
     reference_skills:
       - ../asdt-core/references/conventions.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
     host_skills:
       - frontend-design # visual execution of UI files, when the host has it
 
@@ -73,4 +74,4 @@ steps:
     output: summary
     reference_skills:
       - ../asdt-core/references/conventions.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md

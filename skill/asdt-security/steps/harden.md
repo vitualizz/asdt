@@ -7,8 +7,6 @@ one summary Developer, Architect, and QA consume.
 ## Inputs
 - `### INPUT security/assess` — the assessment: `Attack surface`, `Threats`, and `Open items`
 
-It arrives as a path to read — never look for anything else.
-
 **DEGRADATION**: `security/assess` UNRESOLVED → produce no findings rather than invented ones, and record `ASSUMED: assessment unavailable — no findings produced` in `Open items`.
 
 ## Processing
@@ -34,7 +32,7 @@ Carry any `ASSUMED:` entries from the assessment forward — a threat you could 
 stays visible.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Security: {change}

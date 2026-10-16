@@ -52,7 +52,7 @@ metadata:
 ...
 ```
 
-Entre el frontmatter y `## Role` van tres bloques textuales de los que depende el instalador — el blockquote `FIRST ACTION`, la región generada vacía (`<!-- ASDT:GENERATED:specialist-header -->` … `<!-- /ASDT:GENERATED:specialist-header -->`) y el blockquote `ORCHESTRATOR GATE`. Copialos de cualquier specialist existente sin tocarlos. Un step `inline` sin archivo de prompt — una compuerta donde el orquestador se detiene a esperar al humano, como `approve` y `verify` del Developer — lleva su propia sección `## {step} — …` antes de `## Final Output`; esa sección es todo su contrato.
+Entre el frontmatter y `## Role` van dos bloques textuales de los que depende el instalador — el blockquote `FIRST ACTION` y la región generada vacía (`<!-- ASDT:GENERATED:specialist-header -->` … `<!-- /ASDT:GENERATED:specialist-header -->`), donde el instalador inserta el header compartido con su ORCHESTRATOR GATE. Copialos de cualquier specialist existente sin tocarlos. Un step `inline` sin archivo de prompt — una compuerta donde el orquestador se detiene a esperar al humano, como `approve` y `verify` del Developer — lleva su propia sección `## {step} — …` antes de `## Final Output`; esa sección es todo su contrato.
 
 `metadata` (`author` + `version`) es obligatorio en todos los `SKILL.md`. `trigger_phrases` es la única key opcional — una lista de descubribilidad que consume el host.
 
@@ -81,7 +81,7 @@ steps:
     output: summary              # opcional — lo que devuelve este step pasa a ser el resumen del rol
     reference_skills:
       - ../asdt-core/references/{x}.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
     host_skills:                 # opcional — solo en steps subagent
       - {nombre-de-skill-en-kebab-case}
 ```

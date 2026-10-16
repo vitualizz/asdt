@@ -5,8 +5,7 @@ Understand the area of the codebase that will change before a single line is spe
 
 ## Inputs
 No `### INPUT` line: this step works from the raw request, the codebase, the platform block
-(stack, naming conventions, key patterns), and any `### PROJECT NOTE` lines. Look for nothing
-else.
+(stack, naming conventions, key patterns), and any `### PROJECT NOTE` lines.
 
 **DEGRADATION**: no platform block → take the conventions from the code around the change, and record `ASSUMED: no platform block — conventions read from the code` in `Open items`.
 
@@ -26,7 +25,7 @@ else.
 Do NOT design the solution: name the reuse candidates, `spec` chooses. Do NOT write code.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Developer: {change}

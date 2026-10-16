@@ -10,7 +10,7 @@ go/no-go verdict, in one summary.
 - `### INPUT developer` — OPTIONAL. Developer's summary. Read its `**Stage:**` line first.
   `spec` is a plan, nothing built: plan cases against its `Edit targets` and `Acceptance
   criteria` (a `Prior delivery` it carries is an earlier build, not this plan). `implemented`:
-  the change's files (`asdt-core/protocol.md` §6: git, with `Files changed` and `Prior
+  the change's files (`asdt-core/references/summary-schema.md`: git, with `Files changed` and `Prior
   delivery` as hints), or `Code snippets` when `Edit roots` reads `Mode: plan-only`; the carried
   `Acceptance criteria`, `Open items` (including any `AC not covered:` lines), and the
   `**Verification:**` line under `**Stage:**` — never claim a pass it did not record
@@ -21,8 +21,6 @@ go/no-go verdict, in one summary.
   designs`, only the `disabled`, `loading`, and `error` states
 - `### INPUT security` — OPTIONAL. Security's summary: each `Risks` finding's severity and
   mitigation, and `Files hint` for where the mitigations land
-
-Each arrives as a path to read — never look for anything else.
 
 **DEGRADATION**: all five UNRESOLVED → work from the raw request and the codebase, and record `ASSUMED: no upstream summary — criteria read from the raw request` in `Open items`. Never block.
 **DEGRADATION**: `ux-ui` UNRESOLVED → find the state cases in the code alone; UX not running is the common case, so no entry.
@@ -54,7 +52,7 @@ Each arrives as a path to read — never look for anything else.
    cases cannot be unit tests; say which level each group lands on.
 
 4. **Test cases.** Given/When/Then for each AC and for each edge case worth a test — not
-   every edge case earns one, and saying which ones you dropped is part of the plan. When
+   every edge case earns one; say in `Strategy` which ones you dropped. When
    the developer summary arrived, name the path each case exercises — from the change's files,
    or the `Edit targets` at `Stage: spec`, whose `AC{n}` tags (on `Files changed` too) say which
    file serves which criterion — so a reader can go from case to code without guessing.
@@ -65,7 +63,7 @@ Each arrives as a path to read — never look for anything else.
 
 5. **Verdict.** `go` or `no-go`, with two lines of why. A blocking AC gap, an uncovered
    critical path, or — when the developer summary arrived — a Security `high` whose mitigation
-   leaves no trace in its files (at `implemented`, the change's files of protocol §6, earlier
+   leaves no trace in its files (at `implemented`, the change's files of `asdt-core/references/summary-schema.md`, earlier
    deliveries included; at `spec`, the `Edit targets` and any `Prior delivery`) is a `no-go`: a `high` reaches real data or identity, and a fix that is nowhere in the
    change ships the threat with it. Everything else is a shipping condition, not a block. At
    `Stage: spec`, or `implemented` with `Mode: plan-only`, nothing is built, so the verdict is
@@ -73,12 +71,12 @@ Each arrives as a path to read — never look for anything else.
    build.
 
 **Never emit a pass or fail on something you did not run.** This step executes nothing beyond
-the read-only git inspection of protocol §6. If Product's summary carries NFR targets, list the
+the read-only git inspection of `asdt-core/references/summary-schema.md`. If Product's summary carries NFR targets, list the
 command the USER can run to measure each one and what a healthy result looks like — that is an offer, not a result. A performance claim with
 no measurement behind it is worse than no claim.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # QA: {change}
@@ -111,6 +109,3 @@ Return this summary (`asdt-core/protocol.md` §6):
 ## Open items
 - ASSUMED: {what was assumed} — {what would confirm or refute it}
 ```
-
-`Measurement offered` is never a verdict: it lists commands the USER may run. Say in `Strategy`
-which edge cases earned no test case.

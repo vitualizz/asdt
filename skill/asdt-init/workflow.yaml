@@ -12,7 +12,7 @@ steps:
     model: sonnet
     agent: analyst
     reference_skills:
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
 
   - name: enrichment
     description: Surfaces up to 3 central, non-obvious symbols as skippable note questions via code intelligence; skipped without memory or an indexed project, never fails
@@ -33,4 +33,4 @@ steps:
       - asdt-init/clarify
     output: summary
     reference_skills:
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md

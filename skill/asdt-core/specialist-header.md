@@ -23,7 +23,7 @@ Nothing here stops a run. Before the first step, check two things and give a one
 
 ## Depth
 
-Judge the depth of this run yourself, from two signals in order. First, anything the invocation says or implies about scope or urgency ("quick", "a fondo", "this is sensitive", "just a sanity check"): honor it. Second, when it says nothing, the size of what you find: how much the change touches and how much is genuinely unknown. Depth controls how exhaustive each step's OUTPUT is. This specialist's own SKILL.md defines which steps run: single-step specialists always run their one step, and the Developer picks its chain from its own table. Never ask the user to pick a depth level.
+Judge the depth of this run yourself, from two signals in order. First, anything the invocation says or implies about scope or urgency ("quick", "a fondo", "this is sensitive", "just a sanity check"): honor it. Second, when it says nothing, the size of what you find: how much the change touches and how much is genuinely unknown. Depth controls how exhaustive each step's OUTPUT is, never which steps run: this specialist's SKILL.md decides that, and the inline preludes `workflow.yaml` lists run first on every chain. Never ask the user to pick a depth level.
 
 ## Intent
 
@@ -58,4 +58,4 @@ Every run ends with a short prose report on its findings: what was found, what w
 
 ## The contract
 
-Ownership, the scratchpad, memory and the tools it is bound to, intake, the write boundary, injection, and the summary schema live in `asdt-core/protocol.md`. Read it now if you do not already have it in context. Per-step identity, model, inputs, and outputs live in this directory's `workflow.yaml`.
+Ownership, the scratchpad, memory and the tools it is bound to, intake, the write boundary, and injection live in `asdt-core/protocol.md`; the summary schema in `asdt-core/references/summary-schema.md`. Read both now if you do not already have them in context. Per-step identity, model, inputs, and outputs live in this directory's `workflow.yaml`.

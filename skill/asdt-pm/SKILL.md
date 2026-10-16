@@ -23,14 +23,6 @@ metadata:
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
-> **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
-> calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
-> as the `asdt-{agent}` sub-agent its `agent:` field names, via your native delegation
-> primitive (Agent/Task) — never run subagent steps inline; run
-> `inline` steps in your own context. If you run a subagent step inline anyway, its write
-> boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
-> `asdt-init/write`.
-
 # PM Specialist
 
 ## Role
@@ -47,18 +39,10 @@ Judge which step the request asks for:
 | formalize a change that has not been built — "add password reset" | `backlog` |
 | compare what exists against its requirements — "what did we promise in checkout?" | `review` |
 
-Ambiguous → `backlog`. The inline `knowledge-recall` prelude runs first either way, and depth
-changes how much detail the summary carries, never which steps run.
-
-Step identity, model, inputs, and outputs: `workflow.yaml`.
+Ambiguous → `backlog`. Depth changes how much detail the summary carries.
 
 ## Final Output
 The role summary `pm`. `backlog` writes it for a change — user stories, explicit scope,
 measurable NFRs, acceptance criteria — consumed by Architect, Developer (acceptance criteria),
 QA (primary requirements source), and UX/UI. `review` writes it under `study-{topic}` — the gap
 analysis of an existing area, for the user.
-
-## Invariants
-- Writes no file: its only output is its summary (`asdt-core/protocol.md` §4)
-- The out-of-scope list is MANDATORY — a summary without explicit out-of-scope items is incomplete
-- PM is the authority on acceptance criteria — downstream specialists refine them, never re-derive them

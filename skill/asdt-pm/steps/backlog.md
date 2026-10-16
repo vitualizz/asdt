@@ -8,7 +8,7 @@ everything PM has to say about this change, in one summary.
 - `### INPUT researcher` — OPTIONAL. Researcher's summary: its one-sentence direction is your
   starting point, and its `rejected:` decisions seed the out-of-scope list
 
-Each arrives as a path to read — never look for anything else. The raw request, the platform
+The raw request, the platform
 block (stack and domain vocabulary), and any `### PROJECT NOTE` lines are in this prompt.
 
 **DEGRADATION**: `researcher` UNRESOLVED → work from the raw request alone and record `ASSUMED: no prior discovery — requirements derived from the raw request` in `Open items`.
@@ -36,7 +36,7 @@ block (stack and domain vocabulary), and any `### PROJECT NOTE` lines are in thi
    this list to look thorough.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # PM: {change}
@@ -61,8 +61,3 @@ Return this summary (`asdt-core/protocol.md` §6):
 ## Open items
 - ASSUMED: {what was assumed} — {what would confirm or refute it}
 ```
-
-The stories are numbered in delivery order: the order IS the priority, never a separate
-rating. At most 5 acceptance criteria: the whole pipeline refines them, and QA formalizes edge
-cases from them without replacing them. No traceability matrix, no MoSCoW block — if a part
-does not change what the consumer does, leave it out.

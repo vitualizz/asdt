@@ -7,7 +7,7 @@ the starting point for requirements — or the Architect, when PM is skipped.
 ## Inputs
 No `### INPUT` line: this step works from the raw request, the codebase, the platform block
 (the stack the directions have to live in), and any `### PROJECT NOTE` lines (prior framings
-of the same problem). Look for nothing else.
+of the same problem).
 
 **DEGRADATION**: without a platform block, ground feasibility in what the codebase shows, and say so in `Open items`.
 
@@ -31,11 +31,8 @@ of the same problem). Look for nothing else.
    you did not pick becomes a won't-do with its reason — a rejected direction with no reason
    is the one that comes back next quarter.
 
-The recommendation is a direction, not a requirement. PM decides what gets built — or, when PM
-is skipped, the Architect designs from it.
-
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Researcher: {change}
@@ -58,5 +55,3 @@ Return this summary (`asdt-core/protocol.md` §6):
 ## Open items
 - ASSUMED: {feasibility call with no evidence} — {what would confirm or refute it}
 ```
-
-`Decisions` lists every discarded direction: it is where the exploration survives.

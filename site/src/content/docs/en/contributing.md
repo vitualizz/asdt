@@ -52,7 +52,7 @@ metadata:
 ...
 ```
 
-Between the frontmatter and `## Role` go three verbatim blocks the installer depends on — the `FIRST ACTION` blockquote, the empty generated region (`<!-- ASDT:GENERATED:specialist-header -->` … `<!-- /ASDT:GENERATED:specialist-header -->`), and the `ORCHESTRATOR GATE` blockquote. Copy them from any existing specialist without editing. An `inline` step with no prompt file — a gate where the orchestrator pauses for the human, like the Developer's `approve` and `verify` — gets its own `## {step} — …` section before `## Final Output`; that section is the step's whole contract.
+Between the frontmatter and `## Role` go two verbatim blocks the installer depends on — the `FIRST ACTION` blockquote and the empty generated region (`<!-- ASDT:GENERATED:specialist-header -->` … `<!-- /ASDT:GENERATED:specialist-header -->`), into which the installer splices the shared header with its ORCHESTRATOR GATE. Copy them from any existing specialist without editing. An `inline` step with no prompt file — a gate where the orchestrator pauses for the human, like the Developer's `approve` and `verify` — gets its own `## {step} — …` section before `## Final Output`; that section is the step's whole contract.
 
 `metadata` (`author` + `version`) is required in every `SKILL.md`. `trigger_phrases` is the one optional key — a host-facing discoverability list.
 
@@ -81,7 +81,7 @@ steps:
     output: summary              # optional — this step's return becomes the role summary
     reference_skills:
       - ../asdt-core/references/{x}.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
     host_skills:                 # optional — subagent steps only
       - {kebab-case-skill-name}
 ```
@@ -97,7 +97,7 @@ steps:
 
 ### 4. Write step files
 
-Create one `.md` per `subagent` step in `skill/{name}/steps/{step}.md`. Each file has four sections — `Purpose`, `Inputs` (one bullet per `### INPUT {name}` line, each a path to read, with one degradation line per optional input), `Processing`, and `Output` (the summary it returns, in the shared protocol's schema). A step never reaches memory, never writes a file (the Developer's `implement` and `/asdt-init`'s `write` are the only exceptions), and never asks the user: every gap becomes an `ASSUMED:` entry. Never write a memory provider's name or tool names into a prompt — `TestPromptsAreProviderNeutral` fails on one.
+Create one `.md` per `subagent` step in `skill/{name}/steps/{step}.md`. Each file has four sections — `Purpose`, `Inputs` (one bullet per `### INPUT {name}` line, each a path to read, with one degradation line per optional input), `Processing`, and `Output` (the summary it returns, in the shared summary schema (`asdt-core/references/summary-schema.md`)). A step never reaches memory, never writes a file (the Developer's `implement` and `/asdt-init`'s `write` are the only exceptions), and never asks the user: every gap becomes an `ASSUMED:` entry. Never write a memory provider's name or tool names into a prompt — `TestPromptsAreProviderNeutral` fails on one.
 
 ### 5. Register the specialist
 

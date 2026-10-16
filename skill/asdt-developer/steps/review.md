@@ -7,13 +7,13 @@ judgments with fixes, never a change.
 ## Inputs
 No `### INPUT` line: this step runs standalone, on the area the request names, the codebase,
 the platform block (the project's conventions and structure), and any `### PROJECT NOTE`
-lines. Look for nothing else.
+lines.
 
 ## Processing
 
 1. **Map the area.** The files, modules, and entry points the request names, plus who calls
    into them. A built change, branch, or uncommitted diff → its files from git
-   (`asdt-core/protocol.md` §6) plus every caller of a symbol they change, judged against the
+   (`asdt-core/references/summary-schema.md`) plus every caller of a symbol they change, judged against the
    expected load the repo shows (README, deploy config), recorded as `ASSUMED: expected load —
    {what}`. "What you built" with HEAD on the default branch and a clean tree → the last
    commit (`HEAD~1..HEAD`), recorded as `ASSUMED: reviewed HEAD~1..HEAD`. Anchor every
@@ -52,11 +52,11 @@ lines. Look for nothing else.
 5. **Say what is right.** Two or three strengths, with the same evidence, so the reader can
    tell an area solid with rough edges from one in trouble.
 
-**This step writes NOT ONE BYTE.** Every fix is a
-proposal in the summary; turning any of them into code is a separate, explicit request.
+Every fix is a proposal in the summary; turning any of them into code is a separate, explicit
+request.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Developer: {change}

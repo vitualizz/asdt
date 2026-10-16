@@ -6,8 +6,7 @@ requirements for a change that has not been built. The product is a gap analysis
 
 ## Inputs
 No `### INPUT` line: this step runs standalone, on the area the request names, the codebase,
-the platform block, and any `### PROJECT NOTE` lines (prior requirements for the area). Look
-for nothing else.
+the platform block, and any `### PROJECT NOTE` lines (prior requirements for the area).
 
 ## Processing
 
@@ -35,7 +34,7 @@ Do NOT write new requirements for the gaps. Naming a gap is this step's job; dec
 build about it is a change, and a change starts at `backlog`.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # PM: {change}

@@ -9,7 +9,7 @@ owes. `ui-design` designs the UI from this return; this step designs no visuals.
 - `### INPUT pm` — OPTIONAL. Product's summary: the requirement, its `Acceptance criteria`, and
   the scope in `Constraints`
 
-It arrives as a path to read — never look for anything else. The platform block is in this
+The platform block is in this
 prompt: extract its `CSS:` line and its `Design surface:` line, whose bare value you use
 (`mobile (default — never asked)` → `mobile`). A `Design surface: none` never reaches this
 step: the orchestrator stops first (SKILL.md).
@@ -61,11 +61,8 @@ step: the orchestrator stops first (SKILL.md).
    (`text on surface`), which `ui-design` resolves to values. A requirement you cannot verify
    from those values goes to `Open items` as advisory — never asserted as a pass.
 
-No self-critique section. Judging your own design without a user in front of it produces
-confident prose and no signal.
-
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # UX/UI: {change}
@@ -110,5 +107,3 @@ Primary: {the Design surface line's bare value}. Other surfaces: {one line on wh
 ## Open items
 - ASSUMED: {anything unverified} — {what would confirm or refute it}
 ```
-
-Name each screen the same way every time it recurs: `ui-design` designs one screen per name.

@@ -8,17 +8,14 @@ None. The project tree is the only source, and no `### INPUT` line arrives.
 
 ## Processing
 
-Read-only: run the probes below and return what they found. Every probe is one bounded shell command with an exact mapping table: first matching row wins, no model judgment. A probe that errors is non-fatal: record that field as `unknown` / `inferred` / `low` and continue.
+Read-only: run the probes below and return what they found. Every probe is one bounded shell command with an exact mapping table: first matching row wins, no model judgment. A probe that errors is non-fatal: record that field as `unknown` / `inferred` / `low` and continue. When one command's output satisfies ≥ 2 distinct rows, emit the first-matching row's value and cap `confidence` at `medium` (conflicting evidence).
 
 **Never guess.** No marker matched means an empty stack, never one inferred from incidental files.
 
 ### Detect project stack
 
-Run ONE bounded command scanning for stack marker files down to depth 3 — do not
-eyeball a directory listing or infer from visible files. The result must be
-identical no matter which model or session runs it. The exclusion list and the
-result cap are part of the contract: they keep the output size independent of
-repo size.
+Run ONE bounded command scanning for stack marker files down to depth 3. The exclusion
+list and the result cap keep the output size independent of repo size.
 
 ```
 fd -d 3 -t f -H '^(go\.mod|package\.json|Cargo\.toml|pyproject\.toml|requirements\.txt|Gemfile)$' . \
@@ -52,13 +49,9 @@ From the ordered marker list, derive — mechanically, first occurrence wins:
 - **Primary language** — the first entry of `detected_stack`.
 - **Language root `{lang_root}`** — for each language, the directory containing its first marker. The context probes below run against these roots, not blindly against the repo root — a marker in `backend/` means that language's evidence lives in `backend/`.
 
-If nothing matches, record an empty stack — do not guess a stack from other files.
-
 ### Detect project context
 
-The tables are uniform across languages: a new language adds rows, never logic. No row matches → `unknown` / `inferred` / `low`.
-
-Inputs from the stack scan: `detected_stack`, the primary language, and each language's `{lang_root}`. Probes that inspect language evidence run against the primary language's `{lang_root}` — not blindly against the repo root.
+The tables are uniform across languages: a new language adds rows, never logic. A table match is `source: detected`; no row matching is `unknown` / `inferred` / `low`. Probes that inspect language evidence run against the primary language's `{lang_root}`.
 
 **Probe: `is_monorepo`**
 
@@ -89,8 +82,6 @@ ls go.work pnpm-workspace.yaml 2>/dev/null; grep -l '^\[workspace\]' Cargo.toml 
 | ruby | `{lang_root}/.rspec` exists | `bundle exec rspec` | medium |
 | rust | `{lang_root}/Cargo.toml` exists | `cargo test` | high |
 
-All table matches are `source=detected`.
-
 **Probe: `naming_style`** — sample up to 8 source files (≤ 64 KB each) under the primary language's `{lang_root}`, depth ≤ 3, deterministic order:
 
 ```
@@ -111,10 +102,6 @@ A file **conforms** when it matches the positive regex (`grep -qE`) and does not
 
 No source files sampled → `unknown`/inferred/low.
 
-The violation regexes flag what breaks the language's OWN idiom — an underscore in a
-Go or TS identifier, a capitalised Python `def` — never the lowercase names the idiom
-itself prescribes. A Go `func helper()` or a TS `export function parseDate()` conforms.
-
 **Probe: `architectural_style`** — list top-level directories with one command (`fd -d 1 -t d . {dir}` or `find {dir} -maxdepth 1 -type d`), first at the repo root; if no row matches there and the primary `{lang_root}` differs from the root, evaluate the same table once more at `{lang_root}`:
 
 | Layout evidence (first match wins) | Value | Source | Confidence | `file_structure` |
@@ -127,11 +114,6 @@ itself prescribes. A Go `func helper()` or a TS `export function parseDate()` co
 | No match at root nor at `{lang_root}` | `unknown` | inferred | low | *(none — omit the field)* |
 
 The matching row also fixes `file_structure`, a plain value with no source or confidence, prefixed with `{lang_root}/` when the row matched at `{lang_root}` rather than the root. It never produces an ambiguity.
-
-`go-standard-layout` names the `cmd/` + `internal/` directory convention only — it says
-nothing about hexagonal, layered, or any other architecture inside those packages.
-
-When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting architectural styles). Here "rows" are the five layout predicates in table order — count how many DISTINCT predicates the same directory listing satisfies; the count is a mechanical row-id count over the one command's output, never a judgment call.
 
 ### Detect design fingerprint
 
@@ -177,7 +159,7 @@ grep -oE '"(i18next|react-i18next|next-i18next|vue-i18n|react-intl|@formatjs/[a-
 | no dep, but a `locales` directory exists (dual fd/find, depth ≤ 3) | `custom (locale files)` | detected | medium |
 | none of the above | `none` | detected | medium |
 
-When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting i18n libraries). Locale-dir fallback: `fd -d 3 -t d -H '^locales$' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -type d -name locales -not -path '*/node_modules/*' | head -1`).
+Locale-dir fallback: `fd -d 3 -t d -H '^locales$' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -type d -name locales -not -path '*/node_modules/*' | head -1`).
 
 **Pack: `css_approach`** *(fires: node)*:
 
@@ -196,7 +178,7 @@ grep -oE '"(tailwindcss|styled-components|@emotion/[a-z]+|sass|less|@stitches/[a
 | no dep, but a `*.module.css` file exists (dual fd/find) | `css-modules` | detected | medium |
 | none of the above | `none` | detected | medium |
 
-When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting css approaches). CSS-modules probe: `fd -d 3 -g '*.module.css' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -name '*.module.css' -not -path '*/node_modules/*' | head -1`).
+CSS-modules probe: `fd -d 3 -g '*.module.css' -E node_modules {node_root} | head -1` (find fallback: `find {node_root} -maxdepth 3 -name '*.module.css' -not -path '*/node_modules/*' | head -1`).
 
 **Pack: `orm`** *(fires: node | go | python — evaluate the FIRST of these in `detected_stack` order; first-lang-wins)*:
 
@@ -225,9 +207,7 @@ Run only the winning language's command against its `{lang_root}`; each pipes `|
 | python | `peewee` | `peewee` | high |
 | (winning lang) | no match | `none` | medium |
 
-Every row is `source: detected`.
-
-When the command output spans libraries from ≥ 2 distinct rows above, emit the first-matching row's value but cap `confidence` at `medium` (conflicting ORMs). Distinct rows are counted WITHIN the winning language's rows only — only the winning language's command ran, so rows of a losing language never count toward distinctness.
+The ≥ 2-rows cap counts the winning language's rows only: no other language's command ran.
 
 **Pack: `state_management`** *(fires: node)*:
 
@@ -287,9 +267,7 @@ Config-file checks are fixed-path `ls` at `{lang_root}`; dep checks grep the man
 | python | `.pylintrc` or `pylint` dep | `pylint` | high |
 | (winning lang) | no match | `none` | medium |
 
-Every row is `source: detected`.
-
-**Pack: `code_intelligence`** *(fires: the binding names a provider — repo root; modeled on `is_monorepo`, positive-evidence-only)*. Probe the index marker the binding names:
+**Pack: `code_intelligence`** *(fires: the binding names a provider — repo root; positive-evidence-only)*. Probe the index marker the binding names:
 
 ```
 ls -d {index marker} 2>/dev/null | head -1
@@ -323,9 +301,8 @@ Emit ONE ambiguity per field that is `medium` or `low` confidence, or genuinely 
 
 **Fingerprint ambiguities.** Every FIRED pack with a `medium` or `low` result, a clean `none` included, emits one ambiguity named `design_fingerprint.{concern}` (e.g. `design_fingerprint.css_approach`), always skippable. A pack that did not fire emits none, and `code_intelligence` never does.
 
-
 ## Output
-Return this summary (protocol §6), filling `Open items` and the two sections below, which `write` and `clarify` read, so keep their shape exact:
+Return this summary (`asdt-core/references/summary-schema.md`), filling `Open items` and the two sections below, which `write` and `clarify` read, so keep their shape exact:
 
 ```markdown
 # Init detection: init

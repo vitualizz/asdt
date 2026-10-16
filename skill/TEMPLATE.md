@@ -32,19 +32,18 @@ metadata:
 ---
 ```
 
-**Three verbatim blocks follow, in this order.** The Go installer depends on all three; copy them from any existing specialist without editing:
+**Two verbatim blocks follow, in this order.** The Go installer depends on both; copy them from any existing specialist without editing:
 
 1. The `FIRST ACTION — self-load the header` blockquote.
 2. The generated region — the HTML comment, then `<!-- ASDT:GENERATED:specialist-header -->` immediately followed by `<!-- /ASDT:GENERATED:specialist-header -->`, committed with an EMPTY body. The installer splices `asdt-core/specialist-header.md` between the markers. Never hand-edit inside them, and never place them at or above the closing frontmatter `---` (a marker inside the frontmatter breaks the parser and the OpenCode wrapper). Dropping the region is SILENT — with both markers absent the splice is a no-op and the specialist installs with no header, which is why `skill/embedded_test.go` greps for both literals.
-3. The `ORCHESTRATOR GATE` blockquote.
 
 **Body**, in this order:
 
 - `## Role` — two or three sentences: what it does, and what it explicitly does not.
-- `## Orchestration Plan` — for a single-step specialist, one sentence naming the step and what depth changes; for a multi-step one, a table mapping what the request asks for to the chain that serves it. Then the pointer: `Step identity, model, inputs, and outputs: workflow.yaml.` Never restate a step's file, model, inputs, or outputs here — that duplication is what `workflow.yaml` exists to prevent.
+- `## Orchestration Plan` — for a single-step specialist, one sentence naming the step and what depth changes; for a multi-step one, a table mapping what the request asks for to the chain that serves it. Never restate a step's file, model, inputs, outputs, or prelude order here: `workflow.yaml` holds them, and the FIRST ACTION block already sends the reader there.
 - One `## {step} — …` section per `inline` step that has no prompt file, and only for those — that section IS the step's contract, so it says when the step runs, what it shows or asks, and what happens on every answer, including when no human can answer.
 - `## Final Output` — what this specialist's role summary carries, which step writes it, and who consumes it.
-- `## Invariants` — a handful of lines: write scope, prefix, degradation, and whatever is load-bearing for THIS specialist.
+- `## Invariants` — only when something orchestrator-level remains for THIS specialist: a write-scope exception, a gate, a narration rule. The default write boundary, depth, and step-level rules already live in the header and the step files; never restate them, and omit the section when nothing remains.
 
 ## 3. workflow.yaml
 
@@ -69,7 +68,7 @@ steps:
     output: summary              # optional — this step's return becomes the role summary
     reference_skills:
       - ../asdt-core/references/{x}.md
-      - ../asdt-core/protocol.md
+      - ../asdt-core/references/summary-schema.md
     host_skills:                 # optional — subagent steps only
       - {kebab-case-skill-name}
 ```
@@ -104,21 +103,20 @@ Four sections. Nothing else.
 # {Step} — {Specialist} Specialist
 ## Purpose        One or two sentences.
 ## Inputs         One bullet per `### INPUT {name}` line, marking the optional ones
-                  OPTIONAL, and what to extract from that file. Then: each arrives as a
-                  path to read — never look for anything else. Then one DEGRADATION line
-                  per optional input.
+                  OPTIONAL, and what to extract from that file; a step with none says so.
+                  Then one DEGRADATION line per optional input.
 ## Processing     Numbered steps. Reasoning and judgment, not bureaucracy.
-## Output         "Return this summary:" — the protocol §6 schema, naming the sections
+## Output         "Return this summary:" — the `asdt-core/references/summary-schema.md` schema, naming the sections
                   this step fills and any role-specific section it adds.
 ```
 
-A step never reaches memory, never writes a file (the two exceptions are `asdt-core/protocol.md` §4), and never asks the user — it hardens every gap into an `ASSUMED:` entry. Never write a provider's name or tool names — memory or code intelligence — into any prompt: the installer binds the verbs, and `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails on a hardcoded one. A step never reads the memory binding: the orchestrator strips it from every text it injects (protocol §5), so a value a step needs from it arrives in the step's payload. The code-intelligence binding is the step's own: it rides in the executor header, so a step speaks the code-intelligence verbs (**explore**, **search**, …) and never a tool name.
+A step never reaches memory, never writes a file (the two exceptions are `asdt-core/protocol.md` §4), and never asks the user — it hardens every gap into an `ASSUMED:` entry. Never write a provider's name or tool names — memory or code intelligence — into any prompt: the installer binds the verbs, and `TestPromptsAreProviderNeutral` (`internal/installer/memory_binding_test.go`) fails on a hardcoded one. A step never reads the memory binding: no text the orchestrator injects carries one (protocol §5), so a value a step needs from it arrives in the step's payload. The code-intelligence binding is the step's own: it rides in the executor header, so a step speaks the code-intelligence verbs (**explore**, **search**, …) and never a tool name.
 
 No numeric context budgets. No per-input degradation paragraph — one line each. No envelope: the return value IS the summary. A step file NEVER contains the EXECUTOR block; those guardrails come from the agent definition (`agent: analyst` / `agent: builder` bake in `asdt-core/executor-header.md`) or from the orchestrator prepending that header.
 
 ## 5. Summary contract
 
-One role summary per role per change: `{scratchpad}/asdt/{change}/{role}.md`. Its schema is defined once, in `asdt-core/protocol.md` §6 — reference it, never restate it. A role omits sections that do not apply, and never adds sections about the process itself.
+One role summary per role per change: `{scratchpad}/asdt/{change}/{role}.md`. Its schema is defined once, in `asdt-core/references/summary-schema.md` — reference it, never restate it. A role omits sections that do not apply, and never adds sections about the process itself.
 
 ## 6. Registering a new specialist
 

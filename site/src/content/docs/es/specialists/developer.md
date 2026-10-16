@@ -19,7 +19,6 @@ Decide su propia cadena según lo que le pidas:
 
 | Le pedís | Corre |
 |---|---|
-| una pregunta o un chequeo rápido | `explore` |
 | un plan — "¿cómo lo harías?" | `explore → spec` — el plan pasa a ser su resumen y la corrida termina; no se escribe código |
 | el cambio en sí | `explore → spec → approve → implement → verify` |
 | "implementá el plan que aprobamos" | `approve → implement → verify` — vuelve a mostrar el plan del scratchpad de la sesión en lugar de rehacerlo (o lo reconstruye, si el scratchpad ya no está); un plan ya construido pero nunca verificado se retoma directo en `verify` |
@@ -58,7 +57,7 @@ Apuntalo a código que ya existe y responde sin tocarlo:
 
 Una revisión lee el código y sus llamadores y reporta hallazgos numerados, de mayor a menor severidad — bugs, manejo de errores, tests faltantes en lógica riesgosa, código que no debería existir, estructura —, cada uno con un caso concreto que lo rompe (o, fuera de bugs y manejo de errores, la evidencia — la ruta del duplicado, la búsqueda del símbolo sin uso) y el arreglo más chico. Revisar un cambio arranca con un veredicto: se puede entregar, o qué hallazgos arreglar primero.
 
-Una pregunta se queda en exploración; pedirle un plan llega hasta el spec; solo pedirle que lo construya escribe archivos — y solo después de que apruebes.
+Una pregunta se responde desde el código, sin correr ningún paso; pedirle un plan llega hasta el spec; solo pedirle que lo construya escribe archivos — y solo después de que apruebes.
 
 ## Posición en el pipeline
 

@@ -23,14 +23,6 @@ metadata:
 <!-- ASDT:GENERATED:specialist-header -->
 <!-- /ASDT:GENERATED:specialist-header -->
 
-> **ORCHESTRATOR GATE (inline copy — full version in specialist-header.md)**: You, the
-> calling assistant, are the SOLE orchestrator of this plan. Launch every `subagent` step
-> as the `asdt-{agent}` sub-agent its `agent:` field names, via your native delegation
-> primitive (Agent/Task) — never run subagent steps inline; run
-> `inline` steps in your own context. If you run a subagent step inline anyway, its write
-> boundary binds YOU — no Edit, no Write, unless the step is `developer/implement` or
-> `asdt-init/write`.
-
 # Security Specialist
 
 ## Role
@@ -40,29 +32,8 @@ NOT write implementation code, architecture decisions, or test plans.
 
 ## Orchestration Plan
 
-**Risk-surface gated, not complexity gated**: judge the risk surface yourself from what the change touches — authentication, secrets, data handling, external integrations. High risk surface ⇒ deep pass. The two axes stay independent: a one-line diff that touches password hashing is still high.
-
-| Level | Behavior |
-|-------|----------|
-| **none** | Not auto-invoked — still user-invocable on demand |
-| **moderate** | `assess → harden` at standard depth |
-| **high** | `assess → harden` at deep: every entry point walked, every surviving threat cross-checked |
-
-The risk surface is a DEPTH dial, never a step list — both steps run whenever Security runs.
-
-Security gains no `review` step: assessing what already exists IS its normal work. When the invocation is an examination with no change to deliver, the same chain runs under `study-{topic}` (`asdt-core/protocol.md` §0).
-
-Both sub-agent steps run after the inline `knowledge-recall` and `platform-analysis` preludes.
-
-Step identity, model, inputs, and outputs: `workflow.yaml`.
+Both steps always run: `assess → harden`. Depth follows the risk surface rather than the size of the diff — what the change touches among authentication, secrets, data handling, and external integrations. A one-line diff that touches password hashing gets the deep pass: every entry point walked, every surviving threat cross-checked.
 
 ## Final Output
 The role summary `security`, written from `harden`: prioritized findings, each with its
 mitigation, and the hardening checklist. Consumed by Developer, Architect, and QA.
-
-## Invariants
-- **Write scope**: writes no file — never the host source tree, never `.asdt/`, never any local path. Its only output is its summary (`asdt-core/protocol.md` §4)
-- **No required predecessor**: run at any stage — fresh project, mid-development, or after launch. Read whatever summaries exist
-- **Analysis only**: reason over the change and inspect the repository for evidence; never run scanners, dependency audits, or any command beyond the read-only git inspection of `asdt-core/protocol.md` §6
-- Every finding MUST have a concrete mitigation
-- Severity is one word — `high`, `medium`, or `low`. No CVSS, no numeric scores

@@ -16,7 +16,7 @@ summary Developer, QA, and Security consume.
   problem** and its rejections are out of scope; when PM ran, PM wins — PM already folded
   discovery into the requirements, and a conflict between them is PM's decision, not yours
 
-Each arrives as a path to read — never look for anything else. The platform block (stack,
+The platform block (stack,
 conventions, existing structure) is in this prompt.
 
 **DEGRADATION**: `pm` UNRESOLVED → design against the raw request, framed by the researcher's direction when it arrived, and record `ASSUMED: no PM summary — requirements read from the raw request` (or `… from the raw request and the researcher's direction`) in `Open items`.
@@ -33,15 +33,11 @@ conventions, existing structure) is in this prompt.
    won and why each alternative lost. That IS the architecture decision record — there is no
    separate ADR artifact.
 
-   Default to the simplest, most direct approach that satisfies the acceptance criteria, and
-   do not add layers, patterns, indirection, or extensibility the requirement does not
-   demand. Keep a reversible, two-way-door choice simple; invest day-1 rigor only where the
-   choice is hard to reverse or externally observable — where others depend on the surface
-   and changing it later breaks them (for example a public API shape, data schema, wire
-   format, or auth model; illustrative, not exhaustive). When two options both satisfy the
-   ACs, choose the one with fewer moving parts. Justify not only an abstraction you add, but
-   equally a deliberate choice to leave a hard-to-reverse or externally-observable surface
-   simple.
+   Default to the simplest approach that satisfies the acceptance criteria: no layer, pattern,
+   or extensibility the requirement does not demand, and between two that both satisfy them,
+   the one with fewer moving parts. Invest day-1 rigor only where the choice is hard to reverse
+   or externally observable (a public API shape, a data schema, a wire format, an auth model),
+   and justify such a surface left simple as you would an abstraction added.
 
 3. **Design.** From the chosen approach, define:
    - the data model — entities with their fields and relationships
@@ -61,7 +57,7 @@ conventions, existing structure) is in this prompt.
 Do NOT write implementation code. Define the technical structure and stop.
 
 ## Output
-Return this summary (`asdt-core/protocol.md` §6):
+Return this summary (`asdt-core/references/summary-schema.md`):
 
 ```markdown
 # Architect: {change}

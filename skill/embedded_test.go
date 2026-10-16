@@ -104,9 +104,9 @@ func TestCoreSourcesCarryWriteBoundaryPhrase(t *testing.T) {
 		return strings.Contains(strings.ToLower(string(body)), phrase)
 	}
 
-	// The protocol is the only text BOTH parties hold: a declared reference skill
-	// on every subagent step, and — via specialist-header.md — spliced into every
-	// routed SKILL.md the orchestrator itself reads.
+	// The protocol reaches the orchestrator through specialist-header.md, which is
+	// spliced into every routed SKILL.md; sub-agents get the write boundary from
+	// the executor header instead.
 	if body, err := fs.ReadFile(FS(), "asdt-core/protocol.md"); err != nil {
 		t.Errorf("asdt-core/protocol.md unreadable in embedded FS: %v", err)
 	} else if !contains(body) {
@@ -152,8 +152,7 @@ func TestRoutedSpecialistInvariants(t *testing.T) {
 	}
 
 	const (
-		soleOrchestrator = "SOLE orchestrator"
-		firstAction      = "FIRST ACTION — self-load the header"
+		firstAction = "FIRST ACTION — self-load the header"
 
 		// Package skill cannot import internal/installer (the installer imports
 		// this package), so these two literals are a hand-copy of
@@ -170,9 +169,6 @@ func TestRoutedSpecialistInvariants(t *testing.T) {
 			continue
 		}
 		body := string(data)
-		if !strings.Contains(body, soleOrchestrator) {
-			t.Errorf("%s/SKILL.md missing required phrase %q", dir, soleOrchestrator)
-		}
 		if !strings.Contains(body, firstAction) {
 			t.Errorf("%s/SKILL.md missing required phrase %q", dir, firstAction)
 		}

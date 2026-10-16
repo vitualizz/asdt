@@ -12,11 +12,11 @@ Language-neutral defaults for writing code and tests. Optional reference for Dev
 
 ## Simplicity first
 
-The smallest change that FULLY solves the problem. Take the first rung of this ladder that fully works, and name a rung by its name, never a number:
+The smallest change that FULLY solves the problem. Take the first rung of this ladder that fully works:
 
 - **not needed** — a feature, option, or flexibility nobody asked for is not built; it is out of scope.
 - **exists in the codebase** — a helper, component, service, or pattern: use it the way the surrounding code does.
-- **stdlib or platform**.
+- **stdlib or platform** — what the language, its standard library, or the runtime already provides.
 - **installed dependency** — one already in the manifest. Never add a dependency for what a few lines do.
 - **one line** — when a reader gets it at a glance; a one-liner that needs decoding is not one.
 - **minimum new code** — otherwise: no wrapper, option, config, or "for later" code nobody asked for.
