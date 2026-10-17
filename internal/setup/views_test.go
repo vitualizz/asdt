@@ -207,11 +207,6 @@ func stateView(t *testing.T, target string) string {
 		return m.View()
 	}
 
-	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → PermissionConsent
-	if target == "PermissionConsent" {
-		return m.View()
-	}
-
 	if target == "AgentWriteMode" {
 		// Need a conflict to enter StateAgentWriteMode. Set up a CLAUDE.md with
 		// the asdt block marker so detectAgentConflicts returns a hit.
@@ -241,7 +236,7 @@ func stateView(t *testing.T, target string) string {
 		return m2.View()
 	}
 
-	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
+	m = updateKey(t, m, tea.KeyEnter) // EmojiPref → Review
 	if target == "Review" {
 		return m.View()
 	}
@@ -562,8 +557,7 @@ func TestView_ReviewOmitsEmojiRowWhenSkipped(t *testing.T) {
 	for range installer.PersonaPresets {
 		m = updateKey(t, m, tea.KeyDown) // navigate to [ Skip → ]
 	}
-	m = updateKey(t, m, tea.KeyEnter) // Skip → PermissionConsent
-	m = updateKey(t, m, tea.KeyEnter) // PermissionConsent → Review
+	m = updateKey(t, m, tea.KeyEnter) // Skip → Review
 	if m.State() != setup.StateReview {
 		t.Fatalf("expected StateReview, got %v", m.State())
 	}
@@ -685,7 +679,6 @@ func TestView_ReviewMemoryRow(t *testing.T) {
 			for range installer.PersonaPresets {
 				m = updateKey(t, m, tea.KeyDown) // → [ Skip → ]
 			}
-			m = updateKey(t, m, tea.KeyEnter) // → PermissionConsent
 			m = updateKey(t, m, tea.KeyEnter) // → Review
 			if m.State() != setup.StateReview {
 				t.Fatalf("state = %v, want StateReview", m.State())
@@ -782,7 +775,6 @@ func TestView_ReviewCodeIntelRow(t *testing.T) {
 			for range installer.PersonaPresets {
 				m = updateKey(t, m, tea.KeyDown) // → [ Skip → ]
 			}
-			m = updateKey(t, m, tea.KeyEnter) // → PermissionConsent
 			m = updateKey(t, m, tea.KeyEnter) // → Review
 			if m.State() != setup.StateReview {
 				t.Fatalf("state = %v, want StateReview", m.State())

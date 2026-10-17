@@ -44,8 +44,9 @@ asdt-tui
 4. **Providers** — one screen, two choices. **Memory**: pick Engram or **No memory**. The default is Engram when it is on your `PATH`, otherwise No memory. You can pick Engram before installing it: the installer warns and shows the install link, and memory works once Engram is connected. A provider is recommended because it keeps key project knowledge between sessions. **Code intelligence**: pick Codegraph or **No code intelligence**, defaulting the same way. Specialists query the index only in a project it has indexed; everywhere else they grep and read.
 5. **Model preset** — pick how much model horsepower each specialist step uses (see below).
 6. **Persona** — optionally pick a persona for the installed assistants, and whether they should use emojis. It goes into your global `CLAUDE.md` / `AGENTS.md` as one marked block; the rest of the file is never touched. If the file already exists, you choose per assistant to update ASDT's block or skip it. You can skip this step entirely (see [The agent config](/asdt/docs/ai-assistants#the-agent-config-both)).
-7. **Permissions** — an opt-in gate for the Claude Code permission overlay. Declining is the safe default and writes nothing.
-8. **Review → Install → Done** — confirm your selections, watch the install run, and you're set. The **Dashboard** on the main menu shows per-assistant status any time, and removes ASDT's agent config block (`r`) when you no longer want it.
+7. **Review → Install → Done** — confirm your selections, watch the install run, and you're set. The **Dashboard** on the main menu shows per-assistant status any time, and removes ASDT's agent config block (`r`) when you no longer want it.
+
+> **Fewer approval prompts on Claude Code:** run it in **auto mode**, where a classifier lets routine actions through and blocks risky ones; ASDT's sub-agents inherit it. ASDT's own gates (approving the Developer's plan, approving verification commands) stay in every mode. Never use `bypassPermissions` on your host. See [Permission prompts](/asdt/docs/ai-assistants#permission-prompts-claude-code).
 
 ### Model presets
 

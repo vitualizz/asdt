@@ -1,6 +1,6 @@
 ---
 title: Asistentes de IA
-description: Cómo se instala ASDT en cada asistente de IA compatible — Claude Code y OpenCode — incluyendo directorios de instalación, configuración de agentes, envoltorios de comandos, la capa de permisos y cómo se conecta la memoria.
+description: Cómo se instala ASDT en cada asistente de IA compatible — Claude Code y OpenCode — incluyendo directorios de instalación, configuración de agentes, envoltorios de comandos, avisos de permiso y cómo se conecta la memoria.
 order: 14
 locale: es
 ---
@@ -20,7 +20,7 @@ Independientemente del asistente, una instalación produce las mismas piezas ló
 - **Configuración del agente** — tus preferencias de persona, emojis e idioma, escritas como un único bloque marcado en el archivo de configuración global del asistente (consulta [La configuración del agente](#la-configuración-del-agente-ambos)).
 - **Un manifiesto de instalación** — un archivo `.install-meta.json` que registra lo que escribió la última instalación, para que volver a ejecutar pueda actualizar de forma limpia y eliminar archivos obsoletos.
 
-Los detalles de cada pieza difieren según el asistente. Aquí está la comparación completa — un par de términos de la tabla merecen una nota en lenguaje simple antes de que te los encuentres: **`XDG_CONFIG_HOME`** es solo la variable estándar de ubicación de carpeta que las herramientas de Linux/macOS revisan antes de usar una ruta de configuración por defecto, y la fila de **capa de permisos** (solo Claude Code, más abajo hay más detalle) es una **fusión estructural JSON** opcional — combinar la configuración de ASDT dentro de tu archivo de configuración existente sin sobrescribir el resto — que activa el **modo bypass**, un ajuste de Claude Code que deja de pedir permiso en cada acción, detrás de una **red de denegación**: la lista fija de archivos y configuraciones que el instalador se niega a tocar incluso cuando esos avisos de permiso se están saltando.
+Los detalles de cada pieza difieren según el asistente. Un término de abajo merece una nota en lenguaje simple antes de que te lo encuentres: **`XDG_CONFIG_HOME`** es solo la variable estándar de ubicación de carpeta que las herramientas de Linux/macOS revisan antes de usar una ruta de configuración por defecto.
 
 ## Claude Code vs OpenCode
 
@@ -28,11 +28,17 @@ Los detalles de cada pieza difieren según el asistente. Aquí está la comparac
 
 Claude Code descubre y activa las skills de forma nativa, así que no necesita un punto de entrada extra: llamas al especialista directamente. OpenCode no expone las skills como slash-commands de la misma manera, por eso ASDT genera un pequeño archivo de comando por especialista que simplemente dice "carga y activa esta skill de especialista". Por eso verás `~/.config/opencode/commands/` poblado para OpenCode, pero ningún directorio equivalente para Claude Code.
 
-### La capa de permisos (solo Claude Code)
+### Avisos de permiso (Claude Code)
 
-Como se explicó arriba, la capa es una fusión estructural JSON **opcional** en tu `~/.claude/settings.json` global: activa el modo bypass (`permissions.defaultMode = "bypassPermissions"`) detrás de una red de denegación curada — la lista de denegación es el control real bajo bypass, y protege su propio archivo de configuración y el resto de `~/.claude` de ser editados.
+ASDT nunca cambia tu configuración de permisos de Claude Code. Para reducir los avisos de aprobación, usa Claude Code en **modo auto** (auto mode): un clasificador revisa cada acción, deja pasar las rutinarias y bloquea las riesgosas. Es el modo inicial por defecto de las sesiones interactivas desde Claude Code v2.1.283. Los sub-agentes de ASDT (`asdt-analyst`, `asdt-builder`) heredan el modo auto de la sesión, y el clasificador también revisa la tarea que se les entrega, cada una de sus llamadas a herramientas y el reporte que devuelven.
 
-Se escribe de forma segura: se guarda una copia de respaldo previa, la escritura es atómica (archivo temporal + fsync + rename) y el resultado se valida después de escribir — si la validación falla, ASDT revierte a la copia de respaldo para que Claude Code siempre arranque. Volver a ejecutar es idempotente: unifica al mismo conjunto de denegación sin duplicados, y las reglas obsoletas de instalaciones anteriores se eliminan primero. OpenCode no tiene equivalente porque sus agentes ejecutores llevan sus permisos inline (el analyst deniega ediciones y restringe Bash a una lista de solo inspección; el builder permite ediciones pero deniega la delegación y el scratchpad; los dos deniegan las herramientas de memoria).
+Las compuertas de consentimiento propias de ASDT son aparte y se mantienen en todos los modos: el Developer te pide aprobar su plan antes de escribir cualquier archivo, y te pregunta antes de correr comandos de verificación en tu máquina.
+
+Nunca uses `bypassPermissions` en tu máquina: Claude Code lo reserva para contenedores y máquinas virtuales aisladas.
+
+Para un aislamiento extra, el sandbox nativo de Claude Code (`/sandbox`) confina Bash a nivel del sistema operativo. En Linux necesita `bubblewrap` y `socat`; define `sandbox.failIfUnavailable: true` para que una dependencia faltante falle en lugar de correr sin sandbox.
+
+Los agentes ejecutores de OpenCode llevan sus permisos inline: el analyst deniega ediciones y restringe Bash a una lista de solo inspección; el builder permite ediciones pero deniega la delegación y el scratchpad; los dos deniegan las herramientas de memoria.
 
 ### La configuración del agente (ambos)
 
@@ -85,4 +91,4 @@ El soporte de cada asistente se expresa como un conjunto de pequeños **adaptado
 - **`AgentConfigAdapters`** — la ruta del archivo de configuración global del asistente. La lógica compartida del bloque marcado escribe y quita ahí la configuración del agente.
 - **`CommandAdapters`** — opcional; solo los asistentes que necesitan envoltorios de comandos generados llevan una entrada (Claude Code no lleva ninguna).
 
-Cualquier cosa específica de un asistente — como la capa de permisos de Claude Code — vive en su propio archivo detrás de su propia guarda. Como cada aspecto es una lista de adaptadores separada, un nuevo asistente es aditivo: implementas su generación y rutas, lo registras, y la lógica compartida de copia de skills, manifiesto y limpieza (prune) se le aplica sin cambios.
+Cualquier cosa específica de un asistente vive en los adaptadores de ese asistente. Como cada aspecto es una lista de adaptadores separada, un nuevo asistente es aditivo: implementas su generación y rutas, lo registras, y la lógica compartida de copia de skills, manifiesto y limpieza (prune) se le aplica sin cambios.

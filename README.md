@@ -42,6 +42,8 @@ asdt-tui
 
 An interactive menu checks your setup, lets you pick which assistant(s) to target (Claude Code, OpenCode, or both), and copies the ASDT skills in. If you pick a persona, it goes into your global `CLAUDE.md` / `AGENTS.md` as one marked block: ASDT edits only that block, never the rest of the file, and the menu's Dashboard removes it.
 
+ASDT never changes your Claude Code permission settings. For fewer approval prompts, run Claude Code in **auto mode**: a classifier lets routine actions through and blocks risky ones, and ASDT's sub-agents inherit it. ASDT's own gates (approving the Developer's plan, approving verification commands) stay in every mode. Never use `bypassPermissions` on your host.
+
 **2. Initialize your project**
 
 Open your AI assistant in your project folder and run:
