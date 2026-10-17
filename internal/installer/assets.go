@@ -7,5 +7,5 @@ package installer
 
 import "embed"
 
-//go:embed assets/personas/*.md assets/agents-template.md assets/permission-overlay.json
+//go:embed assets/personas/*.md assets/agents-template.md
 var assetsFS embed.FS

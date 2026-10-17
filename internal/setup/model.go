@@ -67,11 +67,6 @@ const (
 	// opens it. Appended at the END of the iota block so existing state values
 	// never shift.
 	StateModelGate
-	// StatePermissionConsent is the opt-in gate for the Claude Code permission
-	// overlay. It sits immediately before StateReview in navigation order;
-	// Decline is the safe default and writes nothing. Appended at the END of
-	// the iota block so existing state values never shift.
-	StatePermissionConsent
 )
 
 // preflightState holds state for the StateEnvironmentCheck screen.
@@ -156,19 +151,6 @@ func languageIndex(code string) int {
 	return -1
 }
 
-// permissionState holds state for the StatePermissionConsent screen and the
-// overlay write it triggers. consent is the radio choice (false = Decline, the
-// safe default); touched guards against a late default override; expected is set
-// when an overlay Cmd was batched into the install so allInstallsDone waits on
-// done; result captures the write outcome for the Done screen.
-type permissionState struct {
-	consent  bool
-	touched  bool
-	expected bool
-	done     bool
-	result   installer.PermissionOverlayResult
-}
-
 // agentConfigState holds per-assistant agent config state across AgentSetup,
 // EmojiPref, and AgentWriteMode.
 type agentConfigState struct {
@@ -197,7 +179,6 @@ type Model struct {
 	agentConfig agentConfigState
 	dashboard   dashboardState
 	language    languageState
-	permission  permissionState
 }
 
 // New constructs an initial Model with the running binary version. Init()
@@ -333,14 +314,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.dashboard.removeResults = msg.Results
 		return m, nil
 
-	case PermissionOverlayDoneMsg:
-		m.permission.done = true
-		m.permission.result = msg.Result
-		if m.allInstallsDone() {
-			m.state = StateDone
-		}
-		return m, nil
-
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		return m, nil
@@ -407,8 +380,6 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleEmojiPref(msg)
 	case StateAgentWriteMode:
 		return m.handleAgentWriteMode(msg)
-	case StatePermissionConsent:
-		return m.handlePermissionConsent(msg)
 	case StateReview:
 		return m.handleReview(msg)
 	case StateDone:
@@ -932,10 +903,10 @@ func (m Model) handleAgentSetup(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case tea.KeyEnter:
 		if m.cursor == presets {
 			// User pressed Enter on the [ Skip → ] button — bypass EmojiPref and
-			// land on the permission-consent gate that precedes Review.
+			// go straight to Review.
 			m.agentConfig.skip = true
-			m.state = StatePermissionConsent
-			m.cursor = consentCursor(m.permission.consent)
+			m.state = StateReview
+			m.cursor = 0
 			return m, nil
 		}
 		// m.agentConfig.selectedPersona reflects the current choice; ask the
@@ -978,8 +949,8 @@ func (m Model) handleEmojiPref(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursor = 0
 			return m, nil
 		}
-		m.state = StatePermissionConsent
-		m.cursor = consentCursor(m.permission.consent)
+		m.state = StateReview
+		m.cursor = 0
 		return m, nil
 	case tea.KeyEsc:
 		m.state = StateAgentSetup
@@ -988,47 +959,9 @@ func (m Model) handleEmojiPref(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// consentCursor maps the consent choice to its radio row: Accept (0) when
-// consented, Decline (1) otherwise. Decline is the safe default.
-func consentCursor(consent bool) int {
-	if consent {
-		return 0
-	}
-	return 1
-}
-
-// handlePermissionConsent handles keys for the opt-in overlay gate. Two radio
-// rows: cursor 0 = Accept, cursor 1 = Decline; consent stays in sync with the
-// cursor. Enter advances to Review (the overlay Cmd fires later, only when
-// consent is true). Esc returns to whichever step preceded the gate.
-func (m Model) handlePermissionConsent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.Type {
-	case tea.KeyUp:
-		if m.cursor > 0 {
-			m.cursor--
-			m.permission.consent = m.cursor == 0
-			m.permission.touched = true
-		}
-	case tea.KeyDown:
-		if m.cursor < 1 {
-			m.cursor++
-			m.permission.consent = m.cursor == 0
-			m.permission.touched = true
-		}
-	case tea.KeyEnter:
-		m.state = StateReview
-		m.cursor = 0
-		return m, nil
-	case tea.KeyEsc:
-		m.state = consentPriorState(m)
-		m.cursor = 0
-	}
-	return m, nil
-}
-
-// consentPriorState returns the step that precedes the permission-consent gate
-// for the current path, so both the gate's Esc and Review's Esc agree.
-func consentPriorState(m Model) ViewState {
+// reviewPriorState returns the step that precedes Review for the current path,
+// so Review's Esc retraces the path the user took.
+func reviewPriorState(m Model) ViewState {
 	switch {
 	case len(m.agentConfig.conflicts) > 0 && !m.agentConfig.skip:
 		return StateAgentWriteMode
@@ -1072,8 +1005,8 @@ func (m Model) handleAgentWriteMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.KeyEnter:
-		m.state = StatePermissionConsent
-		m.cursor = consentCursor(m.permission.consent)
+		m.state = StateReview
+		m.cursor = 0
 	case tea.KeyEsc:
 		m.state = StateEmojiPref
 		m.cursor = 0
@@ -1098,13 +1031,10 @@ func (m Model) handleReview(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.agentConfig.skip {
 			m.wizard.agentDone = true
 		}
-		if m.permission.consent {
-			m.permission.expected = true
-		}
 		return m, tea.Batch(m.buildInstallCmd(), m.spinner.Tick)
 	case tea.KeyEsc:
-		m.state = StatePermissionConsent
-		m.cursor = consentCursor(m.permission.consent)
+		m.state = reviewPriorState(m)
+		m.cursor = 0
 	}
 	return m, nil
 }
@@ -1119,7 +1049,6 @@ func (m Model) handleDone(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.wizard.installExpected = 0
 		m.wizard.agentDone = false
 		m.wizard.selected = make(map[int]bool)
-		m.permission = permissionState{}
 	}
 	return m, nil
 }
@@ -1153,11 +1082,6 @@ func (m Model) buildInstallCmd() tea.Cmd {
 	if !m.agentConfig.skip {
 		preset := installer.PersonaPresets[m.agentConfig.selectedPersona]
 		cmds = append(cmds, AgentInstallCmd(assistants, preset, m.agentConfig.useEmojis, lang, m.agentConfig.writeModes))
-	}
-	// The overlay Cmd fires only when the user accepted the consent gate; the
-	// merge preserves a user's existing settings values.
-	if m.permission.consent {
-		cmds = append(cmds, PermissionOverlayCmd())
 	}
 	if len(cmds) == 1 {
 		return cmds[0]
@@ -1240,13 +1164,7 @@ func (m Model) allInstallsDone() bool {
 	if len(m.wizard.results) < m.wizard.installExpected {
 		return false
 	}
-	if !m.wizard.agentDone {
-		return false
-	}
-	if m.permission.expected && !m.permission.done {
-		return false
-	}
-	return true
+	return m.wizard.agentDone
 }
 
 func allProbesDone(sections []components.SectionGroup) bool {

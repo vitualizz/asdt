@@ -1,6 +1,6 @@
 ---
 title: AI Assistants
-description: How ASDT installs into each supported AI assistant — Claude Code and OpenCode — including install dirs, agent config, command wrappers, the permission overlay, and how memory is wired.
+description: How ASDT installs into each supported AI assistant — Claude Code and OpenCode — including install dirs, agent config, command wrappers, permission prompts, and how memory is wired.
 order: 14
 locale: en
 ---
@@ -20,7 +20,7 @@ Regardless of assistant, an install produces the same logical pieces:
 - **Agent config** — your persona, emoji, and language preferences, written as one marked block into the assistant's global config file (see [The agent config](#the-agent-config-both)).
 - **An install manifest** — a `.install-meta.json` file recording what the last install wrote, so re-running can update cleanly and prune stale files.
 
-The details of each piece differ per assistant. Here is the full comparison — a couple of terms in the table are worth a plain-language note before you hit them: **`XDG_CONFIG_HOME`** is just the standard folder-location variable Linux/macOS tools check before falling back to a default config path, and the **permission overlay** row (Claude Code only, more on it below) is an optional **structural JSON merge** — combining ASDT's settings into your existing config file without overwriting the rest of it — that turns on **bypass mode**, a Claude Code setting that stops asking for permission on every action, behind a **deny-net**: the fixed list of files and settings the installer refuses to touch even when those permission prompts are skipped.
+The details of each piece differ per assistant. One term below is worth a plain-language note before you hit it: **`XDG_CONFIG_HOME`** is just the standard folder-location variable Linux/macOS tools check before falling back to a default config path.
 
 ## Claude Code vs OpenCode
 
@@ -28,11 +28,17 @@ The details of each piece differ per assistant. Here is the full comparison — 
 
 Claude Code discovers and activates skills natively, so it needs no extra entry point — you call the specialist directly. OpenCode does not surface skills as slash-commands the same way, so ASDT generates a small command file per specialist that simply says "load and activate this specialist skill." This is why you'll see `~/.config/opencode/commands/` populated for OpenCode but no equivalent directory for Claude Code.
 
-### The permission overlay (Claude Code only)
+### Permission prompts (Claude Code)
 
-As introduced above, the overlay is an **optional** structural JSON merge into your global `~/.claude/settings.json`: it turns on bypass mode (`permissions.defaultMode = "bypassPermissions"`) behind a curated deny-net — the deny list is the real control under bypass, and it protects its own settings file and the rest of `~/.claude` from being edited.
+ASDT never changes your Claude Code permission settings. To cut down on approval prompts, run Claude Code in **auto mode**: a classifier reviews each action, lets routine ones through, and blocks risky ones. It is the default starting mode for interactive sessions from Claude Code v2.1.283. ASDT's sub-agents (`asdt-analyst`, `asdt-builder`) inherit the session's auto mode, and the classifier also reviews the task handed to them, each of their tool calls, and the report they return.
 
-It is written safely: a pre-write backup is kept, the write is atomic (temp file + fsync + rename), and the result is validated after writing — if validation fails, ASDT rolls back to the backup so Claude Code always launches. Re-running is idempotent: it unions to the same deny set with no duplicates, and stale rules from prior installs are pruned first. OpenCode has no equivalent because its executor agents carry their permissions inline (the analyst denies edits and restricts Bash to an inspection-only allowlist; the builder allows edits but denies delegation and the scratchpad; both deny the memory tools).
+ASDT's own consent gates are separate and stay in every mode: the Developer asks you to approve its plan before any file is written, and asks before running verification commands on your machine.
+
+Never use `bypassPermissions` on your host machine: Claude Code reserves it for isolated containers and VMs.
+
+For extra isolation, Claude Code's native sandbox (`/sandbox`) confines Bash at the OS level. On Linux it needs `bubblewrap` and `socat`; set `sandbox.failIfUnavailable: true` so a missing dependency fails instead of running unsandboxed.
+
+OpenCode's executor agents carry their permissions inline: the analyst denies edits and restricts Bash to an inspection-only allowlist; the builder allows edits but denies delegation and the scratchpad; both deny the memory tools.
 
 ### The agent config (both)
 
@@ -85,4 +91,4 @@ Support for each assistant is expressed as a set of small **adapters** — that'
 - **`AgentConfigAdapters`** — the path of the assistant's global config file. The shared marker-block logic writes and removes the agent config there.
 - **`CommandAdapters`** — optional; only assistants that need generated command wrappers carry an entry (Claude Code carries none).
 
-Anything assistant-specific — like Claude Code's permission overlay — lives in its own file behind its own guard. Because each concern is a separate adapter list, a new assistant is additive: you implement its rendering and paths, register it, and the shared skill-copy, manifest, and prune logic apply to it unchanged.
+Anything assistant-specific lives in that assistant's adapters. Because each concern is a separate adapter list, a new assistant is additive: you implement its rendering and paths, register it, and the shared skill-copy, manifest, and prune logic apply to it unchanged.
