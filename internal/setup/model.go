@@ -29,7 +29,8 @@ const (
 	// StateDashboard shows the dashboard overview with per-assistant status.
 	StateDashboard
 	// StateSelectAssistants allows the user to choose assistants to install.
-	// Shows present/missing status badges alongside checkboxes.
+	// Shows each assistant's state (ASDT installed / detected / not in PATH)
+	// as a badge alongside its checkbox.
 	StateSelectAssistants
 	// StateSelectProvider allows the user to choose a memory provider (or "No
 	// memory") and a code-intelligence provider (or "No code intelligence"):
@@ -71,10 +72,11 @@ const (
 
 // preflightState holds state for the StateEnvironmentCheck screen.
 type preflightState struct {
-	sections       []components.SectionGroup
-	done           bool
-	providersFound map[installer.ProviderID]bool // see EnvironmentCheckMsg
-	codeIntelFound map[installer.ProviderID]bool // see EnvironmentCheckMsg
+	sections        []components.SectionGroup
+	done            bool
+	assistantsFound map[installer.AssistantID]bool // see EnvironmentCheckMsg
+	providersFound  map[installer.ProviderID]bool  // see EnvironmentCheckMsg
+	codeIntelFound  map[installer.ProviderID]bool  // see EnvironmentCheckMsg
 }
 
 // wizardState holds install-wizard state across SelectAssistants → Installing → Done.
@@ -233,6 +235,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.preflight.sections = components.UpdateRow(m.preflight.sections, msg.RowLabel, progress)
 		if allProbesDone(m.preflight.sections) {
+			assistantsFound := make(map[installer.AssistantID]bool, len(installer.Descriptors))
+			for _, d := range installer.Descriptors {
+				assistantsFound[d.ID] = !rowHasStatus(m.preflight.sections, d.Name, components.CheckStatusWarning)
+			}
 			providersFound := make(map[installer.ProviderID]bool, len(installer.Providers))
 			for _, p := range installer.Providers {
 				providersFound[p.ID] = !rowHasStatus(m.preflight.sections, p.Name, components.CheckStatusWarning)
@@ -242,13 +248,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				codeIntelFound[p.ID] = !rowHasStatus(m.preflight.sections, p.Name, components.CheckStatusWarning)
 			}
 			return m, func() tea.Msg {
-				return EnvironmentCheckMsg{ProvidersFound: providersFound, CodeIntelFound: codeIntelFound}
+				return EnvironmentCheckMsg{AssistantsFound: assistantsFound, ProvidersFound: providersFound, CodeIntelFound: codeIntelFound}
 			}
 		}
 		return m, nil
 
 	case EnvironmentCheckMsg:
 		m.preflight.done = true
+		m.preflight.assistantsFound = msg.AssistantsFound
 		m.preflight.providersFound = msg.ProvidersFound
 		m.preflight.codeIntelFound = msg.CodeIntelFound
 		if !m.wizard.providerChosen {
@@ -391,7 +398,8 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 // handleEnvironmentCheck handles keys for the pre-flight check screen.
 // Enter proceeds to StateSelectAssistants once every probe has resolved,
 // whatever it found: a missing memory provider never blocks.
-// All assistants are pre-selected on first entry so the default is visible.
+// On first entry the assistants found on PATH are pre-selected — every
+// assistant when none was found — so the default is visible.
 // Esc returns to StateMainMenu at any point.
 // q and ctrl+c always quit.
 func (m Model) handleEnvironmentCheck(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -402,9 +410,7 @@ func (m Model) handleEnvironmentCheck(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.preflight.done {
 			m.state = StateSelectAssistants
 			if len(m.wizard.selected) == 0 {
-				for i := range installer.Descriptors {
-					m.wizard.selected[i] = true
-				}
+				m.wizard.selected = m.defaultAssistantSelection()
 			}
 			m.cursor = 0
 			return m, nil
@@ -1176,6 +1182,24 @@ func allProbesDone(sections []components.SectionGroup) bool {
 		}
 	}
 	return true
+}
+
+// defaultAssistantSelection is the assistant-screen default: every assistant
+// the environment check found on PATH, or every assistant when it found none
+// (or reported nothing), so the screen never opens with an empty selection.
+func (m Model) defaultAssistantSelection() map[int]bool {
+	selected := make(map[int]bool, len(installer.Descriptors))
+	for i, d := range installer.Descriptors {
+		if m.preflight.assistantsFound[d.ID] {
+			selected[i] = true
+		}
+	}
+	if len(selected) == 0 {
+		for i := range installer.Descriptors {
+			selected[i] = true
+		}
+	}
+	return selected
 }
 
 // noMemoryChoice is the provider-screen index of the "No memory" row: one past

@@ -93,7 +93,8 @@ func envCheckMsg(found bool) setup.EnvironmentCheckMsg {
 }
 
 // TestEnvironmentCheckCmd_ProbesEveryProvider runs the real probes with an
-// empty PATH and asserts every provider gets a row labeled with its Name: a
+// empty PATH and asserts every assistant and provider gets a row labeled with
+// its Name: a missing assistant is a soft warning naming its binary, a
 // probed provider that is missing is a soft warning carrying its install hint,
 // and a provider with no local probe resolves OK. Neither blocks.
 func TestEnvironmentCheckCmd_ProbesEveryProvider(t *testing.T) {
@@ -111,6 +112,16 @@ func TestEnvironmentCheckCmd_ProbesEveryProvider(t *testing.T) {
 		}
 	}
 
+	for _, d := range installer.Descriptors {
+		got, ok := rows[d.Name]
+		if !ok {
+			t.Errorf("no preflight row labeled %q (assistant)", d.Name)
+			continue
+		}
+		if got.Status != components.CheckStatusWarning || !got.SoftWarn || !strings.Contains(got.Detail, d.BinaryName) {
+			t.Errorf("missing %s row = %+v, want a soft warning naming %s", d.Name, got, d.BinaryName)
+		}
+	}
 	for _, p := range installer.Providers {
 		if _, ok := rows[p.Name]; !ok {
 			t.Errorf("no preflight row labeled %q", p.Name)

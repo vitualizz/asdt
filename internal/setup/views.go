@@ -166,20 +166,37 @@ func renderLanguageSelect(m Model) string {
 	return frame(s.TitleLanguageSelect, body, footer, true)
 }
 
+// renderSelectAssistants renders the assistant screen: a short intro, then one
+// checkbox row per installer.Descriptors entry carrying its state as a badge
+// and a dim note — ASDT already installed (it will be updated), binary
+// detected (ready to install), or binary not on PATH — so "not installed yet"
+// never reads as "not found". A selected assistant that is not on PATH gets a
+// warning under the list; it never blocks Continue.
 func renderSelectAssistants(m Model) string {
 	s := m.catalog.Installer
 	var b strings.Builder
 	fmt.Fprintf(&b, "  %s\n\n", stepLine(s, 2, 6))
+	fmt.Fprintf(&b, "  %s\n\n", styles.Default.Dim.Render(s.DescSelectAssistants))
 
+	var missing []installer.AssistantDescriptor
 	for i, d := range installer.Descriptors {
 		bp, sp, _ := installer.Detect(d)
-		present := bp && sp
 
 		var badge panels.Badge
-		if present {
-			badge = panels.NewBadge("present", panels.ColorSuccess)
-		} else {
-			badge = panels.NewBadge("missing", panels.ColorError)
+		var note string
+		switch {
+		case !bp:
+			badge = panels.NewBadge(s.BadgeAssistantNotFound, panels.ColorWarning)
+			note = s.NoteAssistantNotFound
+			if m.wizard.selected[i] {
+				missing = append(missing, d)
+			}
+		case sp:
+			badge = panels.NewBadge(s.BadgeAssistantInstalled, panels.ColorSuccess)
+			note = s.NoteAssistantInstalled
+		default:
+			badge = panels.NewBadge(s.BadgeAssistantDetected, panels.ColorSecondary)
+			note = s.NoteAssistantDetected
 		}
 
 		check := "[ ]"
@@ -196,7 +213,11 @@ func renderSelectAssistants(m Model) string {
 			nameStr = styles.Default.Dim.Render(d.Name)
 		}
 
-		fmt.Fprintf(&b, "  %s%s %s %s\n", cursor, check, nameStr, badge.Render())
+		fmt.Fprintf(&b, "  %s%s %s %s %s\n", cursor, check, nameStr, badge.Render(), styles.Default.Dim.Render(note))
+	}
+
+	for _, d := range missing {
+		fmt.Fprintf(&b, "\n  %s\n", styles.Default.Warning.Render(fmt.Sprintf(s.WarnAssistantMissing, d.Name, d.BinaryName)))
 	}
 
 	b.WriteString("\n")
@@ -694,7 +715,7 @@ func renderDashboard(m Model) string {
 }
 
 // renderSummaryLine renders a dashboard row for one assistant.
-// First line: name + binary/skills badges, plus the agent config badge when
+// First line: name + CLI/ASDT badges, plus the agent config badge when
 // the assistant's global config file carries ASDT's block.
 // Second line (when install metadata exists): install date and persona.
 func renderSummaryLine(d installer.AssistantDescriptor, meta installer.InstallMeta, hasBlock bool, s i18n.DashboardStrings) string {
@@ -703,14 +724,14 @@ func renderSummaryLine(d installer.AssistantDescriptor, meta installer.InstallMe
 	var parts []string
 	parts = append(parts, d.Name)
 	if bp {
-		parts = append(parts, panels.NewBadge("binary", panels.ColorSuccess).Render())
+		parts = append(parts, panels.NewBadge(s.BadgeCLIFound, panels.ColorSuccess).Render())
 	} else {
-		parts = append(parts, panels.NewBadge("binary", panels.ColorError).Render())
+		parts = append(parts, panels.NewBadge(s.BadgeCLIMissing, panels.ColorWarning).Render())
 	}
 	if sp {
-		parts = append(parts, panels.NewBadge("skills", panels.ColorSuccess).Render())
+		parts = append(parts, panels.NewBadge(s.BadgeASDTInstalled, panels.ColorSuccess).Render())
 	} else {
-		parts = append(parts, panels.NewBadge("skills", panels.ColorError).Render())
+		parts = append(parts, panels.NewBadge(s.BadgeASDTMissing, panels.ColorMuted).Render())
 	}
 	if hasBlock {
 		parts = append(parts, panels.NewBadge(s.BadgeAgentConfig, panels.ColorSuccess).Render())
