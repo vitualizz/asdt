@@ -3,6 +3,7 @@ package setup_test
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -88,26 +89,112 @@ func TestView_SelectAssistantsSelectedItemHasCursor(t *testing.T) {
 	}
 }
 
-func TestView_SelectAssistantsUsesBadgeForStatus(t *testing.T) {
-	// Force color so panels.Badge styling is distinguishable from plain-text fallback.
-	prev := lipgloss.ColorProfile()
-	lipgloss.SetColorProfile(termenv.TrueColor)
-	defer lipgloss.SetColorProfile(prev)
+// withAssistantsEnv points every installer.Descriptors entry at its own empty
+// skills root under a temp dir, marks the ones in installed as having ASDT
+// installed, and sets PATH to a dir holding a fake binary for each one in
+// onPath. t.Cleanup restores the descriptors.
+func withAssistantsEnv(t *testing.T, onPath, installed map[installer.AssistantID]bool) {
+	t.Helper()
+	saved := installer.Descriptors
+	descs := append([]installer.AssistantDescriptor{}, saved...)
+	binDir := t.TempDir()
+	for i, d := range descs {
+		descs[i].SkillsDir = t.TempDir()
+		if installed[d.ID] {
+			if err := os.MkdirAll(filepath.Join(descs[i].SkillsDir, "asdt"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if onPath[d.ID] {
+			if err := os.WriteFile(filepath.Join(binDir, d.BinaryName), []byte("#!/bin/sh\n"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	installer.Descriptors = descs
+	t.Cleanup(func() { installer.Descriptors = saved })
+	t.Setenv("PATH", binDir)
+}
 
+// selectAssistantsView walks to StateSelectAssistants with found as the
+// environment check's AssistantsFound and returns the view.
+func selectAssistantsView(t *testing.T, found map[installer.AssistantID]bool) string {
+	t.Helper()
 	m := setup.New(fstest.MapFS{}, "dev")
-	m = sendEngramFound(t, m)         // no-op, already at MainMenu
-	m = updateKey(t, m, tea.KeyEnter) // cursor-0 (Install) → StateLanguageSelect
-	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → StateEnvironmentCheck
-	next, _ := m.Update(envCheckMsg(true))
+	m = updateKey(t, m, tea.KeyEnter) // MainMenu → LanguageSelect
+	m = updateKey(t, m, tea.KeyEnter) // LanguageSelect → EnvironmentCheck
+	msg := envCheckMsg(true)
+	msg.AssistantsFound = found
+	next, _ := m.Update(msg)
 	m = next.(setup.Model)
-	m2 := updateKey(t, m, tea.KeyEnter) // preflightDone → StateSelectAssistants
-	view := m2.View()
+	return updateKey(t, m, tea.KeyEnter).View() // → SelectAssistants
+}
 
-	wantPresent := panels.NewBadge("present", panels.ColorSuccess).Render()
-	wantMissing := panels.NewBadge("missing", panels.ColorError).Render()
+// lineWith returns the first view line containing sub, or "".
+func lineWith(view, sub string) string {
+	for _, line := range strings.Split(view, "\n") {
+		if strings.Contains(line, sub) {
+			return line
+		}
+	}
+	return ""
+}
 
-	if !strings.Contains(view, wantPresent) && !strings.Contains(view, wantMissing) {
-		t.Errorf("expected select assistants to render status via panels.Badge ([present]/[missing] in tone color), got: %q", view)
+// TestView_SelectAssistantsShowsEachState checks that an assistant whose
+// binary is on PATH never reads as missing: it is "ASDT installed" when ASDT's
+// skills are there, "detected" when they are not, and only an assistant off
+// PATH reads "not in PATH" — with a warning once it is selected.
+func TestView_SelectAssistantsShowsEachState(t *testing.T) {
+	claude, opencode := installer.Descriptors[0], installer.Descriptors[1]
+
+	t.Run("installed and missing", func(t *testing.T) {
+		withAssistantsEnv(t,
+			map[installer.AssistantID]bool{claude.ID: true},
+			map[installer.AssistantID]bool{claude.ID: true})
+		view := selectAssistantsView(t, nil) // nil: every assistant pre-selected
+		if line := lineWith(view, claude.Name); !strings.Contains(line, "ASDT installed") || !strings.Contains(line, "will be updated") {
+			t.Errorf("%s row = %q, want the installed badge and note", claude.Name, line)
+		}
+		if line := lineWith(view, opencode.Name+" "); !strings.Contains(line, "not in PATH") {
+			t.Errorf("%s row = %q, want the not-in-PATH badge", opencode.Name, line)
+		}
+		if !strings.Contains(view, "no `"+opencode.BinaryName+"` command in PATH") {
+			t.Errorf("selected assistant off PATH has no warning, view:\n%s", view)
+		}
+	})
+
+	t.Run("detected", func(t *testing.T) {
+		withAssistantsEnv(t,
+			map[installer.AssistantID]bool{claude.ID: true, opencode.ID: true}, nil)
+		view := selectAssistantsView(t, nil)
+		if line := lineWith(view, claude.Name); !strings.Contains(line, "detected") || !strings.Contains(line, "ready to install") {
+			t.Errorf("%s row = %q, want the detected badge and note", claude.Name, line)
+		}
+		if strings.Contains(view, "not in PATH") || strings.Contains(view, "⚠") {
+			t.Errorf("no assistant is off PATH, yet the view warns:\n%s", view)
+		}
+	})
+}
+
+// TestUpdate_PreselectsAssistantsFoundOnPath checks the assistant default: the
+// assistants the environment check found, or every assistant when it found none.
+func TestUpdate_PreselectsAssistantsFoundOnPath(t *testing.T) {
+	withAssistantsEnv(t, nil, nil)
+	claude, opencode := installer.Descriptors[0], installer.Descriptors[1]
+
+	view := selectAssistantsView(t, map[installer.AssistantID]bool{claude.ID: true, opencode.ID: false})
+	if line := lineWith(view, claude.Name); !strings.Contains(line, "[x]") {
+		t.Errorf("found %s not pre-selected: %q", claude.Name, line)
+	}
+	if line := lineWith(view, opencode.Name+" "); !strings.Contains(line, "[ ]") {
+		t.Errorf("missing %s pre-selected: %q", opencode.Name, line)
+	}
+
+	view = selectAssistantsView(t, map[installer.AssistantID]bool{claude.ID: false, opencode.ID: false})
+	for _, d := range installer.Descriptors {
+		if line := lineWith(view, d.Name+" "); !strings.Contains(line, "[x]") {
+			t.Errorf("none found: %s not pre-selected: %q", d.Name, line)
+		}
 	}
 }
 

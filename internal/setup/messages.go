@@ -64,6 +64,10 @@ type EnvironmentCheckProgressMsg struct {
 // EnvironmentCheckMsg is the terminal message sent after ALL probes in
 // EnvironmentCheckCmd have resolved. Continue is enabled once it arrives.
 type EnvironmentCheckMsg struct {
+	// AssistantsFound maps each installer.Descriptors ID to whether its
+	// binary is on PATH. It picks the assistants pre-selected on the
+	// selection screen; a nil map pre-selects every assistant.
+	AssistantsFound map[installer.AssistantID]bool
 	// ProvidersFound maps each installer.Providers ID to whether that memory
 	// provider was found: its Detect.Binary is on PATH, or it has no probe. A
 	// missing ID reads as not found. It picks the provider screen's default
@@ -195,6 +199,9 @@ const environmentCheckTimeout = 5 * time.Second
 // TUI hang on slow PATH resolution. s localizes the probe row details.
 func EnvironmentCheckCmd(s i18n.InstallerStrings) tea.Cmd {
 	cmds := []tea.Cmd{osProbeCmd(), shellProbeCmd()}
+	for _, d := range installer.Descriptors {
+		cmds = append(cmds, assistantProbeCmd(d, s.DetailAssistantNotFound))
+	}
 	for _, p := range installer.Providers {
 		cmds = append(cmds, providerProbeCmd(p.Name, p.Detect, s.DetailProviderNotFound))
 	}
@@ -225,6 +232,31 @@ func shellProbeCmd() tea.Cmd {
 			RowLabel: "Shell",
 			Status:   components.CheckStatusOK,
 			Detail:   shell,
+		}
+	}
+}
+
+// assistantProbeCmd resolves an assistant's preflight row, labeled d.Name: OK
+// with the binary's path when d.BinaryName is on PATH, else a soft warning
+// carrying notFound (a printf format taking d.BinaryName). Never blocks: ASDT
+// can be installed for an assistant before the assistant itself.
+func assistantProbeCmd(d installer.AssistantDescriptor, notFound string) tea.Cmd {
+	return func() tea.Msg {
+		ctx, cancel := context.WithTimeout(context.Background(), environmentCheckTimeout)
+		defer cancel()
+		path, err := lookPathCtx(ctx, d.BinaryName)
+		if err != nil {
+			return EnvironmentCheckProgressMsg{
+				RowLabel: d.Name,
+				Status:   components.CheckStatusWarning,
+				Detail:   fmt.Sprintf(notFound, d.BinaryName),
+				SoftWarn: true,
+			}
+		}
+		return EnvironmentCheckProgressMsg{
+			RowLabel: d.Name,
+			Status:   components.CheckStatusOK,
+			Detail:   path,
 		}
 	}
 }

@@ -160,8 +160,25 @@ type InstallerStrings struct {
 
 	// Preflight section group titles (display only; row labels are lookup keys)
 	SectionYourEnvironment  string
+	SectionAssistants       string
 	SectionMemoryProvider   string
 	SectionCodeIntelligence string
+
+	// Assistant detection. The preflight row of an assistant whose binary is
+	// not on PATH is a soft warning (DetailAssistantNotFound); on the
+	// selection screen each assistant reads one of three states — ASDT
+	// already installed, binary detected (new install), or binary not on
+	// PATH — as a badge plus a short note, and a selected assistant that is
+	// not on PATH gets WarnAssistantMissing under the list. None blocks.
+	DetailAssistantNotFound string // printf format: %s = binary name
+	DescSelectAssistants    string
+	BadgeAssistantInstalled string
+	NoteAssistantInstalled  string
+	BadgeAssistantDetected  string
+	NoteAssistantDetected   string
+	BadgeAssistantNotFound  string
+	NoteAssistantNotFound   string
+	WarnAssistantMissing    string // printf format: %s = assistant Name, %s = binary name
 
 	// Memory provider selection. A provider is optional: the "No memory" row
 	// sits after every installer.Providers entry, and a selected provider whose
@@ -201,6 +218,13 @@ type DashboardStrings struct {
 	// ValueNoCodeIntel follows it for an install with none.
 	LabelCodeIntel   string
 	ValueNoCodeIntel string
+
+	// Assistant status badges: whether the assistant's CLI is on PATH and
+	// whether ASDT's skills are installed for it.
+	BadgeCLIFound      string
+	BadgeCLIMissing    string
+	BadgeASDTInstalled string
+	BadgeASDTMissing   string
 
 	// Agent config block: the badge on an assistant whose global config file
 	// carries ASDT's block, and the remove action.

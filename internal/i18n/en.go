@@ -97,8 +97,19 @@ var English = Catalog{
 		MsgStaleRemoved:       "%d stale file(s) cleaned up",
 
 		SectionYourEnvironment:  "Your Environment",
+		SectionAssistants:       "AI Assistants",
 		SectionMemoryProvider:   "Memory Provider",
 		SectionCodeIntelligence: "Code Intelligence",
+
+		DetailAssistantNotFound: "`%s` not in PATH — you can still install ASDT for it",
+		DescSelectAssistants:    "Choose where to install ASDT. Assistants found on this machine are pre-selected.",
+		BadgeAssistantInstalled: "ASDT installed",
+		NoteAssistantInstalled:  "will be updated",
+		BadgeAssistantDetected:  "detected",
+		NoteAssistantDetected:   "ready to install",
+		BadgeAssistantNotFound:  "not in PATH",
+		NoteAssistantNotFound:   "install it to use ASDT there",
+		WarnAssistantMissing:    "⚠  %s was not found (no `%s` command in PATH). ASDT installs its skills anyway; they work once you install it.",
 
 		OptionNoMemory:         "No memory",
 		DescNoMemory:           "ASDT works without a provider; one is recommended because it keeps key project knowledge between sessions.",
@@ -122,6 +133,11 @@ var English = Catalog{
 		ValueNoMemory:    "none",
 		LabelCodeIntel:   "Code intelligence",
 		ValueNoCodeIntel: "none",
+
+		BadgeCLIFound:      "CLI found",
+		BadgeCLIMissing:    "CLI not in PATH",
+		BadgeASDTInstalled: "ASDT installed",
+		BadgeASDTMissing:   "ASDT not installed",
 
 		BadgeAgentConfig:         "agent config",
 		HintRemoveAgentConfig:    "remove ASDT block",

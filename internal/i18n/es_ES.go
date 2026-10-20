@@ -102,8 +102,19 @@ var SpanishSpain = Catalog{
 		MsgStaleRemoved:       "se han limpiado %d archivo(s) obsoleto(s)",
 
 		SectionYourEnvironment:  "Tu Entorno",
+		SectionAssistants:       "Asistentes de IA",
 		SectionMemoryProvider:   "Proveedor de Memoria",
 		SectionCodeIntelligence: "Inteligencia de Código",
+
+		DetailAssistantNotFound: "`%s` no está en el PATH — puedes instalar ASDT para él igualmente",
+		DescSelectAssistants:    "Elige dónde instalar ASDT. Los asistentes encontrados en este equipo ya vienen seleccionados.",
+		BadgeAssistantInstalled: "ASDT instalado",
+		NoteAssistantInstalled:  "se actualizará",
+		BadgeAssistantDetected:  "detectado",
+		NoteAssistantDetected:   "listo para instalar",
+		BadgeAssistantNotFound:  "no está en el PATH",
+		NoteAssistantNotFound:   "instálalo para usar ASDT ahí",
+		WarnAssistantMissing:    "⚠  No se ha encontrado %s (no hay comando `%s` en el PATH). ASDT instala sus skills igualmente; funcionarán cuando lo instales.",
 
 		OptionNoMemory:         "Sin memoria",
 		DescNoMemory:           "ASDT funciona sin un proveedor; se recomienda uno porque conserva el conocimiento clave del proyecto entre sesiones.",
@@ -127,6 +138,11 @@ var SpanishSpain = Catalog{
 		ValueNoMemory:    "ninguna",
 		LabelCodeIntel:   "Inteligencia de código",
 		ValueNoCodeIntel: "ninguna",
+
+		BadgeCLIFound:      "CLI encontrado",
+		BadgeCLIMissing:    "CLI no está en el PATH",
+		BadgeASDTInstalled: "ASDT instalado",
+		BadgeASDTMissing:   "ASDT no instalado",
 
 		BadgeAgentConfig:         "configuración del agente",
 		HintRemoveAgentConfig:    "quitar bloque de ASDT",

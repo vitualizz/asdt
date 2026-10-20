@@ -11,12 +11,18 @@ import (
 )
 
 // initialPreflightSections returns the seed state for the pre-flight check screen.
-// Every provider row — memory or code intelligence — is a soft warning: a
-// provider is optional, so a missing one never blocks Continue.
+// An assistant row whose binary is not on PATH is a soft warning: ASDT can be
+// installed for it anyway. Every provider row — memory or code intelligence —
+// is a soft warning too: a provider is optional, so a missing one never blocks
+// Continue.
 // Section titles come from the active catalog; row labels are kept as constants
 // — a provider's row is its Name — because they also serve as lookup keys in
 // rowHasStatus and in probe messages.
 func initialPreflightSections(s i18n.InstallerStrings) []components.SectionGroup {
+	assistantRows := make([]components.CheckRow, len(installer.Descriptors))
+	for i, d := range installer.Descriptors {
+		assistantRows[i] = components.CheckRow{Label: d.Name, Status: components.CheckStatusPending, SoftWarn: true}
+	}
 	providerRows := make([]components.CheckRow, len(installer.Providers))
 	for i, p := range installer.Providers {
 		providerRows[i] = components.CheckRow{Label: p.Name, Status: components.CheckStatusPending, SoftWarn: true}
@@ -32,6 +38,10 @@ func initialPreflightSections(s i18n.InstallerStrings) []components.SectionGroup
 				{Label: "OS / Arch", Status: components.CheckStatusPending},
 				{Label: "Shell", Status: components.CheckStatusPending},
 			},
+		},
+		{
+			Title: s.SectionAssistants,
+			Rows:  assistantRows,
 		},
 		{
 			Title: s.SectionMemoryProvider,
