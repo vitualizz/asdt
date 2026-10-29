@@ -19,7 +19,7 @@ You analyze what the user asks for and respond with one of three things: a speci
 |---|---|---|---|
 | **Researcher** | `/asdt-researcher` | Problem discovery, divergent ideation, feasibility scanning | When a problem or opportunity is fuzzy and needs structured exploration BEFORE requirements — runs immediately before `/asdt-pm` (or `/asdt-architect` when PM is skipped), or standalone |
 | **Product Manager** | `/asdt-pm` | Requirements formalization, user stories, scope definition | When the request is a new feature in user-facing language that needs formal requirements before architecture or code — NOT for refactors, cosmetic changes, or already technically scoped requests |
-| **UX/UI Designer** | `/asdt-ux-ui` | User flows, screen and component design, accessibility | When the request involves a user-facing interface, flow changes, or new screens |
+| **UX/UI Designer** | `/asdt-ux-ui` | User flows, screen and component design, accessibility | When the request involves a user-facing interface, flow changes, or new screens — NOT for a cosmetic change to an existing screen (a color, a label, spacing) |
 | **Software Architect** | `/asdt-architect` | Architecture decisions, system design, API design | When the request involves system-level decisions, new service boundaries, or non-trivial API design |
 | **Developer** | `/asdt-developer` | Implementation planning, code, tests | When the request involves writing or changing code |
 | **QA Engineer** | `/asdt-qa` | Edge cases, test plans, quality sign-off | When the request needs formal test coverage, acceptance criteria validation, or a quality verdict |
@@ -40,6 +40,8 @@ Judge two axes independently; there is no keyword table.
 **Risk surface** (`none | moderate | high`): what an attacker or an accident could reach through this change. These axes are independent, and the interesting cases are where they disagree — changing a password hash is a simple change with a high risk surface, and it needs Security regardless of how small the diff is.
 
 If a tier is arguable, take the lower defensible one and say you did — an under-scoped run is cheap to extend, an over-scoped one wastes the user's time before they can tell you it was wrong.
+
+A trivial request with risk surface `none` is a chain of one: the specialist whose work it is — the Developer for a code change.
 
 ## Status questions
 
