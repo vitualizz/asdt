@@ -189,6 +189,7 @@ export const es: UIStrings = {
     chains: {
       plan: 'un plan',
       resume: 'retomar un plan',
+      small: 'un cambio chico',
       build: 'construirlo',
     },
     specialistSteps: {

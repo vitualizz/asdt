@@ -50,7 +50,7 @@ When you already know what you need, skip `/asdt` and invoke the specialist dire
 /asdt-security Audit the OAuth integration
 ```
 
-Each specialist judges which of its own steps the request needs — the Developer, for example, stops at `explore` for a question, at `spec` for a plan, and only goes on to `approve → implement → verify` when you ask it to build — and returns its one summary, which the orchestrator writes to the session scratchpad for the next specialist. Its report opens with what it built on and closes proposing the next specialist.
+Each specialist judges which of its own steps the request needs — the Developer, for example, runs no step for a question, stops at `spec` for a plan, and only goes on to `approve → implement → verify` when you ask it to build, skipping `explore` and `spec` when a quick read of the code shows the change is small — and returns its one summary, which the orchestrator writes to the session scratchpad for the next specialist. Its report opens with what it built on and closes proposing the next specialist.
 
 ## Picking up mid-pipeline
 

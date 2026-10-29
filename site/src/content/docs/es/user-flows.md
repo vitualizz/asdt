@@ -42,7 +42,7 @@ Cuando ya sabes lo que necesitas, salteate `/asdt` e invocá el especialista dir
 /asdt-security Auditar la integración OAuth
 ```
 
-Cada especialista juzga qué pasos propios necesita el pedido — el Developer, por ejemplo, se queda en `explore` ante una pregunta, en `spec` ante un plan, y solo sigue a `approve → implement → verify` cuando le pedís construir — y devuelve su único resumen, que el orquestador escribe en el scratchpad de la sesión para el siguiente especialista. Su reporte arranca contando sobre qué trabajó y cierra proponiendo el siguiente especialista.
+Cada especialista juzga qué pasos propios necesita el pedido — el Developer, por ejemplo, no corre ningún paso ante una pregunta, se queda en `spec` ante un plan, y solo sigue a `approve → implement → verify` cuando le pedís construir, salteando `explore` y `spec` cuando una lectura rápida del código muestra que el cambio es chico — y devuelve su único resumen, que el orquestador escribe en el scratchpad de la sesión para el siguiente especialista. Su reporte arranca contando sobre qué trabajó y cierra proponiendo el siguiente especialista.
 
 ## Retomar en mitad del pipeline
 

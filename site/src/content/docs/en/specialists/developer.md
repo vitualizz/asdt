@@ -20,12 +20,15 @@ It judges its own chain from what you ask for:
 | You ask for | It runs |
 |---|---|
 | a plan — "how would you do this?" | `explore → spec` — the plan becomes its summary and the run stops; no code is written |
-| the change itself | `explore → spec → approve → implement → verify` |
+| the change itself, when it is small | `approve → implement → verify` — it writes the plan itself from a quick read of the code, with no `explore` or `spec` step (see below) |
+| the change itself, otherwise | `explore → spec → approve → implement → verify` |
 | "implement the plan we approved" | `approve → implement → verify` — the plan in the session scratchpad is shown again instead of re-derived (or rebuilt, when the scratchpad is gone); a plan already built but never verified resumes at `verify` alone |
 
 When a request is ambiguous between a plan and a build, it produces the plan, and building it later is a resume, re-approved at the gate. A resume starts from the scratchpad, never from an earlier approval: once the change is confirmed (when several could match, one question picks), it reads its own summary. A plan goes back to the approval gate; a build never verified goes to `verify`; anything else, it says what the summary already holds and stops. When the scratchpad is gone, which is normal in a new session, it rebuilds the plan from git, the recalled notes, and your words. Since the upstream summaries are gone too, it asks which specialists shaped the plan and offers to re-run them first; it also asks you to restate the plan if needed. The gate then shows you that rebuilt plan to approve. An approval given in another session never carries over.
 
-**The approval gate.** Before any file in your repo is written, it shows you the plan in plain prose: what is in scope and what is explicitly out, the acceptance criteria, the visual direction when there is one, the names of the screens and components UX/UI designed, the approach in one line — what it reuses, the larger option it rejected, any new dependency (with the install you must run, since it never installs anything) and any shortcut it accepts with its limit — the exact files it will create and modify, which of them are tests (or that there are none), and anything it assumed or flagged — such as a UI file in a project with no visual surface. If the change was already delivered once, it also tells you that this build lands on top of that earlier delivery, which stays part of the change. You answer approve, adjust, or stop. Adjust re-runs the spec once with your words — that is how you pick the larger option instead, or drop the tests; stop ends the run at the plan, ready to resume. When no human can answer, nothing gets written.
+**Small changes.** Not every build needs the whole chain. When you ask for a change and no other specialist has worked on it yet, the Developer first takes one quick look at the code — at most three reads or searches — and checks three things. Does it understand the change exactly, down to the lines to edit and the tests that cover them? Is the risk contained — no stored data, no security, no contract others consume, no shared code, no concurrency or caching, no build or deploy setup? And could the work be picked up again from your request and the diff alone? When all three hold, it writes the plan itself instead of running the exploration and spec steps, and goes straight to the approval gate. When any of them is in doubt, it tells you which one and runs the full chain. For example, if the color you want changed is a design token other components also use, that is shared code, and the change takes the full chain. Asking for it "quick" never makes a change small; asking for it in depth, as a full plan, or flagging it as sensitive always takes the full chain. The gates are the same either way: you approve the plan before anything is written, and the checks run only on your yes.
+
+**The approval gate.** Before any file in your repo is written, it shows you the plan in plain prose: what is in scope and what is explicitly out, the acceptance criteria, the visual direction when there is one, the names of the screens and components UX/UI designed, the approach in one line — what it reuses, the larger option it rejected, any new dependency (with the install you must run, since it never installs anything) and any shortcut it accepts with its limit — the exact files it will create and modify, which of them are tests (or that there are none), and anything it assumed or flagged — such as a UI file in a project with no visual surface. If the change was already delivered once, it also tells you that this build lands on top of that earlier delivery, which stays part of the change. You answer approve, adjust, or stop. Adjust re-runs the spec once with your words — that is how you pick the larger option instead, or drop the tests; stop ends the run at the plan, ready to resume. When the plan was written for a small change, the gate tells you so — the files it read, and that no exploration or spec step ran — and adjust revises that plan once or, when you ask for the full plan, runs the full chain with your words. When no human can answer, nothing gets written.
 
 **Write scope.** `implement` only writes inside the files the spec declared. If a needed edit falls outside them, it stops and reports the path instead of freelancing the write. Nothing under `.asdt/` is ever a Developer edit target: a change wanted there is reported as an open item pointing you to `/asdt-init`, which owns that directory. A spec that declares no files is a plan-only run: the code comes back as snippets in its summary and nothing touches the repo.
 
@@ -65,7 +68,7 @@ Typically runs **after Architect**, and it reads every upstream summary that exi
 
 ## What it produces
 
-The Developer's summary (`developer`) — one summary, written in stages. `spec` writes the plan (`Stage: spec`); `implement` replaces it with what was built (`Stage: implemented`) — the files changed, or the code snippets in a plan-only run; `verify` adds whether the checks ran and passed. An earlier delivery of the same change is never dropped: each new plan and build carries its files forward under `## Prior delivery`. Reviewing code that already exists runs `review` instead and writes its summary under `study-{topic}`.
+The Developer's summary (`developer`) — one summary, written in stages. `spec` — or the Developer itself, for a small change — writes the plan (`Stage: spec`); `implement` replaces it with what was built (`Stage: implemented`) — the files changed, or the code snippets in a plan-only run; `verify` adds whether the checks ran and passed. An earlier delivery of the same change is never dropped: each new plan and build carries its files forward under `## Prior delivery`. Reviewing code that already exists runs `review` instead and writes its summary under `study-{topic}`.
 
 Consumed by: **QA** (tests against the plan or what was built, and never claims a pass the summary doesn't show), **Security** (the planned surface or the code that changed), and the **Developer** itself when a later run resumes or iterates on it.
 
@@ -84,6 +87,12 @@ Consumed by: **QA** (tests against the plan or what was built, and never claims 
 ```
 /asdt-developer "add CSV export to the reporting dashboard"
 # → Standalone build — explores, specs, asks you to approve, implements
+```
+
+```
+/asdt-developer "make the Save button on the settings screen green"
+# → Small change — a quick read of the code, the plan written in place, your approval, the build
+#   (a color other screens share takes the full chain instead)
 ```
 
 ## Limits — what it does NOT do

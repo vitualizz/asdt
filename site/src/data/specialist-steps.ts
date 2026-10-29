@@ -69,6 +69,7 @@ export const specialistSteps: Record<string, SpecialistConfig> = {
       { when: 'plan', steps: ['knowledge-recall', 'platform-analysis', 'explore', 'spec'] },
       // A resume of a plan built but never verified runs `verify` alone.
       { when: 'resume', steps: ['knowledge-recall', 'platform-analysis', 'approve', 'implement', 'verify'] },
+      { when: 'small', steps: ['knowledge-recall', 'platform-analysis', 'approve', 'implement', 'verify'] },
       { when: 'build', steps: ['knowledge-recall', 'platform-analysis', 'explore', 'spec', 'approve', 'implement', 'verify'] },
     ],
     steps: {

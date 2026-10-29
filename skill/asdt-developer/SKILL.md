@@ -38,7 +38,8 @@ pure question about the code is answered from the code, with no step.
 | The request is | Chain |
 |---|---|
 | a plan — "how would you do this?", "propose the approach" | `explore → spec` *(the plan is the role summary and the run stops — no code is written)* |
-| a request to build it | `explore → spec → approve → implement → verify` |
+| a request to build it, and the change is small *(the small lane, below)* | `approve → implement → verify` *(you write the plan yourself — no `explore` or `spec` runs)* |
+| a request to build it, any other change | `explore → spec → approve → implement → verify` |
 | a resume — "implement the plan we approved", "verify what you built" | `approve → implement → verify`, or `verify` alone *(below)* |
 | a review of code that already exists — "code review X", "how is this module doing?", "review what you built" | `review` |
 
@@ -65,6 +66,58 @@ established (`asdt-core/protocol.md` §0), read the role summary `developer`:
 
 Tests are `(test)` edit targets (`steps/spec.md`); approving the plan approves them.
 
+**The small lane.** Which steps run is this file's call (the header's `## Depth`), and for a
+build it decides on code evidence, not depth — the skip-and-write shape of UX/UI's "No visual
+surface". Anything short of every condition below runs the full chain.
+
+1. **Entry.** The request is a build — not a plan, a resume, a review, or a rebuild with no
+   summary; no `pm`, `architect`, `ux-ui`, `security`, or `qa` role summary exists under
+   `{change}`; and the invocation carries no hint toward depth, sensitivity, or the full plan
+   ("a fondo", "this is sensitive", "full plan"). Any failure → the full chain, with no read.
+   Hints only push toward the full chain: "quick" never makes a change small.
+2. **One bounded read.** After `knowledge-recall` and `platform-analysis`, before any launch:
+   one batch of at most 3 read or search calls, whatever tool serves them. It finds the exact
+   edit locations (`path:line`) and every user of the touched code — search the touched symbol
+   or literal across the repo, tests included.
+3. **Judge three criteria** on what the read found:
+   - **understood** — the read pinned every edit location, the test home of each unit that
+     earns a test (under strict TDD, of every unit the change alters), and each existing test
+     that hits the touched code; and nothing is left that Product, UX/UI, or the Architect
+     would decide.
+   - **contained** — none of these applies: stored data or schema; security (authn/authz,
+     secrets, input crossing a trust boundary, an external integration); a contract others
+     consume; shared code — code that behavior the request did not name also uses, such as a
+     shared design token, a shared component, or a helper with other callers; concurrency,
+     ordering, or caching; delivery or environment (manifest, lockfile, build/CI/deploy, env).
+   - **resumable** — the request plus `git diff` suffice (`asdt-core/protocol.md` §2, "Persist
+     little"): no `shortcut:`, no `New dependency:`, and `Approach:` reads
+     `rejected: none — no larger option`.
+
+   A plan that would need `Data model`, `API surface`, `Migration notes`, a design section,
+   `Test cases`, a `.asdt/` target, or a UI target under `Design surface: none` is not small.
+4. **All three hold → launch neither `explore` nor `spec`: write the plan yourself**, in
+   `steps/spec.md`'s Output shape at `Stage: spec`, held to its step 5. It carries only:
+   - the one sentence;
+   - `Decisions`: `Approach:` first, then the lane line,
+     `- Lane: small — understood: {paths read}; contained: {nearest risk item}: {why it does not apply}; resumable: request + git diff`;
+   - `Constraints`, at most 5 `Acceptance criteria`, and `Edit targets`;
+   - `Scope` In/Out, with the users the read found and the plan leaves untouched in one Out
+     line, ``Out: callers unchanged — `{path}`, …``;
+   - `Prior delivery`, when the replaced `developer` summary held a delivery: copied verbatim,
+     as `steps/spec.md` carries it forward;
+   - `Open items`, `ASSUMED:` entries only.
+
+   File it as the role summary `developer` and as the `developer/spec` payload, then go to
+   `approve`.
+5. **Any criterion fails or is in doubt** → say in one line which one failed, and run the full
+   chain from `explore`; never widen a small plan to absorb the failure. A scope question only
+   the user can settle goes in the run's one clarification turn (`asdt-core/protocol.md` §3),
+   and the test is judged again with the answer; with that turn already spent, the full chain
+   runs.
+
+The plan is your own scratchpad write (`asdt-core/protocol.md` §4); from `approve` on, the
+chain is every build's.
+
 `approve` and `verify` have no step file: the two sections below are their whole contract.
 
 ## approve — the plan gate (inline)
@@ -81,18 +134,25 @@ on (`## Narration`'s opening line), then the plan —
 - the exact files to create and to modify — or, with none, that nothing will be written and the
   code comes back as snippets — then one line naming its `(test)` targets, or "no tests";
 - every `Open items` entry — what the plan assumed, and any conflict it flagged;
-- when the plan carries a `Prior delivery`, that this build lands on top of that earlier one, which stays part of the change.
+- when the plan carries a `Prior delivery`, that this build lands on top of that earlier one, which stays part of the change;
+- when its `Decisions` carry `Lane: small`, one line saying the plan came from the small lane:
+  the files you read, that no exploration or spec step ran, and that adjust can ask for the
+  full plan.
 
 Ask: approve, adjust (e.g. take the rejected option, drop the tests), or stop.
 
-- **Approve** → launch `implement`. Its `developer/spec` must be the plan you just showed: on a
-  resume, write that payload from the role summary when it is missing or differs. Delete any
-  leftover `developer/verify` payload first: only `verify`'s fix loop may hand one on.
+- **Approve** → launch `implement`. Its `developer/spec` must be the plan you just showed:
+  on a resume or in the small lane, write that payload from the role summary when it is
+  missing or differs. Delete any leftover `developer/verify` payload first: only `verify`'s
+  fix loop may hand one on.
 - **Adjust** → write the user's words to `feedback.md` and re-launch `spec` ONCE, with
   `feedback` and `previous` (the plan you showed) injected (`asdt-core/protocol.md` §5); show
-  its revision the same way and ask again. A second adjust ends the run at the plan: say the
-  last revision is the plan on file, this latest adjustment is NOT in it, and resuming the plan
-  returns here.
+  its revision the same way and ask again. In the small lane, revise and re-file the plan
+  yourself instead, once, while understood, contained, and resumable still hold after the
+  user's words; otherwise, or when they ask for the full plan, write `feedback.md`, launch
+  `explore`, then `spec` with `feedback` and `previous`. Either path is the one adjust. A
+  second adjust ends the run at the plan: say the last revision is the plan on file, this
+  latest adjustment is NOT in it, and resuming the plan returns here.
 - **Stop**, or **no human can answer** (a non-interactive harness) → the run ends at the plan,
   which the scratchpad holds; resuming it returns here. Never infer approval: the next step
   writes host files.
@@ -145,18 +205,22 @@ sentence on what git shows was built, `**Stage:** implemented`, the `**Verificat
 and `## Files changed` from the change's git diff.
 
 ## Final Output
-The role summary `developer`, written in stages: `spec` writes the plan (`Stage: spec`),
-`implement` replaces it with what was built (`Stage: implemented`), `verify` adds the
-`Verification` line. `review` writes it under `study-{topic}` instead. Consumed by QA,
-Security, and this specialist's later resumes and iterations.
+The role summary `developer`, written in stages: `spec` — or you, in the small lane — writes
+the plan (`Stage: spec`), `implement` replaces it with what was built (`Stage: implemented`),
+`verify` adds the `Verification` line. `review` writes it under `study-{topic}` instead.
+Consumed by QA, Security, and this specialist's later resumes and iterations.
 
 After a build, the report adds one sentence before `Next:` on what was not checked — from
 `ran: false`, `AC not covered:` lines, and `Unsafe skipped` — and omits it when none applies.
+After a small-lane build whose `implement` reported `Unsafe skipped`, `Next:` proposes the full
+plan: `/asdt-developer "{request} — full plan"`.
 
 ## Invariants
 - **Write scope**: only `implement` writes host files, inside the spec's edit roots — its modes and
   STOP rule are `steps/implement.md`, the boundary `asdt-core/protocol.md` §4
 - **No host file is written without approval**: `implement` runs only after `approve` returned
   approve in this same run
+- **The small lane changes only how the plan is made**: `approve`, `implement`, and `verify`
+  run as in every build, behind the same consent gates
 - **A built `shortcut:` is a decision**: at run close, after a writing-mode `implement`, remember
   each one (`asdt-core/protocol.md` §2); a plan never built remembers none

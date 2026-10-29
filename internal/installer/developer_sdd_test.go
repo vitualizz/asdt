@@ -3,6 +3,7 @@ package installer
 import (
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -77,6 +78,109 @@ func TestDeveloperSDDShape(t *testing.T) {
 			}
 			if tc.before != "" && index[tc.step] >= index[tc.before] {
 				t.Errorf("%s: step %q is at position %d, want it before %q (position %d)", path, tc.step, index[tc.step], tc.before, index[tc.before])
+			}
+		})
+	}
+}
+
+// TestDeveloperSmallLane guards the Developer's small lane: a build whose one
+// bounded read shows it understood, contained (shared code included), and
+// resumable gets a plan the orchestrator writes itself, so neither explore nor
+// spec launches, while approve, implement, and verify run with the same
+// consent gates as every build. The lane lives in prose only, so the test pins
+// the few phrases that carry it, each scoped to its section, and keeps explore
+// and spec as subagent steps for every other build. It also pins the router
+// side: UX/UI's registry row excludes a cosmetic change, and a trivial request
+// with no risk surface is a chain of one.
+func TestDeveloperSmallLane(t *testing.T) {
+	const smallLaneLead = "**The small lane.**"
+
+	root := skillDir(t)
+	workflowPath, wf := readWorkflowFile(t, root, "asdt-developer")
+	skillPath := filepath.Join(root, "asdt-developer", "SKILL.md")
+	skillMD := readText(t, skillPath)
+	routerPath := filepath.Join(root, "SKILL.md")
+	routerMD := readText(t, routerPath)
+
+	section := func(path, doc, name string) string {
+		t.Helper()
+		body, ok := markdownSection(doc, name)
+		if !ok {
+			t.Fatalf("%s: no `## %s` section, want one", path, name)
+		}
+		return body
+	}
+	tableRows := func(body string) []string {
+		var rows []string
+		for _, line := range strings.Split(body, "\n") {
+			if strings.HasPrefix(line, "|") {
+				rows = append(rows, line)
+			}
+		}
+		return rows
+	}
+
+	plan := section(skillPath, skillMD, "Orchestration Plan")
+	_, lane, ok := strings.Cut(plan, smallLaneLead)
+	if !ok {
+		t.Fatalf("%s: `## Orchestration Plan` has no block led by %s, want one", skillPath, smallLaneLead)
+	}
+	planRows := tableRows(plan)
+	approve := section(skillPath, skillMD, "approve")
+	invariants := section(skillPath, skillMD, "Invariants")
+	assess := section(routerPath, routerMD, "How to assess")
+	var uxUIRows []string
+	for _, row := range tableRows(section(routerPath, routerMD, "Registry")) {
+		if firstCommandDir(row) == "asdt-ux-ui" {
+			uxUIRows = append(uxUIRows, row)
+		}
+	}
+
+	cases := []struct {
+		name  string
+		path  string
+		where string   // names the candidates in a failure message
+		in    []string // one candidate must carry every phrase in want
+		want  []string
+	}{
+		{name: "small build row", path: skillPath, where: "`## Orchestration Plan` table row", in: planRows, want: []string{"small", "`approve → implement → verify`"}},
+		{name: "full build row", path: skillPath, where: "`## Orchestration Plan` table row", in: planRows, want: []string{"`explore → spec → approve → implement → verify`"}},
+		{name: "three criteria", path: skillPath, where: "small lane block", in: []string{lane}, want: []string{"understood", "contained", "resumable"}},
+		{name: "shared code is not contained", path: skillPath, where: "small lane block", in: []string{lane}, want: []string{"shared"}},
+		{name: "no explore or spec launch", path: skillPath, where: "small lane block", in: []string{lane}, want: []string{"launch neither `explore` nor `spec`"}},
+		{name: "doubt runs the full chain", path: skillPath, where: "small lane block", in: []string{lane}, want: []string{"full chain"}},
+		{name: "approve shows the lane", path: skillPath, where: "`## approve` section", in: []string{approve}, want: []string{"Lane: small"}},
+		{name: "approve writes the lane payload", path: skillPath, where: "`## approve` section", in: []string{approve}, want: []string{"on a resume or in the small lane"}},
+		{name: "lane changes only the plan", path: skillPath, where: "`## Invariants` section", in: []string{invariants}, want: []string{"The small lane changes only how the plan is made"}},
+		{name: "approval invariant survives", path: skillPath, where: "`## Invariants` section", in: []string{invariants}, want: []string{"No host file is written without approval"}},
+		{name: "ux-ui row excludes a cosmetic change", path: routerPath, where: "`## Registry` row led by the UX/UI command", in: uxUIRows, want: []string{"cosmetic"}},
+		{name: "trivial with no risk is a chain of one", path: routerPath, where: "`## How to assess` section", in: []string{assess}, want: []string{"chain of one"}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			carriesAll := func(text string) bool {
+				for _, phrase := range tc.want {
+					if !strings.Contains(text, phrase) {
+						return false
+					}
+				}
+				return true
+			}
+			if !slices.ContainsFunc(tc.in, carriesAll) {
+				t.Errorf("%s: no %s contains all of %q, want one that does", tc.path, tc.where, tc.want)
+			}
+		})
+	}
+
+	for _, name := range []string{"explore", "spec"} {
+		t.Run("workflow keeps "+name, func(t *testing.T) {
+			i := slices.IndexFunc(wf.Steps, func(s workflowStep) bool { return s.Name == name })
+			if i < 0 {
+				t.Fatalf("%s: step %q is missing, want it kept for every build outside the small lane", workflowPath, name)
+			}
+			if got := wf.Steps[i].Execution; got != "subagent" {
+				t.Errorf("%s: step %q execution = %q, want %q", workflowPath, name, got, "subagent")
 			}
 		})
 	}

@@ -11,6 +11,8 @@ steps:
     description: Inject the platform block — conventions and the design surface — from .asdt/config.yaml
     execution: inline
 
+  # In the small lane the orchestrator launches neither explore nor spec: it writes the plan
+  # itself (SKILL.md, "The small lane").
   - name: explore
     skill: steps/explore.md
     description: Explore the request, every place the change must reach, and what already exists to reuse, before speccing
